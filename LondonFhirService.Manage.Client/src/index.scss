@@ -1,0 +1,36 @@
+//// NHS UK Frontend
+@forward "nhsuk-frontend/dist/nhsuk";
+
+//// Global font styles
+* {
+    font-family: "Helvetica Neue Roman", Arial, sans-serif;
+}
+
+body {
+    background: white !important;
+}
+
+.nhsuk-card__heading--feature {
+    background: #004F69 !important;
+    color: #ffffff;
+    display: inline-block;
+    left: -25px;
+    margin-bottom: 8px;
+    margin-right: -24px;
+    padding: 8px 24px;
+    position: relative;
+    top: -8px;
+}
+
+.content-inner {
+    background: #FAF9F6 !important;
+}
+
+
+.fa-icon:hover {
+    cursor: pointer;
+}
+
+.list-group-item {
+    cursor: pointer;
+}
