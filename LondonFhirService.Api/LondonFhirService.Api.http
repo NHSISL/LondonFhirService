@@ -1,6 +1,6 @@
-@LondonDataServices.IDecide.FrontEnd.Server_HostAddress = http://localhost:5034
+@LondonFhirService.Manage_HostAddress = http://localhost:5034
 
-GET {{LondonDataServices.IDecide.FrontEnd.Server_HostAddress}}/weatherforecast/
+GET {{LondonFhirService.Manage_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
