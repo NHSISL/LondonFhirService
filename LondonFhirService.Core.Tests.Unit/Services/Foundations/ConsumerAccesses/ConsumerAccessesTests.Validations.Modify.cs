@@ -108,7 +108,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             var invalidConsumerAccessException =
                 new InvalidConsumerAccessException(
-                    message: "Invalid user access. Please correct the errors and try again.");
+                    message: "Invalid consumer access. Please correct the errors and try again.");
 
             invalidConsumerAccessException.AddData(
                 key: nameof(ConsumerAccess.Id),
@@ -205,7 +205,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             var invalidConsumerAccessException =
                 new InvalidConsumerAccessException(
-                    message: "Invalid user access. Please correct the errors and try again.");
+                    message: "Invalid consumer access. Please correct the errors and try again.");
 
             invalidConsumerAccessException.AddData(
                 key: nameof(ConsumerAccess.UpdatedDate),
@@ -311,7 +311,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     .ReturnsAsync(randomUser);
 
             var invalidConsumerAccessException = new InvalidConsumerAccessException(
-                message: "Invalid user access. Please correct the errors and try again.");
+                message: "Invalid consumer access. Please correct the errors and try again.");
 
             invalidConsumerAccessException.AddData(
                 key: nameof(ConsumerAccess.OrgCode),
@@ -396,7 +396,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     .ReturnsAsync(randomUser);
 
             var invalidConsumerAccessException = new InvalidConsumerAccessException(
-                message: "Invalid user access. Please correct the errors and try again.");
+                message: "Invalid consumer access. Please correct the errors and try again.");
 
             invalidConsumerAccessException.AddData(
                 key: nameof(ConsumerAccess.UpdatedDate),
@@ -546,7 +546,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     .ReturnsAsync(invalidConsumerAccess);
 
             var invalidConsumerAccessException = new InvalidConsumerAccessException(
-                message: "Invalid user access. Please correct the errors and try again.");
+                message: "Invalid consumer access. Please correct the errors and try again.");
 
             invalidConsumerAccessException.AddData(
                 key: nameof(ConsumerAccess.CreatedDate),
@@ -628,7 +628,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     .ReturnsAsync(invalidConsumerAccess);
 
             var invalidConsumerAccessValidationException = new InvalidConsumerAccessException(
-                message: "Invalid user access. Please correct the errors and try again.");
+                message: "Invalid consumer access. Please correct the errors and try again.");
 
             invalidConsumerAccessValidationException.AddData(
                 key: nameof(ConsumerAccess.CreatedDate),

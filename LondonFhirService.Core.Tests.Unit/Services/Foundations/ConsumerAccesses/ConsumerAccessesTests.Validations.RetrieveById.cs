@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             Guid invalidConsumerAccessId = Guid.Empty;
 
             var invalidConsumerAccessException = new InvalidConsumerAccessException(
-                message: "Invalid user access. Please correct the errors and try again.");
+                message: "Invalid consumer access. Please correct the errors and try again.");
 
             invalidConsumerAccessException.AddData(
                 key: nameof(ConsumerAccess.Id),
@@ -64,7 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ConsumerAccess nullConsumerAccess = null;
 
             var notFoundConsumerAccessException = new NotFoundConsumerAccessException(
-                message: $"User access not found with Id: {someConsumerAccessId}");
+                message: $"Consumer access not found with Id: {someConsumerAccessId}");
 
             var expectedConsumerAccessValidationException = new ConsumerAccessValidationException(
                 message: "ConsumerAccess validation error occurred, please fix errors and try again.",

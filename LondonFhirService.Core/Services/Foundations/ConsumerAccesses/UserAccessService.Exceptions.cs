@@ -42,7 +42,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             catch (SqlException sqlException)
             {
                 var failedStorageConsumerAccessException = new FailedStorageConsumerAccessException(
-                    message: "Failed user access storage error occurred, contact support.",
+                    message: "Failed consumer access storage error occurred, contact support.",
                     innerException: sqlException);
 
                 throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessException);
@@ -61,7 +61,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 var lockedConsumerAccessException =
                     new LockedConsumerAccessException(
-                        message: "Locked user access record error occurred, please try again.",
+                        message: "Locked consumer access record error occurred, please try again.",
                         innerException: dbUpdateConcurrencyException);
 
                 throw await CreateAndLogDependencyValidationExceptionAsync(lockedConsumerAccessException);
@@ -70,7 +70,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 var failedOperationConsumerAccessException =
                     new FailedOperationConsumerAccessException(
-                        message: "Failed operation user access error occurred, contact support.",
+                        message: "Failed operation consumer access error occurred, contact support.",
                         innerException: dbUpdateException);
 
                 throw await CreateAndLogDependencyExceptionAsync(failedOperationConsumerAccessException);
@@ -79,7 +79,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 var failedServiceConsumerAccessException =
                     new FailedServiceConsumerAccessException(
-                        message: "Failed service user access error occurred, contact support.",
+                        message: "Failed service consumer access error occurred, contact support.",
                         innerException: exception);
 
                 throw await CreateAndLogServiceExceptionAsync(failedServiceConsumerAccessException);
@@ -96,7 +96,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             catch (SqlException sqlException)
             {
                 var failedStorageConsumerAccessException = new FailedStorageConsumerAccessException(
-                    message: "Failed user access storage error occurred, contact support.",
+                    message: "Failed consumer access storage error occurred, contact support.",
                     innerException: sqlException);
 
                 throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessException);
@@ -105,7 +105,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 var failedServiceConsumerAccessException =
                     new FailedServiceConsumerAccessException(
-                        message: "Failed service user access error occurred, contact support.",
+                        message: "Failed service consumer access error occurred, contact support.",
                         innerException: exception);
 
                 throw await CreateAndLogServiceExceptionAsync(failedServiceConsumerAccessException);
@@ -125,7 +125,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             catch (SqlException sqlException)
             {
                 var failedStorageConsumerAccessException = new FailedStorageConsumerAccessException(
-                    message: "Failed user access storage error occurred, contact support.",
+                    message: "Failed consumer access storage error occurred, contact support.",
                     innerException: sqlException);
 
                 throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessException);
@@ -134,7 +134,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 var failedServiceConsumerAccessException =
                     new FailedServiceConsumerAccessException(
-                        message: "Failed service user access error occurred, contact support.",
+                        message: "Failed service consumer access error occurred, contact support.",
                         innerException: exception);
 
                 throw await CreateAndLogServiceExceptionAsync(failedServiceConsumerAccessException);

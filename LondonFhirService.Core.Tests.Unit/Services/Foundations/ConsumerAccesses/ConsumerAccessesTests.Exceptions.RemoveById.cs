@@ -24,7 +24,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             var failedConsumerAccessStorageException =
                 new FailedStorageConsumerAccessException(
-                    message: "Failed user access storage error occurred, contact support.",
+                    message: "Failed consumer access storage error occurred, contact support.",
                         innerException: sqlException);
 
             var expectedConsumerAccessDependencyException =
@@ -83,7 +83,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             var lockedConsumerAccessException =
                 new LockedConsumerAccessException(
-                    message: "Locked user access record error occurred, please try again.",
+                    message: "Locked consumer access record error occurred, please try again.",
                     innerException: databaseUpdateConcurrencyException);
 
             var expectedConsumerAccessDependencyValidationException =
@@ -138,7 +138,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             Exception serviceError = new Exception();
 
             var failedServiceConsumerAccessException = new FailedServiceConsumerAccessException(
-                message: "Failed service user access error occurred, contact support.",
+                message: "Failed service consumer access error occurred, contact support.",
                 innerException: serviceError);
 
             var expectedConsumerAccessServiceException = new ConsumerAccessServiceException(

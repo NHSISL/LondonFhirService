@@ -252,7 +252,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         {
             var invalidConsumerAccessException =
                 new InvalidConsumerAccessException(
-                    message: "Invalid user access. Please correct the errors and try again.");
+                    message: "Invalid consumer access. Please correct the errors and try again.");
 
             foreach ((dynamic rule, string parameter) in validations)
             {

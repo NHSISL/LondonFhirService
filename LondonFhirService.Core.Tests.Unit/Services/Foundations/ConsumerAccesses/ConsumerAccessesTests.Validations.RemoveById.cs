@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             Guid invalidConsumerAccessId = Guid.Empty;
 
             var invalidConsumerAccessException = new InvalidConsumerAccessException(
-                message: "Invalid user access. Please correct the errors and try again.");
+                message: "Invalid consumer access. Please correct the errors and try again.");
 
             invalidConsumerAccessException.AddData(
                 key: nameof(ConsumerAccess.Id),
