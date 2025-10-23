@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         [InlineData("", emptyList)]
         [InlineData(" ", emptyList)]
         public async Task ShouldThrowValidationExceptionOnOrganisationsHaveAccessToThisPatientAndLogItAsync(
-            string invalidPseudoNumber,
+            string invalidNhsNumber,
             List<string> invalidList)
         {
             // given
@@ -43,7 +43,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
 
             // when
             ValueTask<bool> retrievePdsDataByIdTask =
-                this.pdsDataService.OrganisationsHaveAccessToThisPatient(invalidPseudoNumber, invalidList);
+                this.pdsDataService.OrganisationsHaveAccessToThisPatient(invalidNhsNumber, invalidList);
 
             PdsDataValidationException actualPdsDataValidationException =
                 await Assert.ThrowsAsync<PdsDataValidationException>(

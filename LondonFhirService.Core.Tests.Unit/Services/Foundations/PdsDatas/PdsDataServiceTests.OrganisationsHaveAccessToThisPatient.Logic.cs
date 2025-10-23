@@ -18,10 +18,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldCheckIfOrganisationsHaveAccessToThisPatientAsync()
         {
             // given
-            string randomPseudoNhsNumber = GetRandomString();
-            string inputPseudoNhsNumber = randomPseudoNhsNumber;
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
-            randomPdsDatas.ForEach(pdsData => pdsData.NhsNumber = inputPseudoNhsNumber);
+            randomPdsDatas.ForEach(pdsData => pdsData.NhsNumber = inputNhsNumber);
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = randomPdsDatas.Select(pdsData => pdsData.OrgCode).ToList();
             bool expectedResult = true;
@@ -37,7 +37,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             bool actualResult =
                 await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputPseudoNhsNumber, organisationCodes: inputOrganisationCodes);
+                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -56,11 +56,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         }
 
         [Fact]
-        public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidPseudonumberAsync()
+        public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidNhsNumberAsync()
         {
             // given
-            string randomPseudoNhsNumber = GetRandomString();
-            string inputPseudoNhsNumber = randomPseudoNhsNumber;
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = randomPdsDatas.Select(pdsData => pdsData.OrgCode).ToList();
@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             bool actualResult =
                 await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputPseudoNhsNumber, organisationCodes: inputOrganisationCodes);
+                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -99,10 +99,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidOrganisationsAsync()
         {
             // given
-            string randomPseudoNhsNumber = GetRandomString();
-            string inputPseudoNhsNumber = randomPseudoNhsNumber;
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
-            randomPdsDatas.ForEach(pdsData => pdsData.NhsNumber = inputPseudoNhsNumber);
+            randomPdsDatas.ForEach(pdsData => pdsData.NhsNumber = inputNhsNumber);
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = GetRandomStringsWithLengthOf(10);
             bool expectedResult = false;
@@ -118,7 +118,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             bool actualResult =
                 await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputPseudoNhsNumber, organisationCodes: inputOrganisationCodes);
+                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -180,12 +180,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldNotHaveAccessToThisPatientIfRelationshipIsInactiveAsync()
         {
             // given
-            string randomPseudoNhsNumber = GetRandomString();
-            string inputPseudoNhsNumber = randomPseudoNhsNumber;
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
             randomPdsDatas.ForEach(pdsData =>
             {
-                pdsData.NhsNumber = inputPseudoNhsNumber;
+                pdsData.NhsNumber = inputNhsNumber;
                 pdsData.RelationshipWithOrganisationEffectiveFromDate = GetRandomFutureDateTimeOffset();
             });
             List<PdsData> storagePdsDatas = randomPdsDatas;
@@ -203,7 +203,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             bool actualResult =
                 await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputPseudoNhsNumber, organisationCodes: inputOrganisationCodes);
+                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
 
             // then
             actualResult.Should().Be(expectedResult);
