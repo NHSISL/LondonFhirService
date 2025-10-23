@@ -86,7 +86,7 @@ namespace LondonFhirService.Core.Services.Foundations.Consumers
 
         private static void ValidateConsumerId(Guid consumerId) =>
             Validate<InvalidConsumerServiceException>(
-                message: "Invalid consumer. Please correct the errors and try again.",
+                message: "Invalid consumer Id. Please correct the errors and try again.",
                 validations: (Rule: IsInvalid(consumerId), Parameter: nameof(Consumer.Id)));
 
         private static void ValidateStorageConsumer(Consumer maybeConsumer, Guid consumerId)

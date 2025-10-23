@@ -22,7 +22,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
 
             this.storageBrokerMock.Setup(broker =>
                     broker.SelectAllConsumersAsync())
-                .ReturnsAsync(storageConsumers);
+                        .ReturnsAsync(storageConsumers);
 
             // when
             IQueryable<Consumer> actualConsumers = await this.consumerService.RetrieveAllConsumersAsync();
