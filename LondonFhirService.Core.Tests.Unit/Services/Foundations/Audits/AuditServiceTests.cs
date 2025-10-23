@@ -15,7 +15,6 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonFhirService.Core.Services.Foundations;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using Microsoft.Data.SqlClient;
 using Moq;
