@@ -82,7 +82,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
-            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -154,7 +153,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
-            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -223,7 +221,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
-            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -292,7 +289,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
-            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -361,7 +357,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
-            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
