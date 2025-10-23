@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Audits;
 
-namespace LondonFhirService.Core.Services.Audits
+namespace LondonFhirService.Core.Services.Foundations
 {
     public interface IAuditService
     {

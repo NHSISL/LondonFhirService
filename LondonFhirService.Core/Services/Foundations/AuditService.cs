@@ -12,9 +12,8 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonFhirService.Core.Services.Audits;
 
-namespace LondonDataServices.IDecide.Core.Services.Foundations.Audits
+namespace LondonFhirService.Core.Services.Foundations.Audits
 {
     public partial class AuditService : IAuditService
     {
@@ -163,7 +162,7 @@ namespace LondonDataServices.IDecide.Core.Services.Foundations.Audits
 
         virtual internal async ValueTask<List<Audit>> ValidateAuditsAndAssignIdAndAuditAsync(List<Audit> audits)
         {
-            List<Audit> validatedAudites = new List<Audit>();
+            List<Audit> validatedAudits = new List<Audit>();
 
             foreach (Audit address in audits)
             {
@@ -177,7 +176,7 @@ namespace LondonDataServices.IDecide.Core.Services.Foundations.Audits
                     address.UpdatedDate = address.CreatedDate;
                     address.UpdatedBy = currentUserId;
                     await ValidateAuditOnAddAsync(address);
-                    validatedAudites.Add(address);
+                    validatedAudits.Add(address);
                 }
                 catch (Exception ex)
                 {
@@ -185,7 +184,7 @@ namespace LondonDataServices.IDecide.Core.Services.Foundations.Audits
                 }
             }
 
-            return validatedAudites;
+            return validatedAudits;
         }
     }
 }

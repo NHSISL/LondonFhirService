@@ -12,7 +12,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Xeptions;
 
-namespace LondonDataServices.IDecide.Core.Services.Foundations.Audits
+namespace LondonFhirService.Core.Services.Foundations.Audits
 {
     public partial class AuditService
     {
