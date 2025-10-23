@@ -29,7 +29,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 this.loggingBrokerMock.Object)
             { CallBase = true };
 
-
             auditServiceMock.Setup(service =>
                 service.BatchBulkAddAuditsAsync(randomAudits, randomBatchSize))
                     .Returns(ValueTask.CompletedTask);

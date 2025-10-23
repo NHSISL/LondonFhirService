@@ -3,11 +3,10 @@
 // ---------------------------------------------------------
 
 using System.Net.Http;
-using LondonFhirService.Manage;
 using Microsoft.AspNetCore.Mvc.Testing;
 using RESTFulSense.Clients;
 
-namespace LondonDataServices.IDecide.Manage.Tests.Integration.Brokers
+namespace LondonFhirService.Manage.Tests.Integration.Brokers
 {
     public partial class ApiBroker
     {

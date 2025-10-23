@@ -162,7 +162,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
 
         virtual internal async ValueTask<List<Audit>> ValidateAuditsAndAssignIdAndAuditAsync(List<Audit> audits)
         {
-            List<Audit> validatedAudites = new List<Audit>();
+            List<Audit> validatedAudits = new List<Audit>();
 
             foreach (Audit address in audits)
             {
@@ -176,7 +176,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                     address.UpdatedDate = address.CreatedDate;
                     address.UpdatedBy = currentUserId;
                     await ValidateAuditOnAddAsync(address);
-                    validatedAudites.Add(address);
+                    validatedAudits.Add(address);
                 }
                 catch (Exception ex)
                 {
@@ -184,7 +184,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                 }
             }
 
-            return validatedAudites;
+            return validatedAudits;
         }
     }
 }
