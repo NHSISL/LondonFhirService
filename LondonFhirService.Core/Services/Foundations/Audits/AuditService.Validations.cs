@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 
-namespace LondonDataServices.IDecide.Core.Services.Foundations.Audits
+namespace LondonFhirService.Core.Services.Foundations.Audits
 {
     public partial class AuditService
     {

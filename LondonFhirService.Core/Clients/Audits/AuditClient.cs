@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Clients.AuditClient.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
-using LondonFhirService.Core.Services.Audits;
+using LondonFhirService.Core.Services.Foundations.Audits;
 using Xeptions;
 
 namespace LondonFhirService.Core.Clients.Audits

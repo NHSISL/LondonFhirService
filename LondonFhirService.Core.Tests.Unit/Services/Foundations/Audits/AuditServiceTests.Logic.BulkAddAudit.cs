@@ -5,7 +5,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonDataServices.IDecide.Core.Services.Foundations.Audits;
+using LondonFhirService.Core.Services.Foundations.Audits;
 using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits

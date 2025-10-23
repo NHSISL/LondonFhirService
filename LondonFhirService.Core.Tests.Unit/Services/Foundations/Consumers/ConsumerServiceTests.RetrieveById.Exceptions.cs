@@ -1,0 +1,113 @@
+﻿// ---------------------------------------------------------
+// Copyright (c) North East London ICB. All rights reserved.
+// ---------------------------------------------------------
+
+using System;
+using System.Threading.Tasks;
+using FluentAssertions;
+using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
+using Microsoft.Data.SqlClient;
+using Moq;
+
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
+{
+    public partial class ConsumerServiceTests
+    {
+        [Fact]
+        public async Task ShouldThrowCriticalDependencyExceptionOnRetrieveByIdIfSqlErrorOccursAndLogItAsync()
+        {
+            // given
+            Guid someId = Guid.NewGuid();
+            SqlException sqlException = GetSqlException();
+
+            var failedStorageConsumerServiceException =
+                new FailedStorageConsumerServiceException(
+                    message: "Failed consumer storage error occurred, contact support.",
+                    innerException: sqlException);
+
+            var expectedConsumerServiceDependencyException =
+                new ConsumerServiceDependencyException(
+                    message: "Consumer dependency error occurred, contact support.",
+                    innerException: failedStorageConsumerServiceException);
+
+            this.storageBrokerMock.Setup(broker =>
+                broker.SelectConsumerByIdAsync(It.IsAny<Guid>()))
+                    .ThrowsAsync(sqlException);
+
+            // when
+            ValueTask<Consumer> retrieveConsumerByIdTask =
+                this.consumerService.RetrieveConsumerByIdAsync(someId);
+
+            ConsumerServiceDependencyException actualConsumerServiceDependencyException =
+                await Assert.ThrowsAsync<ConsumerServiceDependencyException>(
+                    retrieveConsumerByIdTask.AsTask);
+
+            // then
+            actualConsumerServiceDependencyException.Should()
+                .BeEquivalentTo(expectedConsumerServiceDependencyException);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectConsumerByIdAsync(It.IsAny<Guid>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogCriticalAsync(It.Is(SameExceptionAs(
+                    expectedConsumerServiceDependencyException))),
+                        Times.Once);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowServiceExceptionOnRetrieveByIdIfServiceErrorOccursAndLogItAsync()
+        {
+            // given
+            Guid someId = Guid.NewGuid();
+            var serviceException = new Exception();
+
+            var failedConsumerServiceException =
+                new FailedConsumerServiceException(
+                    message: "Failed consumer service occurred, please contact support",
+                    innerException: serviceException);
+
+            var expectedConsumerServiceException =
+                new ConsumerServiceException(
+                    message: "Consumer service error occurred, contact support.",
+                    innerException: failedConsumerServiceException);
+
+            this.storageBrokerMock.Setup(broker =>
+                broker.SelectConsumerByIdAsync(It.IsAny<Guid>()))
+                    .ThrowsAsync(serviceException);
+
+            // when
+            ValueTask<Consumer> retrieveConsumerByIdTask =
+                this.consumerService.RetrieveConsumerByIdAsync(someId);
+
+            ConsumerServiceException actualConsumerServiceException =
+                await Assert.ThrowsAsync<ConsumerServiceException>(
+                    retrieveConsumerByIdTask.AsTask);
+
+            // then
+            actualConsumerServiceException.Should()
+                .BeEquivalentTo(expectedConsumerServiceException);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectConsumerByIdAsync(It.IsAny<Guid>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+               broker.LogErrorAsync(It.Is(SameExceptionAs(
+                   expectedConsumerServiceException))),
+                        Times.Once);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
+    }
+}

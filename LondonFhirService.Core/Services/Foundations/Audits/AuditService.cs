@@ -12,9 +12,8 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonFhirService.Core.Services.Audits;
 
-namespace LondonDataServices.IDecide.Core.Services.Foundations.Audits
+namespace LondonFhirService.Core.Services.Foundations.Audits
 {
     public partial class AuditService : IAuditService
     {
