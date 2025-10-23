@@ -52,7 +52,7 @@ namespace LondonFhirService.Core.Brokers.Securities
             T storageEntity);
 
         /// <summary>
-        /// Retrieves the current user identifier from the given claims principal.
+        /// Retrieves the user identifier from the given claims principal.
         /// </summary>
         /// <param name="claimsPrincipal">The user context containing claims.</param>
         /// <returns>The user identifier string.</returns>
@@ -61,10 +61,10 @@ namespace LondonFhirService.Core.Brokers.Securities
         /// </remarks>
         /// <example>
         /// <code>
-        /// string userId = await auditClient.GetCurrentUserIdAsync(User);
+        /// string userId = await auditClient.GetUserIdAsync(User);
         /// // e.g. "Alice" or "Anonymous"
         /// </code>
         /// </example>
-        ValueTask<string> GetCurrentUserIdAsync();
+        ValueTask<string> GetUserIdAsync();
     }
 }
