@@ -97,6 +97,9 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
+                createException: () => new InvalidAuditException(
+                    message: "Invalid audit. Please correct the errors and try again."),
+
                 (Rule: IsNotSame(
                     audit.CreatedDate,
                     maybeAudit.CreatedDate,
@@ -124,7 +127,11 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         }
 
         public void ValidateAuditId(Guid auditId) =>
-            Validate((Rule: IsInvalid(auditId), Parameter: nameof(Audit.Id)));
+            Validate(
+                createException: () => new InvalidAuditException(
+                    message: "Invalid audit. Please correct the errors and try again."),
+
+                (Rule: IsInvalid(auditId), Parameter: nameof(Audit.Id)));
 
         private static void ValidateStorageAudit(Audit maybeAudit, Guid auditId)
         {
@@ -145,6 +152,9 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         private static void ValidateAgainstStorageAuditOnModify(Audit inputAudit, Audit storageAudit)
         {
             Validate(
+                createException: () => new InvalidAuditException(
+                    message: "Invalid audit. Please correct the errors and try again."),
+
                 (Rule: IsNotSame(
                     firstDate: inputAudit.CreatedDate,
                     secondDate: storageAudit.CreatedDate,
