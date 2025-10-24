@@ -19,7 +19,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
-                createException: () => new InvalidAuditException(
+                createException: () => new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(audit.Id), Parameter: nameof(Audit.Id)),
@@ -54,7 +54,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         {
             if (audits is null)
             {
-                throw new NullAuditException(message: "Audits is null.");
+                throw new NullAuditServiceException(message: "Audits is null.");
             }
         }
 
@@ -64,7 +64,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
-                createException: () => new InvalidAuditException(
+                createException: () => new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(audit.Id), Parameter: nameof(Audit.Id)),
@@ -97,7 +97,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
-                createException: () => new InvalidAuditException(
+                createException: () => new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again."),
 
                 (Rule: IsNotSame(
@@ -128,7 +128,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
 
         public void ValidateAuditId(Guid auditId) =>
             Validate(
-                createException: () => new InvalidAuditException(
+                createException: () => new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(auditId), Parameter: nameof(Audit.Id)));
@@ -137,7 +137,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         {
             if (maybeAudit is null)
             {
-                throw new NotFoundAuditException(auditId);
+                throw new NotFoundAuditServiceException(auditId);
             }
         }
 
@@ -145,14 +145,14 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         {
             if (audit is null)
             {
-                throw new NullAuditException(message: "Audit is null.");
+                throw new NullAuditServiceException(message: "Audit is null.");
             }
         }
 
         private static void ValidateAgainstStorageAuditOnModify(Audit inputAudit, Audit storageAudit)
         {
             Validate(
-                createException: () => new InvalidAuditException(
+                createException: () => new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again."),
 
                 (Rule: IsNotSame(

@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             Guid invalidPdsDataId = Guid.Empty;
 
             var invalidPdsDataException =
-                new InvalidPdsDataException(
+                new InvalidPdsDataServiceException(
                     message: "Invalid pdsData. Please correct the errors and try again.");
 
             invalidPdsDataException.AddData(
@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 values: "Id is invalid");
 
             var expectedPdsDataValidationException =
-                new PdsDataValidationException(
+                new PdsDataServiceValidationException(
                     message: "PdsData validation error occurred, please fix errors and try again.",
                     innerException: invalidPdsDataException);
 
@@ -36,8 +36,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> removePdsDataByIdTask =
                 this.pdsDataService.RemovePdsDataByIdAsync(invalidPdsDataId);
 
-            PdsDataValidationException actualPdsDataValidationException =
-                await Assert.ThrowsAsync<PdsDataValidationException>(
+            PdsDataServiceValidationException actualPdsDataValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceValidationException>(
                     testCode: removePdsDataByIdTask.AsTask);
 
             // then

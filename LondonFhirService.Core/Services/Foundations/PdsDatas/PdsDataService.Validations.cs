@@ -17,7 +17,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             ValidatePdsDataIsNotNull(pdsData);
 
             Validate(
-                createException: () => new InvalidPdsDataException(
+                createException: () => new InvalidPdsDataServiceException(
                     message: "Invalid pdsData. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(pdsData.Id), Parameter: nameof(PdsData.Id)),
@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             ValidatePdsDataIsNotNull(pdsData);
 
             Validate(
-                createException: () => new InvalidPdsDataException(
+                createException: () => new InvalidPdsDataServiceException(
                     message: "Invalid pdsData. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(pdsData.Id), Parameter: nameof(PdsData.Id)),
@@ -41,7 +41,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             List<string> organisationCodes)
         {
             Validate(
-                createException: () => new InvalidPdsDataException(
+                createException: () => new InvalidPdsDataServiceException(
                     message: "Invalid pdsData. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
@@ -50,7 +50,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
 
         public static void ValidatePdsDataId(Guid pdsDataId) =>
             Validate(
-                createException: () => new InvalidPdsDataException(
+                createException: () => new InvalidPdsDataServiceException(
                     message: "Invalid pdsData. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(pdsDataId), Parameter: nameof(PdsData.Id)));
@@ -59,7 +59,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
         {
             if (maybePdsData is null)
             {
-                throw new NotFoundPdsDataException(message: $"PdsData not found with Id: {pdsDataId}");
+                throw new NotFoundPdsDataServiceException(message: $"PdsData not found with Id: {pdsDataId}");
             }
         }
 
@@ -67,7 +67,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
         {
             if (pdsData is null)
             {
-                throw new NullPdsDataException(message: "PdsData is null.");
+                throw new NullPdsDataServiceException(message: "PdsData is null.");
             }
         }
 

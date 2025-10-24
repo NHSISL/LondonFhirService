@@ -85,7 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.storageBroker.Verify(broker =>
                 broker.SelectAllOdsDatasAsync(),
-                    Times.Exactly(validConsumerAccesses.Count() * 2));
+                    Times.Once);
 
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();

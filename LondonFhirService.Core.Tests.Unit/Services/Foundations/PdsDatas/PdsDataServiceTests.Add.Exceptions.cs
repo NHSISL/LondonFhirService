@@ -24,12 +24,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             SqlException sqlException = CreateSqlException();
 
             var failedStoragePdsDataException =
-                new FailedStoragePdsDataException(
+                new FailedStoragePdsDataServiceException(
                     message: "Failed pdsData storage error occurred, contact support.",
                     innerException: sqlException);
 
             var expectedPdsDataDependencyException =
-                new PdsDataDependencyException(
+                new PdsDataServiceDependencyException(
                     message: "PdsData dependency error occurred, contact support.",
                     innerException: failedStoragePdsDataException);
 
@@ -41,8 +41,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> addPdsDataTask =
                 this.pdsDataService.AddPdsDataAsync(somePdsData);
 
-            PdsDataDependencyException actualPdsDataDependencyException =
-                await Assert.ThrowsAsync<PdsDataDependencyException>(
+            PdsDataServiceDependencyException actualPdsDataDependencyException =
+                await Assert.ThrowsAsync<PdsDataServiceDependencyException>(
                     testCode: addPdsDataTask.AsTask);
 
             // then
@@ -75,13 +75,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 new DuplicateKeyException(randomMessage);
 
             var alreadyExistsPdsDataException =
-                new AlreadyExistsPdsDataException(
+                new AlreadyExistsPdsDataServiceException(
                     message: "PdsData with the same Id already exists.",
                     innerException: duplicateKeyException,
                     data: duplicateKeyException.Data);
 
             var expectedPdsDataDependencyValidationException =
-                new PdsDataDependencyValidationException(
+                new PdsDataServiceDependencyValidationException(
                     message: "PdsData dependency validation occurred, please try again.",
                     innerException: alreadyExistsPdsDataException);
 
@@ -94,8 +94,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 this.pdsDataService.AddPdsDataAsync(alreadyExistsPdsData);
 
             // then
-            PdsDataDependencyValidationException actualPdsDataDependencyValidationException =
-                await Assert.ThrowsAsync<PdsDataDependencyValidationException>(
+            PdsDataServiceDependencyValidationException actualPdsDataDependencyValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceDependencyValidationException>(
                     testCode: addPdsDataTask.AsTask);
 
             actualPdsDataDependencyValidationException.Should()
@@ -127,12 +127,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 new ForeignKeyConstraintConflictException(exceptionMessage);
 
             var invalidPdsDataReferenceException =
-                new InvalidPdsDataReferenceException(
+                new InvalidReferencePdsDataServiceException(
                     message: "Invalid pdsData reference error occurred.",
                     innerException: foreignKeyConstraintConflictException);
 
             var expectedPdsDataValidationException =
-                new PdsDataDependencyValidationException(
+                new PdsDataServiceDependencyValidationException(
                     message: "PdsData dependency validation occurred, please try again.",
                     innerException: invalidPdsDataReferenceException);
 
@@ -145,8 +145,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 this.pdsDataService.AddPdsDataAsync(somePdsData);
 
             // then
-            PdsDataDependencyValidationException actualPdsDataDependencyValidationException =
-                await Assert.ThrowsAsync<PdsDataDependencyValidationException>(
+            PdsDataServiceDependencyValidationException actualPdsDataDependencyValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceDependencyValidationException>(
                     testCode: addPdsDataTask.AsTask);
 
             actualPdsDataDependencyValidationException.Should()
@@ -176,12 +176,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 new DbUpdateException();
 
             var failedOperationPdsDataException =
-                new FailedOperationPdsDataException(
+                new FailedOperationPdsDataServiceException(
                     message: "Failed pdsData operation error occurred, contact support.",
                     innerException: databaseUpdateException);
 
             var expectedPdsDataDependencyException =
-                new PdsDataDependencyException(
+                new PdsDataServiceDependencyException(
                     message: "PdsData dependency error occurred, contact support.",
                     innerException: failedOperationPdsDataException);
 
@@ -193,8 +193,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> addPdsDataTask =
                 this.pdsDataService.AddPdsDataAsync(somePdsData);
 
-            PdsDataDependencyException actualPdsDataDependencyException =
-                await Assert.ThrowsAsync<PdsDataDependencyException>(
+            PdsDataServiceDependencyException actualPdsDataDependencyException =
+                await Assert.ThrowsAsync<PdsDataServiceDependencyException>(
                     testCode: addPdsDataTask.AsTask);
 
             // then

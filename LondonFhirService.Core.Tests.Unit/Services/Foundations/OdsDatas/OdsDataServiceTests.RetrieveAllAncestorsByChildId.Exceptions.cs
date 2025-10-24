@@ -23,12 +23,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             SqlException sqlException = CreateSqlException();
 
             var failedStorageOdsDataException =
-                new FailedStorageOdsDataException(
+                new FailedStorageOdsDataServiceException(
                     message: "Failed odsData storage error occurred, contact support.",
                     innerException: sqlException);
 
             var expectedOdsDataDependencyException =
-                new OdsDataDependencyException(
+                new OdsDataServiceDependencyException(
                     message: "OdsData dependency error occurred, contact support.",
                     innerException: failedStorageOdsDataException);
 
@@ -40,8 +40,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<List<OdsData>> retrieveAncestorsByChildIdTask =
                 this.odsDataService.RetrieveAllAncestorsByChildId(someId);
 
-            OdsDataDependencyException actualOdsDataDependencyException =
-                await Assert.ThrowsAsync<OdsDataDependencyException>(
+            OdsDataServiceDependencyException actualOdsDataDependencyException =
+                await Assert.ThrowsAsync<OdsDataServiceDependencyException>(
                     testCode: retrieveAncestorsByChildIdTask.AsTask);
 
             // then

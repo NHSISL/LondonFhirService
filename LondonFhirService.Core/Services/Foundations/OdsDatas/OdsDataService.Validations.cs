@@ -17,7 +17,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             ValidateOdsDataIsNotNull(odsData);
 
             Validate(
-                createException: () => new InvalidOdsDataException(
+                createException: () => new InvalidOdsDataServiceException(
                     message: "Invalid odsData. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(odsData.Id), Parameter: nameof(OdsData.Id)),
@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             ValidateOdsDataIsNotNull(odsData);
 
             Validate(
-                createException: () => new InvalidOdsDataException(
+                createException: () => new InvalidOdsDataServiceException(
                     message: "Invalid odsData. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(odsData.Id), Parameter: nameof(OdsData.Id)),
@@ -38,7 +38,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
 
         public static void ValidateOdsDataId(Guid odsDataId) =>
             Validate(
-                createException: () => new InvalidOdsDataException(
+                createException: () => new InvalidOdsDataServiceException(
                     message: "Invalid odsData. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(odsDataId), Parameter: nameof(OdsData.Id)));
@@ -47,7 +47,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
         {
             if (maybeOdsData is null)
             {
-                throw new NotFoundOdsDataException(message: $"OdsData not found with Id: {odsDataId}");
+                throw new NotFoundOdsDataServiceException(message: $"OdsData not found with Id: {odsDataId}");
             }
         }
 
@@ -55,7 +55,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
         {
             if (odsData is null)
             {
-                throw new NullOdsDataException(message: "OdsData is null.");
+                throw new NullOdsDataServiceException(message: "OdsData is null.");
             }
         }
 
