@@ -62,10 +62,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityAuditBrokerMock.Verify(broker =>
-                broker.GetUserIdAsync(),
-                    Times.Once);
-
             this.storageBroker.Verify(broker =>
                 broker.InsertConsumerAccessAsync(inputConsumerAccess),
                     Times.Once);

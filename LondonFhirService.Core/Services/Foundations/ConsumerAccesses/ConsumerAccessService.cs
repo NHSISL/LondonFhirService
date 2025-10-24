@@ -115,20 +115,17 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
                 .Where(consumerAccess => consumerAccess.ConsumerId == consumerId)
                     .Select(consumerAccess => consumerAccess.OrgCode).Distinct().ToList();
 
+            IQueryable<OdsData> odsDataQuery =
+                await this.storageBroker.SelectAllOdsDatasAsync();
+
             foreach (var userOrganisation in userOrganisations)
             {
-                IQueryable<OdsData> odsParentRecord =
-                    await this.storageBroker.SelectAllOdsDatasAsync();
-
-                OdsData parentRecord = odsParentRecord
+                OdsData parentRecord = odsDataQuery
                     .FirstOrDefault(ods => ods.OrganisationCode == userOrganisation);
 
                 if (parentRecord != null)
                 {
                     organisations.Add(parentRecord.OrganisationCode);
-
-                    IQueryable<OdsData> odsDataQuery =
-                        await this.storageBroker.SelectAllOdsDatasAsync();
 
                     odsDataQuery = odsDataQuery
                         .Where(ods => ods.OdsHierarchy.IsDescendantOf(parentRecord.OdsHierarchy)

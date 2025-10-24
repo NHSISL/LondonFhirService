@@ -320,7 +320,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
                 .OnProperty(consumer => consumer.Name).Use(GetRandomStringWithLengthOf(255))
-                .OnProperty(consumer => consumer.Name).Use(GetRandomStringWithLengthOf(36))
                 .OnProperty(consumer => consumer.CreatedBy).Use(userId)
                 .OnProperty(consumer => consumer.UpdatedBy).Use(userId)
                 .OnProperty(consumer => consumer.ConsumerAccesses).IgnoreIt();
