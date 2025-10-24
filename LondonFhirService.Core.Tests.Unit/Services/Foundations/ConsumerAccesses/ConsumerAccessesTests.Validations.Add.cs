@@ -20,7 +20,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ConsumerAccess nullConsumerAccess = null;
             var nullConsumerAccessException = new NullConsumerAccessException(message: "Consumer access is null.");
 
-
             securityAuditBrokerMock.Setup(service =>
                 service.ApplyAddAuditValuesAsync(nullConsumerAccess))
                     .ReturnsAsync(nullConsumerAccess);
@@ -40,6 +39,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // then
             actualConsumerAccessValidationException.Should().BeEquivalentTo(expectedConsumerAccessValidationException);
+
+            securityAuditBrokerMock.Verify(service =>
+                service.ApplyAddAuditValuesAsync(nullConsumerAccess),
+                    Times.Once);
+
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(expectedConsumerAccessValidationException))), Times.Once());
 
