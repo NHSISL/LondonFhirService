@@ -29,6 +29,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ConsumerAccess updatedConsumerAccess = inputConsumerAccess.DeepClone();
             ConsumerAccess expectedConsumerAccess = updatedConsumerAccess.DeepClone();
 
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyModifyAuditValuesAsync(inputConsumerAccess))
+                    .ReturnsAsync(inputConsumerAccess);
+
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateOffset);
@@ -52,13 +56,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             // then
             actualConsumerAccess.Should().BeEquivalentTo(expectedConsumerAccess);
 
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyModifyAuditValuesAsync(inputConsumerAccess),
+                    Times.Once);
+
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Exactly(2));
+                    Times.Once);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.GetUserIdAsync(),
-                    Times.Exactly(2));
+                    Times.Once);
 
             this.storageBroker.Verify(broker =>
                 broker.SelectConsumerAccessByIdAsync(inputConsumerAccess.Id),
