@@ -252,7 +252,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         {
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
-            string randomUserId = Guid.NewGuid().ToString();
+            string randomUserId = GetRandomStringWithLengthOf(256);
 
             ConsumerAccess invalidConsumerAccess = CreateRandomModifyConsumerAccess(
                 dateTimeOffset: randomDateTimeOffset,
@@ -304,6 +304,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // then
             actualConsumerAccessValidationException.Should().BeEquivalentTo(expectedConsumerAccessException);
+
+            securityAuditBrokerMock.Verify(service =>
+                service.ApplyModifyAuditValuesAsync(invalidConsumerAccess),
+                    Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
