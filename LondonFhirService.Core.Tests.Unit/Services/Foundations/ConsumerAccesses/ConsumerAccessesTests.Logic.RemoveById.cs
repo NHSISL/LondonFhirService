@@ -33,13 +33,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateOffset);
 
-            this.securityAuditBrokerMock.Setup(broker =>
-                broker.GetUserIdAsync())
-                    .ReturnsAsync(randomUserId);
-
             this.storageBroker.Setup(broker =>
                 broker.SelectConsumerAccessByIdAsync(inputConsumerAccessId))
                     .ReturnsAsync(storageConsumerAccess);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyRemoveAuditValuesAsync(storageConsumerAccess))
+                    .ReturnsAsync(updatedConsumerAccess);
 
             this.storageBroker.Setup(broker =>
                 broker.UpdateConsumerAccessAsync(It.Is(SameConsumerAccessAs(updatedConsumerAccess))))
@@ -62,11 +62,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Exactly(2));
+                    Times.Once);
 
             this.securityAuditBrokerMock.Verify(broker =>
-                broker.GetUserIdAsync(),
-                    Times.Once());
+                broker.ApplyRemoveAuditValuesAsync(storageConsumerAccess),
+                    Times.Once);
 
             this.storageBroker.Verify(broker =>
                 broker.UpdateConsumerAccessAsync(It.Is(SameConsumerAccessAs(updatedConsumerAccess))),

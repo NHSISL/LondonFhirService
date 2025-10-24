@@ -96,7 +96,9 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             var updatedConsumerAccess = await this.storageBroker
                 .UpdateConsumerAccessAsync(consumerAccessWithModifyAuditApplied);
 
-            await ValidateAgainstStorageConsumerAccessOnDeleteAsync(updatedConsumerAccess, consumerAccessWithModifyAuditApplied);
+            await ValidateAgainstStorageConsumerAccessOnDeleteAsync(
+                updatedConsumerAccess,
+                consumerAccessWithModifyAuditApplied);
 
             return await this.storageBroker.DeleteConsumerAccessAsync(updatedConsumerAccess);
         });
