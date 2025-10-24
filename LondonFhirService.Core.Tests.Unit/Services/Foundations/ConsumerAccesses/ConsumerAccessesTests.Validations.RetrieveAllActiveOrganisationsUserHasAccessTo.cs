@@ -51,7 +51,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

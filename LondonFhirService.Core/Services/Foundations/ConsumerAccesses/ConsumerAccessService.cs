@@ -19,25 +19,27 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
     {
         private readonly IStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;
-        private readonly ISecurityBroker securityBroker;
+        private readonly ISecurityAuditBroker securityAuditBroker;
         private readonly ILoggingBroker loggingBroker;
 
         public ConsumerAccessService(
             IStorageBroker storageBroker,
             IDateTimeBroker dateTimeBroker,
-            ISecurityBroker securityBroker,
+            ISecurityAuditBroker securityAuditBroker,
             ILoggingBroker loggingBroker)
         {
             this.storageBroker = storageBroker;
             this.dateTimeBroker = dateTimeBroker;
-            this.securityBroker = securityBroker;
+            this.securityAuditBroker = securityAuditBroker;
             this.loggingBroker = loggingBroker;
         }
 
         public ValueTask<ConsumerAccess> AddConsumerAccessAsync(ConsumerAccess consumerAccess) =>
         TryCatch(async () =>
         {
-            ConsumerAccess consumerAccessWithAddAuditApplied = await ApplyAddAuditAsync(consumerAccess);
+            ConsumerAccess consumerAccessWithAddAuditApplied =
+                await this.securityAuditBroker.ApplyAddAuditValuesAsync(consumerAccess);
+
             await ValidateConsumerAccessOnAddAsync(consumerAccessWithAddAuditApplied);
 
             return await this.storageBroker.InsertConsumerAccessAsync(consumerAccessWithAddAuditApplied);
@@ -62,14 +64,18 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         public ValueTask<ConsumerAccess> ModifyConsumerAccessAsync(ConsumerAccess consumerAccess) =>
         TryCatch(async () =>
         {
-            ConsumerAccess consumerAccessWithModifyAuditApplied = await ApplyModifyAuditAsync(consumerAccess);
+            ConsumerAccess consumerAccessWithModifyAuditApplied =
+                await this.securityAuditBroker.ApplyModifyAuditValuesAsync(consumerAccess);
+
             await ValidateConsumerAccessOnModifyAsync(consumerAccessWithModifyAuditApplied);
 
             var maybeConsumerAccess = await this.storageBroker
                 .SelectConsumerAccessByIdAsync(consumerAccessWithModifyAuditApplied.Id);
 
             ValidateStorageConsumerAccess(maybeConsumerAccess, consumerAccessWithModifyAuditApplied.Id);
-            await ValidateAgainstStorageConsumerAccessOnModifyAsync(consumerAccessWithModifyAuditApplied, maybeConsumerAccess);
+
+            await ValidateAgainstStorageConsumerAccessOnModifyAsync(
+                consumerAccessWithModifyAuditApplied, maybeConsumerAccess);
 
             return await this.storageBroker.UpdateConsumerAccessAsync(consumerAccessWithModifyAuditApplied);
         });
@@ -83,7 +89,9 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
                 .SelectConsumerAccessByIdAsync(consumerAccessId);
 
             ValidateStorageConsumerAccess(maybeConsumerAccess, consumerAccessId);
-            ConsumerAccess consumerAccessWithModifyAuditApplied = await ApplyModifyAuditAsync(maybeConsumerAccess);
+
+            ConsumerAccess consumerAccessWithModifyAuditApplied =
+                await this.securityAuditBroker.ApplyRemoveAuditValuesAsync(maybeConsumerAccess);
 
             var updatedConsumerAccess = await this.storageBroker
                 .UpdateConsumerAccessAsync(consumerAccessWithModifyAuditApplied);
@@ -136,29 +144,5 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
 
             return organisations.Distinct().ToList();
         });
-
-        virtual internal async ValueTask<ConsumerAccess> ApplyAddAuditAsync(ConsumerAccess consumerAccess)
-        {
-            ValidateConsumerAccessIsNotNull(consumerAccess);
-            var auditDateTimeOffset = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-            var auditUser = await this.securityBroker.GetCurrentUserAsync();
-            consumerAccess.CreatedBy = auditUser?.UserId.ToString() ?? string.Empty;
-            consumerAccess.CreatedDate = auditDateTimeOffset;
-            consumerAccess.UpdatedBy = auditUser?.UserId.ToString() ?? string.Empty;
-            consumerAccess.UpdatedDate = auditDateTimeOffset;
-
-            return consumerAccess;
-        }
-
-        virtual internal async ValueTask<ConsumerAccess> ApplyModifyAuditAsync(ConsumerAccess consumerAccess)
-        {
-            ValidateConsumerAccessIsNotNull(consumerAccess);
-            var auditDateTimeOffset = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-            var auditUser = await this.securityBroker.GetCurrentUserAsync();
-            consumerAccess.UpdatedBy = auditUser?.UserId.ToString() ?? string.Empty;
-            consumerAccess.UpdatedDate = auditDateTimeOffset;
-
-            return consumerAccess;
-        }
     }
 }

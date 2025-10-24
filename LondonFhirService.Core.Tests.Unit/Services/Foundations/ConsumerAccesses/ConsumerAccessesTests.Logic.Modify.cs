@@ -6,7 +6,6 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
-using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using Moq;
 
@@ -19,10 +18,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         {
             // given
             DateTimeOffset randomDateOffset = GetRandomDateTimeOffset();
-            User randomUser = CreateRandomUser();
+            string randomUserId = Guid.NewGuid().ToString();
 
             ConsumerAccess randomModifyConsumerAccess =
-                CreateRandomModifyConsumerAccess(randomDateOffset, userId: randomUser.UserId.ToString());
+                CreateRandomModifyConsumerAccess(randomDateOffset, userId: randomUserId.ToString());
 
             ConsumerAccess inputConsumerAccess = randomModifyConsumerAccess.DeepClone();
             ConsumerAccess storageConsumerAccess = randomModifyConsumerAccess.DeepClone();
@@ -34,9 +33,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
 
             this.storageBroker.Setup(broker =>
                 broker.SelectConsumerAccessByIdAsync(inputConsumerAccess.Id))
@@ -57,8 +56,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Exactly(2));
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Exactly(2));
 
             this.storageBroker.Verify(broker =>
@@ -72,7 +71,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

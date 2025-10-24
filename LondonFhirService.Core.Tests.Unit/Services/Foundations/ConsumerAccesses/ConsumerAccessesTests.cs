@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
     {
         private readonly Mock<IStorageBroker> storageBroker;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
-        private readonly Mock<ISecurityBroker> securityBrokerMock;
+        private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly ConsumerAccessService consumerAccessService;
         private readonly ICompareLogic compareLogic;
@@ -38,14 +38,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         {
             this.storageBroker = new Mock<IStorageBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
-            this.securityBrokerMock = new Mock<ISecurityBroker>();
+            this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.compareLogic = new CompareLogic();
 
             this.consumerAccessService = new ConsumerAccessService(
                 storageBroker: storageBroker.Object,
                 dateTimeBroker: dateTimeBrokerMock.Object,
-                securityBroker: securityBrokerMock.Object,
+                securityAuditBroker: securityAuditBrokerMock.Object,
                 loggingBroker: loggingBrokerMock.Object);
         }
 

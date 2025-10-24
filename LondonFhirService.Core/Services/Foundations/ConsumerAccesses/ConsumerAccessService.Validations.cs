@@ -4,7 +4,6 @@
 
 using System;
 using System.Threading.Tasks;
-using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
 
@@ -15,7 +14,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         private async ValueTask ValidateConsumerAccessOnAddAsync(ConsumerAccess consumerAccess)
         {
             ValidateConsumerAccessIsNotNull(consumerAccess);
-            User currentUser = await this.securityBroker.GetCurrentUserAsync();
+            string userId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
                 (Rule: IsInvalid(consumerAccess.Id), Parameter: nameof(ConsumerAccess.Id)),
@@ -36,7 +35,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
                 Parameter: nameof(ConsumerAccess.UpdatedBy)),
 
                 (Rule: IsNotSame(
-                    first: currentUser.UserId,
+                    first: userId,
                     second: consumerAccess.CreatedBy),
                 Parameter: nameof(ConsumerAccess.CreatedBy)),
 
@@ -59,7 +58,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         private async ValueTask ValidateConsumerAccessOnModifyAsync(ConsumerAccess consumerAccess)
         {
             ValidateConsumerAccessIsNotNull(consumerAccess);
-            User currentUser = await this.securityBroker.GetCurrentUserAsync();
+            string userId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
                 (Rule: IsInvalid(consumerAccess.Id), Parameter: nameof(ConsumerAccess.Id)),
@@ -74,7 +73,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
                 (Rule: IsInvalidLength(consumerAccess.OrgCode, 15), Parameter: nameof(ConsumerAccess.OrgCode)),
 
                 (Rule: IsNotSame(
-                    first: currentUser.UserId,
+                    first: userId,
                     second: consumerAccess.UpdatedBy),
                 Parameter: nameof(ConsumerAccess.UpdatedBy)),
 
@@ -143,7 +142,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         {
             if (consumerAccess is null)
             {
-                throw new NullConsumerAccessException("User access is null.");
+                throw new NullConsumerAccessException("Consumer access is null.");
             }
         }
 

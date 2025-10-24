@@ -6,7 +6,6 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
-using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using Moq;
 
@@ -19,40 +18,53 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         {
             // given
             DateTimeOffset randomDateOffset = GetRandomDateTimeOffset();
-            User randomUser = CreateRandomUser();
+            string randomUserId = Guid.NewGuid().ToString();
 
             ConsumerAccess randomConsumerAccess =
-                CreateRandomConsumerAccess(randomDateOffset, userId: randomUser.UserId.ToString());
+                CreateRandomConsumerAccess(randomDateOffset, userId: randomUserId.ToString());
 
             ConsumerAccess inputConsumerAccess = randomConsumerAccess;
             ConsumerAccess storageConsumerAccess = inputConsumerAccess.DeepClone();
             ConsumerAccess expectedConsumerAccess = inputConsumerAccess.DeepClone();
 
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(inputConsumerAccess))
+                    .ReturnsAsync(inputConsumerAccess);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
+
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateOffset);
-
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
 
             this.storageBroker.Setup(broker =>
                 broker.InsertConsumerAccessAsync(inputConsumerAccess))
                     .ReturnsAsync(storageConsumerAccess);
 
             // when
-            ConsumerAccess actualConsumerAccess = await this.consumerAccessService.AddConsumerAccessAsync(inputConsumerAccess);
+            ConsumerAccess actualConsumerAccess = await this.consumerAccessService
+                .AddConsumerAccessAsync(inputConsumerAccess);
 
             // then
             actualConsumerAccess.Should().BeEquivalentTo(expectedConsumerAccess);
 
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(inputConsumerAccess),
+                    Times.Once);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
+
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Exactly(2));
+                    Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
-                    Times.Exactly(2));
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
 
             this.storageBroker.Verify(broker =>
                 broker.InsertConsumerAccessAsync(inputConsumerAccess),
@@ -61,7 +73,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

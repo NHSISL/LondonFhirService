@@ -5,10 +5,8 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
-using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesses
@@ -20,19 +18,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         {
             // given
             ConsumerAccess nullConsumerAccess = null;
-            var nullConsumerAccessException = new NullConsumerAccessException(message: "User access is null.");
+            var nullConsumerAccessException = new NullConsumerAccessException(message: "Consumer access is null.");
 
-            var consumerAccessServiceMock = new Mock<ConsumerAccessService>(
-                storageBroker.Object,
-                dateTimeBrokerMock.Object,
-                securityBrokerMock.Object,
-                loggingBrokerMock.Object)
-            {
-                CallBase = true
-            };
 
-            consumerAccessServiceMock.Setup(service =>
-                service.ApplyAddAuditAsync(nullConsumerAccess))
+            securityAuditBrokerMock.Setup(service =>
+                service.ApplyAddAuditValuesAsync(nullConsumerAccess))
                     .ReturnsAsync(nullConsumerAccess);
 
             var expectedConsumerAccessValidationException =
@@ -41,7 +31,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     innerException: nullConsumerAccessException);
 
             // when
-            ValueTask<ConsumerAccess> addConsumerAccessTask = consumerAccessServiceMock.Object.AddConsumerAccessAsync(nullConsumerAccess);
+            ValueTask<ConsumerAccess> addConsumerAccessTask = consumerAccessService.
+                AddConsumerAccessAsync(nullConsumerAccess);
 
             ConsumerAccessValidationException actualConsumerAccessValidationException =
                 await Assert.ThrowsAsync<ConsumerAccessValidationException>(
@@ -59,7 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -69,7 +60,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         public async Task ShouldThrowValidationExceptionOnAddIfConsumerAccessIsInvalidAndLogItAsync(string invalidText)
         {
             // given
-            User randomUser = CreateRandomUser();
+            string randomUserId = Guid.NewGuid().ToString();
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             DateTimeOffset startDate = randomDateTimeOffset.AddSeconds(-90);
             DateTimeOffset endDate = randomDateTimeOffset.AddSeconds(0);
@@ -82,26 +73,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 UpdatedBy = invalidText,
             };
 
-            var consumerAccessServiceMock = new Mock<ConsumerAccessService>(
-                storageBroker.Object,
-                dateTimeBrokerMock.Object,
-                securityBrokerMock.Object,
-                loggingBrokerMock.Object)
-            {
-                CallBase = true
-            };
-
-            consumerAccessServiceMock.Setup(service =>
-                service.ApplyAddAuditAsync(invalidConsumerAccess))
+            securityAuditBrokerMock.Setup(service =>
+                service.ApplyAddAuditValuesAsync(invalidConsumerAccess))
                     .ReturnsAsync(invalidConsumerAccess);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
 
             var invalidConsumerAccessException =
                 new InvalidConsumerAccessException(
@@ -123,7 +105,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 key: nameof(ConsumerAccess.CreatedBy),
                 values: [
                     "Text is invalid",
-                    $"Expected value to be '{randomUser.UserId}' but found '{invalidConsumerAccess.CreatedBy}'."
+                    $"Expected value to be '{randomUserId}' but found '{invalidConsumerAccess.CreatedBy}'."
                 ]);
 
             invalidConsumerAccessException.AddData(
@@ -149,7 +131,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // when
             ValueTask<ConsumerAccess> addConsumerAccessTask =
-                consumerAccessServiceMock.Object.AddConsumerAccessAsync(invalidConsumerAccess);
+                consumerAccessService.AddConsumerAccessAsync(invalidConsumerAccess);
 
             ConsumerAccessValidationException actualConsumerAccessValidationException =
                 await Assert.ThrowsAsync<ConsumerAccessValidationException>(
@@ -163,8 +145,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -179,7 +161,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -188,25 +170,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             var inputCreatedByUpdatedByString = GetRandomStringWithLength(256);
-            User randomUser = CreateRandomUser();
+            string randomUserId = Guid.NewGuid().ToString();
 
             ConsumerAccess invalidConsumerAccess = CreateRandomConsumerAccess(
                 dateTimeOffset: randomDateTimeOffset,
-                userId: randomUser.UserId);
+                userId: randomUserId);
 
             invalidConsumerAccess.OrgCode = GetRandomStringWithLength(16);
 
-            var consumerAccessServiceMock = new Mock<ConsumerAccessService>(
-                storageBroker.Object,
-                dateTimeBrokerMock.Object,
-                securityBrokerMock.Object,
-                loggingBrokerMock.Object)
-            {
-                CallBase = true
-            };
-
-            consumerAccessServiceMock.Setup(service =>
-                service.ApplyAddAuditAsync(invalidConsumerAccess))
+            securityAuditBrokerMock.Setup(service =>
+                service.ApplyAddAuditValuesAsync(invalidConsumerAccess))
                     .ReturnsAsync(invalidConsumerAccess);
 
             var invalidConsumerAccessException = new InvalidConsumerAccessException(
@@ -225,13 +198,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
 
             // when
             ValueTask<ConsumerAccess> addConsumerAccessTask =
-                consumerAccessServiceMock.Object.AddConsumerAccessAsync(invalidConsumerAccess);
+                consumerAccessService.AddConsumerAccessAsync(invalidConsumerAccess);
 
             ConsumerAccessValidationException actualConsumerAccessValidationException =
                 await Assert.ThrowsAsync<ConsumerAccessValidationException>(
@@ -245,8 +218,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -261,7 +234,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -271,11 +244,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             DateTimeOffset startDate = randomDateTimeOffset.AddSeconds(-90);
             DateTimeOffset endDate = randomDateTimeOffset.AddSeconds(0);
-            User randomUser = CreateRandomUser();
+            string randomUserId = Guid.NewGuid().ToString();
 
             ConsumerAccess randomConsumerAccess = CreateRandomModifyConsumerAccess(
                 dateTimeOffset: randomDateTimeOffset,
-                userId: randomUser.UserId);
+                userId: randomUserId);
 
             randomConsumerAccess.CreatedBy = GetRandomString();
             randomConsumerAccess.UpdatedBy = GetRandomString();
@@ -284,17 +257,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             ConsumerAccess invalidConsumerAccess = randomConsumerAccess;
 
-            var consumerAccessServiceMock = new Mock<ConsumerAccessService>(
-                storageBroker.Object,
-                dateTimeBrokerMock.Object,
-                securityBrokerMock.Object,
-                loggingBrokerMock.Object)
-            {
-                CallBase = true
-            };
-
-            consumerAccessServiceMock.Setup(service =>
-                service.ApplyAddAuditAsync(invalidConsumerAccess))
+            securityAuditBrokerMock.Setup(service =>
+                service.ApplyAddAuditValuesAsync(invalidConsumerAccess))
                     .ReturnsAsync(invalidConsumerAccess);
 
             var invalidConsumerAccessException = new InvalidConsumerAccessException(
@@ -303,7 +267,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             invalidConsumerAccessException.AddData(
                 key: nameof(ConsumerAccess.CreatedBy),
                 values:
-                    $"Expected value to be '{randomUser.UserId}' " +
+                    $"Expected value to be '{randomUserId}' " +
                     $"but found '{randomConsumerAccess.CreatedBy}'.");
 
             invalidConsumerAccessException.AddData(
@@ -329,13 +293,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
 
             // when
             ValueTask<ConsumerAccess> addConsumerAccessTask =
-                consumerAccessServiceMock.Object.AddConsumerAccessAsync(invalidConsumerAccess);
+                consumerAccessService.AddConsumerAccessAsync(invalidConsumerAccess);
 
             ConsumerAccessValidationException actualConsumerAccessValidationException =
                 await Assert.ThrowsAsync<ConsumerAccessValidationException>(
@@ -349,8 +313,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -365,7 +329,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBroker.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -376,13 +340,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         {
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
-            User randomUser = CreateRandomUser();
+            string randomUserId = Guid.NewGuid().ToString();
             DateTimeOffset startDate = randomDateTimeOffset.AddSeconds(-90);
             DateTimeOffset endDate = randomDateTimeOffset.AddSeconds(0);
 
             ConsumerAccess randomConsumerAccess = CreateRandomConsumerAccess(
                 dateTimeOffset: randomDateTimeOffset,
-                userId: randomUser.UserId);
+                userId: randomUserId);
 
             ConsumerAccess invalidConsumerAccess = randomConsumerAccess;
 
@@ -406,30 +370,21 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     message: "ConsumerAccess validation error occurred, please fix errors and try again.",
                     innerException: invalidConsumerAccessException);
 
-            var consumerAccessServiceMock = new Mock<ConsumerAccessService>(
-                storageBroker.Object,
-                dateTimeBrokerMock.Object,
-                securityBrokerMock.Object,
-                loggingBrokerMock.Object)
-            {
-                CallBase = true
-            };
-
-            consumerAccessServiceMock.Setup(service =>
-                service.ApplyAddAuditAsync(invalidConsumerAccess))
+            securityAuditBrokerMock.Setup(service =>
+                service.ApplyAddAuditValuesAsync(invalidConsumerAccess))
                     .ReturnsAsync(invalidConsumerAccess);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
 
             // when
             ValueTask<ConsumerAccess> addConsumerAccessTask =
-                consumerAccessServiceMock.Object.AddConsumerAccessAsync(invalidConsumerAccess);
+                consumerAccessService.AddConsumerAccessAsync(invalidConsumerAccess);
 
             ConsumerAccessValidationException actualConsumerAccessValidationException =
                 await Assert.ThrowsAsync<ConsumerAccessValidationException>(
@@ -443,8 +398,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -456,7 +411,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.InsertConsumerAccessAsync(It.IsAny<ConsumerAccess>()),
                     Times.Never);
 
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBroker.VerifyNoOtherCalls();
