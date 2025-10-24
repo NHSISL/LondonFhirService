@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
+using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.PdsDatas
 {
@@ -16,6 +17,9 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             ValidatePdsDataIsNotNull(pdsData);
 
             Validate(
+                createException: () => new InvalidPdsDataException(
+                    message: "Invalid pdsData. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(pdsData.Id), Parameter: nameof(PdsData.Id)),
                 (Rule: IsInvalid(pdsData.NhsNumber), Parameter: nameof(PdsData.NhsNumber)));
         }
@@ -25,6 +29,9 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             ValidatePdsDataIsNotNull(pdsData);
 
             Validate(
+                createException: () => new InvalidPdsDataException(
+                    message: "Invalid pdsData. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(pdsData.Id), Parameter: nameof(PdsData.Id)),
                 (Rule: IsInvalid(pdsData.NhsNumber), Parameter: nameof(PdsData.NhsNumber)));
         }
@@ -34,12 +41,19 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             List<string> organisationCodes)
         {
             Validate(
+                createException: () => new InvalidPdsDataException(
+                    message: "Invalid pdsData. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
                 (Rule: IsInvalid(organisationCodes), Parameter: nameof(organisationCodes)));
         }
 
         public static void ValidatePdsDataId(Guid pdsDataId) =>
-            Validate((Rule: IsInvalid(pdsDataId), Parameter: nameof(PdsData.Id)));
+            Validate(
+                createException: () => new InvalidPdsDataException(
+                    message: "Invalid pdsData. Please correct the errors and try again."),
+
+                (Rule: IsInvalid(pdsDataId), Parameter: nameof(PdsData.Id)));
 
         private static void ValidateStoragePdsData(PdsData maybePdsData, Guid pdsDataId)
         {
@@ -126,23 +140,24 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                 Message = $"Date is not the same as {secondName}"
             };
 
-        private static void Validate(params (dynamic Rule, string Parameter)[] validations)
+        private static void Validate<T>(
+            Func<T> createException,
+            params (dynamic Rule, string Parameter)[] validations)
+            where T : Xeption
         {
-            var invalidPdsDataException =
-                new InvalidPdsDataException(
-                    message: "Invalid pdsData. Please correct the errors and try again.");
+            T invalidDataException = createException();
 
             foreach ((dynamic rule, string parameter) in validations)
             {
                 if (rule.Condition)
                 {
-                    invalidPdsDataException.UpsertDataList(
+                    invalidDataException.UpsertDataList(
                         key: parameter,
                         value: rule.Message);
                 }
             }
 
-            invalidPdsDataException.ThrowIfContainsErrors();
+            invalidDataException.ThrowIfContainsErrors();
         }
     }
 }

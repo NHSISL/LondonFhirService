@@ -19,30 +19,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             // given
             Guid invalidConsumerAccessId = Guid.Empty;
 
-            var invalidConsumerAccessException = new InvalidConsumerAccessException(
+            var invalidConsumerAccessServiceException = new InvalidConsumerAccessServiceException(
                 message: "Invalid consumer access. Please correct the errors and try again.");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.Id),
                 values: "Id is invalid");
 
-            var expectedConsumerAccessValidationException =
-                new ConsumerAccessValidationException(
+            var expectedConsumerAccessServiceValidationException =
+                new ConsumerAccessServiceValidationException(
                     message: "ConsumerAccess validation error occurred, please fix errors and try again.",
-                    innerException: invalidConsumerAccessException);
+                    innerException: invalidConsumerAccessServiceException);
 
             // when
             ValueTask<ConsumerAccess> removeByIdConsumerAccessTask = this.consumerAccessService
                 .RemoveConsumerAccessByIdAsync(invalidConsumerAccessId);
 
-            ConsumerAccessValidationException actualConsumerAccessValidationException =
-                await Assert.ThrowsAsync<ConsumerAccessValidationException>(
+            ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
                     testCode: removeByIdConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessValidationException.Should().BeEquivalentTo(expectedConsumerAccessValidationException);
+            actualConsumerAccessServiceValidationException.Should().BeEquivalentTo(expectedConsumerAccessServiceValidationException);
             this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedConsumerAccessValidationException))),
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedConsumerAccessServiceValidationException))),
                     Times.Once());
 
             this.storageBroker.Verify(broker =>
@@ -63,10 +63,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ConsumerAccess nonExistingConsumerAccess = randomConsumerAccess;
             ConsumerAccess nullConsumerAccess = null;
 
-            var notFoundConsumerAccessException = new NotFoundConsumerAccessException(
+            var notFoundConsumerAccessException = new NotFoundConsumerAccessServiceException(
                 message: $"Consumer access not found with Id: {nonExistingConsumerAccess.Id}");
 
-            var expectedConsumerAccessValidationException = new ConsumerAccessValidationException(
+            var expectedConsumerAccessServiceValidationException = new ConsumerAccessServiceValidationException(
                 message: "ConsumerAccess validation error occurred, please fix errors and try again.",
                 innerException: notFoundConsumerAccessException);
 
@@ -78,12 +78,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ValueTask<ConsumerAccess> removeByIdConsumerAccessTask =
                 this.consumerAccessService.RemoveConsumerAccessByIdAsync(nonExistingConsumerAccess.Id);
 
-            ConsumerAccessValidationException actualConsumerAccessVaildationException =
-                await Assert.ThrowsAsync<ConsumerAccessValidationException>(
+            ConsumerAccessServiceValidationException actualConsumerAccessVaildationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
                     testCode: removeByIdConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessVaildationException.Should().BeEquivalentTo(expectedConsumerAccessValidationException);
+            actualConsumerAccessVaildationException.Should().BeEquivalentTo(expectedConsumerAccessServiceValidationException);
 
             this.storageBroker.Verify(broker =>
                 broker.SelectConsumerAccessByIdAsync(nonExistingConsumerAccess.Id),
@@ -91,7 +91,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                broker.LogErrorAsync(It.Is(
-                   SameExceptionAs(expectedConsumerAccessValidationException))),
+                   SameExceptionAs(expectedConsumerAccessServiceValidationException))),
                        Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();

@@ -3,14 +3,15 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections;
 using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class LockedConsumerAccessException : Xeption
+    public class AlreadyExistsConsumerAccessServiceException : Xeption
     {
-        public LockedConsumerAccessException(string message, Exception innerException)
-            : base(message, innerException)
+        public AlreadyExistsConsumerAccessServiceException(string message, Exception innerException, IDictionary data)
+            : base(message, innerException, data)
         { }
     }
 }

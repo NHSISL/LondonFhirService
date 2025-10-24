@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
+using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Audits
 {
@@ -18,6 +19,9 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
+                createException: () => new InvalidAuditException(
+                    message: "Invalid audit. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(audit.Id), Parameter: nameof(Audit.Id)),
                 (Rule: IsInvalid(audit.AuditType), Parameter: nameof(Audit.AuditType)),
                 (Rule: IsInvalid(audit.Title), Parameter: nameof(Audit.Title)),
@@ -60,6 +64,9 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
+                createException: () => new InvalidAuditException(
+                    message: "Invalid audit. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(audit.Id), Parameter: nameof(Audit.Id)),
                 (Rule: IsInvalid(audit.AuditType), Parameter: nameof(Audit.AuditType)),
                 (Rule: IsInvalid(audit.Title), Parameter: nameof(Audit.Title)),
@@ -242,23 +249,24 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             return timeDifference.Duration() > oneMinute;
         }
 
-        private static void Validate(params (dynamic Rule, string Parameter)[] validations)
+        private static void Validate<T>(
+            Func<T> createException,
+            params (dynamic Rule, string Parameter)[] validations)
+            where T : Xeption
         {
-            var invalidAuditException =
-                new InvalidAuditException(
-                    message: "Invalid audit. Please correct the errors and try again.");
+            T invalidDataException = createException();
 
             foreach ((dynamic rule, string parameter) in validations)
             {
                 if (rule.Condition)
                 {
-                    invalidAuditException.UpsertDataList(
+                    invalidDataException.UpsertDataList(
                         key: parameter,
                         value: rule.Message);
                 }
             }
 
-            invalidAuditException.ThrowIfContainsErrors();
+            invalidDataException.ThrowIfContainsErrors();
         }
     }
 }

@@ -2,13 +2,14 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class ConsumerAccessDependencyValidationException : Xeption
+    public class FailedOperationConsumerAccessServiceException : Xeption
     {
-        public ConsumerAccessDependencyValidationException(string message, Xeption innerException)
+        public FailedOperationConsumerAccessServiceException(string message, Exception innerException)
             : base(message, innerException)
         { }
     }

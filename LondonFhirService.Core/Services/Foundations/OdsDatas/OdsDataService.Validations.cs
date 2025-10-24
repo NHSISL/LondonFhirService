@@ -6,6 +6,7 @@ using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.OdsDatas.Exceptions;
+using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.OdsDatas
 {
@@ -16,6 +17,9 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             ValidateOdsDataIsNotNull(odsData);
 
             Validate(
+                createException: () => new InvalidOdsDataException(
+                    message: "Invalid odsData. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(odsData.Id), Parameter: nameof(OdsData.Id)),
                 (Rule: IsInvalid(odsData.OrganisationCode), Parameter: nameof(OdsData.OrganisationCode)));
         }
@@ -25,12 +29,19 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             ValidateOdsDataIsNotNull(odsData);
 
             Validate(
+                createException: () => new InvalidOdsDataException(
+                    message: "Invalid odsData. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(odsData.Id), Parameter: nameof(OdsData.Id)),
                 (Rule: IsInvalid(odsData.OrganisationCode), Parameter: nameof(OdsData.OrganisationCode)));
         }
 
         public static void ValidateOdsDataId(Guid odsDataId) =>
-            Validate((Rule: IsInvalid(odsDataId), Parameter: nameof(OdsData.Id)));
+            Validate(
+                createException: () => new InvalidOdsDataException(
+                    message: "Invalid odsData. Please correct the errors and try again."),
+
+                (Rule: IsInvalid(odsDataId), Parameter: nameof(OdsData.Id)));
 
         private static void ValidateStorageOdsData(OdsData maybeOdsData, Guid odsDataId)
         {
@@ -105,23 +116,24 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
                 Message = $"Date is not the same as {secondName}"
             };
 
-        private static void Validate(params (dynamic Rule, string Parameter)[] validations)
+        private static void Validate<T>(
+            Func<T> createException,
+            params (dynamic Rule, string Parameter)[] validations)
+            where T : Xeption
         {
-            var invalidOdsDataException =
-                new InvalidOdsDataException(
-                    message: "Invalid odsData. Please correct the errors and try again.");
+            T invalidDataException = createException();
 
             foreach ((dynamic rule, string parameter) in validations)
             {
                 if (rule.Condition)
                 {
-                    invalidOdsDataException.UpsertDataList(
+                    invalidDataException.UpsertDataList(
                         key: parameter,
                         value: rule.Message);
                 }
             }
 
-            invalidOdsDataException.ThrowIfContainsErrors();
+            invalidDataException.ThrowIfContainsErrors();
         }
     }
 }

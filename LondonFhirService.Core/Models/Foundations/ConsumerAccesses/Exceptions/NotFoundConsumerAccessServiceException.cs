@@ -6,10 +6,10 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class ConsumerAccessDependencyException : Xeption
+    public class NotFoundConsumerAccessServiceException : Xeption
     {
-        public ConsumerAccessDependencyException(string message, Xeption innerException)
-            : base(message, innerException)
+        public NotFoundConsumerAccessServiceException(string message)
+            : base(message)
         { }
     }
 }

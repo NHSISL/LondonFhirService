@@ -18,34 +18,34 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         {
             // given
             ConsumerAccess nullConsumerAccess = null;
-            var nullConsumerAccessException = new NullConsumerAccessException(message: "Consumer access is null.");
+            var nullConsumerAccessServiceException = new NullConsumerAccessServiceException(message: "Consumer access is null.");
 
             securityAuditBrokerMock.Setup(service =>
                 service.ApplyAddAuditValuesAsync(nullConsumerAccess))
                     .ReturnsAsync(nullConsumerAccess);
 
-            var expectedConsumerAccessValidationException =
-                new ConsumerAccessValidationException(
+            var expectedConsumerAccessServiceValidationException =
+                new ConsumerAccessServiceValidationException(
                     message: "ConsumerAccess validation error occurred, please fix errors and try again.",
-                    innerException: nullConsumerAccessException);
+                    innerException: nullConsumerAccessServiceException);
 
             // when
             ValueTask<ConsumerAccess> addConsumerAccessTask = consumerAccessService.
                 AddConsumerAccessAsync(nullConsumerAccess);
 
-            ConsumerAccessValidationException actualConsumerAccessValidationException =
-                await Assert.ThrowsAsync<ConsumerAccessValidationException>(
+            ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
                     testCode: addConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessValidationException.Should().BeEquivalentTo(expectedConsumerAccessValidationException);
+            actualConsumerAccessServiceValidationException.Should().BeEquivalentTo(expectedConsumerAccessServiceValidationException);
 
             securityAuditBrokerMock.Verify(service =>
                 service.ApplyAddAuditValuesAsync(nullConsumerAccess),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedConsumerAccessValidationException))), Times.Once());
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedConsumerAccessServiceValidationException))), Times.Once());
 
             this.storageBroker.Verify(broker =>
                 broker.InsertConsumerAccessAsync(It.IsAny<ConsumerAccess>()),
@@ -89,30 +89,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.GetUserIdAsync())
                     .ReturnsAsync(randomUserId);
 
-            var invalidConsumerAccessException =
-                new InvalidConsumerAccessException(
+            var invalidConsumerAccessServiceException =
+                new InvalidConsumerAccessServiceException(
                     message: "Invalid consumer access. Please correct the errors and try again.");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.Id),
                 values: "Id is invalid");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.ConsumerId),
                 values: "Id is invalid");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.OrgCode),
                 values: "Text is invalid");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.CreatedBy),
                 values: [
                     "Text is invalid",
                     $"Expected value to be '{randomUserId}' but found '{invalidConsumerAccess.CreatedBy}'."
                 ]);
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.CreatedDate),
                 values: [
                     "Date is invalid",
@@ -120,30 +120,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     $"{startDate} and {endDate} but found {invalidConsumerAccess.CreatedDate}"
                 ]);
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.UpdatedBy),
                 values: "Text is invalid");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.UpdatedDate),
                 values: "Date is invalid");
 
-            var expectedConsumerAccessValidationException =
-                new ConsumerAccessValidationException(
+            var expectedConsumerAccessServiceValidationException =
+                new ConsumerAccessServiceValidationException(
                     message: "ConsumerAccess validation error occurred, please fix errors and try again.",
-                    innerException: invalidConsumerAccessException);
+                    innerException: invalidConsumerAccessServiceException);
 
             // when
             ValueTask<ConsumerAccess> addConsumerAccessTask =
                 consumerAccessService.AddConsumerAccessAsync(invalidConsumerAccess);
 
-            ConsumerAccessValidationException actualConsumerAccessValidationException =
-                await Assert.ThrowsAsync<ConsumerAccessValidationException>(
+            ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
                     testCode: addConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessValidationException.Should()
-                .BeEquivalentTo(expectedConsumerAccessValidationException);
+            actualConsumerAccessServiceValidationException.Should()
+                .BeEquivalentTo(expectedConsumerAccessServiceValidationException);
 
             securityAuditBrokerMock.Verify(service =>
                 service.ApplyAddAuditValuesAsync(invalidConsumerAccess),
@@ -159,7 +159,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessValidationException))),
+                    expectedConsumerAccessServiceValidationException))),
                         Times.Once);
 
             this.storageBroker.Verify(broker =>
@@ -190,17 +190,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 service.ApplyAddAuditValuesAsync(invalidConsumerAccess))
                     .ReturnsAsync(invalidConsumerAccess);
 
-            var invalidConsumerAccessException = new InvalidConsumerAccessException(
+            var invalidConsumerAccessServiceException = new InvalidConsumerAccessServiceException(
                 message: "Invalid consumer access. Please correct the errors and try again.");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.OrgCode),
                 values: $"Text exceed max length of {invalidConsumerAccess.OrgCode.Length - 1} characters");
 
-            var expectedConsumerAccessValidationException =
-                new ConsumerAccessValidationException(
+            var expectedConsumerAccessServiceValidationException =
+                new ConsumerAccessServiceValidationException(
                     message: "ConsumerAccess validation error occurred, please fix errors and try again.",
-                    innerException: invalidConsumerAccessException);
+                    innerException: invalidConsumerAccessServiceException);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
@@ -214,13 +214,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ValueTask<ConsumerAccess> addConsumerAccessTask =
                 consumerAccessService.AddConsumerAccessAsync(invalidConsumerAccess);
 
-            ConsumerAccessValidationException actualConsumerAccessValidationException =
-                await Assert.ThrowsAsync<ConsumerAccessValidationException>(
+            ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
                     testCode: addConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessValidationException.Should()
-                .BeEquivalentTo(expectedConsumerAccessValidationException);
+            actualConsumerAccessServiceValidationException.Should()
+                .BeEquivalentTo(expectedConsumerAccessServiceValidationException);
 
             securityAuditBrokerMock.Verify(service =>
                 service.ApplyAddAuditValuesAsync(invalidConsumerAccess),
@@ -236,7 +236,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessValidationException))),
+                    expectedConsumerAccessServiceValidationException))),
                         Times.Once);
 
             this.storageBroker.Verify(broker =>
@@ -273,33 +273,33 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 service.ApplyAddAuditValuesAsync(invalidConsumerAccess))
                     .ReturnsAsync(invalidConsumerAccess);
 
-            var invalidConsumerAccessException = new InvalidConsumerAccessException(
+            var invalidConsumerAccessServiceException = new InvalidConsumerAccessServiceException(
                 message: "Invalid consumer access. Please correct the errors and try again.");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.CreatedBy),
                 values:
                     $"Expected value to be '{randomUserId}' " +
                     $"but found '{randomConsumerAccess.CreatedBy}'.");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.UpdatedBy),
                 values: $"Text is not the same as {nameof(ConsumerAccess.CreatedBy)}");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.UpdatedDate),
                 values: $"Date is not the same as {nameof(ConsumerAccess.CreatedDate)}");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
                 key: nameof(ConsumerAccess.CreatedDate),
                 values:
                     $"Date is not recent." +
                     $" Expected a value between {startDate} and {endDate} but found {invalidConsumerAccess.CreatedDate}");
 
-            var expectedConsumerAccessValidationException =
-                new ConsumerAccessValidationException(
+            var expectedConsumerAccessServiceValidationException =
+                new ConsumerAccessServiceValidationException(
                     message: "ConsumerAccess validation error occurred, please fix errors and try again.",
-                    innerException: invalidConsumerAccessException);
+                    innerException: invalidConsumerAccessServiceException);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
@@ -313,13 +313,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ValueTask<ConsumerAccess> addConsumerAccessTask =
                 consumerAccessService.AddConsumerAccessAsync(invalidConsumerAccess);
 
-            ConsumerAccessValidationException actualConsumerAccessValidationException =
-                await Assert.ThrowsAsync<ConsumerAccessValidationException>(
+            ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
                     testCode: addConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessValidationException.Should().BeEquivalentTo(
-                expectedConsumerAccessValidationException);
+            actualConsumerAccessServiceValidationException.Should().BeEquivalentTo(
+                expectedConsumerAccessServiceValidationException);
 
             securityAuditBrokerMock.Verify(service =>
                 service.ApplyAddAuditValuesAsync(invalidConsumerAccess),
@@ -335,7 +335,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(
-                    SameExceptionAs(expectedConsumerAccessValidationException))),
+                    SameExceptionAs(expectedConsumerAccessServiceValidationException))),
                         Times.Once);
 
             this.storageBroker.Verify(broker =>
@@ -372,19 +372,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             invalidConsumerAccess.CreatedDate = invalidDate;
             invalidConsumerAccess.UpdatedDate = invalidDate;
 
-            var invalidConsumerAccessException = new InvalidConsumerAccessException(
+            var invalidConsumerAccessServiceException = new InvalidConsumerAccessServiceException(
                 message: "Invalid consumer access. Please correct the errors and try again.");
 
-            invalidConsumerAccessException.AddData(
+            invalidConsumerAccessServiceException.AddData(
             key: nameof(ConsumerAccess.CreatedDate),
                 values:
                     $"Date is not recent. Expected a value between " +
                     $"{startDate} and {endDate} but found {invalidDate}");
 
-            var expectedConsumerAccessValidationException =
-                new ConsumerAccessValidationException(
+            var expectedConsumerAccessServiceValidationException =
+                new ConsumerAccessServiceValidationException(
                     message: "ConsumerAccess validation error occurred, please fix errors and try again.",
-                    innerException: invalidConsumerAccessException);
+                    innerException: invalidConsumerAccessServiceException);
 
             securityAuditBrokerMock.Setup(service =>
                 service.ApplyAddAuditValuesAsync(invalidConsumerAccess))
@@ -402,13 +402,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ValueTask<ConsumerAccess> addConsumerAccessTask =
                 consumerAccessService.AddConsumerAccessAsync(invalidConsumerAccess);
 
-            ConsumerAccessValidationException actualConsumerAccessValidationException =
-                await Assert.ThrowsAsync<ConsumerAccessValidationException>(
+            ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
                     testCode: addConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessValidationException.Should().BeEquivalentTo(
-                expectedConsumerAccessValidationException);
+            actualConsumerAccessServiceValidationException.Should().BeEquivalentTo(
+                expectedConsumerAccessServiceValidationException);
 
             securityAuditBrokerMock.Verify(service =>
                 service.ApplyAddAuditValuesAsync(invalidConsumerAccess),
@@ -424,7 +424,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(
-                    SameExceptionAs(expectedConsumerAccessValidationException))),
+                    SameExceptionAs(expectedConsumerAccessServiceValidationException))),
                         Times.Once);
 
             this.storageBroker.Verify(broker =>

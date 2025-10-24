@@ -27,62 +27,62 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 return await returningConsumerAccessFunction();
             }
-            catch (NullConsumerAccessException nullConsumerAccessException)
+            catch (NullConsumerAccessServiceException nullConsumerAccessServiceException)
             {
-                throw await CreateAndLogValidationExceptionAsync(nullConsumerAccessException);
+                throw await CreateAndLogValidationExceptionAsync(nullConsumerAccessServiceException);
             }
-            catch (InvalidConsumerAccessException invalidConsumerAccessException)
+            catch (InvalidConsumerAccessServiceException invalidConsumerAccessServiceException)
             {
-                throw await CreateAndLogValidationExceptionAsync(invalidConsumerAccessException);
+                throw await CreateAndLogValidationExceptionAsync(invalidConsumerAccessServiceException);
             }
-            catch (NotFoundConsumerAccessException notFoundConsumerAccessException)
+            catch (NotFoundConsumerAccessServiceException notFoundConsumerAccessServiceException)
             {
-                throw await CreateAndLogValidationExceptionAsync(notFoundConsumerAccessException);
+                throw await CreateAndLogValidationExceptionAsync(notFoundConsumerAccessServiceException);
             }
             catch (SqlException sqlException)
             {
-                var failedStorageConsumerAccessException = new FailedStorageConsumerAccessException(
+                var failedStorageConsumerAccessServiceException = new FailedStorageConsumerAccessServiceException(
                     message: "Failed consumer access storage error occurred, contact support.",
                     innerException: sqlException);
 
-                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessException);
+                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessServiceException);
             }
             catch (DuplicateKeyException duplicateKeyException)
             {
-                var alreadyExistsConsumerAccessException =
-                    new AlreadyExistsConsumerAccessException(
+                var alreadyExistsConsumerAccessServiceException =
+                    new AlreadyExistsConsumerAccessServiceException(
                         message: "ConsumerAccess already exists error occurred.",
                         innerException: duplicateKeyException,
                         data: duplicateKeyException.Data);
 
-                throw await CreateAndLogDependencyValidationExceptionAsync(alreadyExistsConsumerAccessException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(alreadyExistsConsumerAccessServiceException);
             }
             catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
             {
-                var lockedConsumerAccessException =
-                    new LockedConsumerAccessException(
+                var lockedConsumerAccessServiceException =
+                    new LockedConsumerAccessServiceException(
                         message: "Locked consumer access record error occurred, please try again.",
                         innerException: dbUpdateConcurrencyException);
 
-                throw await CreateAndLogDependencyValidationExceptionAsync(lockedConsumerAccessException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(lockedConsumerAccessServiceException);
             }
             catch (DbUpdateException dbUpdateException)
             {
-                var failedOperationConsumerAccessException =
-                    new FailedOperationConsumerAccessException(
+                var failedOperationConsumerAccessServiceException =
+                    new FailedOperationConsumerAccessServiceException(
                         message: "Failed operation consumer access error occurred, contact support.",
                         innerException: dbUpdateException);
 
-                throw await CreateAndLogDependencyExceptionAsync(failedOperationConsumerAccessException);
+                throw await CreateAndLogDependencyExceptionAsync(failedOperationConsumerAccessServiceException);
             }
             catch (Exception exception)
             {
-                var failedServiceConsumerAccessException =
-                    new FailedServiceConsumerAccessException(
+                var failedConsumerAccessServiceException =
+                    new FailedConsumerAccessServiceException(
                         message: "Failed service consumer access error occurred, contact support.",
                         innerException: exception);
 
-                throw await CreateAndLogServiceExceptionAsync(failedServiceConsumerAccessException);
+                throw await CreateAndLogServiceExceptionAsync(failedConsumerAccessServiceException);
             }
         }
 
@@ -95,20 +95,20 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             }
             catch (SqlException sqlException)
             {
-                var failedStorageConsumerAccessException = new FailedStorageConsumerAccessException(
+                var failedStorageConsumerAccessServiceException = new FailedStorageConsumerAccessServiceException(
                     message: "Failed consumer access storage error occurred, contact support.",
                     innerException: sqlException);
 
-                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessException);
+                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessServiceException);
             }
             catch (Exception exception)
             {
-                var failedServiceConsumerAccessException =
-                    new FailedServiceConsumerAccessException(
+                var failedConsumerAccessServiceException =
+                    new FailedConsumerAccessServiceException(
                         message: "Failed service consumer access error occurred, contact support.",
                         innerException: exception);
 
-                throw await CreateAndLogServiceExceptionAsync(failedServiceConsumerAccessException);
+                throw await CreateAndLogServiceExceptionAsync(failedConsumerAccessServiceException);
             }
         }
 
@@ -118,57 +118,57 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 return await returningStringListFunction();
             }
-            catch (InvalidConsumerAccessException invalidConsumerAccessException)
+            catch (InvalidConsumerAccessServiceException invalidConsumerAccessServiceException)
             {
-                throw await CreateAndLogValidationExceptionAsync(invalidConsumerAccessException);
+                throw await CreateAndLogValidationExceptionAsync(invalidConsumerAccessServiceException);
             }
             catch (SqlException sqlException)
             {
-                var failedStorageConsumerAccessException = new FailedStorageConsumerAccessException(
+                var failedStorageConsumerAccessServiceException = new FailedStorageConsumerAccessServiceException(
                     message: "Failed consumer access storage error occurred, contact support.",
                     innerException: sqlException);
 
-                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessException);
+                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageConsumerAccessServiceException);
             }
             catch (Exception exception)
             {
-                var failedServiceConsumerAccessException =
-                    new FailedServiceConsumerAccessException(
+                var failedConsumerAccessServiceException =
+                    new FailedConsumerAccessServiceException(
                         message: "Failed service consumer access error occurred, contact support.",
                         innerException: exception);
 
-                throw await CreateAndLogServiceExceptionAsync(failedServiceConsumerAccessException);
+                throw await CreateAndLogServiceExceptionAsync(failedConsumerAccessServiceException);
             }
         }
 
-        private async ValueTask<ConsumerAccessValidationException> CreateAndLogValidationExceptionAsync(
+        private async ValueTask<ConsumerAccessServiceValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
-            var consumerAccessValidationException = new ConsumerAccessValidationException(
+            var consumerAccessServiceValidationException = new ConsumerAccessServiceValidationException(
                 message: "ConsumerAccess validation error occurred, please fix errors and try again.",
                 innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(consumerAccessValidationException);
+            await this.loggingBroker.LogErrorAsync(consumerAccessServiceValidationException);
 
-            return consumerAccessValidationException;
+            return consumerAccessServiceValidationException;
         }
 
-        private async ValueTask<ConsumerAccessDependencyException> CreateAndLogCriticalDependencyExceptionAsync(
+        private async ValueTask<ConsumerAccessServiceDependencyException> CreateAndLogCriticalDependencyExceptionAsync(
             Xeption exception)
         {
-            var consumerAccessDependencyException = new ConsumerAccessDependencyException(
+            var consumerAccessServiceDependencyException = new ConsumerAccessServiceDependencyException(
                 message: "ConsumerAccess dependency error occurred, contact support.",
                 innerException: exception);
 
-            await this.loggingBroker.LogCriticalAsync(consumerAccessDependencyException);
+            await this.loggingBroker.LogCriticalAsync(consumerAccessServiceDependencyException);
 
-            return consumerAccessDependencyException;
+            return consumerAccessServiceDependencyException;
         }
 
-        private async ValueTask<ConsumerAccessDependencyValidationException> CreateAndLogDependencyValidationExceptionAsync(
+        private async ValueTask<ConsumerAccessServiceDependencyValidationException> CreateAndLogDependencyValidationExceptionAsync(
             Xeption exception)
         {
-            var consumerAccessDependencyValidationException = new ConsumerAccessDependencyValidationException(
+            var consumerAccessDependencyValidationException = new ConsumerAccessServiceDependencyValidationException(
                 message: "ConsumerAccess dependency validation error occurred, fix errors and try again.",
                 innerException: exception);
 
@@ -177,16 +177,16 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             return consumerAccessDependencyValidationException;
         }
 
-        private async ValueTask<ConsumerAccessDependencyException> CreateAndLogDependencyExceptionAsync(
+        private async ValueTask<ConsumerAccessServiceDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
-            var consumerAccessDependencyException = new ConsumerAccessDependencyException(
+            var consumerAccessServiceDependencyException = new ConsumerAccessServiceDependencyException(
                 message: "ConsumerAccess dependency error occurred, contact support.",
                 innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(consumerAccessDependencyException);
+            await this.loggingBroker.LogErrorAsync(consumerAccessServiceDependencyException);
 
-            return consumerAccessDependencyException;
+            return consumerAccessServiceDependencyException;
         }
 
         private async ValueTask<ConsumerAccessServiceException> CreateAndLogServiceExceptionAsync(

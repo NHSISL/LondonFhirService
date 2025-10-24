@@ -6,6 +6,7 @@ using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
+using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
 {
@@ -17,6 +18,9 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             string userId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
+                createException: () => new InvalidConsumerAccessServiceException(
+                    message: "Invalid consumer access. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(consumerAccess.Id), Parameter: nameof(ConsumerAccess.Id)),
                 (Rule: IsInvalid(consumerAccess.ConsumerId), Parameter: nameof(ConsumerAccess.ConsumerId)),
                 (Rule: IsInvalid(consumerAccess.OrgCode), Parameter: nameof(ConsumerAccess.OrgCode)),
@@ -52,6 +56,9 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         private static void ValidateConsumerAccessOnRetrieveById(Guid consumerAccessId)
         {
             Validate(
+                createException: () => new InvalidConsumerAccessServiceException(
+                    message: "Invalid consumer access. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(consumerAccessId), Parameter: nameof(ConsumerAccess.Id)));
         }
 
@@ -61,6 +68,9 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             string userId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
+                createException: () => new InvalidConsumerAccessServiceException(
+                    message: "Invalid consumer access. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(consumerAccess.Id), Parameter: nameof(ConsumerAccess.Id)),
                 (Rule: IsInvalid(consumerAccess.ConsumerId), Parameter: nameof(ConsumerAccess.ConsumerId)),
                 (Rule: IsInvalid(consumerAccess.OrgCode), Parameter: nameof(ConsumerAccess.OrgCode)),
@@ -88,16 +98,24 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         }
 
         private static void ValidateConsumerAccessOnRemoveById(Guid consumerAccessId) =>
-            Validate((Rule: IsInvalid(consumerAccessId), Parameter: nameof(ConsumerAccess.Id)));
+            Validate(
+                createException: () => new InvalidConsumerAccessServiceException(
+                    message: "Invalid consumer access. Please correct the errors and try again."),
+
+                (Rule: IsInvalid(consumerAccessId), Parameter: nameof(ConsumerAccess.Id)));
 
         private static void ValidateOnRetrieveAllOrganisationUserHasAccessTo(Guid consumerId) =>
-            Validate((Rule: IsInvalid(consumerId), Parameter: nameof(ConsumerAccess.ConsumerId)));
+            Validate(
+                createException: () => new InvalidConsumerAccessServiceException(
+                    message: "Invalid consumer access. Please correct the errors and try again."),
+
+                (Rule: IsInvalid(consumerId), Parameter: nameof(ConsumerAccess.ConsumerId)));
 
         private static void ValidateStorageConsumerAccess(ConsumerAccess maybeConsumerAccess, Guid maybeId)
         {
             if (maybeConsumerAccess is null)
             {
-                throw new NotFoundConsumerAccessException($"Consumer access not found with Id: {maybeId}");
+                throw new NotFoundConsumerAccessServiceException($"Consumer access not found with Id: {maybeId}");
             }
         }
 
@@ -106,6 +124,9 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             ConsumerAccess maybeConsumerAccess)
         {
             Validate(
+                createException: () => new InvalidConsumerAccessServiceException(
+                    message: "Invalid consumer access. Please correct the errors and try again."),
+
                 (Rule: IsNotSame(
                     consumerAccess.CreatedDate,
                     maybeConsumerAccess.CreatedDate,
@@ -126,6 +147,9 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
             Validate(
+                createException: () => new InvalidConsumerAccessServiceException(
+                    message: "Invalid consumer access. Please correct the errors and try again."),
+
                 (Rule: IsNotSame(
                     consumerAccess.CreatedDate,
                     maybeConsumerAccess.CreatedDate,
@@ -142,7 +166,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         {
             if (consumerAccess is null)
             {
-                throw new NullConsumerAccessException("Consumer access is null.");
+                throw new NullConsumerAccessServiceException("Consumer access is null.");
             }
         }
 
@@ -247,23 +271,24 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             return (isNotRecent, startDate, endDate);
         }
 
-        private static void Validate(params (dynamic Rule, string Parameter)[] validations)
+        private static void Validate<T>(
+            Func<T> createException,
+            params (dynamic Rule, string Parameter)[] validations)
+            where T : Xeption
         {
-            var invalidConsumerAccessException =
-                new InvalidConsumerAccessException(
-                    message: "Invalid consumer access. Please correct the errors and try again.");
+            T invalidDataException = createException();
 
             foreach ((dynamic rule, string parameter) in validations)
             {
                 if (rule.Condition)
                 {
-                    invalidConsumerAccessException.UpsertDataList(
+                    invalidDataException.UpsertDataList(
                         key: parameter,
                         value: rule.Message);
                 }
             }
 
-            invalidConsumerAccessException.ThrowIfContainsErrors();
+            invalidDataException.ThrowIfContainsErrors();
         }
     }
 }

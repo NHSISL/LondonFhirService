@@ -6,9 +6,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class NotFoundConsumerAccessException : Xeption
+    public class InvalidConsumerAccessServiceException : Xeption
     {
-        public NotFoundConsumerAccessException(string message)
+        public InvalidConsumerAccessServiceException(string message)
             : base(message)
         { }
     }

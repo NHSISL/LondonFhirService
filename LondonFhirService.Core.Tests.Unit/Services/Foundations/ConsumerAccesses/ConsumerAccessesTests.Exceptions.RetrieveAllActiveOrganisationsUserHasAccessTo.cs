@@ -21,15 +21,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             Guid randomConsumerAccessId = Guid.NewGuid();
             SqlException sqlException = CreateSqlException();
 
-            var failedConsumerAccessStorageException =
-                new FailedStorageConsumerAccessException(
+            var failedStorageConsumerAccessServiceException =
+                new FailedStorageConsumerAccessServiceException(
                     message: "Failed consumer access storage error occurred, contact support.",
                     innerException: sqlException);
 
-            var expectedConsumerAccessDependencyException =
-                new ConsumerAccessDependencyException(
+            var expectedConsumerAccessServiceDependencyException =
+                new ConsumerAccessServiceDependencyException(
                     message: "ConsumerAccess dependency error occurred, contact support.",
-                    innerException: failedConsumerAccessStorageException);
+                    innerException: failedStorageConsumerAccessServiceException);
 
             this.storageBroker.Setup(broker =>
                 broker.SelectAllConsumerAccessesAsync())
@@ -39,13 +39,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ValueTask<List<string>> retrieveAllActiveOrganisationUserHasAccessToTask =
                 this.consumerAccessService.RetrieveAllActiveOrganisationsUserHasAccessToAsync(randomConsumerAccessId);
 
-            ConsumerAccessDependencyException actualConsumerAccessDependencyException =
-                await Assert.ThrowsAsync<ConsumerAccessDependencyException>(
+            ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
                     testCode: retrieveAllActiveOrganisationUserHasAccessToTask.AsTask);
 
             // then
-            actualConsumerAccessDependencyException.Should().BeEquivalentTo(
-                expectedConsumerAccessDependencyException);
+            actualConsumerAccessServiceDependencyException.Should().BeEquivalentTo(
+                expectedConsumerAccessServiceDependencyException);
 
             this.storageBroker.Verify(broker =>
                 broker.SelectAllConsumerAccessesAsync(),
@@ -53,7 +53,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogCriticalAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessDependencyException))),
+                    expectedConsumerAccessServiceDependencyException))),
                         Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -73,13 +73,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             Guid randomConsumerAccessId = Guid.NewGuid();
             Exception serviceError = new Exception();
 
-            var failedServiceConsumerAccessException = new FailedServiceConsumerAccessException(
+            var failedConsumerAccessServiceException = new FailedConsumerAccessServiceException(
                 message: "Failed service consumer access error occurred, contact support.",
                 innerException: serviceError);
 
             var expectedConsumerAccessServiceException = new ConsumerAccessServiceException(
                 message: "Service error occurred, contact support.",
-                innerException: failedServiceConsumerAccessException);
+                innerException: failedConsumerAccessServiceException);
 
             this.storageBroker.Setup(broker =>
                 broker.SelectAllConsumerAccessesAsync())

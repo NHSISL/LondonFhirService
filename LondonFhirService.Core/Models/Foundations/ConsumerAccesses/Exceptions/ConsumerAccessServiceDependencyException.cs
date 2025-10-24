@@ -6,9 +6,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class ConsumerAccessValidationException : Xeption
+    public class ConsumerAccessServiceDependencyException : Xeption
     {
-        public ConsumerAccessValidationException(string message, Xeption innerException)
+        public ConsumerAccessServiceDependencyException(string message, Xeption innerException)
             : base(message, innerException)
         { }
     }

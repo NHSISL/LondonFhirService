@@ -23,15 +23,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ConsumerAccess someConsumerAccess = CreateRandomConsumerAccess();
             SqlException sqlException = CreateSqlException();
 
-            var failedStorageConsumerAccessException =
-                new FailedStorageConsumerAccessException(
+            var failedStorageConsumerAccessServiceException =
+                new FailedStorageConsumerAccessServiceException(
                     message: "Failed consumer access storage error occurred, contact support.",
                     innerException: sqlException);
 
-            var expectedConsumerAccessDependencyException =
-                new ConsumerAccessDependencyException(
+            var expectedConsumerAccessServiceDependencyException =
+                new ConsumerAccessServiceDependencyException(
                     message: "ConsumerAccess dependency error occurred, contact support.",
-                    innerException: failedStorageConsumerAccessException);
+                    innerException: failedStorageConsumerAccessServiceException);
 
             this.securityAuditBrokerMock.Setup(broker =>
                 broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()))
@@ -42,13 +42,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 this.consumerAccessService.AddConsumerAccessAsync(
                     someConsumerAccess);
 
-            ConsumerAccessDependencyException actualConsumerAccessDependencyException =
-                await Assert.ThrowsAsync<ConsumerAccessDependencyException>(
+            ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
                     testCode: addConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessDependencyException.Should().BeEquivalentTo(
-                expectedConsumerAccessDependencyException);
+            actualConsumerAccessServiceDependencyException.Should().BeEquivalentTo(
+                expectedConsumerAccessServiceDependencyException);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()),
@@ -56,7 +56,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogCriticalAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessDependencyException))),
+                    expectedConsumerAccessServiceDependencyException))),
                         Times.Once);
 
             this.storageBroker.Verify(broker =>
@@ -78,16 +78,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 new DuplicateKeyException(
                     message: "Duplicate key error occurred");
 
-            var alreadyExistsConsumerAccessException =
-                new AlreadyExistsConsumerAccessException(
+            var alreadyExistsConsumerAccessServiceException =
+                new AlreadyExistsConsumerAccessServiceException(
                     message: "ConsumerAccess already exists error occurred.",
                     innerException: duplicateKeyException,
                     data: duplicateKeyException.Data);
 
-            var expectedConsumerAccessDependencyValidationException =
-                new ConsumerAccessDependencyValidationException(
+            var expectedConsumerAccessServiceDependencyValidationException =
+                new ConsumerAccessServiceDependencyValidationException(
                     message: "ConsumerAccess dependency validation error occurred, fix errors and try again.",
-                    innerException: alreadyExistsConsumerAccessException);
+                    innerException: alreadyExistsConsumerAccessServiceException);
 
             this.securityAuditBrokerMock.Setup(broker =>
                 broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()))
@@ -97,13 +97,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ValueTask<ConsumerAccess> addConsumerAccessTask =
                 this.consumerAccessService.AddConsumerAccessAsync(someConsumerAccess);
 
-            ConsumerAccessDependencyValidationException actualConsumerAccessDependencyValidationException =
-                await Assert.ThrowsAsync<ConsumerAccessDependencyValidationException>(
+            ConsumerAccessServiceDependencyValidationException actualConsumerAccessServiceDependencyValidationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceDependencyValidationException>(
                     testCode: addConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessDependencyValidationException.Should().BeEquivalentTo(
-                expectedConsumerAccessDependencyValidationException);
+            actualConsumerAccessServiceDependencyValidationException.Should().BeEquivalentTo(
+                expectedConsumerAccessServiceDependencyValidationException);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()),
@@ -111,7 +111,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessDependencyValidationException))),
+                    expectedConsumerAccessServiceDependencyValidationException))),
                         Times.Once);
 
             this.storageBroker.Verify(broker =>
@@ -131,15 +131,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ConsumerAccess someConsumerAccess = CreateRandomConsumerAccess();
             var dbUpdateException = new DbUpdateException();
 
-            var failedOperationConsumerAccessException =
-                new FailedOperationConsumerAccessException(
+            var failedOperationConsumerAccessServiceException =
+                new FailedOperationConsumerAccessServiceException(
                     message: "Failed operation consumer access error occurred, contact support.",
                     innerException: dbUpdateException);
 
-            var expectedConsumerAccessDependencyException =
-                new ConsumerAccessDependencyException(
+            var expectedConsumerAccessServiceDependencyException =
+                new ConsumerAccessServiceDependencyException(
                     message: "ConsumerAccess dependency error occurred, contact support.",
-                    innerException: failedOperationConsumerAccessException);
+                    innerException: failedOperationConsumerAccessServiceException);
 
             this.securityAuditBrokerMock.Setup(broker =>
                 broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()))
@@ -150,13 +150,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 this.consumerAccessService.AddConsumerAccessAsync(
                     someConsumerAccess);
 
-            ConsumerAccessDependencyException actualConsumerAccessDependencyException =
-                await Assert.ThrowsAsync<ConsumerAccessDependencyException>(
+            ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
                     testCode: addConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessDependencyException.Should().BeEquivalentTo(
-                expectedConsumerAccessDependencyException);
+            actualConsumerAccessServiceDependencyException.Should().BeEquivalentTo(
+                expectedConsumerAccessServiceDependencyException);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()),
@@ -164,7 +164,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessDependencyException))),
+                    expectedConsumerAccessServiceDependencyException))),
                         Times.Once);
 
             this.storageBroker.Verify(broker =>
@@ -184,15 +184,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             ConsumerAccess someConsumerAccess = CreateRandomConsumerAccess();
             var serviceException = new Exception();
 
-            var failedServiceConsumerAccessException =
-                new FailedServiceConsumerAccessException(
+            var failedConsumerAccessServiceException =
+                new FailedConsumerAccessServiceException(
                     message: "Failed service consumer access error occurred, contact support.",
                     innerException: serviceException);
 
             var expectedConsumerAccessServiceException =
                 new ConsumerAccessServiceException(
                     message: "Service error occurred, contact support.",
-                    innerException: failedServiceConsumerAccessException);
+                    innerException: failedConsumerAccessServiceException);
 
             this.securityAuditBrokerMock.Setup(broker =>
                 broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()))

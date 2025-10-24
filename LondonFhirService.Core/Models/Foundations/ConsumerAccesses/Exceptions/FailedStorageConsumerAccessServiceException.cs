@@ -7,9 +7,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class FailedServiceConsumerAccessException : Xeption
+    public class FailedStorageConsumerAccessServiceException : Xeption
     {
-        public FailedServiceConsumerAccessException(string message, Exception innerException)
+        public FailedStorageConsumerAccessServiceException(string message, Exception innerException)
             : base(message, innerException)
         { }
     }
