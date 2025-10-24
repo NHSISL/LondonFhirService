@@ -524,10 +524,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.SelectConsumerAccessByIdAsync(invalidConsumerAccess.Id))
                     .ReturnsAsync(storageConsumerAccess);
 
-            this.securityAuditBrokerMock.Setup(broker =>
-                broker.ApplyModifyAuditValuesAsync(storageConsumerAccess))
-                    .ReturnsAsync(storageConsumerAccess);
-
             // when
             ValueTask<ConsumerAccess> modifyConsumerAccessTask =
                 consumerAccessService.ModifyConsumerAccessAsync(invalidConsumerAccess);
@@ -539,6 +535,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             // then
             actualConsumerAccessValidationException.Should().BeEquivalentTo(expectedConsumerAccessValidationException);
 
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyModifyAuditValuesAsync(invalidConsumerAccess),
+                    Times.Once);
+
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
@@ -549,10 +549,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.storageBroker.Verify(broker =>
                 broker.SelectConsumerAccessByIdAsync(invalidConsumerAccess.Id),
-                    Times.Once);
-
-            this.securityAuditBrokerMock.Verify(broker =>
-                broker.ApplyModifyAuditValuesAsync(storageConsumerAccess),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
