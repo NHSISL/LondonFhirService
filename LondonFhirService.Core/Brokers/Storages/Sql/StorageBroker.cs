@@ -6,8 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EFxceptions;
+using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Foundations.OdsDatas;
+using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using STX.EFCore.Client.Clients;
@@ -43,8 +46,11 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 
         private static void AddConfigurations(ModelBuilder modelBuilder)
         {
+            AddAuditConfigurations(modelBuilder.Entity<Audit>());
             AddConsumerConfigurations(modelBuilder.Entity<Consumer>());
             AddConsumerAccessConfigurations(modelBuilder.Entity<ConsumerAccess>());
+            AddPdsDataConfigurations(modelBuilder.Entity<PdsData>());
+            AddOdsDataConfigurations(modelBuilder.Entity<OdsData>());
         }
 
         private async ValueTask<T> InsertAsync<T>(T @object) where T : class =>
