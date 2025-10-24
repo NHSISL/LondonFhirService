@@ -18,7 +18,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
         ValueTask<OdsData> ModifyOdsDataAsync(OdsData odsData);
         ValueTask<OdsData> RemoveOdsDataByIdAsync(Guid odsDataId);
         ValueTask<List<OdsData>> RetrieveChildrenByParentId(Guid odsDataId);
-        ValueTask<List<OdsData>> RetrieveAllDecendentsByParentId(Guid odsDataId);
+        ValueTask<List<OdsData>> RetrieveAllDescendantsByParentId(Guid odsDataId);
         ValueTask<List<OdsData>> RetrieveAllAncestorsByChildId(Guid odsDataId);
     }
 }

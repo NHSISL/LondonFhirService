@@ -18,7 +18,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldThrowCriticalDependencyExceptionOnOrganisationsHaveAccessToThisPatientAndLogItAsync()
         {
             // given
-            string somePseudoNhsNumber = GetRandomString();
+            string someNhsNumber = GetRandomString();
             List<string> someOrganisations = GetRandomStringsWithLengthOf(10);
             SqlException sqlException = CreateSqlException();
 
@@ -39,7 +39,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             ValueTask<bool> retrieveAllPdsDatasTask =
                 this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: somePseudoNhsNumber, organisationCodes: someOrganisations);
+                    nhsNumber: someNhsNumber, organisationCodes: someOrganisations);
 
             PdsDataDependencyException actualPdsDataDependencyException =
                 await Assert.ThrowsAsync<PdsDataDependencyException>(
@@ -71,7 +71,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldThrowServiceExceptionOnOrganisationsHaveAccessToThisPatientAndLogItAsync()
         {
             // given
-            string somePseudoNhsNumber = GetRandomString();
+            string someNhsNumber = GetRandomString();
             List<string> someOrganisations = GetRandomStringsWithLengthOf(10);
             string exceptionMessage = GetRandomString();
             var serviceException = new Exception(exceptionMessage);
@@ -93,7 +93,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             ValueTask<bool> retrieveAllPdsDatasTask =
                 this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: somePseudoNhsNumber, organisationCodes: someOrganisations);
+                    nhsNumber: someNhsNumber, organisationCodes: someOrganisations);
 
             PdsDataServiceException actualPdsDataServiceException =
                 await Assert.ThrowsAsync<PdsDataServiceException>(

@@ -15,7 +15,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
     public partial class OdsDataServiceTests
     {
         [Fact]
-        public async Task ShouldThrowValidationExceptionOnRetrieveAllDecendentsByParentIdIsInvalidAndLogItAsync()
+        public async Task ShouldThrowValidationExceptionOnRetrieveChildrenByParentIdIfIdIsInvalidAndLogItAsync()
         {
             // given
             var invalidOdsDataId = Guid.Empty;
@@ -35,7 +35,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
 
             // when
             ValueTask<List<OdsData>> retrieveOdsDataByIdTask =
-                this.odsDataService.RetrieveAllDecendentsByParentId(invalidOdsDataId);
+                this.odsDataService.RetrieveChildrenByParentId(invalidOdsDataId);
 
             OdsDataValidationException actualOdsDataValidationException =
                 await Assert.ThrowsAsync<OdsDataValidationException>(
@@ -51,7 +51,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                         Times.Once);
 
             this.storageBroker.Verify(broker =>
-                broker.SelectAllOdsDatasAsync(),
+                broker.SelectOdsDataByIdAsync(It.IsAny<Guid>()),
                     Times.Never);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -59,11 +59,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
         }
 
         [Fact]
-        public async Task ShouldThrowNotFoundExceptionOnRetrieveAllDecendentsByParentIdIfOdsDataIsNotFoundAndLogItAsync()
+        public async Task ShouldThrowNotFoundExceptionOnRetrieveChildrenByParentIdIfOdsDataIsNotFoundAndLogItAsync()
         {
             //given
             Guid someOdsDataId = Guid.NewGuid();
             OdsData noOdsData = null;
+
             var notFoundOdsDataException =
                 new NotFoundOdsDataException(message: $"OdsData not found with Id: {someOdsDataId}");
 
@@ -78,7 +79,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
 
             //when
             ValueTask<List<OdsData>> retrieveOdsDataByIdTask =
-                this.odsDataService.RetrieveAllDecendentsByParentId(someOdsDataId);
+                this.odsDataService.RetrieveChildrenByParentId(someOdsDataId);
 
             OdsDataValidationException actualOdsDataValidationException =
                 await Assert.ThrowsAsync<OdsDataValidationException>(

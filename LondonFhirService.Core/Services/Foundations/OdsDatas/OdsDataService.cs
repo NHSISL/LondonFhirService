@@ -17,9 +17,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
         private readonly IStorageBroker storageBroker;
         private readonly ILoggingBroker loggingBroker;
 
-        public OdsDataService(
-            IStorageBroker storageBroker,
-            ILoggingBroker loggingBroker)
+        public OdsDataService(IStorageBroker storageBroker, ILoggingBroker loggingBroker)
         {
             this.storageBroker = storageBroker;
             this.loggingBroker = loggingBroker;
@@ -93,7 +91,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             return children;
         });
 
-        public ValueTask<List<OdsData>> RetrieveAllDecendentsByParentId(Guid odsDataParentId) =>
+        public ValueTask<List<OdsData>> RetrieveAllDescendantsByParentId(Guid odsDataParentId) =>
         TryCatch(async () =>
         {
             ValidateOdsDataId(odsDataParentId);

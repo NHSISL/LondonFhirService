@@ -22,6 +22,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 
         public async ValueTask<OdsData> SelectOdsDataByIdAsync(Guid odsDataId) =>
             await SelectAsync<OdsData>(odsDataId);
+
         public async ValueTask<OdsData> UpdateOdsDataAsync(OdsData odsData) =>
             await UpdateAsync(odsData);
 

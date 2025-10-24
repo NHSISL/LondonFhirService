@@ -35,7 +35,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
 
             // when
             List<OdsData> actualOdsDatas =
-                await this.odsDataService.RetrieveAllDecendentsByParentId(inputOdsData.Id);
+                await this.odsDataService.RetrieveAllDescendantsByParentId(inputOdsData.Id);
 
             // then
             actualOdsDatas.Should().BeEquivalentTo(expectedOdsDatas);

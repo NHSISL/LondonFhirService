@@ -38,7 +38,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
 
             // when
             ValueTask<List<OdsData>> retrieveOdsDataByIdTask =
-                this.odsDataService.RetrieveAllDecendentsByParentId(someId);
+                this.odsDataService.RetrieveAllDescendantsByParentId(someId);
 
             OdsDataDependencyException actualOdsDataDependencyException =
                 await Assert.ThrowsAsync<OdsDataDependencyException>(
@@ -84,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
 
             // when
             ValueTask<List<OdsData>> retrieveOdsDataByIdTask =
-                this.odsDataService.RetrieveAllDecendentsByParentId(someId);
+                this.odsDataService.RetrieveAllDescendantsByParentId(someId);
 
             OdsDataServiceException actualOdsDataServiceException =
                 await Assert.ThrowsAsync<OdsDataServiceException>(

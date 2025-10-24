@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
 
             var invalidConsumerServiceException =
                 new InvalidConsumerServiceException(
-                    message: "Invalid consumer. Please correct the errors and try again.");
+                    message: "Invalid consumer Id. Please correct the errors and try again.");
 
             invalidConsumerServiceException.AddData(
                 key: nameof(Consumer.Id),

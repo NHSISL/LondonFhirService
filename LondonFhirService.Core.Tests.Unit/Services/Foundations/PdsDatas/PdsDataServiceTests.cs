@@ -80,9 +80,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         private static PdsData CreateRandomModifyPdsData(DateTimeOffset dateTimeOffset)
         {
             int randomDaysInPast = GetRandomNegativeNumber();
-            PdsData PandomPdsData = CreateRandomPdsData(dateTimeOffset);
+            PdsData randomPdsData = CreateRandomPdsData(dateTimeOffset);
 
-            return PandomPdsData;
+            return randomPdsData;
         }
 
         private static List<PdsData> CreateRandomPdsDatas()
