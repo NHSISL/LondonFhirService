@@ -313,6 +313,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             actualConsumerAccessValidationException.Should().BeEquivalentTo(
                 expectedConsumerAccessValidationException);
 
+            securityAuditBrokerMock.Verify(service =>
+                service.ApplyAddAuditValuesAsync(invalidConsumerAccess),
+                    Times.Once);
+
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
