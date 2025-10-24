@@ -1,7 +1,7 @@
 export enum FeatureDefinitions {
     Configuration,
-    UserAccess,
-    DelegatedUserAccess,
+    ConsumerAccess,
+    DelegatedConsumerAccess,
     Ods,
     Pds,
     ReportReidentify,

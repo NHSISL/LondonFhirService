@@ -23,12 +23,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             SqlException sqlException = CreateSqlException();
 
             var failedStoragePdsDataException =
-                new FailedStoragePdsDataException(
+                new FailedStoragePdsDataServiceException(
                     message: "Failed pdsData storage error occurred, contact support.",
                     innerException: sqlException);
 
             var expectedPdsDataDependencyException =
-                new PdsDataDependencyException(
+                new PdsDataServiceDependencyException(
                     message: "PdsData dependency error occurred, contact support.",
                     innerException: failedStoragePdsDataException);
 
@@ -40,8 +40,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> addPdsDataTask =
                 this.pdsDataService.RemovePdsDataByIdAsync(randomPdsData.Id);
 
-            PdsDataDependencyException actualPdsDataDependencyException =
-                await Assert.ThrowsAsync<PdsDataDependencyException>(
+            PdsDataServiceDependencyException actualPdsDataDependencyException =
+                await Assert.ThrowsAsync<PdsDataServiceDependencyException>(
                     testCode: addPdsDataTask.AsTask);
 
             // then
@@ -76,12 +76,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 new DbUpdateConcurrencyException();
 
             var lockedPdsDataException =
-                new LockedPdsDataException(
+                new LockedPdsDataServiceException(
                     message: "Locked pdsData record exception, please try again later",
                     innerException: databaseUpdateConcurrencyException);
 
             var expectedPdsDataDependencyValidationException =
-                new PdsDataDependencyValidationException(
+                new PdsDataServiceDependencyValidationException(
                     message: "PdsData dependency validation occurred, please try again.",
                     innerException: lockedPdsDataException);
 
@@ -93,8 +93,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> removePdsDataByIdTask =
                 this.pdsDataService.RemovePdsDataByIdAsync(somePdsDataId);
 
-            PdsDataDependencyValidationException actualPdsDataDependencyValidationException =
-                await Assert.ThrowsAsync<PdsDataDependencyValidationException>(
+            PdsDataServiceDependencyValidationException actualPdsDataDependencyValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceDependencyValidationException>(
                     testCode: removePdsDataByIdTask.AsTask);
 
             // then
@@ -127,12 +127,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             SqlException sqlException = CreateSqlException();
 
             var failedStoragePdsDataException =
-                new FailedStoragePdsDataException(
+                new FailedStoragePdsDataServiceException(
                     message: "Failed pdsData storage error occurred, contact support.",
                     innerException: sqlException);
 
             var expectedPdsDataDependencyException =
-                new PdsDataDependencyException(
+                new PdsDataServiceDependencyException(
                     message: "PdsData dependency error occurred, contact support.",
                     innerException: failedStoragePdsDataException);
 
@@ -144,8 +144,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> deletePdsDataTask =
                 this.pdsDataService.RemovePdsDataByIdAsync(somePdsDataId);
 
-            PdsDataDependencyException actualPdsDataDependencyException =
-                await Assert.ThrowsAsync<PdsDataDependencyException>(
+            PdsDataServiceDependencyException actualPdsDataDependencyException =
+                await Assert.ThrowsAsync<PdsDataServiceDependencyException>(
                     testCode: deletePdsDataTask.AsTask);
 
             // then

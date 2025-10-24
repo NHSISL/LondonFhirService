@@ -27,31 +27,31 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             {
                 return await returningOdsDataFunction();
             }
-            catch (NullOdsDataException nullOdsDataException)
+            catch (NullOdsDataServiceException nullOdsDataException)
             {
                 throw CreateAndLogValidationException(nullOdsDataException);
             }
-            catch (InvalidOdsDataException invalidOdsDataException)
+            catch (InvalidOdsDataServiceException invalidOdsDataException)
             {
                 throw CreateAndLogValidationException(invalidOdsDataException);
             }
             catch (SqlException sqlException)
             {
                 var failedStorageOdsDataException =
-                    new FailedStorageOdsDataException(
+                    new FailedStorageOdsDataServiceException(
                         message: "Failed odsData storage error occurred, contact support.",
                         innerException: sqlException);
 
                 throw CreateAndLogCriticalDependencyException(failedStorageOdsDataException);
             }
-            catch (NotFoundOdsDataException notFoundOdsDataException)
+            catch (NotFoundOdsDataServiceException notFoundOdsDataException)
             {
                 throw CreateAndLogValidationException(notFoundOdsDataException);
             }
             catch (DuplicateKeyException duplicateKeyException)
             {
                 var alreadyExistsOdsDataException =
-                    new AlreadyExistsOdsDataException(
+                    new AlreadyExistsOdsDataServiceException(
                         message: "OdsData with the same Id already exists.",
                         innerException: duplicateKeyException,
                         data: duplicateKeyException.Data);
@@ -61,7 +61,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             catch (ForeignKeyConstraintConflictException foreignKeyConstraintConflictException)
             {
                 var invalidOdsDataReferenceException =
-                    new InvalidOdsDataReferenceException(
+                    new InvalidReferenceOdsDataServiceException(
                         message: "Invalid odsData reference error occurred.",
                         innerException: foreignKeyConstraintConflictException);
 
@@ -70,7 +70,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
             {
                 var lockedOdsDataException =
-                    new LockedOdsDataException(
+                    new LockedOdsDataServiceException(
                         message: "Locked odsData record exception, please try again later",
                         innerException: dbUpdateConcurrencyException);
 
@@ -79,7 +79,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             catch (DbUpdateException databaseUpdateException)
             {
                 var failedOperationOdsDataException =
-                    new FailedOperationOdsDataException(
+                    new FailedOperationOdsDataServiceException(
                         message: "Failed odsData operation error occurred, contact support.",
                         innerException: databaseUpdateException);
 
@@ -105,7 +105,7 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             catch (SqlException sqlException)
             {
                 var failedStorageOdsDataException =
-                    new FailedStorageOdsDataException(
+                    new FailedStorageOdsDataServiceException(
                         message: "Failed odsData storage error occurred, contact support.",
                         innerException: sqlException);
 
@@ -128,22 +128,22 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             {
                 return await returningOdsDataListFunction();
             }
-            catch (NullOdsDataException nullOdsDataException)
+            catch (NullOdsDataServiceException nullOdsDataException)
             {
                 throw CreateAndLogValidationException(nullOdsDataException);
             }
-            catch (InvalidOdsDataException invalidOdsDataException)
+            catch (InvalidOdsDataServiceException invalidOdsDataException)
             {
                 throw CreateAndLogValidationException(invalidOdsDataException);
             }
-            catch (NotFoundOdsDataException notFoundOdsDataException)
+            catch (NotFoundOdsDataServiceException notFoundOdsDataException)
             {
                 throw CreateAndLogValidationException(notFoundOdsDataException);
             }
             catch (SqlException sqlException)
             {
                 var failedStorageOdsDataException =
-                    new FailedStorageOdsDataException(
+                    new FailedStorageOdsDataServiceException(
                         message: "Failed odsData storage error occurred, contact support.",
                         innerException: sqlException);
 
@@ -160,10 +160,10 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             }
         }
 
-        private OdsDataValidationException CreateAndLogValidationException(Xeption exception)
+        private OdsDataServiceValidationException CreateAndLogValidationException(Xeption exception)
         {
             var odsDataValidationException =
-                new OdsDataValidationException(
+                new OdsDataServiceValidationException(
                     message: "OdsData validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
@@ -172,10 +172,10 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             return odsDataValidationException;
         }
 
-        private OdsDataDependencyException CreateAndLogCriticalDependencyException(Xeption exception)
+        private OdsDataServiceDependencyException CreateAndLogCriticalDependencyException(Xeption exception)
         {
             var odsDataDependencyException =
-                new OdsDataDependencyException(
+                new OdsDataServiceDependencyException(
                     message: "OdsData dependency error occurred, contact support.",
                     innerException: exception);
 
@@ -184,10 +184,10 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             return odsDataDependencyException;
         }
 
-        private OdsDataDependencyValidationException CreateAndLogDependencyValidationException(Xeption exception)
+        private OdsDataServiceDependencyValidationException CreateAndLogDependencyValidationException(Xeption exception)
         {
             var odsDataDependencyValidationException =
-                new OdsDataDependencyValidationException(
+                new OdsDataServiceDependencyValidationException(
                     message: "OdsData dependency validation occurred, please try again.",
                     innerException: exception);
 
@@ -196,10 +196,10 @@ namespace LondonFhirService.Core.Services.Foundations.OdsDatas
             return odsDataDependencyValidationException;
         }
 
-        private OdsDataDependencyException CreateAndLogDependencyException(Xeption exception)
+        private OdsDataServiceDependencyException CreateAndLogDependencyException(Xeption exception)
         {
             var odsDataDependencyException =
-                new OdsDataDependencyException(
+                new OdsDataServiceDependencyException(
                     message: "OdsData dependency error occurred, contact support.",
                     innerException: exception);
 

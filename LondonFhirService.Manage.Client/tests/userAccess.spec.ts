@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-    await page.goto('https://localhost:6073/userAccess');
+    await page.goto('https://localhost:6073/consumerAccess');
 });
 
 test('has User Access heading', async ({ page }) => {

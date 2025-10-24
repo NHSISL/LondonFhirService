@@ -32,19 +32,19 @@ namespace LondonFhirService.Core.Clients.Audits
                 return await auditService
                     .AddAuditAsync(auditType, title, message, fileName, correlationId, logLevel);
             }
-            catch (AuditValidationException auditValidationException)
+            catch (AuditServiceValidationException auditValidationException)
             {
                 throw new AuditClientValidationException(
                     message: "Audit client validation error occurred, fix errors and try again.",
                     innerException: auditValidationException.InnerException as Xeption);
             }
-            catch (AuditDependencyValidationException auditDependencyValidationException)
+            catch (AuditServiceDependencyValidationException auditDependencyValidationException)
             {
                 throw new AuditClientValidationException(
                     message: "Audit client validation error occurred, fix errors and try again.",
                     innerException: auditDependencyValidationException.InnerException as Xeption);
             }
-            catch (AuditDependencyException auditDependencyException)
+            catch (AuditServiceDependencyException auditDependencyException)
             {
                 throw new AuditClientDependencyException(
                     message: "Audit client dependency error occurred, please contact support.",
@@ -64,19 +64,19 @@ namespace LondonFhirService.Core.Clients.Audits
             {
                 await auditService.BulkAddAuditsAsync(audits);
             }
-            catch (AuditValidationException auditValidationException)
+            catch (AuditServiceValidationException auditValidationException)
             {
                 throw new AuditClientValidationException(
                     message: "Audit client validation error occurred, fix errors and try again.",
                     innerException: auditValidationException.InnerException as Xeption);
             }
-            catch (AuditDependencyValidationException auditDependencyValidationException)
+            catch (AuditServiceDependencyValidationException auditDependencyValidationException)
             {
                 throw new AuditClientValidationException(
                     message: "Audit client validation error occurred, fix errors and try again.",
                     innerException: auditDependencyValidationException.InnerException as Xeption);
             }
-            catch (AuditDependencyException auditDependencyException)
+            catch (AuditServiceDependencyException auditDependencyException)
             {
                 throw new AuditClientDependencyException(
                     message: "Audit client dependency error occurred, please contact support.",
