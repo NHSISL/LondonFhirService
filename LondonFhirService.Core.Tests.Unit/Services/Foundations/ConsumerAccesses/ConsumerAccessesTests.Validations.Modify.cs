@@ -62,7 +62,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task ShouldThrowValidationExceptionOnModifyIfConsumerAccessIsInvalidAndLogItAsync(string invalidText)
+        public async Task ShouldThrowValidationExceptionOnModifyIfConsumerAccessIsInvalidAndLogItAsync(
+            string invalidText)
         {
             // given
             string randomUserId = Guid.NewGuid().ToString();
@@ -149,6 +150,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             // then
             actualConsumerAccessValidationException.Should()
                 .BeEquivalentTo(expectedConsumerAccessValidationException);
+
+            securityAuditBrokerMock.Verify(service =>
+                service.ApplyModifyAuditValuesAsync(invalidConsumerAccess),
+                    Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
