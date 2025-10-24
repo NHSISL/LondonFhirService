@@ -33,8 +33,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     message: "ConsumerAccess dependency error occurred, contact support.",
                     innerException: failedStorageConsumerAccessException);
 
-            this.dateTimeBrokerMock.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()))
                     .ThrowsAsync(sqlException);
 
             // when
@@ -50,8 +50,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             actualConsumerAccessDependencyException.Should().BeEquivalentTo(
                 expectedConsumerAccessDependencyException);
 
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -89,8 +89,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     message: "ConsumerAccess dependency validation error occurred, fix errors and try again.",
                     innerException: alreadyExistsConsumerAccessException);
 
-            this.dateTimeBrokerMock.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()))
                     .ThrowsAsync(duplicateKeyException);
 
             // when
@@ -105,8 +105,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             actualConsumerAccessDependencyValidationException.Should().BeEquivalentTo(
                 expectedConsumerAccessDependencyValidationException);
 
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -141,8 +141,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     message: "ConsumerAccess dependency error occurred, contact support.",
                     innerException: failedOperationConsumerAccessException);
 
-            this.dateTimeBrokerMock.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()))
                     .ThrowsAsync(dbUpdateException);
 
             // when
@@ -158,8 +158,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             actualConsumerAccessDependencyException.Should().BeEquivalentTo(
                 expectedConsumerAccessDependencyException);
 
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -194,8 +194,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     message: "Service error occurred, contact support.",
                     innerException: failedServiceConsumerAccessException);
 
-            this.dateTimeBrokerMock.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()))
                     .ThrowsAsync(serviceException);
 
             // when
@@ -210,9 +210,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             actualConsumerAccessServiceException.Should().BeEquivalentTo(
                 expectedConsumerAccessServiceException);
 
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                        Times.Once);
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<ConsumerAccess>()),
+                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
