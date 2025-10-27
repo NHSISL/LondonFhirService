@@ -47,6 +47,15 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogDependencyValidationException(alreadyExistsProviderServiceException);
             }
+            catch (ForeignKeyConstraintConflictException foreignKeyConstraintConflictException)
+            {
+                var invalidProviderReferenceException =
+                    new InvalidProviderReferenceException(
+                        message: "Invalid provider reference error occurred.",
+                        innerException: foreignKeyConstraintConflictException);
+
+                throw await CreateAndLogDependencyValidationException(invalidProviderReferenceException);
+            }
         }
 
         private async ValueTask<ProviderServiceValidationException> CreateAndLogValidationException(Xeption exception)
