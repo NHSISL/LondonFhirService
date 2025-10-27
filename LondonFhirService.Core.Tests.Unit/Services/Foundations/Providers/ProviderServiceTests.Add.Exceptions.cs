@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System.Threading.Tasks;
+using EFxceptions.Models.Exceptions;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
@@ -53,6 +54,70 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogCriticalAsync(It.Is(SameExceptionAs(
                     expectedProviderServiceDependencyException))),
+                        Times.Once);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Never);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Never());
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertProviderAsync(It.IsAny<Provider>()),
+                    Times.Never);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowDependencyValidationExceptionOnAddIfProviderAlreadyExistsAndLogItAsync()
+        {
+            // given
+            Provider randomProvider = CreateRandomProvider();
+            Provider alreadyExistsProvider = randomProvider;
+            string randomMessage = GetRandomString();
+
+            var duplicateKeyException =
+                new DuplicateKeyException(randomMessage);
+
+            var alreadyExistsProviderServiceException =
+                new AlreadyExistsProviderServiceException(
+                    message: "Provider with the same Id already exists.",
+                    innerException: duplicateKeyException);
+
+            var expectedProviderServiceDependencyValidationException =
+                new ProviderServiceDependencyValidationException(
+                    message: "Provider dependency validation occurred, please try again.",
+                    innerException: alreadyExistsProviderServiceException);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<Provider>()))
+                    .ThrowsAsync(duplicateKeyException);
+
+            // when
+            ValueTask<Provider> addProviderTask =
+                this.providerService.AddProviderAsync(alreadyExistsProvider);
+
+            // then
+            ProviderServiceDependencyValidationException actualProviderServiceDependencyValidationException =
+                await Assert.ThrowsAsync<ProviderServiceDependencyValidationException>(
+                    addProviderTask.AsTask);
+
+            actualProviderServiceDependencyValidationException.Should()
+                .BeEquivalentTo(expectedProviderServiceDependencyValidationException);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<Provider>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedProviderServiceDependencyValidationException))),
                         Times.Once);
 
             this.securityAuditBrokerMock.Verify(broker =>
