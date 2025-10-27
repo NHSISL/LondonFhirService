@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System.Threading.Tasks;
+using EFxceptions.Models.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
 using Microsoft.Data.SqlClient;
@@ -37,6 +38,15 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogCriticalDependencyException(failedStorageProviderServiceException);
             }
+            catch (DuplicateKeyException duplicateKeyException)
+            {
+                var alreadyExistsProviderServiceException =
+                    new AlreadyExistsProviderServiceException(
+                        message: "Provider with the same Id already exists.",
+                        innerException: duplicateKeyException);
+
+                throw await CreateAndLogDependencyValidationException(alreadyExistsProviderServiceException);
+            }
         }
 
         private async ValueTask<ProviderServiceValidationException> CreateAndLogValidationException(Xeption exception)
@@ -62,6 +72,19 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             await this.loggingBroker.LogCriticalAsync(providerServiceDependencyException);
 
             return providerServiceDependencyException;
+        }
+
+        private async ValueTask<ProviderServiceDependencyValidationException> CreateAndLogDependencyValidationException(
+            Xeption exception)
+        {
+            var providerServiceDependencyValidationException =
+                new ProviderServiceDependencyValidationException(
+                    message: "Provider dependency validation occurred, please try again.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(providerServiceDependencyValidationException);
+
+            return providerServiceDependencyValidationException;
         }
     }
 }
