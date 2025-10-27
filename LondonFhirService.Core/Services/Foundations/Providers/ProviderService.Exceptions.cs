@@ -4,6 +4,8 @@
 
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Providers;
+using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
+using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Providers
 {
@@ -13,7 +15,26 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
         private async ValueTask<Provider> TryCatch(ReturningProviderFunction returningProviderFunction)
         {
-            return await returningProviderFunction();
+            try
+            {
+                return await returningProviderFunction();
+            }
+            catch (NullProviderServiceException nullProviderServiceException)
+            {
+                throw await CreateAndLogValidationException(nullProviderServiceException);
+            }
+        }
+
+        private async ValueTask<ProviderServiceValidationException> CreateAndLogValidationException(Xeption exception)
+        {
+            var providerServiceValidationException =
+                new ProviderServiceValidationException(
+                    message: "Provider validation errors occurred, please try again.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(providerServiceValidationException);
+
+            return providerServiceValidationException;
         }
     }
 }
