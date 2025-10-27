@@ -154,5 +154,73 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnAddIfProviderHasInvalidLengthProperty()
+        {
+            // given
+            string randomUserId = GetRandomString();
+            var invalidProvider = CreateRandomProvider(GetRandomDateTimeOffset(), userId: randomUserId);
+            invalidProvider.Name = GetRandomStringWithLengthOf(501);
+
+            var invalidProviderServiceException =
+                new InvalidProviderServiceException(
+                    message: "Invalid provider. Please correct the errors and try again.");
+
+            invalidProviderServiceException.AddData(
+                key: nameof(Provider.Name),
+                values: $"Text exceed max length of {invalidProvider.Name.Length - 1} characters");
+
+            var expectedProviderServiceValidationException =
+                new ProviderServiceValidationException(
+                    message: "Provider validation errors occurred, please try again.",
+                    innerException: invalidProviderServiceException);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(invalidProvider))
+                    .ReturnsAsync(invalidProvider);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
+
+            // when
+            ValueTask<Provider> addProviderTask =
+                this.providerService.AddProviderAsync(invalidProvider);
+
+            ProviderServiceValidationException actualProviderServiceValidationException =
+                await Assert.ThrowsAsync<ProviderServiceValidationException>(
+                    addProviderTask.AsTask);
+
+            // then
+            actualProviderServiceValidationException.Should()
+                .BeEquivalentTo(expectedProviderServiceValidationException);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(invalidProvider),
+                    Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once());
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedProviderServiceValidationException))),
+                        Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertProviderAsync(It.IsAny<Provider>()),
+                    Times.Never);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
