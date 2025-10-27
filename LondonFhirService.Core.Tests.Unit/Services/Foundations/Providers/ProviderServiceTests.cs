@@ -49,6 +49,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();
 
+        private static int GetRandomNegativeNumber() =>
+            -1 * new IntRange(min: 2, max: 10).GetValue();
+
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: new DateTime()).GetValue();
 
@@ -60,6 +63,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             string result = new MnemonicString(wordCount: 1, wordMinLength: length, wordMaxLength: length).GetValue();
 
             return result.Length > length ? result.Substring(0, length) : result;
+        }
+
+        public static TheoryData<int> MinutesBeforeOrAfter()
+        {
+            int randomNumber = GetRandomNumber();
+            int randomNegativeNumber = GetRandomNegativeNumber();
+
+            return new TheoryData<int>
+            {
+                randomNumber,
+                randomNegativeNumber
+            };
         }
 
         private static Provider CreateRandomProvider() =>
