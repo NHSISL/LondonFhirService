@@ -137,5 +137,69 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnAddIfReferenceErrorOccursAndLogItAsync()
+        {
+            // given
+            Provider someProvider = CreateRandomProvider();
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+
+            var foreignKeyConstraintConflictException =
+                new ForeignKeyConstraintConflictException(exceptionMessage);
+
+            var invalidProviderReferenceException =
+                new InvalidProviderReferenceException(
+                    message: "Invalid provider reference error occurred.",
+                    innerException: foreignKeyConstraintConflictException);
+
+            var expectedProviderServiceValidationException =
+                new ProviderServiceDependencyValidationException(
+                    message: "Provider dependency validation occurred, please try again.",
+                    innerException: invalidProviderReferenceException);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<Provider>()))
+                    .ThrowsAsync(foreignKeyConstraintConflictException);
+
+            // when
+            ValueTask<Provider> addProviderTask =
+                this.providerService.AddProviderAsync(someProvider);
+
+            // then
+            ProviderServiceDependencyValidationException actualProviderServiceDependencyValidationException =
+                await Assert.ThrowsAsync<ProviderServiceDependencyValidationException>(
+                    addProviderTask.AsTask);
+
+            actualProviderServiceDependencyValidationException.Should()
+                .BeEquivalentTo(expectedProviderServiceValidationException);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<Provider>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedProviderServiceValidationException))),
+                        Times.Once);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Never);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Never());
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertProviderAsync(It.IsAny<Provider>()),
+                    Times.Never);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
