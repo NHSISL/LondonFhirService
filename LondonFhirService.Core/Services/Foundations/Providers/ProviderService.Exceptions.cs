@@ -23,6 +23,10 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             {
                 throw await CreateAndLogValidationException(nullProviderServiceException);
             }
+            catch (InvalidProviderServiceException invalidProviderServiceException)
+            {
+                throw await CreateAndLogValidationException(invalidProviderServiceException);
+            }
         }
 
         private async ValueTask<ProviderServiceValidationException> CreateAndLogValidationException(Xeption exception)
