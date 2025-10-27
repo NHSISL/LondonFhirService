@@ -5,11 +5,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
+using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
@@ -18,6 +20,7 @@ using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using Moq;
 using Tynamix.ObjectFiller;
+using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 {
@@ -30,6 +33,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         private readonly Mock<ISecurityBroker> securityBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly AccessOrchestrationService accessOrchestrationService;
 
         public AccessOrchestrationServiceTests()
@@ -41,6 +45,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.securityBrokerMock = new Mock<ISecurityBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.accessOrchestrationService = new AccessOrchestrationService(
                 consumerService: this.consumerServiceMock.Object,
@@ -49,7 +54,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 auditBroker: this.auditBrokerMock.Object,
                 securityBroker: this.securityBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
-                identifierBroker: this.identifierBrokerMock.Object);
+                identifierBroker: this.identifierBrokerMock.Object,
+                loggingBroker: this.loggingBrokerMock.Object);
         }
 
         private static DateTimeOffset GetRandomDateTimeOffset() =>
@@ -115,6 +121,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 .OnProperty(consumer => consumer.ConsumerAccesses).IgnoreIt();
 
             return filler;
+        }
+
+        private static Expression<Func<Xeption, bool>> SameExceptionAs(
+            Xeption expectedException)
+        {
+            return actualException =>
+                actualException.SameExceptionAs(expectedException);
         }
     }
 }

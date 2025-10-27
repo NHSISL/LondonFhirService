@@ -111,6 +111,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -139,6 +140,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 new ForbiddenAccessOrchestrationException(
                    "Current consumer is not active or does not have the required role.");
 
+            var expectedAccessOrchestrationValidationException =
+                new AccessOrchestrationValidationException(
+                    message: "Access orchestration validation error occurred, " +
+                        "fix the errors and try again.",
+                    innerException: forbiddenAccessOrchestrationException);
+
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
                     .ReturnsAsync(outputUser);
@@ -162,13 +169,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             // when
             ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
 
-            ForbiddenAccessOrchestrationException actualForbiddenAccessOrchestrationException =
-                await Assert.ThrowsAsync<ForbiddenAccessOrchestrationException>(
+            AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
+                await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualForbiddenAccessOrchestrationException
-                .Should().BeEquivalentTo(forbiddenAccessOrchestrationException);
+            actualAccessOrchestrationValidationException
+                .Should().BeEquivalentTo(expectedAccessOrchestrationValidationException);
 
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
@@ -200,6 +207,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     randomGuid.ToString()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+               broker.LogErrorAsync(It.Is(SameExceptionAs(
+                   expectedAccessOrchestrationValidationException))),
+                       Times.Once);
+
             this.consumerAccessServiceMock.Verify(service =>
                 service.RetrieveActiveOrganisationsConsumerHasAccessToAsync(inputConsumer.Id),
                     Times.Never);
@@ -215,6 +227,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -243,6 +256,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 new ForbiddenAccessOrchestrationException(
                    "Current consumer is not active or does not have the required role.");
 
+            var expectedAccessOrchestrationValidationException =
+                new AccessOrchestrationValidationException(
+                    message: "Access orchestration validation error occurred, " +
+                        "fix the errors and try again.",
+                    innerException: forbiddenAccessOrchestrationException);
+
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
                     .ReturnsAsync(outputUser);
@@ -266,13 +285,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             // when
             ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
 
-            ForbiddenAccessOrchestrationException actualForbiddenAccessOrchestrationException =
-                await Assert.ThrowsAsync<ForbiddenAccessOrchestrationException>(
+            AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
+                await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualForbiddenAccessOrchestrationException
-                .Should().BeEquivalentTo(forbiddenAccessOrchestrationException);
+            actualAccessOrchestrationValidationException
+                .Should().BeEquivalentTo(expectedAccessOrchestrationValidationException);
 
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
@@ -304,6 +323,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     randomGuid.ToString()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+              broker.LogErrorAsync(It.Is(SameExceptionAs(
+                  expectedAccessOrchestrationValidationException))),
+                      Times.Once);
+
             this.consumerAccessServiceMock.Verify(service =>
                 service.RetrieveActiveOrganisationsConsumerHasAccessToAsync(inputConsumer.Id),
                     Times.Never);
@@ -319,6 +343,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -352,6 +377,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 new ForbiddenAccessOrchestrationException(
                    "None of the organisations the consumer has access to are permitted to access this patient.");
 
+            var expectedAccessOrchestrationValidationException =
+                new AccessOrchestrationValidationException(
+                    message: "Access orchestration validation error occurred, " +
+                        "fix the errors and try again.",
+                    innerException: forbiddenAccessOrchestrationException);
+
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
                     .ReturnsAsync(outputUser);
@@ -383,13 +414,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             // when
             ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
 
-            ForbiddenAccessOrchestrationException actualForbiddenAccessOrchestrationException =
-                await Assert.ThrowsAsync<ForbiddenAccessOrchestrationException>(
+            AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
+                await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualForbiddenAccessOrchestrationException
-                .Should().BeEquivalentTo(forbiddenAccessOrchestrationException);
+            actualAccessOrchestrationValidationException
+                .Should().BeEquivalentTo(expectedAccessOrchestrationValidationException);
 
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
@@ -430,6 +461,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     randomGuid.ToString()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+              broker.LogErrorAsync(It.Is(SameExceptionAs(
+                  expectedAccessOrchestrationValidationException))),
+                      Times.Once);
+
             this.consumerServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.pdsDataServiceMock.VerifyNoOtherCalls();
@@ -437,6 +473,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
