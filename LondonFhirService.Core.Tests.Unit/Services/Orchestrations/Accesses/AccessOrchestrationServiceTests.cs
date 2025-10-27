@@ -157,7 +157,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     message: "Consumer access dependency validation occurred, please try again.",
                     innerException),
 
-                new PdsDataValidationException(
+                new PdsDataServiceValidationException(
                     message: "Pds data validation errors occurred, please try again.",
                     innerException)
             };
@@ -187,7 +187,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     message: "Consumer access service error occurred, please contact support.",
                     innerException),
 
-                new PdsDataDependencyException(
+                new PdsDataServiceDependencyException(
                     message: "Pds data dependency error occurred, please contact support.",
                     innerException),
 

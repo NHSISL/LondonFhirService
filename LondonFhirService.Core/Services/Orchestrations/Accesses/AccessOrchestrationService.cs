@@ -85,7 +85,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 }
 
                 List<string> consumerActiveOrgs =
-                    await consumerAccessService.RetrieveActiveOrganisationsConsumerHasAccessToAsync(matchingConsumer.Id);
+                    await consumerAccessService.RetrieveAllActiveOrganisationsUserHasAccessToAsync(matchingConsumer.Id);
 
                 bool organisationsHaveAccessToPatient = await pdsDataService.OrganisationsHaveAccessToThisPatient(
                     nhsNumber: nhsNumber,

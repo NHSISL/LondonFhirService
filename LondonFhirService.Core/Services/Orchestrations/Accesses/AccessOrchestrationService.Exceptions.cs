@@ -74,20 +74,20 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 throw await CreateAndLogDependencyValidationExceptionAsync(
                     consumerAccessDependencyValidationException);
             }
-            catch (PdsDataValidationException pdsDataValidationException)
+            catch (PdsDataServiceValidationException pdsDataServiceValidationException)
             {
                 throw await CreateAndLogDependencyValidationExceptionAsync(
-                    pdsDataValidationException);
+                    pdsDataServiceValidationException);
             }
             catch (PdsDataServiceException pdsDataServiceException)
             {
                 throw await CreateAndLogDependencyExceptionAsync(
                     pdsDataServiceException);
             }
-            catch (PdsDataDependencyException pdsDataDependencyException)
+            catch (PdsDataServiceDependencyException pdsDataServiceDependencyException)
             {
                 throw await CreateAndLogDependencyExceptionAsync(
-                    pdsDataDependencyException);
+                    pdsDataServiceDependencyException);
             }
             catch (Exception exception)
             {

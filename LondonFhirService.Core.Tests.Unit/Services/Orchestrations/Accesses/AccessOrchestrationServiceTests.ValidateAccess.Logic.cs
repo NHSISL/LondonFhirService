@@ -65,7 +65,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(true);
 
             this.consumerAccessServiceMock.Setup(service =>
-                service.RetrieveActiveOrganisationsConsumerHasAccessToAsync(inputConsumer.Id))
+                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id))
                     .ReturnsAsync(userOrganisations);
 
             this.pdsDataServiceMock.Setup(service =>
@@ -97,7 +97,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     Times.Once);
 
             this.consumerAccessServiceMock.Verify(service =>
-                service.RetrieveActiveOrganisationsConsumerHasAccessToAsync(inputConsumer.Id),
+                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id),
                     Times.Once);
 
             this.pdsDataServiceMock.Verify(service =>
@@ -213,7 +213,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                        Times.Once);
 
             this.consumerAccessServiceMock.Verify(service =>
-                service.RetrieveActiveOrganisationsConsumerHasAccessToAsync(inputConsumer.Id),
+                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id),
                     Times.Never);
 
             this.pdsDataServiceMock.Verify(service =>
@@ -402,7 +402,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                       Times.Once);
 
             this.consumerAccessServiceMock.Verify(service =>
-                service.RetrieveActiveOrganisationsConsumerHasAccessToAsync(inputConsumer.Id),
+                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id),
                     Times.Never);
 
             this.pdsDataServiceMock.Verify(service =>
@@ -477,7 +477,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(true);
 
             this.consumerAccessServiceMock.Setup(service =>
-                service.RetrieveActiveOrganisationsConsumerHasAccessToAsync(inputConsumer.Id))
+                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id))
                     .ReturnsAsync(userOrganisations);
 
             this.pdsDataServiceMock.Setup(service =>
@@ -516,7 +516,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     Times.Once);
 
             this.consumerAccessServiceMock.Verify(service =>
-                service.RetrieveActiveOrganisationsConsumerHasAccessToAsync(inputConsumer.Id),
+                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id),
                     Times.Once);
 
             this.pdsDataServiceMock.Verify(service =>
