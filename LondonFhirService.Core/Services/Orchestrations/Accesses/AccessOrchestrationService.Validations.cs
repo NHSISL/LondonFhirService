@@ -2,7 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Accesses
@@ -14,7 +13,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
 
         private static dynamic IsInvalid(string name) => new
         {
-            Condition = String.IsNullOrWhiteSpace(name),
+            Condition = string.IsNullOrWhiteSpace(name),
             Message = "Text is invalid"
         };
 

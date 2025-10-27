@@ -10,7 +10,7 @@ namespace LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions
     public class FailedServiceAccessOrchestrationException : Xeption
     {
         public FailedServiceAccessOrchestrationException(string message, Exception innerException)
-            : base(message)
+            : base(message, innerException)
         { }
     }
 }
