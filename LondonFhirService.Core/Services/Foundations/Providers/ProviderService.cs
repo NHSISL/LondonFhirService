@@ -2,7 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -31,9 +30,13 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             this.loggingBroker = loggingBroker;
         }
 
-        public async ValueTask<Provider> AddProviderAsync(Provider provider)
-        {
-            throw new NotImplementedException();
-        }
+        public ValueTask<Provider> AddProviderAsync(Provider provider) =>
+            TryCatch(async () =>
+            {
+                provider = await this.securityAuditBroker.ApplyAddAuditValuesAsync(provider);
+                await ValidateProviderOnAdd(provider);
+
+                return await this.storageBroker.InsertProviderAsync(provider);
+            });
     }
 }
