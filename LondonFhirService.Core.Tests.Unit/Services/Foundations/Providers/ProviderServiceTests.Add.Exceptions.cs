@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using EFxceptions.Models.Exceptions;
 using FluentAssertions;
@@ -244,6 +245,57 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedProviderServiceDependencyException))),
+                        Times.Once);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowServiceExceptionOnAddIfServiceErrorOccursAndLogItAsync()
+        {
+            // given
+            Provider someProvider = CreateRandomProvider();
+            var serviceException = new Exception();
+
+            var failedProviderServiceException =
+                new FailedProviderServiceException(
+                    message: "Failed provider service occurred, please contact support",
+                    innerException: serviceException);
+
+            var expectedProviderServiceException =
+                new ProviderServiceException(
+                    message: "Provider service error occurred, contact support.",
+                    innerException: failedProviderServiceException);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<Provider>()))
+                    .ThrowsAsync(serviceException);
+
+            // when
+            ValueTask<Provider> addProviderTask = this.providerService.AddProviderAsync(someProvider);
+
+            ProviderServiceException actualProviderServiceException =
+                await Assert.ThrowsAsync<ProviderServiceException>(
+                    addProviderTask.AsTask);
+
+            // then
+            actualProviderServiceException.Should()
+                .BeEquivalentTo(expectedProviderServiceException);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<Provider>()),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertProviderAsync(It.IsAny<Provider>()),
+                    Times.Never);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedProviderServiceException))),
                         Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
