@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             var invalidOdsDataId = Guid.Empty;
 
             var invalidOdsDataException =
-                new InvalidOdsDataException(
+                new InvalidOdsDataServiceException(
                     message: "Invalid odsData. Please correct the errors and try again.");
 
             invalidOdsDataException.AddData(
@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                 values: "Id is invalid");
 
             var expectedOdsDataValidationException =
-                new OdsDataValidationException(
+                new OdsDataServiceValidationException(
                     message: "OdsData validation error occurred, please fix errors and try again.",
                     innerException: invalidOdsDataException);
 
@@ -37,8 +37,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<List<OdsData>> retrieveAncestorsByChildIdTask =
                 this.odsDataService.RetrieveAllAncestorsByChildId(invalidOdsDataId);
 
-            OdsDataValidationException actualOdsDataValidationException =
-                await Assert.ThrowsAsync<OdsDataValidationException>(
+            OdsDataServiceValidationException actualOdsDataValidationException =
+                await Assert.ThrowsAsync<OdsDataServiceValidationException>(
                     testCode: retrieveAncestorsByChildIdTask.AsTask);
 
             // then
@@ -65,10 +65,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             Guid someOdsDataId = Guid.NewGuid();
             OdsData noOdsData = null;
             var notFoundOdsDataException =
-                new NotFoundOdsDataException(message: $"OdsData not found with Id: {someOdsDataId}");
+                new NotFoundOdsDataServiceException(message: $"OdsData not found with Id: {someOdsDataId}");
 
             var expectedOdsDataValidationException =
-                new OdsDataValidationException(
+                new OdsDataServiceValidationException(
                     message: "OdsData validation error occurred, please fix errors and try again.",
                     innerException: notFoundOdsDataException);
 
@@ -80,8 +80,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<List<OdsData>> retrieveAncestorsByChildIdTask =
                 this.odsDataService.RetrieveAllAncestorsByChildId(someOdsDataId);
 
-            OdsDataValidationException actualOdsDataValidationException =
-                await Assert.ThrowsAsync<OdsDataValidationException>(
+            OdsDataServiceValidationException actualOdsDataValidationException =
+                await Assert.ThrowsAsync<OdsDataServiceValidationException>(
                     testCode: retrieveAncestorsByChildIdTask.AsTask);
 
             //then

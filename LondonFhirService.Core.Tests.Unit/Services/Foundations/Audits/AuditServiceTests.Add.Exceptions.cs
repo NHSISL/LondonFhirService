@@ -24,12 +24,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             SqlException sqlException = GetSqlException();
 
             var failedAuditStorageException =
-                new FailedAuditStorageException(
+                new FailedStorageAuditServiceException(
                     message: "Failed audit storage error occurred, please contact support.",
                     innerException: sqlException);
 
             var expectedAuditDependencyException =
-                new AuditDependencyException(
+                new AuditServiceDependencyException(
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: failedAuditStorageException);
 
@@ -41,8 +41,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> addAuditTask =
                 this.auditService.AddAuditAsync(someAudit);
 
-            AuditDependencyException actualAuditDependencyException =
-                await Assert.ThrowsAsync<AuditDependencyException>(
+            AuditServiceDependencyException actualAuditDependencyException =
+                await Assert.ThrowsAsync<AuditServiceDependencyException>(
                     addAuditTask.AsTask);
 
             // then
@@ -79,12 +79,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 new DuplicateKeyException(randomMessage);
 
             var alreadyExistsAuditException =
-                new AlreadyExistsAuditException(
+                new AlreadyExistsAuditServiceException(
                     message: "Audit with the same Id already exists.",
                     innerException: duplicateKeyException);
 
             var expectedAuditDependencyValidationException =
-                new AuditDependencyValidationException(
+                new AuditServiceDependencyValidationException(
                     message: "Audit dependency validation occurred, please try again.",
                     innerException: alreadyExistsAuditException);
 
@@ -97,8 +97,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 this.auditService.AddAuditAsync(alreadyExistsAudit);
 
             // then
-            AuditDependencyValidationException actualAuditDependencyValidationException =
-                await Assert.ThrowsAsync<AuditDependencyValidationException>(
+            AuditServiceDependencyValidationException actualAuditDependencyValidationException =
+                await Assert.ThrowsAsync<AuditServiceDependencyValidationException>(
                     addAuditTask.AsTask);
 
             actualAuditDependencyValidationException.Should()
@@ -135,12 +135,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 new ForeignKeyConstraintConflictException(exceptionMessage);
 
             var invalidAuditReferenceException =
-                new InvalidAuditReferenceException(
+                new InvalidReferenceAuditServiceException(
                     message: "Invalid audit reference error occurred.",
                     innerException: foreignKeyConstraintConflictException);
 
             var expectedAuditValidationException =
-                new AuditDependencyValidationException(
+                new AuditServiceDependencyValidationException(
                     message: "Audit dependency validation occurred, please try again.",
                     innerException: invalidAuditReferenceException);
 
@@ -153,8 +153,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 this.auditService.AddAuditAsync(someAudit);
 
             // then
-            AuditDependencyValidationException actualAuditDependencyValidationException =
-                await Assert.ThrowsAsync<AuditDependencyValidationException>(
+            AuditServiceDependencyValidationException actualAuditDependencyValidationException =
+                await Assert.ThrowsAsync<AuditServiceDependencyValidationException>(
                     addAuditTask.AsTask);
 
             actualAuditDependencyValidationException.Should()
@@ -189,12 +189,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 new DbUpdateException();
 
             var failedAuditStorageException =
-                new FailedAuditStorageException(
+                new FailedStorageAuditServiceException(
                     message: "Failed audit storage error occurred, please contact support.",
                     innerException: databaseUpdateException);
 
             var expectedAuditDependencyException =
-                new AuditDependencyException(
+                new AuditServiceDependencyException(
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: failedAuditStorageException);
 
@@ -206,8 +206,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> addAuditTask =
                 this.auditService.AddAuditAsync(someAudit);
 
-            AuditDependencyException actualAuditDependencyException =
-                await Assert.ThrowsAsync<AuditDependencyException>(
+            AuditServiceDependencyException actualAuditDependencyException =
+                await Assert.ThrowsAsync<AuditServiceDependencyException>(
                     addAuditTask.AsTask);
 
             // then

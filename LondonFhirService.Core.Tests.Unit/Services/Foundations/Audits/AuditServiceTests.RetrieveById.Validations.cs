@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             var invalidAuditId = Guid.Empty;
 
             var invalidAuditException =
-                new InvalidAuditException(
+                new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again.");
 
             invalidAuditException.AddData(
@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 values: "Id is required");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
@@ -36,8 +36,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> retrieveAuditByIdTask =
                 this.auditService.RetrieveAuditByIdAsync(invalidAuditId);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     retrieveAuditByIdTask.AsTask);
 
             // then
@@ -67,10 +67,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             Audit noAudit = null;
 
             var notFoundAuditException =
-                new NotFoundAuditException(someAuditId);
+                new NotFoundAuditServiceException(someAuditId);
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: notFoundAuditException);
 
@@ -82,8 +82,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> retrieveAuditByIdTask =
                 this.auditService.RetrieveAuditByIdAsync(someAuditId);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     retrieveAuditByIdTask.AsTask);
 
             //then

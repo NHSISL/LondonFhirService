@@ -22,10 +22,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             int inputBatchSize = randomBatchSize;
 
             var nullAuditException =
-                new NullAuditException(message: "Audits is null.");
+                new NullAuditServiceException(message: "Audits is null.");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: nullAuditException);
 
@@ -33,8 +33,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask bulkAddAuditTask =
                 this.auditService.BulkAddAuditsAsync(nullAudit);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(bulkAddAuditTask.AsTask);
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(bulkAddAuditTask.AsTask);
 
             // then
             actualAuditValidationException.Should()

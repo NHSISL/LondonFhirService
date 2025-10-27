@@ -23,12 +23,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             SqlException sqlException = GetSqlException();
 
             var failedAuditStorageException =
-                new FailedAuditStorageException(
+                new FailedStorageAuditServiceException(
                     message: "Failed audit storage error occurred, please contact support.",
                     innerException: sqlException);
 
             var expectedAuditDependencyException =
-                new AuditDependencyException(
+                new AuditServiceDependencyException(
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: failedAuditStorageException);
 
@@ -40,8 +40,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> addAuditTask =
                 this.auditService.RemoveAuditByIdAsync(randomAudit.Id);
 
-            AuditDependencyException actualAuditDependencyException =
-                await Assert.ThrowsAsync<AuditDependencyException>(
+            AuditServiceDependencyException actualAuditDependencyException =
+                await Assert.ThrowsAsync<AuditServiceDependencyException>(
                     addAuditTask.AsTask);
 
             // then
@@ -81,12 +81,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 new DbUpdateConcurrencyException();
 
             var lockedAuditException =
-                new LockedAuditException(
+                new LockedAuditServiceException(
                     message: "Locked audit record exception, please try again later",
                     innerException: databaseUpdateConcurrencyException);
 
             var expectedAuditDependencyValidationException =
-                new AuditDependencyValidationException(
+                new AuditServiceDependencyValidationException(
                     message: "Audit dependency validation occurred, please try again.",
                     innerException: lockedAuditException);
 
@@ -98,8 +98,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> removeAuditByIdTask =
                 this.auditService.RemoveAuditByIdAsync(someAuditId);
 
-            AuditDependencyValidationException actualAuditDependencyValidationException =
-                await Assert.ThrowsAsync<AuditDependencyValidationException>(
+            AuditServiceDependencyValidationException actualAuditDependencyValidationException =
+                await Assert.ThrowsAsync<AuditServiceDependencyValidationException>(
                     removeAuditByIdTask.AsTask);
 
             // then
@@ -133,12 +133,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             SqlException sqlException = GetSqlException();
 
             var failedAuditStorageException =
-                new FailedAuditStorageException(
+                new FailedStorageAuditServiceException(
                     message: "Failed audit storage error occurred, please contact support.",
                     innerException: sqlException);
 
             var expectedAuditDependencyException =
-                new AuditDependencyException(
+                new AuditServiceDependencyException(
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: failedAuditStorageException);
 
@@ -150,8 +150,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> deleteAuditTask =
                 this.auditService.RemoveAuditByIdAsync(someAuditId);
 
-            AuditDependencyException actualAuditDependencyException =
-                await Assert.ThrowsAsync<AuditDependencyException>(
+            AuditServiceDependencyException actualAuditDependencyException =
+                await Assert.ThrowsAsync<AuditServiceDependencyException>(
                     deleteAuditTask.AsTask);
 
             // then

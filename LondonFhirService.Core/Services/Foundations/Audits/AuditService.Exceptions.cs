@@ -26,31 +26,31 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             {
                 return await returningAuditFunction();
             }
-            catch (NullAuditException nullAuditException)
+            catch (NullAuditServiceException nullAuditException)
             {
                 throw await CreateAndLogValidationExceptionAsync(nullAuditException);
             }
-            catch (InvalidAuditException invalidAuditException)
+            catch (InvalidAuditServiceException invalidAuditException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidAuditException);
             }
             catch (SqlException sqlException)
             {
                 var failedAuditStorageException =
-                    new FailedAuditStorageException(
+                    new FailedStorageAuditServiceException(
                         message: "Failed audit storage error occurred, please contact support.",
                         innerException: sqlException);
 
                 throw await CreateAndLogCriticalDependencyExceptionAsync(failedAuditStorageException);
             }
-            catch (NotFoundAuditException notFoundAuditException)
+            catch (NotFoundAuditServiceException notFoundAuditException)
             {
                 throw await CreateAndLogValidationExceptionAsync(notFoundAuditException);
             }
             catch (DuplicateKeyException duplicateKeyException)
             {
                 var alreadyExistsAuditException =
-                    new AlreadyExistsAuditException(
+                    new AlreadyExistsAuditServiceException(
                         message: "Audit with the same Id already exists.",
                         innerException: duplicateKeyException);
 
@@ -59,7 +59,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             catch (ForeignKeyConstraintConflictException foreignKeyConstraintConflictException)
             {
                 var invalidAuditReferenceException =
-                    new InvalidAuditReferenceException(
+                    new InvalidReferenceAuditServiceException(
                         message: "Invalid audit reference error occurred.",
                         innerException: foreignKeyConstraintConflictException);
 
@@ -68,7 +68,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
             {
                 var lockedAuditException =
-                    new LockedAuditException(
+                    new LockedAuditServiceException(
                         message: "Locked audit record exception, please try again later",
                         innerException: dbUpdateConcurrencyException);
 
@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             catch (DbUpdateException databaseUpdateException)
             {
                 var failedAuditStorageException =
-                    new FailedAuditStorageException(
+                    new FailedStorageAuditServiceException(
                         message: "Failed audit storage error occurred, please contact support.",
                         innerException: databaseUpdateException);
 
@@ -100,7 +100,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             {
                 await returningNothingFunction();
             }
-            catch (NullAuditException nullAuditException)
+            catch (NullAuditServiceException nullAuditException)
             {
                 throw await CreateAndLogValidationExceptionAsync(nullAuditException);
             }
@@ -124,7 +124,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             catch (SqlException sqlException)
             {
                 var failedAuditStorageException =
-                    new FailedAuditStorageException(
+                    new FailedStorageAuditServiceException(
                         message: "Failed audit storage error occurred, please contact support.",
                         innerException: sqlException);
 
@@ -141,10 +141,10 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             }
         }
 
-        private async ValueTask<AuditValidationException> CreateAndLogValidationExceptionAsync(Xeption exception)
+        private async ValueTask<AuditServiceValidationException> CreateAndLogValidationExceptionAsync(Xeption exception)
         {
             var auditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: exception);
 
@@ -153,10 +153,10 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             return auditValidationException;
         }
 
-        private async ValueTask<AuditDependencyException> CreateAndLogCriticalDependencyExceptionAsync(Xeption exception)
+        private async ValueTask<AuditServiceDependencyException> CreateAndLogCriticalDependencyExceptionAsync(Xeption exception)
         {
             var auditDependencyException =
-                new AuditDependencyException(
+                new AuditServiceDependencyException(
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: exception);
 
@@ -165,10 +165,10 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             return auditDependencyException;
         }
 
-        private async ValueTask<AuditDependencyValidationException> CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
+        private async ValueTask<AuditServiceDependencyValidationException> CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
             var auditDependencyValidationException =
-                new AuditDependencyValidationException(
+                new AuditServiceDependencyValidationException(
                     message: "Audit dependency validation occurred, please try again.",
                     innerException: exception);
 
@@ -177,11 +177,11 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             return auditDependencyValidationException;
         }
 
-        private async ValueTask<AuditDependencyException> CreateAndLogDependencyExceptionAsync(
+        private async ValueTask<AuditServiceDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
             var auditDependencyException =
-                new AuditDependencyException(
+                new AuditServiceDependencyException(
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: exception);
 

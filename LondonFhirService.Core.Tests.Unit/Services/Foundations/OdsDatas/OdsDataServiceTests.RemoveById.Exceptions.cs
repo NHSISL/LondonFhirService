@@ -23,12 +23,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             SqlException sqlException = CreateSqlException();
 
             var failedStorageOdsDataException =
-                new FailedStorageOdsDataException(
+                new FailedStorageOdsDataServiceException(
                     message: "Failed odsData storage error occurred, contact support.",
                     innerException: sqlException);
 
             var expectedOdsDataDependencyException =
-                new OdsDataDependencyException(
+                new OdsDataServiceDependencyException(
                     message: "OdsData dependency error occurred, contact support.",
                     innerException: failedStorageOdsDataException);
 
@@ -40,8 +40,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<OdsData> addOdsDataTask =
                 this.odsDataService.RemoveOdsDataByIdAsync(randomOdsData.Id);
 
-            OdsDataDependencyException actualOdsDataDependencyException =
-                await Assert.ThrowsAsync<OdsDataDependencyException>(
+            OdsDataServiceDependencyException actualOdsDataDependencyException =
+                await Assert.ThrowsAsync<OdsDataServiceDependencyException>(
                     testCode: addOdsDataTask.AsTask);
 
             // then
@@ -75,12 +75,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                 new DbUpdateConcurrencyException();
 
             var lockedOdsDataException =
-                new LockedOdsDataException(
+                new LockedOdsDataServiceException(
                     message: "Locked odsData record exception, please try again later",
                     innerException: databaseUpdateConcurrencyException);
 
             var expectedOdsDataDependencyValidationException =
-                new OdsDataDependencyValidationException(
+                new OdsDataServiceDependencyValidationException(
                     message: "OdsData dependency validation occurred, please try again.",
                     innerException: lockedOdsDataException);
 
@@ -92,8 +92,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<OdsData> removeOdsDataByIdTask =
                 this.odsDataService.RemoveOdsDataByIdAsync(someOdsDataId);
 
-            OdsDataDependencyValidationException actualOdsDataDependencyValidationException =
-                await Assert.ThrowsAsync<OdsDataDependencyValidationException>(
+            OdsDataServiceDependencyValidationException actualOdsDataDependencyValidationException =
+                await Assert.ThrowsAsync<OdsDataServiceDependencyValidationException>(
                     testCode: removeOdsDataByIdTask.AsTask);
 
             // then
@@ -125,12 +125,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             SqlException sqlException = CreateSqlException();
 
             var failedStorageOdsDataException =
-                new FailedStorageOdsDataException(
+                new FailedStorageOdsDataServiceException(
                     message: "Failed odsData storage error occurred, contact support.",
                     innerException: sqlException);
 
             var expectedOdsDataDependencyException =
-                new OdsDataDependencyException(
+                new OdsDataServiceDependencyException(
                     message: "OdsData dependency error occurred, contact support.",
                     innerException: failedStorageOdsDataException);
 
@@ -142,8 +142,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<OdsData> deleteOdsDataTask =
                 this.odsDataService.RemoveOdsDataByIdAsync(someOdsDataId);
 
-            OdsDataDependencyException actualOdsDataDependencyException =
-                await Assert.ThrowsAsync<OdsDataDependencyException>(
+            OdsDataServiceDependencyException actualOdsDataDependencyException =
+                await Assert.ThrowsAsync<OdsDataServiceDependencyException>(
                     testCode: deleteOdsDataTask.AsTask);
 
             // then

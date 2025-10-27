@@ -17,6 +17,6 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
         ValueTask<ConsumerAccess> RetrieveConsumerAccessByIdAsync(Guid consumerAccessId);
         ValueTask<ConsumerAccess> ModifyConsumerAccessAsync(ConsumerAccess consumerAccess);
         ValueTask<ConsumerAccess> RemoveConsumerAccessByIdAsync(Guid consumerAccessId);
-        ValueTask<List<string>> RetrieveActiveOrganisationsConsumerHasAccessToAsync(Guid consumerId);
+        ValueTask<List<string>> RetrieveAllActiveOrganisationsUserHasAccessToAsync(Guid consumerId);
     }
 }

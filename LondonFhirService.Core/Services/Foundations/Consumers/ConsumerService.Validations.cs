@@ -17,8 +17,10 @@ namespace LondonFhirService.Core.Services.Foundations.Consumers
             ValidateConsumerIsNotNull(consumer);
             string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
-            Validate<InvalidConsumerServiceException>(
-                message: "Invalid consumer. Please correct the errors and try again.",
+            Validate(
+                createException: () => new InvalidConsumerServiceException(
+                    message: "Invalid consumer. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(consumer.Id), Parameter: nameof(Consumer.Id)),
                 (Rule: IsInvalid(consumer.UserId), Parameter: nameof(Consumer.UserId)),
                 (Rule: IsInvalid(consumer.Name), Parameter: nameof(Consumer.Name)),
@@ -56,8 +58,10 @@ namespace LondonFhirService.Core.Services.Foundations.Consumers
             ValidateConsumerIsNotNull(consumer);
             string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
-            Validate<InvalidConsumerServiceException>(
-                message: "Invalid consumer. Please correct the errors and try again.",
+            Validate(
+                createException: () => new InvalidConsumerServiceException(
+                    message: "Invalid consumer. Please correct the errors and try again."),
+
                 (Rule: IsInvalid(consumer.Id), Parameter: nameof(Consumer.Id)),
                 (Rule: IsInvalid(consumer.UserId), Parameter: nameof(Consumer.UserId)),
                 (Rule: IsInvalid(consumer.Name), Parameter: nameof(Consumer.Name)),
@@ -84,10 +88,14 @@ namespace LondonFhirService.Core.Services.Foundations.Consumers
                 (Rule: await IsNotRecentAsync(consumer.UpdatedDate), Parameter: nameof(Consumer.UpdatedDate)));
         }
 
-        private static void ValidateConsumerId(Guid consumerId) =>
-            Validate<InvalidConsumerServiceException>(
-                message: "Invalid consumer Id. Please correct the errors and try again.",
+        private static void ValidateConsumerId(Guid consumerId)
+        {
+            Validate(
+                createException: () => new InvalidConsumerServiceException(
+                    message: "Invalid consumer. Please correct the errors and try again."),
+
                 validations: (Rule: IsInvalid(consumerId), Parameter: nameof(Consumer.Id)));
+        }
 
         private static void ValidateStorageConsumer(Consumer maybeConsumer, Guid consumerId)
         {
@@ -109,8 +117,10 @@ namespace LondonFhirService.Core.Services.Foundations.Consumers
             Consumer inputConsumer,
             Consumer storageConsumer)
         {
-            Validate<InvalidConsumerServiceException>(
-                message: "Invalid consumer. Please correct the errors and try again.",
+            Validate(
+                createException: () => new InvalidConsumerServiceException(
+                    message: "Invalid consumer. Please correct the errors and try again."),
+
                 (Rule: IsNotSame(
                         firstDate: inputConsumer.CreatedDate,
                         secondDate: storageConsumer.CreatedDate,
@@ -217,10 +227,12 @@ namespace LondonFhirService.Core.Services.Foundations.Consumers
             return (isNotRecent, startDate, endDate);
         }
 
-        private static void Validate<T>(string message, params (dynamic Rule, string Parameter)[] validations)
+        private static void Validate<T>(
+            Func<T> createException,
+            params (dynamic Rule, string Parameter)[] validations)
             where T : Xeption
         {
-            var invalidDataException = (T)Activator.CreateInstance(typeof(T), message);
+            T invalidDataException = createException();
 
             foreach ((dynamic rule, string parameter) in validations)
             {

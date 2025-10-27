@@ -19,10 +19,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             OdsData nullOdsData = null;
 
             var nullOdsDataException =
-                new NullOdsDataException(message: "OdsData is null.");
+                new NullOdsDataServiceException(message: "OdsData is null.");
 
             var expectedOdsDataValidationException =
-                new OdsDataValidationException(
+                new OdsDataServiceValidationException(
                     message: "OdsData validation error occurred, please fix errors and try again.",
                     innerException: nullOdsDataException);
 
@@ -30,8 +30,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<OdsData> addOdsDataTask =
                 this.odsDataService.AddOdsDataAsync(nullOdsData);
 
-            OdsDataValidationException actualOdsDataValidationException =
-                await Assert.ThrowsAsync<OdsDataValidationException>(
+            OdsDataServiceValidationException actualOdsDataValidationException =
+                await Assert.ThrowsAsync<OdsDataServiceValidationException>(
                     testCode: addOdsDataTask.AsTask);
 
             // then
@@ -60,7 +60,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             };
 
             var invalidOdsDataException =
-                new InvalidOdsDataException(
+                new InvalidOdsDataServiceException(
                     message: "Invalid odsData. Please correct the errors and try again.");
 
             invalidOdsDataException.AddData(
@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                 values: "Text is invalid");
 
             var expectedOdsDataValidationException =
-                new OdsDataValidationException(
+                new OdsDataServiceValidationException(
                     message: "OdsData validation error occurred, please fix errors and try again.",
                     innerException: invalidOdsDataException);
 
@@ -80,8 +80,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<OdsData> addOdsDataTask =
                 this.odsDataService.AddOdsDataAsync(invalidOdsData);
 
-            OdsDataValidationException actualOdsDataValidationException =
-                await Assert.ThrowsAsync<OdsDataValidationException>(
+            OdsDataServiceValidationException actualOdsDataValidationException =
+                await Assert.ThrowsAsync<OdsDataServiceValidationException>(
                     testCode: addOdsDataTask.AsTask);
 
             // then

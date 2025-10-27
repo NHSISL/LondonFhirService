@@ -19,10 +19,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
         {
             // given
             Audit nullAudit = null;
-            var nullAuditException = new NullAuditException(message: "Audit is null.");
+            var nullAuditException = new NullAuditServiceException(message: "Audit is null.");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: nullAuditException);
 
@@ -34,8 +34,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> modifyAuditTask =
                 this.auditService.ModifyAuditAsync(nullAudit);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     modifyAuditTask.AsTask);
 
             // then
@@ -94,7 +94,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     .ReturnsAsync(randomUserId);
 
             var invalidAuditException =
-                new InvalidAuditException(
+                new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again.");
 
             invalidAuditException.AddData(
@@ -139,7 +139,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     ]);
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
@@ -147,8 +147,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> modifyAuditTask =
                 auditService.ModifyAuditAsync(invalidAudit);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     modifyAuditTask.AsTask);
 
             //then
@@ -205,7 +205,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     .ReturnsAsync(randomUserId);
 
             var invalidAuditException =
-                new InvalidAuditException(
+                new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again.");
 
             invalidAuditException.AddData(
@@ -213,7 +213,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 values: $"Date is the same as {nameof(Audit.CreatedDate)}");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
@@ -221,8 +221,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> modifyAuditTask =
                 auditService.ModifyAuditAsync(invalidAudit);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     modifyAuditTask.AsTask);
 
             // then
@@ -280,7 +280,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     .ReturnsAsync(randomUserId);
 
             var invalidAuditException =
-                new InvalidAuditException(
+                new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again.");
 
             invalidAuditException.AddData(
@@ -288,7 +288,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 values: "Date is not recent");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
@@ -300,8 +300,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> modifyAuditTask =
                 auditService.ModifyAuditAsync(invalidAudit);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     modifyAuditTask.AsTask);
 
             // then
@@ -344,10 +344,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             Audit invalidAudit = CreateRandomModifyAudit(randomDateTimeOffset, randomUserId);
 
             Audit nonExistAudit = invalidAudit;
-            var notFoundAuditException = new NotFoundAuditException(nonExistAudit.Id);
+            var notFoundAuditException = new NotFoundAuditServiceException(nonExistAudit.Id);
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: notFoundAuditException);
 
@@ -367,8 +367,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> modifyAuditTask =
                 auditService.ModifyAuditAsync(nonExistAudit);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     modifyAuditTask.AsTask);
 
             // then
@@ -429,7 +429,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     .ReturnsAsync(randomUserId);
 
             var invalidAuditException =
-                new InvalidAuditException(
+                new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again.");
 
             invalidAuditException.AddData(
@@ -437,7 +437,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 values: $"Date is not the same as {nameof(Audit.CreatedDate)}");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
@@ -449,8 +449,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> modifyAuditTask =
                 auditService.ModifyAuditAsync(invalidAudit);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     modifyAuditTask.AsTask);
 
             // then
@@ -497,7 +497,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             storageAudit.UpdatedDate = storageAudit.CreatedDate;
 
             var invalidAuditException =
-                new InvalidAuditException(
+                new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again.");
 
             invalidAuditException.AddData(
@@ -505,7 +505,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 values: $"Text is not the same as {nameof(Audit.CreatedBy)}");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
@@ -529,8 +529,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> modifyAuditTask =
                 auditService.ModifyAuditAsync(invalidAudit);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(
                     modifyAuditTask.AsTask);
 
             // then
@@ -575,7 +575,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             invalidAudit.UpdatedDate = storageAudit.UpdatedDate;
 
             var invalidAuditException =
-                new InvalidAuditException(
+                new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again.");
 
             invalidAuditException.AddData(
@@ -583,7 +583,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 values: $"Date is the same as {nameof(Audit.UpdatedDate)}");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
@@ -608,7 +608,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 auditService.ModifyAuditAsync(invalidAudit);
 
             // then
-            await Assert.ThrowsAsync<AuditValidationException>(
+            await Assert.ThrowsAsync<AuditServiceValidationException>(
                 modifyAuditTask.AsTask);
 
             securityAuditBrokerMock.Verify(service =>

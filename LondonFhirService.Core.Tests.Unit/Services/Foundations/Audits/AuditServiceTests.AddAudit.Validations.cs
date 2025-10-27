@@ -31,7 +31,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             Guid? randomCorrelationId = null;
 
             var invalidAuditException =
-                new InvalidAuditException(
+                new InvalidAuditServiceException(
                     message: "Invalid audit. Please correct the errors and try again.");
 
             invalidAuditException.AddData(
@@ -43,7 +43,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 values: "Text is required");
 
             var expectedAuditValidationException =
-                new AuditValidationException(
+                new AuditServiceValidationException(
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
@@ -69,8 +69,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     correlationId: randomCorrelationId.ToString(),
                     logLevel: randomLogLevel);
 
-            AuditValidationException actualAuditValidationException =
-                await Assert.ThrowsAsync<AuditValidationException>(addAuditTask.AsTask);
+            AuditServiceValidationException actualAuditValidationException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(addAuditTask.AsTask);
 
             // then
             actualAuditValidationException.Should()

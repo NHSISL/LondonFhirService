@@ -24,12 +24,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             SqlException sqlException = CreateSqlException();
 
             var failedStorageOdsDataException =
-                new FailedStorageOdsDataException(
+                new FailedStorageOdsDataServiceException(
                     message: "Failed odsData storage error occurred, contact support.",
                     innerException: sqlException);
 
             var expectedOdsDataDependencyException =
-                new OdsDataDependencyException(
+                new OdsDataServiceDependencyException(
                     message: "OdsData dependency error occurred, contact support.",
                     innerException: failedStorageOdsDataException);
 
@@ -41,8 +41,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<OdsData> addOdsDataTask =
                 this.odsDataService.AddOdsDataAsync(someOdsData);
 
-            OdsDataDependencyException actualOdsDataDependencyException =
-                await Assert.ThrowsAsync<OdsDataDependencyException>(
+            OdsDataServiceDependencyException actualOdsDataDependencyException =
+                await Assert.ThrowsAsync<OdsDataServiceDependencyException>(
                     testCode: addOdsDataTask.AsTask);
 
             // then
@@ -74,13 +74,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                 new DuplicateKeyException(randomMessage);
 
             var alreadyExistsOdsDataException =
-                new AlreadyExistsOdsDataException(
+                new AlreadyExistsOdsDataServiceException(
                     message: "OdsData with the same Id already exists.",
                     innerException: duplicateKeyException,
                     data: duplicateKeyException.Data);
 
             var expectedOdsDataDependencyValidationException =
-                new OdsDataDependencyValidationException(
+                new OdsDataServiceDependencyValidationException(
                     message: "OdsData dependency validation occurred, please try again.",
                     innerException: alreadyExistsOdsDataException);
 
@@ -93,8 +93,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                 this.odsDataService.AddOdsDataAsync(alreadyExistsOdsData);
 
             // then
-            OdsDataDependencyValidationException actualOdsDataDependencyValidationException =
-                await Assert.ThrowsAsync<OdsDataDependencyValidationException>(
+            OdsDataServiceDependencyValidationException actualOdsDataDependencyValidationException =
+                await Assert.ThrowsAsync<OdsDataServiceDependencyValidationException>(
                     testCode: addOdsDataTask.AsTask);
 
             actualOdsDataDependencyValidationException.Should()
@@ -125,12 +125,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                 new ForeignKeyConstraintConflictException(exceptionMessage);
 
             var invalidOdsDataReferenceException =
-                new InvalidOdsDataReferenceException(
+                new InvalidReferenceOdsDataServiceException(
                     message: "Invalid odsData reference error occurred.",
                     innerException: foreignKeyConstraintConflictException);
 
             var expectedOdsDataValidationException =
-                new OdsDataDependencyValidationException(
+                new OdsDataServiceDependencyValidationException(
                     message: "OdsData dependency validation occurred, please try again.",
                     innerException: invalidOdsDataReferenceException);
 
@@ -143,8 +143,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                 this.odsDataService.AddOdsDataAsync(someOdsData);
 
             // then
-            OdsDataDependencyValidationException actualOdsDataDependencyValidationException =
-                await Assert.ThrowsAsync<OdsDataDependencyValidationException>(
+            OdsDataServiceDependencyValidationException actualOdsDataDependencyValidationException =
+                await Assert.ThrowsAsync<OdsDataServiceDependencyValidationException>(
                     testCode: addOdsDataTask.AsTask);
 
             actualOdsDataDependencyValidationException.Should()
@@ -173,12 +173,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
                 new DbUpdateException();
 
             var failedOperationOdsDataException =
-                new FailedOperationOdsDataException(
+                new FailedOperationOdsDataServiceException(
                     message: "Failed odsData operation error occurred, contact support.",
                     innerException: databaseUpdateException);
 
             var expectedOdsDataDependencyException =
-                new OdsDataDependencyException(
+                new OdsDataServiceDependencyException(
                     message: "OdsData dependency error occurred, contact support.",
                     innerException: failedOperationOdsDataException);
 
@@ -190,8 +190,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.OdsDatas
             ValueTask<OdsData> addOdsDataTask =
                 this.odsDataService.AddOdsDataAsync(someOdsData);
 
-            OdsDataDependencyException actualOdsDataDependencyException =
-                await Assert.ThrowsAsync<OdsDataDependencyException>(
+            OdsDataServiceDependencyException actualOdsDataDependencyException =
+                await Assert.ThrowsAsync<OdsDataServiceDependencyException>(
                     testCode: addOdsDataTask.AsTask);
 
             // then

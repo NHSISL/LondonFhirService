@@ -18,10 +18,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         {
             // given
             PdsData nullPdsData = null;
-            var nullPdsDataException = new NullPdsDataException(message: "PdsData is null.");
+            var nullPdsDataException = new NullPdsDataServiceException(message: "PdsData is null.");
 
             var expectedPdsDataValidationException =
-                new PdsDataValidationException(
+                new PdsDataServiceValidationException(
                     message: "PdsData validation error occurred, please fix errors and try again.",
                     innerException: nullPdsDataException);
 
@@ -29,8 +29,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> modifyPdsDataTask =
                 this.pdsDataService.ModifyPdsDataAsync(nullPdsData);
 
-            PdsDataValidationException actualPdsDataValidationException =
-                await Assert.ThrowsAsync<PdsDataValidationException>(
+            PdsDataServiceValidationException actualPdsDataValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceValidationException>(
                     testCode: modifyPdsDataTask.AsTask);
 
             // then
@@ -61,7 +61,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             var invalidPdsData = new PdsData { NhsNumber = invalidText };
 
             var invalidPdsDataException =
-                new InvalidPdsDataException(
+                new InvalidPdsDataServiceException(
                     message: "Invalid pdsData. Please correct the errors and try again.");
 
             invalidPdsDataException.AddData(
@@ -73,7 +73,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 values: "Text is invalid");
 
             var expectedPdsDataValidationException =
-                new PdsDataValidationException(
+                new PdsDataServiceValidationException(
                     message: "PdsData validation error occurred, please fix errors and try again.",
                     innerException: invalidPdsDataException);
 
@@ -81,8 +81,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> modifyPdsDataTask =
                 this.pdsDataService.ModifyPdsDataAsync(invalidPdsData);
 
-            PdsDataValidationException actualPdsDataValidationException =
-                await Assert.ThrowsAsync<PdsDataValidationException>(
+            PdsDataServiceValidationException actualPdsDataValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceValidationException>(
                     testCode: modifyPdsDataTask.AsTask);
 
             //then
@@ -113,10 +113,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             PdsData nullPdsData = null;
 
             var notFoundPdsDataException =
-                new NotFoundPdsDataException(message: $"PdsData not found with Id: {nonExistPdsData.Id}");
+                new NotFoundPdsDataServiceException(message: $"PdsData not found with Id: {nonExistPdsData.Id}");
 
             var expectedPdsDataValidationException =
-                new PdsDataValidationException(
+                new PdsDataServiceValidationException(
                     message: "PdsData validation error occurred, please fix errors and try again.",
                     innerException: notFoundPdsDataException);
 
@@ -128,8 +128,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<PdsData> modifyPdsDataTask =
                 this.pdsDataService.ModifyPdsDataAsync(nonExistPdsData);
 
-            PdsDataValidationException actualPdsDataValidationException =
-                await Assert.ThrowsAsync<PdsDataValidationException>(
+            PdsDataServiceValidationException actualPdsDataValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceValidationException>(
                     testCode: modifyPdsDataTask.AsTask);
 
             // then

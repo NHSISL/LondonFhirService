@@ -25,7 +25,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         {
             // given
             var invalidPdsDataException =
-                new InvalidPdsDataException(
+                new InvalidPdsDataServiceException(
                     message: "Invalid pdsData. Please correct the errors and try again.");
 
             invalidPdsDataException.AddData(
@@ -37,7 +37,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 values: "Items is invalid");
 
             var expectedPdsDataValidationException =
-                new PdsDataValidationException(
+                new PdsDataServiceValidationException(
                     message: "PdsData validation error occurred, please fix errors and try again.",
                     innerException: invalidPdsDataException);
 
@@ -45,8 +45,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<bool> retrievePdsDataByIdTask =
                 this.pdsDataService.OrganisationsHaveAccessToThisPatient(invalidNhsNumber, invalidList);
 
-            PdsDataValidationException actualPdsDataValidationException =
-                await Assert.ThrowsAsync<PdsDataValidationException>(
+            PdsDataServiceValidationException actualPdsDataValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceValidationException>(
                     testCode: retrievePdsDataByIdTask.AsTask);
 
             // then

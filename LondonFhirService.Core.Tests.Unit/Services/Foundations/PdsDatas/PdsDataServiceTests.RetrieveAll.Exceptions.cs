@@ -22,12 +22,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             SqlException sqlException = CreateSqlException();
 
             var failedStoragePdsDataException =
-                new FailedStoragePdsDataException(
+                new FailedStoragePdsDataServiceException(
                     message: "Failed pdsData storage error occurred, contact support.",
                     innerException: sqlException);
 
             var expectedPdsDataDependencyException =
-                new PdsDataDependencyException(
+                new PdsDataServiceDependencyException(
                     message: "PdsData dependency error occurred, contact support.",
                     innerException: failedStoragePdsDataException);
 
@@ -39,8 +39,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             ValueTask<IQueryable<PdsData>> retrieveAllPdsDatasTask =
                 this.pdsDataService.RetrieveAllPdsDatasAsync();
 
-            PdsDataDependencyException actualPdsDataDependencyException =
-                await Assert.ThrowsAsync<PdsDataDependencyException>(
+            PdsDataServiceDependencyException actualPdsDataDependencyException =
+                await Assert.ThrowsAsync<PdsDataServiceDependencyException>(
                     testCode: retrieveAllPdsDatasTask.AsTask);
 
             // then

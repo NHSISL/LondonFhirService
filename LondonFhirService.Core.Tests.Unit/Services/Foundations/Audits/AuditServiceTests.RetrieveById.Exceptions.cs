@@ -22,12 +22,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             SqlException sqlException = GetSqlException();
 
             var failedAuditStorageException =
-                new FailedAuditStorageException(
+                new FailedStorageAuditServiceException(
                     message: "Failed audit storage error occurred, please contact support.",
                     innerException: sqlException);
 
             var expectedAuditDependencyException =
-                new AuditDependencyException(
+                new AuditServiceDependencyException(
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: failedAuditStorageException);
 
@@ -39,8 +39,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             ValueTask<Audit> retrieveAuditByIdTask =
                 this.auditService.RetrieveAuditByIdAsync(someId);
 
-            AuditDependencyException actualAuditDependencyException =
-                await Assert.ThrowsAsync<AuditDependencyException>(
+            AuditServiceDependencyException actualAuditDependencyException =
+                await Assert.ThrowsAsync<AuditServiceDependencyException>(
                     retrieveAuditByIdTask.AsTask);
 
             // then
