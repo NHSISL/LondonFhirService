@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 createException: () => new InvalidProviderServiceException(
                     message: "Invalid provider. Please correct the errors and try again."),
 
-(Rule: IsInvalid(provider.Id), Parameter: nameof(Provider.Id)),
+                (Rule: IsInvalid(provider.Id), Parameter: nameof(Provider.Id)),
                 (Rule: IsInvalid(provider.Name), Parameter: nameof(Provider.Name)),
                 (Rule: IsInvalid(provider.CreatedDate), Parameter: nameof(Provider.CreatedDate)),
                 (Rule: IsInvalid(provider.CreatedBy), Parameter: nameof(Provider.CreatedBy)),
