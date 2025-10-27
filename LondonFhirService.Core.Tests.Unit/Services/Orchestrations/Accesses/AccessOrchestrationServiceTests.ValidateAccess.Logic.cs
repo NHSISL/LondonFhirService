@@ -231,6 +231,79 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         }
 
         [Fact]
+        public async Task ShouldThrowUnauthorisedExceptionOnValidateAccessWhenNoMatchingConsumer()
+        {
+            // given
+            string userId = GetRandomString();
+            User randomUser = CreateRandomUser(userId);
+            User outputUser = randomUser;
+            Consumer randomConsumer = CreateRandomConsumer();
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            DateTimeOffset validActiveFromDate = randomDateTimeOffset.AddDays(-2);
+            DateTimeOffset validActiveToDate = randomDateTimeOffset.AddDays(2);
+            randomConsumer.ActiveFrom = validActiveFromDate;
+            randomConsumer.ActiveTo = validActiveToDate;
+            Consumer inputConsumer = randomConsumer.DeepClone();
+
+            IQueryable<Consumer> storageConsumers =
+                new List<Consumer> { inputConsumer }.AsQueryable();
+
+            Guid randomGuid = Guid.NewGuid();
+            string randomNhsNumber = GetRandomStringWithLength(5);
+            string inputNhsNumber = randomNhsNumber;
+
+            var unauthorizedAccessOrchestrationException =
+                new UnauthorizedAccessOrchestrationException("Current consumer is not a valid consumer.");
+
+            var expectedAccessOrchestrationValidationException =
+                new AccessOrchestrationValidationException(
+                    message: "Access orchestration validation error occurred, " +
+                        "fix the errors and try again.",
+                    innerException: unauthorizedAccessOrchestrationException);
+
+            this.securityBrokerMock.Setup(broker =>
+                broker.GetCurrentUserAsync())
+                    .ReturnsAsync(outputUser);
+
+            this.consumerServiceMock.Setup(service =>
+                service.RetrieveAllConsumersAsync())
+                    .ReturnsAsync(storageConsumers);
+
+            // when
+            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
+
+            AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
+                await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
+                    testCode: validateAccessTask.AsTask);
+
+            // then
+            actualAccessOrchestrationValidationException
+                .Should().BeEquivalentTo(expectedAccessOrchestrationValidationException);
+
+            this.securityBrokerMock.Verify(broker =>
+                broker.GetCurrentUserAsync(),
+                    Times.Once);
+
+            this.consumerServiceMock.Verify(service =>
+                service.RetrieveAllConsumersAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+               broker.LogErrorAsync(It.Is(SameExceptionAs(
+                   expectedAccessOrchestrationValidationException))),
+                       Times.Once);
+
+            this.consumerServiceMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.pdsDataServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
         public async Task ShouldThrowForbiddenExceptionOnValidateAccessWhenInactiveConsumer()
         {
             // given
