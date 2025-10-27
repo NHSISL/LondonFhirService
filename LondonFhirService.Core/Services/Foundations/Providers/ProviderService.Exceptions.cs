@@ -7,6 +7,7 @@ using EFxceptions.Models.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Providers
@@ -56,6 +57,15 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogDependencyValidationException(invalidProviderReferenceException);
             }
+            catch (DbUpdateException databaseUpdateException)
+            {
+                var failedStorageProviderServiceException =
+                    new FailedStorageProviderServiceException(
+                        message: "Failed provider storage error occurred, contact support.",
+                        innerException: databaseUpdateException);
+
+                throw await CreateAndLogDependencyException(failedStorageProviderServiceException);
+            }
         }
 
         private async ValueTask<ProviderServiceValidationException> CreateAndLogValidationException(Xeption exception)
@@ -94,6 +104,19 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             await this.loggingBroker.LogErrorAsync(providerServiceDependencyValidationException);
 
             return providerServiceDependencyValidationException;
+        }
+
+        private async ValueTask<ProviderServiceDependencyException> CreateAndLogDependencyException(
+            Xeption exception)
+        {
+            var providerServiceDependencyException =
+                new ProviderServiceDependencyException(
+                    message: "Provider dependency error occurred, contact support.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(providerServiceDependencyException);
+
+            return providerServiceDependencyException;
         }
     }
 }
