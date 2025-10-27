@@ -44,6 +44,11 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 throw await CreateAndLogDependencyExceptionAsync(
                     consumerServiceException);
             }
+            catch (ConsumerServiceDependencyException consumerServiceDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(
+                    consumerServiceDependencyException);
+            }
             catch (ConsumerServiceDependencyValidationException consumerDependencyValidationException)
             {
                 throw await CreateAndLogDependencyValidationExceptionAsync(
@@ -58,6 +63,11 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             {
                 throw await CreateAndLogDependencyExceptionAsync(
                     consumerAccessServiceException);
+            }
+            catch (ConsumerAccessServiceDependencyException consumerAccessServiceDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(
+                    consumerAccessServiceDependencyException);
             }
             catch (ConsumerAccessServiceDependencyValidationException consumerAccessDependencyValidationException)
             {

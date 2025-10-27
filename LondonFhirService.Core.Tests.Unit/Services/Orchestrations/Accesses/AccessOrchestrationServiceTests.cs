@@ -13,7 +13,10 @@ using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
+using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
+using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Consumers;
 using LondonFhirService.Core.Services.Foundations.PdsDatas;
@@ -128,6 +131,70 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         {
             return actualException =>
                 actualException.SameExceptionAs(expectedException);
+        }
+
+        public static TheoryData<Xeption> DependencyValidationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+            var innerException = new Xeption(exceptionMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new ConsumerServiceValidationException(
+                    message: "Consumer validation errors occured, please try again",
+                    innerException),
+
+                new ConsumerServiceValidationException(
+                    message: "Consumer dependency validation occurred, please try again.",
+                    innerException),
+
+                new ConsumerAccessServiceValidationException(
+                    message: "Consumer access validation errors occured, please try again",
+                    innerException),
+
+                new ConsumerAccessServiceValidationException(
+                    message: "Consumer access dependency validation occurred, please try again.",
+                    innerException),
+
+                new PdsDataValidationException(
+                    message: "Pds data validation errors occurred, please try again.",
+                    innerException)
+            };
+        }
+
+        public static TheoryData<Xeption> DependencyExceptions()
+        {
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+            var innerException = new Xeption(exceptionMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new ConsumerServiceDependencyException(
+                    message: "Consumer dependency error occurred, please contact support.",
+                    innerException),
+
+                new ConsumerServiceException(
+                    message: "Consumer service error occurred, please contact support.",
+                    innerException),
+
+                new ConsumerAccessServiceDependencyException(
+                    message: "Consumer access dependency error occurred, please contact support.",
+                    innerException),
+
+                new ConsumerAccessServiceException(
+                    message: "Consumer access service error occurred, please contact support.",
+                    innerException),
+
+                new PdsDataDependencyException(
+                    message: "Pds data dependency error occurred, please contact support.",
+                    innerException),
+
+                new PdsDataServiceException(
+                    message: "Pds data service error occurred, please contact support.",
+                    innerException),
+            };
         }
     }
 }
