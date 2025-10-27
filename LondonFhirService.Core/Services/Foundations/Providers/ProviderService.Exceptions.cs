@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using EFxceptions.Models.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
@@ -66,6 +67,15 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogDependencyException(failedStorageProviderServiceException);
             }
+            catch (Exception exception)
+            {
+                var failedProviderServiceException =
+                    new FailedProviderServiceException(
+                        message: "Failed provider service occurred, please contact support",
+                        innerException: exception);
+
+                throw await CreateAndLogServiceException(failedProviderServiceException);
+            }
         }
 
         private async ValueTask<ProviderServiceValidationException> CreateAndLogValidationException(Xeption exception)
@@ -117,6 +127,19 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             await this.loggingBroker.LogErrorAsync(providerServiceDependencyException);
 
             return providerServiceDependencyException;
+        }
+
+        private async ValueTask<ProviderServiceException> CreateAndLogServiceException(
+            Xeption exception)
+        {
+            var providerServiceException =
+                new ProviderServiceException(
+                    message: "Provider service error occurred, contact support.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(providerServiceException);
+
+            return providerServiceException;
         }
     }
 }
