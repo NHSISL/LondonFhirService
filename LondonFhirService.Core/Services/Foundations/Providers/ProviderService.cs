@@ -48,6 +48,8 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 Provider maybeProvider =
                     await this.storageBroker.SelectProviderByIdAsync(provider.Id);
 
+                ValidateStorageProvider(maybeProvider, provider.Id);
+
                 provider = await this.securityAuditBroker
                     .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(provider, maybeProvider);
 

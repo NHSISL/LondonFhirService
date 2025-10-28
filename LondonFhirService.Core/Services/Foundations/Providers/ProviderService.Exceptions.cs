@@ -40,6 +40,10 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogCriticalDependencyException(failedStorageProviderServiceException);
             }
+            catch (NotFoundProviderServiceException notFoundProviderServiceException)
+            {
+                throw await CreateAndLogValidationException(notFoundProviderServiceException);
+            }
             catch (DuplicateKeyException duplicateKeyException)
             {
                 var alreadyExistsProviderServiceException =

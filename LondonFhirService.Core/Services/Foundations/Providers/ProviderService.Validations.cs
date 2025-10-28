@@ -92,6 +92,14 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             }
         }
 
+        private static void ValidateStorageProvider(Provider maybeProvider, Guid providerId)
+        {
+            if (maybeProvider is null)
+            {
+                throw new NotFoundProviderServiceException(message: $"Couldn't find provider with providerId: {providerId}.");
+            }
+        }
+
         private static dynamic IsInvalid(Guid id) => new
         {
             Condition = id == Guid.Empty,
