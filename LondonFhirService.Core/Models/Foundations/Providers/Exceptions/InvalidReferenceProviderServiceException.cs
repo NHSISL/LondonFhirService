@@ -7,9 +7,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Providers.Exceptions
 {
-    public class InvalidProviderReferenceException : Xeption
+    public class InvalidReferenceProviderServiceException : Xeption
     {
-        public InvalidProviderReferenceException(string message, Exception innerException)
+        public InvalidReferenceProviderServiceException(string message, Exception innerException)
             : base(message, innerException) { }
     }
 }

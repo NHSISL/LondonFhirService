@@ -152,7 +152,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 new ForeignKeyConstraintConflictException(exceptionMessage);
 
             var invalidProviderReferenceException =
-                new InvalidProviderReferenceException(
+                new InvalidReferenceProviderServiceException(
                     message: "Invalid provider reference error occurred.",
                     innerException: foreignKeyConstraintConflictException);
 

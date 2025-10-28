@@ -52,7 +52,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             catch (ForeignKeyConstraintConflictException foreignKeyConstraintConflictException)
             {
                 var invalidProviderReferenceException =
-                    new InvalidProviderReferenceException(
+                    new InvalidReferenceProviderServiceException(
                         message: "Invalid provider reference error occurred.",
                         innerException: foreignKeyConstraintConflictException);
 

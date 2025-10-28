@@ -171,7 +171,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
 
             invalidProviderServiceException.AddData(
                 key: nameof(Provider.Name),
-                values: $"Text exceed max length of {invalidProvider.Name.Length - 1} characters");
+                values: $"Text exceeds max length of {invalidProvider.Name.Length - 1} characters");
 
             var expectedProviderServiceValidationException =
                 new ProviderServiceValidationException(
