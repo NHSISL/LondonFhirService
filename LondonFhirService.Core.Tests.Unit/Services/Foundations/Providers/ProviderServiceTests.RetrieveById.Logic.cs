@@ -22,8 +22,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             Provider expectedProvider = storageProvider.DeepClone();
 
             this.storageBrokerMock.Setup(broker =>
-                    broker.SelectProviderByIdAsync(inputProvider.Id))
-                .ReturnsAsync(storageProvider);
+                broker.SelectProviderByIdAsync(inputProvider.Id))
+                    .ReturnsAsync(storageProvider);
 
             // when
             Provider actualProvider =
@@ -33,8 +33,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             actualProvider.Should().BeEquivalentTo(expectedProvider);
 
             this.storageBrokerMock.Verify(broker =>
-                    broker.SelectProviderByIdAsync(inputProvider.Id),
-                Times.Once());
+                broker.SelectProviderByIdAsync(inputProvider.Id),
+                    Times.Once());
 
             this.storageBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
