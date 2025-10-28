@@ -15,5 +15,6 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
         ValueTask<IQueryable<Provider>> RetrieveAllProvidersAsync();
         ValueTask<Provider> RetrieveProviderByIdAsync(Guid providerId);
         ValueTask<Provider> ModifyProviderAsync(Provider provider);
+        ValueTask<Provider> RemoveProviderByIdAsync(Guid providerId);
     }
 }
