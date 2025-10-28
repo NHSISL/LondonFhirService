@@ -53,6 +53,10 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 provider = await this.securityAuditBroker
                     .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(provider, maybeProvider);
 
+                ValidateAgainstStorageProviderOnModify(
+                    inputProvider: provider,
+                    storageProvider: maybeProvider);
+
                 return await this.storageBroker.UpdateProviderAsync(provider);
             });
 

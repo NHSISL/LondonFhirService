@@ -100,6 +100,33 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             }
         }
 
+        private static void ValidateAgainstStorageProviderOnModify(
+            Provider inputProvider,
+            Provider storageProvider)
+        {
+            Validate(
+                createException: () => new InvalidProviderServiceException(
+                    message: "Invalid provider. Please correct the errors and try again."),
+
+                (Rule: IsNotSame(
+                    firstDate: inputProvider.CreatedDate,
+                    secondDate: storageProvider.CreatedDate,
+                    secondDateName: nameof(Provider.CreatedDate)),
+                Parameter: nameof(Provider.CreatedDate)),
+
+                (Rule: IsNotSame(
+                    first: inputProvider.CreatedBy,
+                    second: storageProvider.CreatedBy,
+                    secondName: nameof(Provider.CreatedBy)),
+                Parameter: nameof(Provider.CreatedBy)),
+
+                (Rule: IsSame(
+                    firstDate: inputProvider.UpdatedDate,
+                    secondDate: storageProvider.UpdatedDate,
+                    secondDateName: nameof(Provider.UpdatedDate)),
+                Parameter: nameof(Provider.UpdatedDate)));
+        }
+
         private static dynamic IsInvalid(Guid id) => new
         {
             Condition = id == Guid.Empty,
