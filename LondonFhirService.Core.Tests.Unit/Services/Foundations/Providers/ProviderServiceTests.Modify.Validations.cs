@@ -650,5 +650,90 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnModifyIfStorageUpdatedDateSameAsUpdatedDateAndLogItAsync()
+        {
+            // given
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            string randomUserId = GetRandomString();
+
+            Provider randomProvider =
+                CreateRandomModifyProvider(dateTimeOffset: randomDateTimeOffset, userId: randomUserId);
+
+            Provider invalidProvider = randomProvider;
+            Provider storageProvider = randomProvider.DeepClone();
+
+            var invalidProviderServiceException =
+                new InvalidProviderServiceException(
+                    message: "Invalid provider. Please correct the errors and try again.");
+
+            invalidProviderServiceException.AddData(
+                key: nameof(Provider.UpdatedDate),
+                values: $"Date is the same as {nameof(Provider.UpdatedDate)}");
+
+            var expectedProviderServiceValidationException =
+                new ProviderServiceValidationException(
+                    message: "Provider validation errors occurred, please try again.",
+                    innerException: invalidProviderServiceException);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyModifyAuditValuesAsync(invalidProvider))
+                    .ReturnsAsync(invalidProvider);
+
+            this.storageBrokerMock.Setup(broker =>
+                broker.SelectProviderByIdAsync(invalidProvider.Id))
+                    .ReturnsAsync(storageProvider);
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(invalidProvider, storageProvider))
+                    .ReturnsAsync(invalidProvider);
+
+            // when
+            ValueTask<Provider> modifyProviderTask =
+                this.providerService.ModifyProviderAsync(invalidProvider);
+
+            // then
+            await Assert.ThrowsAsync<ProviderServiceValidationException>(
+                modifyProviderTask.AsTask);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyModifyAuditValuesAsync(invalidProvider),
+                    Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedProviderServiceValidationException))),
+                        Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectProviderByIdAsync(invalidProvider.Id),
+                    Times.Once);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(invalidProvider, storageProvider),
+                    Times.Once);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
