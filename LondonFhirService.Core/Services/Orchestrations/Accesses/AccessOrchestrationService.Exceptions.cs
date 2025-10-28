@@ -94,7 +94,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 var failedServiceAccessOrchestrationException =
                     new FailedServiceAccessOrchestrationException(
                         message: "Failed access orchestration service error occurred, please contact support.",
-                        innerException: exception);
+                        innerException: exception,
+                        data: exception.Data);
 
                 throw await CreateAndLogServiceExceptionAsync(failedServiceAccessOrchestrationException);
             }
