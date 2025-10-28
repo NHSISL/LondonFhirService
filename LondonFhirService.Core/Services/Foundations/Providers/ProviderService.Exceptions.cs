@@ -109,6 +109,16 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogCriticalDependencyException(failedStorageProviderServiceException);
             }
+            catch (Exception exception)
+            {
+                var failedProviderServiceException =
+                    new FailedProviderServiceException(
+                        message: "Failed provider service occurred, please contact support",
+                        innerException: exception,
+                        data: exception.Data);
+
+                throw await CreateAndLogServiceException(failedProviderServiceException);
+            }
         }
 
         private async ValueTask<ProviderServiceValidationException> CreateAndLogValidationException(Xeption exception)

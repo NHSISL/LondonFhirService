@@ -21,8 +21,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             IQueryable<Provider> expectedProviders = storageProviders;
 
             this.storageBrokerMock.Setup(broker =>
-                    broker.SelectAllProvidersAsync())
-                .ReturnsAsync(storageProviders);
+                broker.SelectAllProvidersAsync())
+                    .ReturnsAsync(storageProviders);
 
             // when
             IQueryable<Provider> actualProviders = await this.providerService.RetrieveAllProvidersAsync();
@@ -31,8 +31,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             actualProviders.Should().BeEquivalentTo(expectedProviders);
 
             this.storageBrokerMock.Verify(broker =>
-                    broker.SelectAllProvidersAsync(),
-                Times.Once());
+                broker.SelectAllProvidersAsync(),
+                    Times.Once());
 
             this.storageBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
