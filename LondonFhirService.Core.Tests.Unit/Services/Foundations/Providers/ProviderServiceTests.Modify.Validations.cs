@@ -309,5 +309,86 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Theory]
+        [MemberData(nameof(MinutesBeforeOrAfter))]
+        public async Task ShouldThrowValidationExceptionOnModifyIfUpdatedDateIsNotRecentAndLogItAsync(int minutes)
+        {
+            // given
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            DateTimeOffset invalidDate = randomDateTimeOffset.AddMinutes(minutes);
+            DateTimeOffset startDate = randomDateTimeOffset.AddSeconds(-90);
+            DateTimeOffset endDate = randomDateTimeOffset.AddSeconds(0);
+            string randomUserId = GetRandomString();
+
+            Provider randomProvider =
+                CreateRandomProvider(dateTimeOffset: randomDateTimeOffset, userId: randomUserId);
+
+            randomProvider.UpdatedDate = randomDateTimeOffset.AddMinutes(minutes);
+
+            var invalidProviderServiceException =
+                new InvalidProviderServiceException(
+                    message: "Invalid provider. Please correct the errors and try again.");
+
+            invalidProviderServiceException.AddData(
+                key: nameof(Provider.UpdatedDate),
+                values:
+                    $"Date is not recent. Expected a value between {startDate} and {endDate} but found {invalidDate}");
+
+            var expectedProviderValidatonException =
+                new ProviderServiceValidationException(
+                    message: "Provider validation errors occurred, please try again.",
+                    innerException: invalidProviderServiceException);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyModifyAuditValuesAsync(randomProvider))
+                    .ReturnsAsync(randomProvider);
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                .ReturnsAsync(randomDateTimeOffset);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
+
+            // when
+            ValueTask<Provider> modifyProviderTask =
+                this.providerService.ModifyProviderAsync(randomProvider);
+
+            ProviderServiceValidationException actualProviderServiceValidationException =
+                await Assert.ThrowsAsync<ProviderServiceValidationException>(
+                    modifyProviderTask.AsTask);
+
+            // then
+            actualProviderServiceValidationException.Should()
+                .BeEquivalentTo(expectedProviderValidatonException);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyModifyAuditValuesAsync(randomProvider),
+                    Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedProviderValidatonException))),
+                        Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>()),
+                    Times.Never);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
