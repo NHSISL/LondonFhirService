@@ -10,5 +10,6 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
     public interface IProviderService
     {
         ValueTask<Provider> AddProviderAsync(Provider provider);
+        ValueTask<Provider> ModifyProviderAsync(Provider provider);
     }
 }
