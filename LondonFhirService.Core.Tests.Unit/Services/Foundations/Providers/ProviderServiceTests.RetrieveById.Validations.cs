@@ -87,7 +87,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     retrieveProviderByIdTask.AsTask);
 
             //then
-            actualProviderServiceValidationException.Should().BeEquivalentTo(expectedProviderServiceValidationException);
+            actualProviderServiceValidationException.Should()
+                .BeEquivalentTo(expectedProviderServiceValidationException);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectProviderByIdAsync(It.IsAny<Guid>()),
