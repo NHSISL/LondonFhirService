@@ -125,5 +125,53 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldThrowDependencyExceptionOnRemoveWhenSqlExceptionOccursAndLogItAsync()
+        {
+            // given
+            Guid someProviderId = Guid.NewGuid();
+            SqlException sqlException = GetSqlException();
+
+            var failedStorageProviderServiceException =
+                new FailedStorageProviderServiceException(
+                    message: "Failed provider storage error occurred, contact support.",
+                    innerException: sqlException);
+
+            var expectedProviderServiceDependencyException =
+                new ProviderServiceDependencyException(
+                    message: "Provider dependency error occurred, contact support.",
+                    innerException: failedStorageProviderServiceException);
+
+            this.storageBrokerMock.Setup(broker =>
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>()))
+                    .ThrowsAsync(sqlException);
+
+            // when
+            ValueTask<Provider> deleteProviderTask =
+                this.providerService.RemoveProviderByIdAsync(someProviderId);
+
+            ProviderServiceDependencyException actualProviderServiceDependencyException =
+                await Assert.ThrowsAsync<ProviderServiceDependencyException>(
+                    deleteProviderTask.AsTask);
+
+            // then
+            actualProviderServiceDependencyException.Should()
+                .BeEquivalentTo(expectedProviderServiceDependencyException);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogCriticalAsync(It.Is(SameExceptionAs(
+                    expectedProviderServiceDependencyException))),
+                        Times.Once);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
