@@ -33,6 +33,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             where T : Xeption
         {
             T invalidDataException = createException();
+
             foreach ((dynamic rule, string parameter) in validations)
             {
                 if (rule.Condition)
@@ -42,6 +43,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                         value: rule.Message);
                 }
             }
+            
             invalidDataException.ThrowIfContainsErrors();
         }
     }
