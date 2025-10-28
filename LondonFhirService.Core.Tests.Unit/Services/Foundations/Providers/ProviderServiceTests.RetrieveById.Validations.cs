@@ -58,5 +58,49 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldThrowNotFoundExceptionOnRetrieveByIdIfProviderIsNotFoundAndLogItAsync()
+        {
+            //given
+            Guid someProviderId = Guid.NewGuid();
+            Provider noProvider = null;
+
+            var notFoundProviderServiceException = new NotFoundProviderServiceException(
+                $"Couldn't find provider with providerId: {someProviderId}.");
+
+            var expectedProviderServiceValidationException =
+                new ProviderServiceValidationException(
+                    message: "Provider validation errors occurred, please try again.",
+                    innerException: notFoundProviderServiceException);
+
+            this.storageBrokerMock.Setup(broker =>
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>()))
+                    .ReturnsAsync(noProvider);
+
+            //when
+            ValueTask<Provider> retrieveProviderByIdTask =
+                this.providerService.RetrieveProviderByIdAsync(someProviderId);
+
+            ProviderServiceValidationException actualProviderServiceValidationException =
+                await Assert.ThrowsAsync<ProviderServiceValidationException>(
+                    retrieveProviderByIdTask.AsTask);
+
+            //then
+            actualProviderServiceValidationException.Should().BeEquivalentTo(expectedProviderServiceValidationException);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>()),
+                    Times.Once());
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedProviderServiceValidationException))),
+                    Times.Once());
+
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
