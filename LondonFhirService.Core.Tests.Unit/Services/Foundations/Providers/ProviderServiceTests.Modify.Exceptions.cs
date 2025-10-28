@@ -71,8 +71,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
-                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(It.IsAny<Provider>(), It.IsAny<Provider>()),
-                    Times.Never);
+                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(
+                    It.IsAny<Provider>(), It.IsAny<Provider>()),
+                        Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.UpdateProviderAsync(It.IsAny<Provider>()),
@@ -126,8 +127,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedProviderServiceDependencyValidationException))),
-                    Times.Once);
+                broker.LogErrorAsync(
+                    It.Is(SameExceptionAs(expectedProviderServiceDependencyValidationException))),
+                        Times.Once);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.GetUserIdAsync(),
@@ -142,8 +144,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
-                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(It.IsAny<Provider>(), It.IsAny<Provider>()),
-                    Times.Never);
+                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(
+                    It.IsAny<Provider>(), It.IsAny<Provider>()),
+                        Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.UpdateProviderAsync(It.IsAny<Provider>()),
@@ -210,8 +213,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
-                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(It.IsAny<Provider>(), It.IsAny<Provider>()),
-                    Times.Never);
+                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(
+                    It.IsAny<Provider>(), It.IsAny<Provider>()),
+                        Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.UpdateProviderAsync(It.IsAny<Provider>()),
@@ -278,8 +282,78 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
-                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(It.IsAny<Provider>(), It.IsAny<Provider>()),
+                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(
+                    It.IsAny<Provider>(), It.IsAny<Provider>()),
+                        Times.Never);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.UpdateProviderAsync(It.IsAny<Provider>()),
                     Times.Never);
+
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowServiceExceptionOnModifyIfServiceErrorOccursAndLogItAsync()
+        {
+            // given
+            Provider randomProvider = CreateRandomProvider();
+            var serviceException = new Exception();
+
+            var failedProviderServiceException =
+                new FailedProviderServiceException(
+                    message: "Failed provider service occurred, please contact support",
+                    innerException: serviceException);
+
+            var expectedProviderServiceException =
+                new ProviderServiceException(
+                    message: "Provider service error occurred, contact support.",
+                    innerException: failedProviderServiceException);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyModifyAuditValuesAsync(It.IsAny<Provider>()))
+                    .Throws(serviceException);
+
+            // when
+            ValueTask<Provider> modifyProviderTask =
+                this.providerService.ModifyProviderAsync(randomProvider);
+
+            ProviderServiceException actualProviderServiceException =
+                await Assert.ThrowsAsync<ProviderServiceException>(
+                    modifyProviderTask.AsTask);
+
+            // then
+            actualProviderServiceException.Should()
+                .BeEquivalentTo(expectedProviderServiceException);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyModifyAuditValuesAsync(It.IsAny<Provider>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedProviderServiceException))),
+                        Times.Once);
+
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Never);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Never);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>()),
+                    Times.Never);
+
+            this.securityAuditBrokerMock.Verify(broker => broker
+                .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(
+                    It.IsAny<Provider>(), It.IsAny<Provider>()),
+                        Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.UpdateProviderAsync(It.IsAny<Provider>()),

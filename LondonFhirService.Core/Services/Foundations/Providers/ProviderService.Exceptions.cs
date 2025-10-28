@@ -62,6 +62,15 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogDependencyValidationException(invalidProviderReferenceException);
             }
+            catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
+            {
+                var lockedProviderServiceException =
+                    new LockedProviderServiceException(
+                        message: "Locked provider record exception, please try again later",
+                        innerException: dbUpdateConcurrencyException);
+
+                throw await CreateAndLogDependencyValidationException(lockedProviderServiceException);
+            }
             catch (DbUpdateException databaseUpdateException)
             {
                 var failedStorageProviderServiceException =
@@ -107,8 +116,8 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             return providerServiceDependencyException;
         }
 
-        private async ValueTask<ProviderServiceDependencyValidationException> CreateAndLogDependencyValidationException(
-            Xeption exception)
+        private async ValueTask<ProviderServiceDependencyValidationException>
+            CreateAndLogDependencyValidationException(Xeption exception)
         {
             var providerServiceDependencyValidationException =
                 new ProviderServiceDependencyValidationException(

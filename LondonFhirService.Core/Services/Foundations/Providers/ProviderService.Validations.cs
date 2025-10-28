@@ -96,7 +96,8 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
         {
             if (maybeProvider is null)
             {
-                throw new NotFoundProviderServiceException(message: $"Couldn't find provider with providerId: {providerId}.");
+                throw new NotFoundProviderServiceException(
+                    message: $"Couldn't find provider with providerId: {providerId}.");
             }
         }
 
