@@ -10,6 +10,7 @@ namespace LondonFhirService.Core.Brokers.Fhirs
     public class FhirBroker : IFhirBroker
     {
         private readonly IFhirAbstractionProvider fhirAbstractionProvider;
+
         public FhirBroker(IFhirAbstractionProvider fhirAbstractionProvider)
         {
             this.fhirAbstractionProvider = fhirAbstractionProvider;
