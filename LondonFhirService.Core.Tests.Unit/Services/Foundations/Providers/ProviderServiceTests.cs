@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using LondonFhirService.Core.Brokers.DateTimes;
@@ -75,6 +76,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 randomNumber,
                 randomNegativeNumber
             };
+        }
+
+        private static IQueryable<Provider> CreateRandomProviders()
+        {
+            return CreateProviderFiller(dateTimeOffset: GetRandomDateTimeOffset())
+                .Create(count: GetRandomNumber())
+                .AsQueryable();
         }
 
         private static Provider CreateRandomProvider() =>
