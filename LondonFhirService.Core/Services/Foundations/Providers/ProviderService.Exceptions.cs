@@ -85,7 +85,8 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 var failedProviderServiceException =
                     new FailedProviderServiceException(
                         message: "Failed provider service occurred, please contact support",
-                        innerException: exception);
+                        innerException: exception,
+                        data: exception.Data);
 
                 throw await CreateAndLogServiceException(failedProviderServiceException);
             }

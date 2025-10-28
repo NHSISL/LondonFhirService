@@ -257,13 +257,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
         public async Task ShouldThrowServiceExceptionOnAddIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            Provider someProvider = CreateRandomProvider();
-            var serviceException = new Exception();
+            Provider randomProvider = CreateRandomProvider();
+            var serviceException = new Exception("Some message");
 
             var failedProviderServiceException =
                 new FailedProviderServiceException(
                     message: "Failed provider service occurred, please contact support",
-                    innerException: serviceException);
+                    innerException: serviceException,
+                    data: serviceException.Data);
 
             var expectedProviderServiceException =
                 new ProviderServiceException(
@@ -275,7 +276,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     .ThrowsAsync(serviceException);
 
             // when
-            ValueTask<Provider> addProviderTask = this.providerService.AddProviderAsync(someProvider);
+            ValueTask<Provider> addProviderTask = this.providerService.AddProviderAsync(randomProvider);
 
             ProviderServiceException actualProviderServiceException =
                 await Assert.ThrowsAsync<ProviderServiceException>(

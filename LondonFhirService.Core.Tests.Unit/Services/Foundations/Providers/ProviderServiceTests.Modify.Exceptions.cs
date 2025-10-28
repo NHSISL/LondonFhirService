@@ -301,12 +301,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
         {
             // given
             Provider randomProvider = CreateRandomProvider();
-            var serviceException = new Exception();
+            var serviceException = new Exception("Some message");
 
             var failedProviderServiceException =
                 new FailedProviderServiceException(
                     message: "Failed provider service occurred, please contact support",
-                    innerException: serviceException);
+                    innerException: serviceException,
+                    data: serviceException.Data);
 
             var expectedProviderServiceException =
                 new ProviderServiceException(
