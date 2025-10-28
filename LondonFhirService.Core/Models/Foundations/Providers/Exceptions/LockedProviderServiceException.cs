@@ -3,15 +3,14 @@
 // ---------------------------------------------------------
 
 using System;
-using System.Collections;
 using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Providers.Exceptions
 {
-    public class FailedProviderServiceException : Xeption
+    public class LockedProviderServiceException : Xeption
     {
-        public FailedProviderServiceException(string message, Exception innerException, IDictionary data)
-            : base(message, innerException, data)
+        public LockedProviderServiceException(string message, Exception innerException)
+            : base(message, innerException)
         { }
     }
 }

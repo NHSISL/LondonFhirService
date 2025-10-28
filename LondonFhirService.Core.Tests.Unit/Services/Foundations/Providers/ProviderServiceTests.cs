@@ -83,6 +83,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
         private static Provider CreateRandomProvider(DateTimeOffset dateTimeOffset, string userId = "") =>
             CreateProviderFiller(dateTimeOffset, userId).Create();
 
+        private static Provider CreateRandomModifyProvider(DateTimeOffset dateTimeOffset, string userId = "")
+        {
+            int randomDaysInPast = GetRandomNegativeNumber();
+            Provider randomProvider = CreateRandomProvider(dateTimeOffset, userId);
+            randomProvider.CreatedDate = randomProvider.CreatedDate.AddDays(randomDaysInPast);
+
+            return randomProvider;
+        }
+
         private static Filler<Provider> CreateProviderFiller(DateTimeOffset dateTimeOffset, string userId = "")
         {
             userId = string.IsNullOrWhiteSpace(userId) ? Guid.NewGuid().ToString() : userId;

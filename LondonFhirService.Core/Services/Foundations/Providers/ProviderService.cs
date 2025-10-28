@@ -38,5 +38,27 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 return await this.storageBroker.InsertProviderAsync(provider);
             });
+
+        public ValueTask<Provider> ModifyProviderAsync(Provider provider) =>
+            TryCatch(async () =>
+            {
+                provider = await this.securityAuditBroker.ApplyModifyAuditValuesAsync(provider);
+                await ValidateProviderOnModify(provider);
+
+                Provider maybeProvider =
+                    await this.storageBroker.SelectProviderByIdAsync(provider.Id);
+
+                ValidateStorageProvider(maybeProvider, provider.Id);
+
+                provider = await this.securityAuditBroker
+                    .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(provider, maybeProvider);
+
+                ValidateAgainstStorageProviderOnModify(
+                    inputProvider: provider,
+                    storageProvider: maybeProvider);
+
+                return await this.storageBroker.UpdateProviderAsync(provider);
+            });
+
     }
 }

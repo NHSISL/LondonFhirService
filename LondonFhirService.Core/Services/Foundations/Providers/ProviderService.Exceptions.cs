@@ -40,6 +40,10 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogCriticalDependencyException(failedStorageProviderServiceException);
             }
+            catch (NotFoundProviderServiceException notFoundProviderServiceException)
+            {
+                throw await CreateAndLogValidationException(notFoundProviderServiceException);
+            }
             catch (DuplicateKeyException duplicateKeyException)
             {
                 var alreadyExistsProviderServiceException =
@@ -58,6 +62,15 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
                 throw await CreateAndLogDependencyValidationException(invalidProviderReferenceException);
             }
+            catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
+            {
+                var lockedProviderServiceException =
+                    new LockedProviderServiceException(
+                        message: "Locked provider record exception, please try again later",
+                        innerException: dbUpdateConcurrencyException);
+
+                throw await CreateAndLogDependencyValidationException(lockedProviderServiceException);
+            }
             catch (DbUpdateException databaseUpdateException)
             {
                 var failedStorageProviderServiceException =
@@ -72,7 +85,8 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 var failedProviderServiceException =
                     new FailedProviderServiceException(
                         message: "Failed provider service occurred, please contact support",
-                        innerException: exception);
+                        innerException: exception,
+                        data: exception.Data);
 
                 throw await CreateAndLogServiceException(failedProviderServiceException);
             }
@@ -103,8 +117,8 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             return providerServiceDependencyException;
         }
 
-        private async ValueTask<ProviderServiceDependencyValidationException> CreateAndLogDependencyValidationException(
-            Xeption exception)
+        private async ValueTask<ProviderServiceDependencyValidationException>
+            CreateAndLogDependencyValidationException(Xeption exception)
         {
             var providerServiceDependencyValidationException =
                 new ProviderServiceDependencyValidationException(
