@@ -51,6 +51,39 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 (Rule: await IsNotRecentAsync(provider.CreatedDate), Parameter: nameof(Provider.CreatedDate)));
         }
 
+        private async ValueTask ValidateProviderOnModify(Provider provider)
+        {
+            ValidateProviderIsNotNull(provider);
+            string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
+
+            Validate(
+                createException: () => new InvalidProviderServiceException(
+                    message: "Invalid provider. Please correct the errors and try again."),
+
+                (Rule: IsInvalid(provider.Id), Parameter: nameof(Provider.Id)),
+                (Rule: IsInvalid(provider.Name), Parameter: nameof(Provider.Name)),
+                (Rule: IsInvalid(provider.CreatedDate), Parameter: nameof(Provider.CreatedDate)),
+                (Rule: IsInvalid(provider.CreatedBy), Parameter: nameof(Provider.CreatedBy)),
+                (Rule: IsInvalid(provider.UpdatedDate), Parameter: nameof(Provider.UpdatedDate)),
+                (Rule: IsInvalid(provider.UpdatedBy), Parameter: nameof(Provider.UpdatedBy)),
+                (Rule: IsGreaterThan(provider.Name, 500), Parameter: nameof(Provider.Name)),
+                (Rule: IsGreaterThan(provider.CreatedBy, 255), Parameter: nameof(Provider.CreatedBy)),
+                (Rule: IsGreaterThan(provider.UpdatedBy, 255), Parameter: nameof(Provider.UpdatedBy)),
+
+                (Rule: IsNotSame(
+                    first: currentUserId,
+                    second: provider.UpdatedBy),
+                Parameter: nameof(Provider.UpdatedBy)),
+
+                (Rule: IsSame(
+                    firstDate: provider.UpdatedDate,
+                    secondDate: provider.CreatedDate,
+                    secondDateName: nameof(Provider.CreatedDate)),
+                Parameter: nameof(Provider.UpdatedDate)),
+
+                (Rule: await IsNotRecentAsync(provider.UpdatedDate), Parameter: nameof(Provider.UpdatedDate)));
+        }
+
         private static void ValidateProviderIsNotNull(Provider provider)
         {
             if (provider is null)
