@@ -92,6 +92,15 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             }
         }
 
+        private static void ValidateProviderId(Guid providerId)
+        {
+            Validate(
+                createException: () => new InvalidProviderServiceException(
+                    message: "Invalid provider. Please correct the errors and try again."),
+
+                validations: (Rule: IsInvalid(providerId), Parameter: nameof(Provider.Id)));
+        }
+
         private static void ValidateStorageProvider(Provider maybeProvider, Guid providerId)
         {
             if (maybeProvider is null)
