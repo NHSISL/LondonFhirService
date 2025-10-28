@@ -40,8 +40,8 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 return await this.storageBroker.InsertProviderAsync(provider);
             });
 
-        public async ValueTask<IQueryable<Provider>> RetrieveAllProvidersAsync() =>
-            await this.storageBroker.SelectAllProvidersAsync();
+        public ValueTask<IQueryable<Provider>> RetrieveAllProvidersAsync() =>
+            TryCatch(async () => await this.storageBroker.SelectAllProvidersAsync());
 
         public ValueTask<Provider> ModifyProviderAsync(Provider provider) =>
             TryCatch(async () =>
