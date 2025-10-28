@@ -25,7 +25,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             this.patientServiceConfig = new PatientServiceConfig
             {
-                MaxProviderWaitTimeSeconds = 60
+                MaxProviderWaitTimeMilliseconds = 3000
             };
 
             this.patientService = new PatientService(

@@ -38,8 +38,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                         null,
                         null,
                         null,
-                        null))
-                        .Returns(outputBundle);
+                        null,
+                        default))
+                        .ReturnsAsync(outputBundle);
             }
 
             List<Bundle> expectedBundles = new List<Bundle>
@@ -67,7 +68,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                         null,
                         null,
                         null,
-                        null),
+                        null,
+                        default),
                             Times.Once);
             }
 

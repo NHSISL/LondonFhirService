@@ -6,6 +6,6 @@ namespace LondonFhirService.Core.Models.Foundations.Patients
 {
     public class PatientServiceConfig
     {
-        public int MaxProviderWaitTimeSeconds { get; set; }
+        public int MaxProviderWaitTimeMilliseconds { get; set; }
     }
 }

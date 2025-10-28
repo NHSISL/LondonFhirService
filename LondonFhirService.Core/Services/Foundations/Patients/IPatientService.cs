@@ -47,7 +47,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
         ValueTask<List<Bundle>> GetStructuredRecord(
               List<string> providers,
               string nhsNumber,
-              CancellationToken? cancellationToken,
+              CancellationToken cancellationToken,
               DateTimeOffset? start = null,
               DateTimeOffset? end = null,
               string typeFilter = null,
