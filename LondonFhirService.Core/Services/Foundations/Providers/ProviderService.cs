@@ -2,7 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
@@ -41,8 +40,8 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 return await this.storageBroker.InsertProviderAsync(provider);
             });
 
-        public ValueTask<IQueryable<Provider>> RetrieveAllProvidersAsync() =>
-            throw new NotImplementedException();
+        public async ValueTask<IQueryable<Provider>> RetrieveAllProvidersAsync() =>
+            await this.storageBroker.SelectAllProvidersAsync();
 
         public ValueTask<Provider> ModifyProviderAsync(Provider provider) =>
             TryCatch(async () =>
