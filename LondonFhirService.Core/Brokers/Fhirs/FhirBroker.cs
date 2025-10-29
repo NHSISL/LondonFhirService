@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System.Collections.Generic;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Resources;
 
@@ -10,6 +11,7 @@ namespace LondonFhirService.Core.Brokers.Fhirs
     public class FhirBroker : IFhirBroker
     {
         private readonly IFhirAbstractionProvider fhirAbstractionProvider;
+        public IReadOnlyCollection<IFhirProvider> FhirProviders { get; private set; }
 
         public FhirBroker(IFhirAbstractionProvider fhirAbstractionProvider)
         {

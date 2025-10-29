@@ -51,8 +51,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             // when
             List<Bundle> actualBundles =
-                await this.patientService.GetStructuredRecord(
-                    providers: inputProviderNames,
+                await this.patientService.Everything(
+                    providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 

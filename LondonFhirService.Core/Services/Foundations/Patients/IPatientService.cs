@@ -44,8 +44,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
         /// A <see cref="Bundle"/> representing the aggregated patient record,
         /// as returned by the FHIR <c>$everything</c> operation.
         /// </returns>
-        ValueTask<List<Bundle>> GetStructuredRecord(
-              List<string> providers,
+        ValueTask<List<Bundle>> Everything(
+              List<string> providerNames,
               string nhsNumber,
               CancellationToken cancellationToken,
               DateTimeOffset? start = null,

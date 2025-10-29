@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Fhirs;
 using LondonFhirService.Core.Models.Foundations.Patients;
+using LondonFhirService.Providers.FHIR.R4.Abstractions;
+using LondonFhirService.Providers.FHIR.R4.Abstractions.Extensions;
+using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Resources;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients
@@ -27,8 +30,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             this.patientServiceConfig = patientServiceConfig;
         }
 
-        public async ValueTask<List<Bundle>> GetStructuredRecord(
-            List<string> providers,
+        public async ValueTask<List<Bundle>> Everything(
+            List<string> providerNames,
             string nhsNumber,
             CancellationToken cancellationToken,
             DateTimeOffset? start = null,
@@ -37,10 +40,40 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             DateTimeOffset? since = null,
             int? count = null)
         {
-            ValidateOnGetStructuredRecord(providers, nhsNumber);
+            ValidateOnGetStructuredRecord(providerNames, nhsNumber);
+
+            var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
+
+            List<IFhirProvider> providers = fhirBroker.FhirProviders
+                .Where(provider => nameSet.Contains(provider.ProviderName)).ToList();
+
+            for (int i = providers.Count - 1; i >= 0; i--)
+            {
+                var p = providers[i];
+
+                bool isSupported;
+
+                try
+                {
+                    isSupported = p.SupportsResource("Patients", "Everything");
+                }
+                catch (Exception ex)
+                {
+                    // Console.WriteLine($"Provider '{p?.ProviderName}' capability check failed: {ex.Message}");
+                    // Log here
+                    isSupported = false;
+                }
+
+                if (!isSupported)
+                {
+                    //Console.WriteLine($"Removing '{p?.ProviderName}': Patients/$everything not supported.");
+                    // Log here
+                    providers.RemoveAt(i);
+                }
+            }
 
             var tasks = providers.Select(provider => ExecuteWithTimeoutAsync(
-                provider,
+                provider.Patients,
                 cancellationToken,
                 nhsNumber,
                 start,
@@ -75,8 +108,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             return bundles;
         }
 
-        private async Task<(Bundle Bundle, Exception Exception)> ExecuteWithTimeoutAsync(
-            string providerName,
+        virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteWithTimeoutAsync(
+            IPatientResource resource,
             CancellationToken globalToken,
             string nhsNumber,
             DateTimeOffset? start = null,
@@ -85,7 +118,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             DateTimeOffset? since = null,
             int? count = null)
         {
-            var everythingTask = this.fhirBroker.Patients(providerName)
+            var everythingTask = resource
                 .Everything(nhsNumber, start, end, typeFilter, since, count, globalToken).AsTask();
 
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
