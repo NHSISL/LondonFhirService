@@ -104,6 +104,5 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
-
     }
 }

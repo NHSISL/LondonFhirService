@@ -43,6 +43,22 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
                 throw await CreateAndLogDependencyValidationExceptionAsync(
                     patientOrchestrationDependencyValidationException);
             }
+            catch (AccessOrchestrationDependencyException accessOrchestrationDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(accessOrchestrationDependencyException);
+            }
+            catch (AccessOrchestrationServiceException accessOrchestrationServiceException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(accessOrchestrationServiceException);
+            }
+            catch (PatientOrchestrationDependencyException patientOrchestrationDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(patientOrchestrationDependencyException);
+            }
+            catch (PatientOrchestrationServiceException patientOrchestrationServiceException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(patientOrchestrationServiceException);
+            }
         }
 
         private async ValueTask<PatentCoordinationValidationException> CreateAndLogValidationExceptionAsync(
@@ -69,6 +85,19 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             await this.loggingBroker.LogErrorAsync(patientCoordinationDependencyValidationException);
 
             return patientCoordinationDependencyValidationException;
+        }
+
+        private async ValueTask<PatientCoordinationDependencyException> CreateAndLogDependencyExceptionAsync(
+            Xeption exception)
+        {
+            var patientCoordinationDependencyException =
+                new PatientCoordinationDependencyException(
+                    message: "Patient coordination dependency error occurred, fix the errors and try again.",
+                    innerException: exception.InnerException as Xeption);
+
+            await this.loggingBroker.LogErrorAsync(patientCoordinationDependencyException);
+
+            return patientCoordinationDependencyException;
         }
     }
 }
