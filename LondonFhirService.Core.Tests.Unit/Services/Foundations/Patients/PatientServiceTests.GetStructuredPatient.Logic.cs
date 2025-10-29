@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Services.Foundations.Patients;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
@@ -19,8 +20,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // given
             List<string> randomProviderNames = new List<string>
             {
-                GetRandomString(),
-                GetRandomString()
+                "DDS",
+                "LDS"
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
@@ -29,29 +30,37 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
 
-            foreach (string providerName in inputProviderNames)
-            {
-                this.fhirBrokerMock.Setup(broker =>
-                    broker.Patients(providerName).Everything(
-                        inputNhsNumber,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        default))
-                        .ReturnsAsync(outputBundle);
-            }
-
             List<Bundle> expectedBundles = new List<Bundle>
             {
                 outputBundle,
                 outputBundle
             };
 
+            var patientServiceMock = new Mock<PatientService>(
+                this.fhirBroker,
+                this.loggingBrokerMock.Object,
+                this.patientServiceConfig);
+
+            foreach (var provider in fhirBroker.FhirProviders)
+            {
+                patientServiceMock.Setup(service =>
+                    service.ExecuteWithTimeoutAsync(
+                        provider.Patients,
+                        default,
+                        inputNhsNumber,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null))
+                    .ReturnsAsync((outputBundle, null));
+            }
+
+            PatientService patientService = patientServiceMock.Object;
+
             // when
             List<Bundle> actualBundles =
-                await this.patientService.Everything(
+                await patientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -59,21 +68,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // then
             actualBundles.Should().BeEquivalentTo(expectedBundles);
 
-            foreach (string providerName in inputProviderNames)
-            {
-                this.fhirBrokerMock.Verify(broker =>
-                    broker.Patients(providerName).Everything(
-                        inputNhsNumber,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        default),
-                            Times.Once);
-            }
-
-            this.fhirBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

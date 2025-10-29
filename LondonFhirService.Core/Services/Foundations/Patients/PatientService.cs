@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Fhirs;
+using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Extensions;
@@ -20,17 +21,20 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
     public partial class PatientService : IPatientService
     {
         private readonly IFhirBroker fhirBroker;
+        private readonly ILoggingBroker loggingBroker;
         private readonly PatientServiceConfig patientServiceConfig;
 
         public PatientService(
             IFhirBroker fhirBroker,
+            ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
             this.fhirBroker = fhirBroker;
+            this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }
 
-        public async ValueTask<List<Bundle>> Everything(
+        public ValueTask<List<Bundle>> Everything(
             List<string> providerNames,
             string nhsNumber,
             CancellationToken cancellationToken,
@@ -38,75 +42,77 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             DateTimeOffset? end = null,
             string typeFilter = null,
             DateTimeOffset? since = null,
-            int? count = null)
-        {
-            ValidateOnGetStructuredRecord(providerNames, nhsNumber);
-
-            var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
-
-            List<IFhirProvider> providers = fhirBroker.FhirProviders
-                .Where(provider => nameSet.Contains(provider.ProviderName)).ToList();
-
-            for (int i = providers.Count - 1; i >= 0; i--)
+            int? count = null) =>
+            TryCatch(async () =>
             {
-                var p = providers[i];
+                ValidateOnGetStructuredRecord(providerNames, nhsNumber);
 
-                bool isSupported;
+                var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
 
-                try
+                List<IFhirProvider> providers = fhirBroker.FhirProviders
+                    .Where(provider => nameSet.Contains(provider.ProviderName)).ToList();
+
+                for (int i = providers.Count - 1; i >= 0; i--)
                 {
-                    isSupported = p.SupportsResource("Patients", "Everything");
+                    var provider = providers[i];
+
+                    bool isSupported;
+
+                    try
+                    {
+                        isSupported = provider.SupportsResource("Patients", "Everything");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Console.WriteLine($"Provider '{p?.ProviderName}' capability check failed: {ex.Message}");
+                        // Log here
+                        isSupported = false;
+                    }
+
+                    if (!isSupported)
+                    {
+                        //Console.WriteLine($"Removing '{p?.ProviderName}': Patients/$everything not supported.");
+                        // Log here
+                        providers.RemoveAt(i);
+                    }
                 }
-                catch (Exception ex)
+
+                var tasks = providers.Select(provider => ExecuteWithTimeoutAsync(
+                    provider.Patients,
+                    cancellationToken,
+                    nhsNumber,
+                    start,
+                    end,
+                    typeFilter,
+                    since,
+                    count)).ToArray();
+
+                var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+                var bundles = new List<Bundle>(outcomes.Length);
+                var exceptions = new List<Exception>();
+
+                foreach (var outcome in outcomes)
                 {
-                    // Console.WriteLine($"Provider '{p?.ProviderName}' capability check failed: {ex.Message}");
-                    // Log here
-                    isSupported = false;
+                    if (outcome.Bundle is not null)
+                    {
+                        bundles.Add(outcome.Bundle);
+                    }
+                    else if (outcome.Exception is not null)
+                    {
+                        exceptions.Add(outcome.Exception);
+                    }
                 }
 
-                if (!isSupported)
+                if (exceptions.Count > 0)
                 {
-                    //Console.WriteLine($"Removing '{p?.ProviderName}': Patients/$everything not supported.");
-                    // Log here
-                    providers.RemoveAt(i);
+                    var aggregate = new AggregateException(
+                        "One or more provider calls failed or timed out.",
+                        exceptions);
                 }
-            }
 
-            var tasks = providers.Select(provider => ExecuteWithTimeoutAsync(
-                provider.Patients,
-                cancellationToken,
-                nhsNumber,
-                start,
-                end,
-                typeFilter,
-                since,
-                count)).ToArray();
-
-            var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
-
-            var bundles = new List<Bundle>(outcomes.Length);
-            var exceptions = new List<Exception>();
-
-            foreach (var outcome in outcomes)
-            {
-                if (outcome.Bundle is not null)
-                {
-                    bundles.Add(outcome.Bundle);
-                }
-                else if (outcome.Exception is not null)
-                {
-                    exceptions.Add(outcome.Exception);
-                }
-            }
-
-            if (exceptions.Count > 0)
-            {
-                var aggregate = new AggregateException("One or more provider calls failed or timed out.", exceptions);
-                //await LogParallelRunIssuesAsync(aggregate).ConfigureAwait(false);
-            }
-
-            return bundles;
-        }
+                return bundles;
+            });
 
         virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteWithTimeoutAsync(
             IPatientResource resource,

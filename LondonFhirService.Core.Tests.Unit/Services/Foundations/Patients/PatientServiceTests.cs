@@ -4,10 +4,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Fhirs;
+using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.Patients;
+using LondonFhirService.Providers.FHIR.R4.Abstractions;
+using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Capabilities;
 using Moq;
 using Tynamix.ObjectFiller;
 
@@ -15,21 +20,39 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 {
     public partial class PatientServiceTests
     {
-        private readonly Mock<IFhirBroker> fhirBrokerMock;
+        private readonly Mock<IFhirAbstractionProvider> fhirAbstractionProviderMock;
+        private readonly FhirBroker fhirBroker;
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly PatientServiceConfig patientServiceConfig;
         private readonly IPatientService patientService;
 
         public PatientServiceTests()
         {
-            this.fhirBrokerMock = new Mock<IFhirBroker>();
+            this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.patientServiceConfig = new PatientServiceConfig
             {
                 MaxProviderWaitTimeMilliseconds = 3000
             };
 
+            var ddsFhirProvider = MakeProvider("DDS", ("Patients", new[] { "Everything" }));
+            var ldsFhirProvider = MakeProvider("LDS", ("Patients", new[] { "Everything" }));
+
+            var fhirProviders = new List<IFhirProvider>
+            {
+                ddsFhirProvider,
+                ldsFhirProvider
+            };
+
+            this.fhirAbstractionProviderMock.SetupGet(provider => provider.FhirProviders)
+                .Returns(fhirProviders);
+
+            this.fhirBroker = new FhirBroker(fhirAbstractionProviderMock.Object);
+
             this.patientService = new PatientService(
-                fhirBroker: this.fhirBrokerMock.Object,
+                fhirBroker: this.fhirBroker,
+                loggingBroker: this.loggingBrokerMock.Object,
                 patientServiceConfig: this.patientServiceConfig);
         }
 
@@ -85,6 +108,39 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
 
             return bundle;
+        }
+
+        private IFhirProvider MakeProvider(
+            string name,
+            params (string Resource, string[] Operations)[] resources)
+        {
+            var providerCaps = new ProviderCapabilities
+            {
+                ProviderName = name,
+                SupportedResources = resources.Select(r => new ResourceCapabilities
+                {
+                    ResourceName = r.Resource,
+                    SupportedOperations = r.Operations?.ToList()
+                }).ToList()
+            };
+
+            var mock = new Mock<IFhirProvider>(MockBehavior.Strict);
+            mock.SetupGet(p => p.ProviderName).Returns(name);
+            mock.SetupGet(p => p.Capabilities).Returns(providerCaps);
+
+            mock.Setup(p => p.Patients.Everything(
+                It.IsAny<string>(),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<string>(),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(CreateRandomBundle());
+
+            // If IFhirProvider has more required members, add minimal setups here.
+
+            return mock.Object;
         }
     }
 }
