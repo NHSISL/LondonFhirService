@@ -19,8 +19,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
         public async Task ShouldThrowDependencyValidationExceptionOnEverythingIfErrorsAndLogItAsync(
             Xeption dependencyValidationException)
         {
-            // Given
-            string inputId = GetRandomString();
+            // given
+            string randomString = GetRandomString();
+            string inputId = randomString;
 
             var expectedPatientCoordinationDependencyValidationException =
                 new PatientCoordinationDependencyValidationException(
@@ -31,18 +32,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                     orchestration.ValidateAccess(It.IsAny<string>()))
                     .ThrowsAsync(dependencyValidationException);
 
-            // When
+            // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientCoordinationService
                     .Everything(id: inputId);
 
             PatientCoordinationDependencyValidationException
-                actuaPatientCoordinationDependencyValidationException =
+                actualPatientCoordinationDependencyValidationException =
                     await Assert.ThrowsAsync<PatientCoordinationDependencyValidationException>(
                         retrieveListOfDocumentsToProcessTask.AsTask);
 
-            // Then
-            actuaPatientCoordinationDependencyValidationException.Should()
+            // then
+            actualPatientCoordinationDependencyValidationException.Should()
                 .BeEquivalentTo(expectedPatientCoordinationDependencyValidationException);
 
             this.accessOrchestrationServiceMock.Verify(orchestration =>
@@ -58,5 +59,51 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Theory]
+        [MemberData(nameof(DependencyExceptions))]
+        public async Task ShouldThrowDependencyExceptionOnRetrieveFileListIfErrorsAndLogItAsync(
+            Xeption dependencyException)
+        {
+            // given
+            string randomString = GetRandomString();
+            string inputId = randomString;
+
+            var expectedPatientCoordinationDependencyException =
+                new PatientCoordinationDependencyException(
+                    message: "Patient coordination dependency error occurred, fix the errors and try again.",
+                    innerException: dependencyException.InnerException as Xeption);
+
+            this.accessOrchestrationServiceMock.Setup(orchestration =>
+                orchestration.ValidateAccess(It.IsAny<string>()))
+                    .ThrowsAsync(dependencyException);
+
+            // when
+            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+                this.patientCoordinationService
+                    .Everything(id: inputId);
+
+            PatientCoordinationDependencyException actualPatientCoordinationDependencyException =
+                await Assert.ThrowsAsync<PatientCoordinationDependencyException>(
+                    retrieveListOfDocumentsToProcessTask.AsTask);
+
+            // then
+            actualPatientCoordinationDependencyException.Should()
+                .BeEquivalentTo(expectedPatientCoordinationDependencyException);
+
+            this.accessOrchestrationServiceMock.Verify(orchestration =>
+                orchestration.ValidateAccess(It.IsAny<string>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                 broker.LogErrorAsync(It.Is(IsSameExceptionAs(
+                     expectedPatientCoordinationDependencyException))),
+                         Times.Once);
+
+            this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
     }
 }

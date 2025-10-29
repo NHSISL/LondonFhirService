@@ -86,5 +86,31 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                     innerException),
             };
         }
+
+        public static TheoryData<Xeption> DependencyExceptions()
+        {
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+            var innerException = new Xeption(exceptionMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new AccessOrchestrationDependencyException(
+                    message: "Access orchestration dependency error occured, please try again.",
+                    innerException),
+
+                new AccessOrchestrationServiceException(
+                    message: "Access orchestration service error occurred, please contact support.",
+                    innerException),
+
+                new PatientOrchestrationDependencyException(
+                    message: "Patient orchestration dependency error occured, please try again.",
+                    innerException),
+
+                new PatientOrchestrationServiceException(
+                    message: "Patient orchestration service error occurred, please contact support.",
+                    innerException)
+            };
+        }
     }
 }
