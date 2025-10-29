@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
 
             invalidArgumentPatientCoordinationException.AddData(
                 key: "Id",
-                values: "Id is required");
+                values: "Text is required");
 
             var expectedPatientCoordinationValidationException =
                 new PatentCoordinationValidationException(

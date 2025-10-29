@@ -28,21 +28,30 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             this.loggingBroker = loggingBroker;
         }
 
-        public async ValueTask<Bundle> Everything(
+        public ValueTask<Bundle> Everything(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
             DateTimeOffset? since = null,
             int? count = null,
-            CancellationToken cancellationToken = default)
-        {
-            await this.accessOrchestrationService.ValidateAccess(id);
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+            {
+                ValidateArgsOnEverything(id);
 
-            Bundle bundle = await this.patientOrchestrationService.Everything(
-                id, start, end, typeFilter, since, count, cancellationToken);
+                await this.accessOrchestrationService.ValidateAccess(id);
 
-            return bundle;
-        }
+                Bundle bundle = await this.patientOrchestrationService.Everything(
+                    id,
+                    start,
+                    end,
+                    typeFilter,
+                    since,
+                    count,
+                    cancellationToken);
+
+                return bundle;
+            });
     }
 }
