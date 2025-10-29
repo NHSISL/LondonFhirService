@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Hl7.Fhir.Model;
@@ -62,7 +63,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
 
         [Theory]
         [MemberData(nameof(DependencyExceptions))]
-        public async Task ShouldThrowDependencyExceptionOnRetrieveFileListIfErrorsAndLogItAsync(
+        public async Task ShouldThrowDependencyExceptionOnEverythingIfErrorsAndLogItAsync(
             Xeption dependencyException)
         {
             // given
@@ -99,6 +100,57 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                  broker.LogErrorAsync(It.Is(IsSameExceptionAs(
                      expectedPatientCoordinationDependencyException))),
                          Times.Once);
+
+            this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowServiceExceptionOnEverythingIfErrorsAndLogItAsync()
+        {
+            // Given
+            string randomString = GetRandomString();
+            string inputId = randomString;
+            string randomExceptionMessage = GetRandomString();
+            Exception serviceException = new Exception(randomExceptionMessage);
+
+            this.accessOrchestrationServiceMock.Setup(orchestration =>
+                orchestration.ValidateAccess(It.IsAny<string>()))
+                    .ThrowsAsync(serviceException);
+
+            var failedPatientCoordinationServiceException =
+                new FailedPatientCoordinationServiceException(
+                    message: "Failed patient coordination service error occurred, please contact support.",
+                    innerException: serviceException,
+                    data: serviceException.Data);
+
+            var expectedPatientCoordinationServiceException =
+                new PatientCoordinationServiceException(
+                    message: "Patient coordination service error occurred, please contact support.",
+                    innerException: failedPatientCoordinationServiceException);
+
+            // When
+            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+                this.patientCoordinationService
+                    .Everything(id: inputId);
+
+            PatientCoordinationServiceException actualPatientCoordinationServiceException =
+                await Assert.ThrowsAsync<PatientCoordinationServiceException>(
+                    retrieveListOfDocumentsToProcessTask.AsTask);
+
+            // Then
+            actualPatientCoordinationServiceException.Should()
+                .BeEquivalentTo(expectedPatientCoordinationServiceException);
+
+            this.accessOrchestrationServiceMock.Verify(orchestration =>
+                orchestration.ValidateAccess(It.IsAny<string>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(IsSameExceptionAs(
+                    expectedPatientCoordinationServiceException))),
+                        Times.Once);
 
             this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();

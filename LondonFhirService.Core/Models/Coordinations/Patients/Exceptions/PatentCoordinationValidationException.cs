@@ -8,7 +8,7 @@ namespace LondonFhirService.Core.Models.Coordinations.Patients.Exceptions
 {
     public class PatentCoordinationValidationException : Xeption
     {
-        public PatentCoordinationValidationException(string message, Xeption? innerException)
+        public PatentCoordinationValidationException(string message, Xeption innerException)
             : base(message, innerException)
         { }
     }

@@ -2,14 +2,16 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
+using System.Collections;
 using Xeptions;
 
 namespace LondonFhirService.Core.Models.Coordinations.Patients.Exceptions
 {
-    public class PatientCoordinationDependencyException : Xeption
+    internal class FailedPatientCoordinationServiceException : Xeption
     {
-        public PatientCoordinationDependencyException(string message, Xeption innerException)
-            : base(message, innerException)
+        public FailedPatientCoordinationServiceException(string message, Exception innerException, IDictionary data)
+            : base(message, innerException, data)
         { }
     }
 }

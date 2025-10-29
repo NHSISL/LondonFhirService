@@ -6,9 +6,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Coordinations.Patients.Exceptions
 {
-    public class PatientCoordinationDependencyException : Xeption
+    public class PatientCoordinationServiceException : Xeption
     {
-        public PatientCoordinationDependencyException(string message, Xeption innerException)
+        public PatientCoordinationServiceException(string message, Xeption innerException)
             : base(message, innerException)
         { }
     }
