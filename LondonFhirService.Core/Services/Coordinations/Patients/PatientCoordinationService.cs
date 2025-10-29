@@ -6,12 +6,29 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Services.Orchestrations.Accesses;
+using LondonFhirService.Core.Services.Orchestrations.Patients;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients
 {
-    public class PatientCoordinationService : IPatientCoordinationService
+    public partial class PatientCoordinationService : IPatientCoordinationService
     {
-        public ValueTask<Bundle> Everything(
+        private readonly IAccessOrchestrationService accessOrchestrationService;
+        private readonly IPatientOrchestrationService patientOrchestrationService;
+        private readonly ILoggingBroker loggingBroker;
+
+        public PatientCoordinationService(
+            IAccessOrchestrationService accessOrchestrationService,
+            IPatientOrchestrationService patientOrchestrationService,
+            ILoggingBroker loggingBroker)
+        {
+            this.accessOrchestrationService = accessOrchestrationService;
+            this.patientOrchestrationService = patientOrchestrationService;
+            this.loggingBroker = loggingBroker;
+        }
+
+        public async ValueTask<Bundle> Everything(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -20,7 +37,12 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             int? count = null,
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            await this.accessOrchestrationService.ValidateAccess(id);
+
+            Bundle bundle = await this.patientOrchestrationService.Everything(
+                id, start, end, typeFilter, since, count, cancellationToken);
+
+            return bundle;
         }
     }
 }
