@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
@@ -59,6 +60,16 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             {
                 throw await CreateAndLogDependencyExceptionAsync(patientOrchestrationServiceException);
             }
+            catch (Exception exception)
+            {
+                var failedPatientCoordinationServiceException =
+                    new FailedPatientCoordinationServiceException(
+                        message: "Failed patient coordination service error occurred, please contact support.",
+                        innerException: exception,
+                        data: exception.Data);
+
+                throw await CreateAndLogServiceExceptionAsync(failedPatientCoordinationServiceException);
+            }
         }
 
         private async ValueTask<PatentCoordinationValidationException> CreateAndLogValidationExceptionAsync(
@@ -98,6 +109,19 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             await this.loggingBroker.LogErrorAsync(patientCoordinationDependencyException);
 
             return patientCoordinationDependencyException;
+        }
+
+        private async ValueTask<PatientCoordinationServiceException> CreateAndLogServiceExceptionAsync(
+            Xeption exception)
+        {
+            var patientCoordinationServiceException =
+                new PatientCoordinationServiceException(
+                    message: "Patient coordination service error occurred, please contact support.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(patientCoordinationServiceException);
+
+            return patientCoordinationServiceException;
         }
     }
 }

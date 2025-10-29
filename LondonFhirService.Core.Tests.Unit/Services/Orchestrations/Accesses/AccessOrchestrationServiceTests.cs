@@ -142,7 +142,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             return new TheoryData<Xeption>
             {
                 new ConsumerServiceValidationException(
-                    message: "Consumer validation errors occured, please try again",
+                    message: "Consumer validation errors occurred, please try again",
                     innerException),
 
                 new ConsumerServiceValidationException(
@@ -150,7 +150,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     innerException),
 
                 new ConsumerAccessServiceValidationException(
-                    message: "Consumer access validation errors occured, please try again",
+                    message: "Consumer access validation errors occurred, please try again",
                     innerException),
 
                 new ConsumerAccessServiceValidationException(

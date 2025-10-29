@@ -70,7 +70,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
             return new TheoryData<Xeption>
             {
                 new AccessOrchestrationValidationException(
-                    message: "Access orchestration validation error occured, please try again",
+                    message: "Access orchestration validation error occurred, please try again",
                     innerException),
 
                 new AccessOrchestrationDependencyValidationException(
@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                     innerException),
 
                 new PatientOrchestrationValidationException(
-                    message: "Patient orchestration validation error occured, please try again.",
+                    message: "Patient orchestration validation error occurred, please try again.",
                     innerException),
 
                 new PatientOrchestrationDependencyValidationException(
@@ -96,7 +96,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
             return new TheoryData<Xeption>
             {
                 new AccessOrchestrationDependencyException(
-                    message: "Access orchestration dependency error occured, please try again.",
+                    message: "Access orchestration dependency error occurred, please try again.",
                     innerException),
 
                 new AccessOrchestrationServiceException(
@@ -104,7 +104,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                     innerException),
 
                 new PatientOrchestrationDependencyException(
-                    message: "Patient orchestration dependency error occured, please try again.",
+                    message: "Patient orchestration dependency error occurred, please try again.",
                     innerException),
 
                 new PatientOrchestrationServiceException(
