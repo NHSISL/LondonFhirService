@@ -5,6 +5,9 @@
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
+using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
+using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
+using Xeptions;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients
 {
@@ -22,6 +25,24 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentPatientCoordinationException);
             }
+            catch (AccessOrchestrationValidationException accessOrchestrationValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(accessOrchestrationValidationException);
+            }
+            catch (AccessOrchestrationDependencyValidationException accessOrchestrationDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    accessOrchestrationDependencyValidationException);
+            }
+            catch (PatientOrchestrationValidationException patientOrchestrationValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(patientOrchestrationValidationException);
+            }
+            catch (PatientOrchestrationDependencyValidationException patientOrchestrationDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    patientOrchestrationDependencyValidationException);
+            }
         }
 
         private async ValueTask<PatentCoordinationValidationException> CreateAndLogValidationExceptionAsync(
@@ -35,6 +56,19 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             await this.loggingBroker.LogErrorAsync(patientCoordinationValidationException);
 
             return patientCoordinationValidationException;
+        }
+
+        private async ValueTask<PatientCoordinationDependencyValidationException>
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
+        {
+            var patientCoordinationDependencyValidationException =
+                new PatientCoordinationDependencyValidationException(
+                    message: "Patient coordination dependency validation error occurred, please try again.",
+                    exception.InnerException as Xeption);
+
+            await this.loggingBroker.LogErrorAsync(patientCoordinationDependencyValidationException);
+
+            return patientCoordinationDependencyValidationException;
         }
     }
 }
