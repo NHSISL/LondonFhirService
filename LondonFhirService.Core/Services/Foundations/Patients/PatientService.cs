@@ -14,7 +14,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients
 {
-    public class PatientService : IPatientService
+    public partial class PatientService : IPatientService
     {
         private readonly IFhirBroker fhirBroker;
         private readonly PatientServiceConfig patientServiceConfig;
@@ -37,7 +37,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             DateTimeOffset? since = null,
             int? count = null)
         {
-            // validate providers list and nhsNumber
+            ValidateOnGetStructuredRecord(providers, nhsNumber);
 
             var tasks = providers.Select(provider => ExecuteWithTimeoutAsync(
                 provider,
