@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using Hl7.Fhir.Model;
 using KellermanSoftware.CompareNetObjects;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
+using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.Patients;
@@ -45,6 +47,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();
+        private static Expression<Func<Xeption, bool>> IsSameExceptionAs(Xeption expectedException) =>
+            actualException => actualException.SameExceptionAs(expectedException);
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
@@ -56,5 +60,31 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                 Type = Bundle.BundleType.Searchset,
                 Total = GetRandomNumber()
             };
+
+        public static TheoryData<Xeption> DependencyValidationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+            var innerException = new Xeption(exceptionMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new AccessOrchestrationValidationException(
+                    message: "Access orchestration validation error occured, please try again",
+                    innerException),
+
+                new AccessOrchestrationDependencyValidationException(
+                    message: "Access orchestration dependency validation error occurred, please try again.",
+                    innerException),
+
+                new PatientOrchestrationValidationException(
+                    message: "Patient orchestration validation error occured, please try again.",
+                    innerException),
+
+                new PatientOrchestrationDependencyValidationException(
+                    message: "Patient orchestration dependency validation error occurred, please try again.",
+                    innerException),
+            };
+        }
     }
 }
