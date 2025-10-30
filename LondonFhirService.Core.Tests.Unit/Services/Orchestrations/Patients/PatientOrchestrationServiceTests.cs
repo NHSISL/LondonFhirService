@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
@@ -141,6 +142,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
                 new PatientServiceDependencyValidationException(
                     message: "Patient dependency validation errors occurred, please try again.",
                     innerException),
+
+                new FhirReconciliationServiceValidationException(
+                    message: "FHIR reconciliation validation errors occurred, please try again",
+                    innerException),
+
+                new FhirReconciliationServiceDependencyValidationException(
+                    message: "FHIR reconciliation dependency validation errors occurred, please try again.",
+                    innerException)
             };
         }
     }

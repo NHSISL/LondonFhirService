@@ -4,6 +4,9 @@
 
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
+using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
+using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using Xeptions;
 
@@ -28,6 +31,35 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidPrimaryProviderPatientOrchestrationException);
             }
+            catch (ProviderServiceValidationException providerServiceValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(providerServiceValidationException);
+            }
+            catch (ProviderServiceDependencyValidationException providerServiceDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    providerServiceDependencyValidationException);
+            }
+            catch (PatientServiceValidationException patientServiceValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(patientServiceValidationException);
+            }
+            catch (PatientServiceDependencyValidationException patientServiceDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    patientServiceDependencyValidationException);
+            }
+            catch (FhirReconciliationServiceValidationException fhirReconciliationServiceValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    fhirReconciliationServiceValidationException);
+            }
+            catch (FhirReconciliationServiceDependencyValidationException
+                   fhirReconciliationServiceDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    fhirReconciliationServiceDependencyValidationException);
+            }
         }
 
         private async ValueTask<PatientOrchestrationValidationException> CreateAndLogValidationExceptionAsync(
@@ -41,6 +73,19 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients
             await this.loggingBroker.LogErrorAsync(patientOrchestrationValidationException);
 
             return patientOrchestrationValidationException;
+        }
+
+        private async ValueTask<PatientOrchestrationDependencyValidationException>
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
+        {
+            var patientOrchestrationDependencyValidationException =
+                new PatientOrchestrationDependencyValidationException(
+                    message: "Patient orchestration dependency validation error occurred, please try again.",
+                    exception.InnerException as Xeption);
+
+            await this.loggingBroker.LogErrorAsync(patientOrchestrationDependencyValidationException);
+
+            return patientOrchestrationDependencyValidationException;
         }
     }
 }
