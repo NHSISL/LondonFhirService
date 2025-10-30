@@ -9,9 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
+using LondonFhirService.Core.Services.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.Providers;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Patients

@@ -7,9 +7,11 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Foundations.Patients;
+using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
+using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
+using LondonFhirService.Core.Services.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Patients;
 using Moq;
@@ -114,6 +116,32 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
                 .OnProperty(provider => provider.UpdatedBy).Use(GetRandomString());
 
             return filler;
+        }
+
+        public static TheoryData<Xeption> DependencyValidationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+            var innerException = new Xeption(exceptionMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new ProviderServiceValidationException(
+                    message: "Provider validation errors occurred, please try again",
+                    innerException),
+
+                new ProviderServiceDependencyValidationException(
+                    message: "Provider dependency validation errors occurred, please try again.",
+                    innerException),
+
+                new PatientServiceValidationException(
+                    message: "Patient validation errors occurred, please try again.",
+                    innerException),
+
+                new PatientServiceDependencyValidationException(
+                    message: "Patient dependency validation errors occurred, please try again.",
+                    innerException),
+            };
         }
     }
 }
