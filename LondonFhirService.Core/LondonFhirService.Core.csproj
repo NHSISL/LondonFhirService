@@ -20,7 +20,7 @@
 		<PackageReference Include="ISL.Providers.Captcha.Abstractions" Version="1.0.0.3" />
 		<PackageReference Include="ISL.Providers.Captcha.FakeCaptcha" Version="1.0.0.3" />
 		<PackageReference Include="ISL.Providers.Captcha.GoogleReCaptcha" Version="1.0.0.3" />
-		<PackageReference Include="LondonFhirService.Providers.FHIR.R4.Abstractions" Version="0.3.2" />
+		<PackageReference Include="LondonFhirService.Providers.FHIR.R4.Abstractions" Version="0.3.3" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.HierarchyId" Version="9.0.10" />

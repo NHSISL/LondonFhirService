@@ -2,6 +2,8 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -39,6 +41,22 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 return await this.storageBroker.InsertProviderAsync(provider);
             });
 
+        public ValueTask<IQueryable<Provider>> RetrieveAllProvidersAsync() =>
+            TryCatch(async () => await this.storageBroker.SelectAllProvidersAsync());
+
+        public ValueTask<Provider> RetrieveProviderByIdAsync(Guid providerId) =>
+            TryCatch(async () =>
+            {
+                ValidateProviderId(providerId);
+
+                Provider maybeProvider = await this.storageBroker
+                    .SelectProviderByIdAsync(providerId);
+
+                ValidateStorageProvider(maybeProvider, providerId);
+
+                return maybeProvider;
+            });
+
         public ValueTask<Provider> ModifyProviderAsync(Provider provider) =>
             TryCatch(async () =>
             {
@@ -60,5 +78,17 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 return await this.storageBroker.UpdateProviderAsync(provider);
             });
 
+        public ValueTask<Provider> RemoveProviderByIdAsync(Guid providerId) =>
+            TryCatch(async () =>
+            {
+                ValidateProviderId(providerId);
+
+                Provider maybeProvider = await this.storageBroker
+                    .SelectProviderByIdAsync(providerId);
+
+                ValidateStorageProvider(maybeProvider, providerId);
+
+                return await this.storageBroker.DeleteProviderAsync(maybeProvider);
+            });
     }
 }

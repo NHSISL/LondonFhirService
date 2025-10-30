@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using EFxceptions.Models.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
@@ -16,6 +17,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
     public partial class ProviderService
     {
         private delegate ValueTask<Provider> ReturningProviderFunction();
+        private delegate ValueTask<IQueryable<Provider>> ReturningProvidersFunction();
 
         private async ValueTask<Provider> TryCatch(ReturningProviderFunction returningProviderFunction)
         {
@@ -79,6 +81,33 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                         innerException: databaseUpdateException);
 
                 throw await CreateAndLogDependencyException(failedStorageProviderServiceException);
+            }
+            catch (Exception exception)
+            {
+                var failedProviderServiceException =
+                    new FailedProviderServiceException(
+                        message: "Failed provider service occurred, please contact support",
+                        innerException: exception,
+                        data: exception.Data);
+
+                throw await CreateAndLogServiceException(failedProviderServiceException);
+            }
+        }
+
+        private async ValueTask<IQueryable<Provider>> TryCatch(ReturningProvidersFunction returningProvidersFunction)
+        {
+            try
+            {
+                return await returningProvidersFunction();
+            }
+            catch (SqlException sqlException)
+            {
+                var failedStorageProviderServiceException =
+                    new FailedStorageProviderServiceException(
+                        message: "Failed provider storage error occurred, contact support.",
+                        innerException: sqlException);
+
+                throw await CreateAndLogCriticalDependencyException(failedStorageProviderServiceException);
             }
             catch (Exception exception)
             {
