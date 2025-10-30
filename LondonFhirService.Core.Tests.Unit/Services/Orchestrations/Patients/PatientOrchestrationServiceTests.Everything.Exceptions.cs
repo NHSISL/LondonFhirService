@@ -122,16 +122,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
                 service.RetrieveAllProvidersAsync())
                     .ThrowsAsync(serviceException);
 
-            var failedPatientOrchestrationServiceException =
+            var failedPatientOrchestrationException =
                 new FailedPatientOrchestrationException(
-                    message: "Failed patient orchestration service error occurred, please contact support.",
+                    message: "Failed patient orchestration error occurred, please contact support.",
                     innerException: serviceException,
                     data: serviceException.Data);
 
             var expectedPatientOrchestrationServiceException =
                 new PatientOrchestrationServiceException(
                     message: "Patient orchestration service error occurred, please contact support.",
-                    innerException: failedPatientOrchestrationServiceException);
+                    innerException: failedPatientOrchestrationException);
 
             // When
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
