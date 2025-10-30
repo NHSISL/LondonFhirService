@@ -118,5 +118,65 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnEverythingIfMultiplePrimaryProvidersAndLogItAsync()
+        {
+            // given
+            string randomId = GetRandomString();
+            string inputId = randomId;
+            CancellationToken cancellationToken = CancellationToken.None;
+
+            Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
+            Provider anotherRandomPrimaryProvider = CreateRandomPrimaryProvider();
+
+            IQueryable<Provider> allProviders = new List<Provider>
+            {
+                randomPrimaryProvider,
+                anotherRandomPrimaryProvider,
+            }.AsQueryable();
+
+            this.providerServiceMock.Setup(service =>
+                service.RetrieveAllProvidersAsync())
+                    .ReturnsAsync(allProviders);
+
+            var invalidPrimaryProviderPatientOrchestrationException =
+                new InvalidPrimaryProviderPatientOrchestrationException(
+                    message:
+                        $"Multiple active providers found: " +
+                        $"{string.Join(", ", allProviders.Select(provider => provider.Name))}. " +
+                        $"Only one active primary provider required.");
+
+            var expectedPatientOrchestrationValidationException =
+                new PatientOrchestrationValidationException(
+                    message: "Patient orchestration validation error occurred, please try again.",
+                    innerException: invalidPrimaryProviderPatientOrchestrationException);
+
+            // when
+            ValueTask<Bundle> everythingTask =
+                this.patientOrchestrationService.Everything(id: inputId, cancellationToken: cancellationToken);
+
+            PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
+                await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
+                    everythingTask.AsTask);
+
+            // then
+            actualPatientOrchestrationValidationException.Should()
+                .BeEquivalentTo(expectedPatientOrchestrationValidationException);
+
+            this.providerServiceMock.Verify(service =>
+                service.RetrieveAllProvidersAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientOrchestrationValidationException))),
+                        Times.Once);
+
+            this.providerServiceMock.VerifyNoOtherCalls();
+            this.patientServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
