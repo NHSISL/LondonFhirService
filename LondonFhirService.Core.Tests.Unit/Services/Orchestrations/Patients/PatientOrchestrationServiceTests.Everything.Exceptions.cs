@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
 
             var expectedPatientOrchestrationDependencyException =
                 new PatientOrchestrationDependencyException(
-                    message: "Patient orchestration dependency error occurred, please try again.",
+                    message: "Patient orchestration dependency error occurred, fix the errors and try again.",
                     innerException: dependencyException.InnerException as Xeption);
 
             this.providerServiceMock.Setup(service =>

@@ -60,6 +60,30 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients
                 throw await CreateAndLogDependencyValidationExceptionAsync(
                     fhirReconciliationServiceDependencyValidationException);
             }
+            catch (ProviderServiceDependencyException providerServiceDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(providerServiceDependencyException);
+            }
+            catch (ProviderServiceException providerServiceException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(providerServiceException);
+            }
+            catch (PatientServiceDependencyException patientServiceDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(patientServiceDependencyException);
+            }
+            catch (PatientServiceException patientServiceException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(patientServiceException);
+            }
+            catch (FhirReconciliationServiceDependencyException fhirReconciliationServiceDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(fhirReconciliationServiceDependencyException);
+            }
+            catch (FhirReconciliationServiceException fhirReconciliationServiceException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(fhirReconciliationServiceException);
+            }
         }
 
         private async ValueTask<PatientOrchestrationValidationException> CreateAndLogValidationExceptionAsync(
@@ -86,6 +110,19 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients
             await this.loggingBroker.LogErrorAsync(patientOrchestrationDependencyValidationException);
 
             return patientOrchestrationDependencyValidationException;
+        }
+
+        private async ValueTask<PatientOrchestrationDependencyException> CreateAndLogDependencyExceptionAsync(
+            Xeption exception)
+        {
+            var patientOrchestrationDependencyException =
+                new PatientOrchestrationDependencyException(
+                    message: "Patient orchestration dependency error occurred, fix the errors and try again.",
+                    innerException: exception.InnerException as Xeption);
+
+            await this.loggingBroker.LogErrorAsync(patientOrchestrationDependencyException);
+
+            return patientOrchestrationDependencyException;
         }
     }
 }
