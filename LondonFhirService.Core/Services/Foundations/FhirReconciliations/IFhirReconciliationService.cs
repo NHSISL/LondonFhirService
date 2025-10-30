@@ -8,11 +8,8 @@ using Hl7.Fhir.Model;
 
 namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations
 {
-    public class FhirReconciliationService : IFhirReconciliationService
+    public interface IFhirReconciliationService
     {
-        public ValueTask<Bundle> Reconcile(List<Bundle> bundles, string primaryProviderName)
-        {
-            throw new System.NotImplementedException();
-        }
+        ValueTask<Bundle> Reconcile(List<Bundle> bundles, string primaryProviderName);
     }
 }
