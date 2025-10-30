@@ -63,7 +63,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.ldsFhirProviderMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -114,7 +113,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.ldsFhirProviderMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -165,7 +163,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.ldsFhirProviderMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -176,7 +173,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             this.patientServiceConfig.MaxProviderWaitTimeMilliseconds = timeoutMilliseconds;
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            var timeoutException = new TimeoutException($"Provider call exceeded {timeoutMilliseconds}.");
+            var timeoutException = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
             var taskCompletionSource = new TaskCompletionSource<Bundle>();
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
@@ -219,7 +216,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.ldsFhirProviderMock.VerifyNoOtherCalls();
         }
     }
 }

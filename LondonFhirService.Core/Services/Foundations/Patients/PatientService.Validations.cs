@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using Xeptions;
 
@@ -26,8 +25,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
 
         private static dynamic IsInvalid(List<string> strings) => new
         {
-            Condition = strings.Count <= 0 || strings.Any(s => string.IsNullOrWhiteSpace(s)),
-            Message = "List is invalid"
+            Condition = strings is null,
+            Message = "List cannot be null"
         };
 
         private static dynamic IsInvalid(string name) => new

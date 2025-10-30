@@ -52,7 +52,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             var patientServiceValidationException =
                 new PatientServiceValidationException(
                     message: "Patient service validation error occurred, " +
-                        "fix the errors and try again.",
+                        "please fix the errors and try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(patientServiceValidationException);

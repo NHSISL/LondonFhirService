@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Fhirs;
@@ -15,6 +16,7 @@ using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Capabilities;
 using Moq;
 using Tynamix.ObjectFiller;
+using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 {
@@ -23,6 +25,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
         private readonly Mock<IFhirAbstractionProvider> fhirAbstractionProviderMock;
         private readonly Mock<IFhirProvider> ddsFhirProviderMock;
         private readonly Mock<IFhirProvider> ldsFhirProviderMock;
+        private readonly Mock<IFhirProvider> unsupportedFhirProviderMock;
+        private readonly Mock<IFhirProvider> unsupportedErrorFhirProviderMock;
         private readonly FhirBroker fhirBroker;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly PatientServiceConfig patientServiceConfig;
@@ -40,11 +44,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "Everything" }));
             this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "Everything" }));
+            this.unsupportedFhirProviderMock = MakeProvider("Unsupported", ("Patients", new[] { "Read" }));
+            this.unsupportedErrorFhirProviderMock = MakeProvider("UnsupportedError", ("Patients", null));
 
             var fhirProviders = new List<IFhirProvider>
             {
                 ddsFhirProviderMock.Object,
-                ldsFhirProviderMock.Object
+                ldsFhirProviderMock.Object,
+                unsupportedFhirProviderMock.Object,
+                unsupportedErrorFhirProviderMock.Object
             };
 
             this.fhirAbstractionProviderMock.SetupGet(provider => provider.FhirProviders)
@@ -143,6 +151,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // If IFhirProvider has more required members, add minimal setups here.
 
             return mock;
+        }
+
+        private static Expression<Func<Xeption, bool>> SameExceptionAs(
+            Xeption expectedException)
+        {
+            return actualException =>
+                actualException.SameExceptionAs(expectedException);
+        }
+
+        private static Expression<Func<Exception, bool>> SameExceptionAs(
+            Exception expectedException)
+        {
+            return actualException =>
+                actualException.SameExceptionAs(expectedException);
         }
     }
 }

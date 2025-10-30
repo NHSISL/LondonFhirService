@@ -109,6 +109,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
                     var aggregate = new AggregateException(
                         "One or more provider calls failed or timed out.",
                         exceptions);
+
+                    await loggingBroker.LogErrorAsync(aggregate);
                 }
 
                 return bundles;
@@ -149,7 +151,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
                 }
             }
 
-            return (null, new TimeoutException($"Provider call exceeded {maxWaitTimeout}."));
+            return (null, new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds."));
         }
     }
 }
