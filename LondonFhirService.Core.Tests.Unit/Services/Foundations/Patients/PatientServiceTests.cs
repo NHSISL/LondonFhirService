@@ -21,10 +21,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
     public partial class PatientServiceTests
     {
         private readonly Mock<IFhirAbstractionProvider> fhirAbstractionProviderMock;
+        private readonly Mock<IFhirProvider> ddsFhirProviderMock;
+        private readonly Mock<IFhirProvider> ldsFhirProviderMock;
         private readonly FhirBroker fhirBroker;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly PatientServiceConfig patientServiceConfig;
-        private readonly IPatientService patientService;
+        private readonly PatientService patientService;
 
         public PatientServiceTests()
         {
@@ -36,13 +38,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 MaxProviderWaitTimeMilliseconds = 3000
             };
 
-            var ddsFhirProvider = MakeProvider("DDS", ("Patients", new[] { "Everything" }));
-            var ldsFhirProvider = MakeProvider("LDS", ("Patients", new[] { "Everything" }));
+            this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "Everything" }));
+            this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "Everything" }));
 
             var fhirProviders = new List<IFhirProvider>
             {
-                ddsFhirProvider,
-                ldsFhirProvider
+                ddsFhirProviderMock.Object,
+                ldsFhirProviderMock.Object
             };
 
             this.fhirAbstractionProviderMock.SetupGet(provider => provider.FhirProviders)
@@ -110,7 +112,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             return bundle;
         }
 
-        private IFhirProvider MakeProvider(
+        private Mock<IFhirProvider> MakeProvider(
             string name,
             params (string Resource, string[] Operations)[] resources)
         {
@@ -140,7 +142,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             // If IFhirProvider has more required members, add minimal setups here.
 
-            return mock.Object;
+            return mock;
         }
     }
 }

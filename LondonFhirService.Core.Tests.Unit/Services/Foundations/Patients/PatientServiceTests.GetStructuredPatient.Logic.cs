@@ -68,7 +68,23 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // then
             actualBundles.Should().BeEquivalentTo(expectedBundles);
 
+            foreach (var provider in fhirBroker.FhirProviders)
+            {
+                patientServiceMock.Verify(service =>
+                    service.ExecuteWithTimeoutAsync(
+                        provider.Patients,
+                        default,
+                        inputNhsNumber,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null),
+                            Times.Once());
+            }
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            patientServiceMock.VerifyNoOtherCalls();
         }
     }
 }
