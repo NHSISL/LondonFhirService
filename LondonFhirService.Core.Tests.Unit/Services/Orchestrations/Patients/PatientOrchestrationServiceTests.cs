@@ -152,5 +152,39 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
                     innerException)
             };
         }
+
+        public static TheoryData<Xeption> DependencyExceptions()
+        {
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+            var innerException = new Xeption(exceptionMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new ProviderServiceDependencyException(
+                    message: "Provider dependency error occurred, please try again",
+                    innerException),
+
+                new ProviderServiceException(
+                    message: "Provider service error occurred, please contact support.",
+                    innerException),
+
+                new PatientServiceDependencyException(
+                    message: "Patient dependency error occurred, please try again",
+                    innerException),
+
+                new PatientServiceException(
+                    message: "Patient service error occurred, please contact support.",
+                    innerException),
+
+                new FhirReconciliationServiceDependencyException(
+                    message: "FHIR reconciliation dependency error occurred, please try again",
+                    innerException),
+
+                new FhirReconciliationServiceException(
+                    message: "FHIR reconciliation service error occurred, please contact support.",
+                    innerException),
+            };
+        }
     }
 }

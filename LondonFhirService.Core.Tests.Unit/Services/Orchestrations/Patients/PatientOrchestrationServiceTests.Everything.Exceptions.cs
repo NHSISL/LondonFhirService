@@ -60,5 +60,52 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Theory]
+        [MemberData(nameof(DependencyExceptions))]
+        public async Task ShouldThrowDependencyExceptionOnEverythingIfErrorsAndLogItAsync(
+            Xeption dependencyException)
+        {
+            // given
+            string randomString = GetRandomString();
+            string inputId = randomString;
+
+            var expectedPatientOrchestrationDependencyException =
+                new PatientOrchestrationDependencyException(
+                    message: "Patient orchestration dependency error occurred, please try again.",
+                    innerException: dependencyException.InnerException as Xeption);
+
+            this.providerServiceMock.Setup(service =>
+                service.RetrieveAllProvidersAsync())
+                    .ThrowsAsync(dependencyException);
+
+            // when
+            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+                this.patientOrchestrationService
+                    .Everything(id: inputId);
+
+            PatientOrchestrationDependencyException
+                actualPatientOrchestrationDependencyException =
+                    await Assert.ThrowsAsync<PatientOrchestrationDependencyException>(
+                        retrieveListOfDocumentsToProcessTask.AsTask);
+
+            // then
+            actualPatientOrchestrationDependencyException.Should()
+                .BeEquivalentTo(expectedPatientOrchestrationDependencyException);
+
+            this.providerServiceMock.Verify(service =>
+                service.RetrieveAllProvidersAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(IsSameExceptionAs(
+                    expectedPatientOrchestrationDependencyException))),
+                        Times.Once);
+
+            this.providerServiceMock.VerifyNoOtherCalls();
+            this.patientServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
