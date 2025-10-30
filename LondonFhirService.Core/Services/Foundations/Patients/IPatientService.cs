@@ -17,8 +17,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
         /// Returns a <see cref="Bundle"/> containing the patient’s consolidated health record,
         /// optionally restricted by date range, resource types, or last update time.
         /// </summary>
-        /// <param name="id">
-        /// Logical identifier of the <see cref="Patient"/> resource on which to invoke <c>$everything</c>.
+        /// <param name="providerNames">
+        /// A list of names of the providers to be used to retrieve with <c>$everything</c>.
+        /// </param>
+        /// <param name="nhsNumber">
+        /// NHS Number of the <see cref="Patient"/> resource on which to invoke <c>$everything</c>.
+        /// </param>
+        /// <param name="cancellationToken">
+        /// A cancellation token to allow cancelling of the request at any time.
         /// </param>
         /// <param name="start">
         /// Optional start date/time that constrains the resources to those with a clinical date

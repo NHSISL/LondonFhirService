@@ -107,7 +107,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             Patient patient = CreateRandomPatient();
 
-            bundle.Entry = new List<Bundle.EntryComponent>{
+            bundle.Entry = new List<Bundle.EntryComponent> {
                 new Bundle.EntryComponent
                 {
                     FullUrl = $"https://api.service.nhs.uk/personal-demographics/FHIR/R4/Patient/{patient.Id}",

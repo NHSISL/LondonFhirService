@@ -45,7 +45,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var patientServiceMock = new Mock<PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
-                this.patientServiceConfig);
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(

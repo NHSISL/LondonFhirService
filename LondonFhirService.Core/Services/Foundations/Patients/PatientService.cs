@@ -62,17 +62,17 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
                     {
                         isSupported = provider.SupportsResource("Patients", "Everything");
                     }
-                    catch (Exception ex)
+                    catch (Exception exception)
                     {
-                        // Console.WriteLine($"Provider '{p?.ProviderName}' capability check failed: {ex.Message}");
-                        // Log here
+                        await loggingBroker.LogErrorAsync(exception);
                         isSupported = false;
                     }
 
                     if (!isSupported)
                     {
-                        //Console.WriteLine($"Removing '{p?.ProviderName}': Patients/$everything not supported.");
-                        // Log here
+                        await loggingBroker.LogInformationAsync($"Removing '{provider.ProviderName}': " +
+                            "Patients/$everything not supported.");
+
                         providers.RemoveAt(i);
                     }
                 }
@@ -141,13 +141,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
                     var bundle = await everythingTask.ConfigureAwait(false);
                     return (bundle, null);
                 }
-                catch (OperationCanceledException oce)
+                catch (OperationCanceledException operationCancelledException)
                 {
-                    return (null, oce);
+                    return (null, operationCancelledException);
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
-                    return (null, ex);
+                    return (null, exception);
                 }
             }
 

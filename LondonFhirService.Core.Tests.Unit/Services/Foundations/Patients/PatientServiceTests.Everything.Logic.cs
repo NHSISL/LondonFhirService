@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             Bundle randomLdsBundle = CreateRandomBundle();
-            Bundle outputLdsBundle = randomDdsBundle.DeepClone();
+            Bundle outputLdsBundle = randomLdsBundle.DeepClone();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
 
@@ -41,7 +41,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var patientServiceMock = new Mock<PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
-                this.patientServiceConfig);
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
@@ -67,11 +70,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((outputLdsBundle, null));
 
-            PatientService patientService = patientServiceMock.Object;
+            PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
-                await patientService.Everything(
+                await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);

@@ -131,7 +131,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var patientServiceMock = new Mock<PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
-                this.patientServiceConfig);
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
@@ -145,11 +148,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((outputDdsBundle, null));
 
-            PatientService patientService = patientServiceMock.Object;
+            PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
-                await patientService.Everything(
+                await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -167,6 +170,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null,
                     null,
                     null),
+                        Times.Once());
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogInformationAsync($"Removing '{this.unsupportedFhirProviderMock.Object.ProviderName}': " +
+                    "Patients/$everything not supported."),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
@@ -209,7 +217,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var patientServiceMock = new Mock<PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
-                this.patientServiceConfig);
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
@@ -223,11 +234,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((outputDdsBundle, null));
 
-            PatientService patientService = patientServiceMock.Object;
+            PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
-                await patientService.Everything(
+                await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -245,6 +256,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null,
                     null,
                     null),
+                        Times.Once());
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogInformationAsync($"Removing '{this.unsupportedErrorFhirProviderMock.Object.ProviderName}': " +
+                    "Patients/$everything not supported."),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
@@ -300,7 +316,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var patientServiceMock = new Mock<PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
-                this.patientServiceConfig);
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
@@ -326,11 +345,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((null, timeoutException));
 
-            PatientService patientService = patientServiceMock.Object;
+            PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
-                await patientService.Everything(
+                await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -403,7 +422,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var patientServiceMock = new Mock<PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
-                this.patientServiceConfig);
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
@@ -429,11 +451,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((null, timeoutException2));
 
-            PatientService patientService = patientServiceMock.Object;
+            PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
-                await patientService.Everything(
+                await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -508,7 +530,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var patientServiceMock = new Mock<PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
-                this.patientServiceConfig);
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
@@ -534,11 +559,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((null, exception));
 
-            PatientService patientService = patientServiceMock.Object;
+            PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
-                await patientService.Everything(
+                await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -609,7 +634,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var patientServiceMock = new Mock<PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
-                this.patientServiceConfig);
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
@@ -635,11 +663,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((null, exception2));
 
-            PatientService patientService = patientServiceMock.Object;
+            PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
-                await patientService.Everything(
+                await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
