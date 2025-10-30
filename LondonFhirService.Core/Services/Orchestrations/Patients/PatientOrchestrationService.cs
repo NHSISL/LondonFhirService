@@ -35,59 +35,63 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients
             this.loggingBroker = loggingBroker;
         }
 
-        public async ValueTask<Bundle> Everything(
+        public ValueTask<Bundle> Everything(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
             DateTimeOffset? since = null,
             int? count = null,
-            CancellationToken cancellationToken = default)
-        {
-            IQueryable<Provider> allProviders =
-                await this.providerService.RetrieveAllProvidersAsync();
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+            {
+                ValidateArgsOnEverything(id);
 
-            List<Provider> orderedProviders = allProviders
-                .OrderByDescending(provider => provider.IsPrimary)
-                .ToList();
+                IQueryable<Provider> allProviders =
+                    await this.providerService.RetrieveAllProvidersAsync();
 
-            DateTimeOffset now = DateTimeOffset.UtcNow;
+                List<Provider> orderedProviders = allProviders
+                    .OrderByDescending(provider => provider.IsPrimary)
+                    .ToList();
 
-            List<Provider> primaryProviders = orderedProviders
-                .Where(provider =>
-                    provider.IsActive &&
-                    provider.ActiveFrom <= now &&
-                    provider.ActiveTo >= now)
-                .ToList();
+                DateTimeOffset now = DateTimeOffset.UtcNow;
 
-            // Validate primary providers here
+                List<Provider> primaryProviders = orderedProviders
+                    .Where(provider =>
+                        provider.IsActive &&
+                        provider.ActiveFrom <= now &&
+                        provider.ActiveTo >= now)
+                    .ToList();
 
-            string primaryProviderName = primaryProviders.FirstOrDefault().Name ?? string.Empty;
+                // Validate primary providers here
+                ValidatePrimaryProviders(primaryProviders);
 
-            List<string> activeProviderNames = orderedProviders
-                .Where(provider =>
-                    provider.IsActive &&
-                    provider.ActiveFrom <= now &&
-                    provider.ActiveTo >= now &&
-                    !provider.IsForComparisonOnly)
-                .Select(provider => provider.Name)
-                .ToList();
+                string primaryProviderName = primaryProviders.First().Name;
 
-            List<Bundle> bundles = await this.patientService.Everything(
-                providerNames: activeProviderNames,
-                nhsNumber: id,
-                cancellationToken: cancellationToken,
-                start: start,
-                end: end,
-                typeFilter: typeFilter,
-                since: since,
-                count: count);
+                List<string> activeProviderNames = orderedProviders
+                    .Where(provider =>
+                        provider.IsActive &&
+                        provider.ActiveFrom <= now &&
+                        provider.ActiveTo >= now &&
+                        !provider.IsForComparisonOnly)
+                    .Select(provider => provider.Name)
+                    .ToList();
 
-            Bundle reconciledBundle = await this.fhirReconciliationService.Reconcile(
-                bundles: bundles,
-                primaryProviderName: primaryProviderName);
+                List<Bundle> bundles = await this.patientService.Everything(
+                    providerNames: activeProviderNames,
+                    nhsNumber: id,
+                    cancellationToken: cancellationToken,
+                    start: start,
+                    end: end,
+                    typeFilter: typeFilter,
+                    since: since,
+                    count: count);
 
-            return reconciledBundle;
-        }
+                Bundle reconciledBundle = await this.fhirReconciliationService.Reconcile(
+                    bundles: bundles,
+                    primaryProviderName: primaryProviderName);
+
+                return reconciledBundle;
+            });
     }
 }
