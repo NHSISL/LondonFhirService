@@ -5,6 +5,7 @@
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
+using Xeptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Patients
 {
@@ -22,15 +23,20 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentPatientOrchestrationException);
             }
+            catch (InvalidPrimaryProviderPatientOrchestrationException
+                   invalidPrimaryProviderPatientOrchestrationException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(invalidPrimaryProviderPatientOrchestrationException);
+            }
         }
 
         private async ValueTask<PatientOrchestrationValidationException> CreateAndLogValidationExceptionAsync(
-            InvalidArgumentPatientOrchestrationException invalidArgumentPatientOrchestrationException)
+            Xeption exception)
         {
             var patientOrchestrationValidationException =
                 new PatientOrchestrationValidationException(
                     message: "Patient orchestration validation error occurred, please try again.",
-                    innerException: invalidArgumentPatientOrchestrationException);
+                    innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(patientOrchestrationValidationException);
 

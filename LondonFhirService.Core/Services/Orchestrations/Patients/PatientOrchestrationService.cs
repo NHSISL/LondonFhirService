@@ -58,14 +58,13 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients
 
                 List<Provider> primaryProviders = orderedProviders
                     .Where(provider =>
+                        provider.IsPrimary &&
                         provider.IsActive &&
                         provider.ActiveFrom <= now &&
                         provider.ActiveTo >= now)
                     .ToList();
 
-                // Validate primary providers here
                 ValidatePrimaryProviders(primaryProviders);
-
                 string primaryProviderName = primaryProviders.First().Name;
 
                 List<string> activeProviderNames = orderedProviders
