@@ -26,20 +26,11 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentsPatientServiceException);
             }
-            catch (AggregateException aggregateException)
-            {
-                var failedPatientServiceException =
-                    new FailedPatientServiceException(
-                        message: "Failed patient service error occurred, contact support.",
-                        innerException: aggregateException);
-
-                throw await CreateAndLogServiceExceptionAsync(failedPatientServiceException);
-            }
             catch (Exception exception)
             {
                 var failedPatientServiceException =
                     new FailedPatientServiceException(
-                        message: "Failed patient service error occurred, contact support.",
+                        message: "Failed patient service error occurred, please contact support.",
                         innerException: exception);
 
                 throw await CreateAndLogServiceExceptionAsync(failedPatientServiceException);
@@ -64,7 +55,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
            Xeption exception)
         {
             var patientServiceException = new PatientServiceException(
-                message: "Service error occurred, contact support.",
+                message: "Patient service error occurred, contact support.",
                 innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(patientServiceException);
