@@ -11,10 +11,13 @@ namespace LondonFhirService.Core.Models.Foundations.Providers
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string System { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public DateTimeOffset ActiveFrom { get; set; }
         public DateTimeOffset ActiveTo { get; set; }
         public bool IsForComparisonOnly { get; set; }
+        public bool IsPrimary { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
         public DateTimeOffset CreatedDate { get; set; }
         public string UpdatedBy { get; set; } = string.Empty;

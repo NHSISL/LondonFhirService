@@ -29,6 +29,16 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .IsUnique();
 
             model
+                .Property(provider => provider.System)
+                .HasMaxLength(1000)
+                .IsRequired();
+
+            model
+                .Property(provider => provider.Code)
+                .HasMaxLength(64)
+                .IsRequired();
+
+            model
                 .Property(provider => provider.IsActive)
                 .IsRequired();
 
@@ -42,6 +52,10 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 
             model
                 .Property(provider => provider.IsForComparisonOnly)
+                .IsRequired();
+
+            model
+                .Property(provider => provider.IsPrimary)
                 .IsRequired();
 
             model
