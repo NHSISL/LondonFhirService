@@ -39,7 +39,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             TryCatch(async () =>
             {
                 ValidateArgsOnEverything(id);
-
                 await this.accessOrchestrationService.ValidateAccess(id);
 
                 Bundle bundle = await this.patientOrchestrationService.Everything(

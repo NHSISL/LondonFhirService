@@ -31,7 +31,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                 values: "Text is required");
 
             var expectedPatientCoordinationValidationException =
-                new PatentCoordinationValidationException(
+                new PatientCoordinationValidationException(
                     message: "Patient coordination validation error occurred, please try again.",
                     innerException: invalidArgumentPatientCoordinationException);
 
@@ -39,8 +39,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
             ValueTask<Bundle> everythingTask =
                 this.patientCoordinationService.Everything(id: invalidId);
 
-            PatentCoordinationValidationException actualPatientCoordinationValidationException =
-                await Assert.ThrowsAsync<PatentCoordinationValidationException>(
+            PatientCoordinationValidationException actualPatientCoordinationValidationException =
+                await Assert.ThrowsAsync<PatientCoordinationValidationException>(
                     everythingTask.AsTask);
 
             // then

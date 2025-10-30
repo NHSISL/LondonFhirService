@@ -5,7 +5,6 @@
 using System;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
-using KellermanSoftware.CompareNetObjects;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
@@ -23,7 +22,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
         private readonly Mock<IAccessOrchestrationService> accessOrchestrationServiceMock;
         private readonly Mock<IPatientOrchestrationService> patientOrchestrationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly ICompareLogic compareLogic;
         private readonly IPatientCoordinationService patientCoordinationService;
 
         public PatientCoordinationServiceTests()
@@ -31,7 +29,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
             this.accessOrchestrationServiceMock = new Mock<IAccessOrchestrationService>();
             this.patientOrchestrationServiceMock = new Mock<IPatientOrchestrationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
-            this.compareLogic = new CompareLogic();
 
             this.patientCoordinationService = new PatientCoordinationService(
                 accessOrchestrationService: accessOrchestrationServiceMock.Object,

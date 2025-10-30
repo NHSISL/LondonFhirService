@@ -63,7 +63,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             catch (Exception exception)
             {
                 var failedPatientCoordinationServiceException =
-                    new FailedPatientCoordinationServiceException(
+                    new FailedPatientCoordinationException(
                         message: "Failed patient coordination service error occurred, please contact support.",
                         innerException: exception,
                         data: exception.Data);
@@ -72,11 +72,11 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients
             }
         }
 
-        private async ValueTask<PatentCoordinationValidationException> CreateAndLogValidationExceptionAsync(
+        private async ValueTask<PatientCoordinationValidationException> CreateAndLogValidationExceptionAsync(
             InvalidArgumentPatientCoordinationException invalidArgumentPatientCoordinationException)
         {
             var patientCoordinationValidationException =
-                new PatentCoordinationValidationException(
+                new PatientCoordinationValidationException(
                     message: "Patient coordination validation error occurred, please try again.",
                     innerException: invalidArgumentPatientCoordinationException);
 

@@ -30,7 +30,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                     innerException: dependencyValidationException.InnerException as Xeption);
 
             this.accessOrchestrationServiceMock.Setup(orchestration =>
-                    orchestration.ValidateAccess(It.IsAny<string>()))
+                orchestration.ValidateAccess(It.IsAny<string>()))
                     .ThrowsAsync(dependencyValidationException);
 
             // when
@@ -52,9 +52,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-                 broker.LogErrorAsync(It.Is(IsSameExceptionAs(
-                     expectedPatientCoordinationDependencyValidationException))),
-                         Times.Once);
+                broker.LogErrorAsync(It.Is(IsSameExceptionAs(
+                    expectedPatientCoordinationDependencyValidationException))),
+                        Times.Once);
 
             this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
@@ -97,9 +97,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-                 broker.LogErrorAsync(It.Is(IsSameExceptionAs(
-                     expectedPatientCoordinationDependencyException))),
-                         Times.Once);
+                broker.LogErrorAsync(It.Is(IsSameExceptionAs(
+                    expectedPatientCoordinationDependencyException))),
+                        Times.Once);
 
             this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
@@ -120,7 +120,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
                     .ThrowsAsync(serviceException);
 
             var failedPatientCoordinationServiceException =
-                new FailedPatientCoordinationServiceException(
+                new FailedPatientCoordinationException(
                     message: "Failed patient coordination service error occurred, please contact support.",
                     innerException: serviceException,
                     data: serviceException.Data);
