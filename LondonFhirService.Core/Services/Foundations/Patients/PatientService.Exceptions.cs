@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
+using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients
@@ -25,6 +26,18 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             catch (InvalidArgumentsPatientServiceException invalidArgumentsPatientServiceException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentsPatientServiceException);
+            }
+            catch (FhirAbstractionProviderValidationException fhirAbstractionProviderValidationException)
+            {
+                throw await CreateAndLogDependencyValidationException(fhirAbstractionProviderValidationException);
+            }
+            catch (FhirAbstractionProviderDependencyException fhirAbstractionProviderDependencyException)
+            {
+                throw await CreateAndLogDependencyException(fhirAbstractionProviderDependencyException);
+            }
+            catch (FhirAbstractionProviderServiceException fhirAbstractionProviderServiceException)
+            {
+                throw await CreateAndLogDependencyException(fhirAbstractionProviderServiceException);
             }
             catch (Exception exception)
             {
@@ -49,6 +62,31 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             await this.loggingBroker.LogErrorAsync(patientServiceValidationException);
 
             return patientServiceValidationException;
+        }
+
+        private async ValueTask<PatientServiceDependencyValidationException> CreateAndLogDependencyValidationException(
+            Xeption exception)
+        {
+            var patientServiceDependencyValidationException =
+                new PatientServiceDependencyValidationException(
+                    message: "Patient service dependency validation error occurred, please try again.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(patientServiceDependencyValidationException);
+
+            return patientServiceDependencyValidationException;
+        }
+
+        private async ValueTask<PatientServiceDependencyException> CreateAndLogDependencyException(Xeption exception)
+        {
+            var patientServiceDependencyException =
+                new PatientServiceDependencyException(
+                    message: "Patient service dependency error occurred, contact support.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(patientServiceDependencyException);
+
+            return patientServiceDependencyException;
         }
 
         private async ValueTask<PatientServiceException> CreateAndLogServiceExceptionAsync(

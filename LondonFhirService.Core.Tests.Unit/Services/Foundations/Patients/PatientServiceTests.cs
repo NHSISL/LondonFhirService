@@ -14,6 +14,7 @@ using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.Patients;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Capabilities;
+using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Exceptions;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
@@ -165,6 +166,41 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
         {
             return actualException =>
                 actualException.SameExceptionAs(expectedException);
+        }
+
+        public static TheoryData<Xeption> DependencyValidationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+            var innerException = new Xeption(exceptionMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new FhirAbstractionProviderValidationException(
+                    message: "Fhir abstraction provider validation errors occured, please try again",
+                    innerException: innerException,
+                    data: innerException.Data)
+            };
+        }
+
+        public static TheoryData<Xeption> DependencyExceptions()
+        {
+            string randomMessage = GetRandomString();
+            string exceptionMessage = randomMessage;
+            var innerException = new Xeption(exceptionMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new FhirAbstractionProviderDependencyException(
+                    message: "Fhir abstraction provider dependency error occurred, please contact support.",
+                    innerException: innerException,
+                    data: innerException.Data),
+
+                new FhirAbstractionProviderServiceException(
+                    message: "Fhir abstraction provider service error occurred, please contact support.",
+                    innerException: innerException,
+                    data: innerException.Data)
+            };
         }
     }
 }

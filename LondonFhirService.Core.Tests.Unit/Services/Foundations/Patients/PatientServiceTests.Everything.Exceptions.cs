@@ -11,12 +11,169 @@ using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Patients;
 using Moq;
+using Xeptions;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 {
     public partial class PatientServiceTests
     {
+        [Theory]
+        [MemberData(nameof(DependencyValidationExceptions))]
+        public async Task ShouldThrowDependencyValidationOnEverythingAndLogItAsync(
+            Xeption dependencyValidationException)
+        {
+            // given
+            List<string> randomProviderNames = new List<string>
+            {
+                "DDS"
+            };
+
+            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
+
+            var expectedPatientServiceDependencyValidationException =
+                new PatientServiceDependencyValidationException(
+                    message: "Patient service dependency validation error occurred, please try again.",
+                    innerException: dependencyValidationException);
+
+            var patientServiceMock = new Mock<PatientService>(
+                this.fhirBroker,
+                this.loggingBrokerMock.Object,
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
+
+            patientServiceMock.Setup(service =>
+                service.ExecuteWithTimeoutAsync(
+                    ddsFhirProviderMock.Object.Patients,
+                    default,
+                    inputNhsNumber,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null))
+                .ThrowsAsync(dependencyValidationException);
+
+            PatientService mockedPatientService = patientServiceMock.Object;
+
+            // when
+            ValueTask<List<Bundle>> everythingTask =
+                mockedPatientService.Everything(
+                    providerNames: inputProviderNames,
+                    nhsNumber: inputNhsNumber,
+                    cancellationToken: default);
+
+            PatientServiceDependencyValidationException actualPatientServiceDependencyValidationException =
+                await Assert.ThrowsAsync<PatientServiceDependencyValidationException>(
+                    testCode: everythingTask.AsTask);
+
+            // then
+            actualPatientServiceDependencyValidationException.Should()
+                .BeEquivalentTo(expectedPatientServiceDependencyValidationException);
+
+            patientServiceMock.Verify(service =>
+                service.ExecuteWithTimeoutAsync(
+                    this.ddsFhirProviderMock.Object.Patients,
+                    default,
+                    inputNhsNumber,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null),
+                        Times.Once());
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceDependencyValidationException))),
+                        Times.Once);
+
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            patientServiceMock.VerifyNoOtherCalls();
+        }
+
+        [Theory]
+        [MemberData(nameof(DependencyExceptions))]
+        public async Task ShouldThrowDependencyOnEverythingAndLogItAsync(
+            Xeption dependencyException)
+        {
+            // given
+            List<string> randomProviderNames = new List<string>
+            {
+                "DDS"
+            };
+
+            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
+
+            var expectedPatientServiceDependencyException =
+                new PatientServiceDependencyException(
+                    message: "Patient service dependency error occurred, contact support.",
+                    innerException: dependencyException);
+
+            var patientServiceMock = new Mock<PatientService>(
+                this.fhirBroker,
+                this.loggingBrokerMock.Object,
+                this.patientServiceConfig)
+            {
+                CallBase = true
+            };
+
+            patientServiceMock.Setup(service =>
+                service.ExecuteWithTimeoutAsync(
+                    ddsFhirProviderMock.Object.Patients,
+                    default,
+                    inputNhsNumber,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null))
+                .ThrowsAsync(dependencyException);
+
+            PatientService mockedPatientService = patientServiceMock.Object;
+
+            // when
+            ValueTask<List<Bundle>> everythingTask =
+                mockedPatientService.Everything(
+                    providerNames: inputProviderNames,
+                    nhsNumber: inputNhsNumber,
+                    cancellationToken: default);
+
+            PatientServiceDependencyException actualPatientServiceDependencyException =
+                await Assert.ThrowsAsync<PatientServiceDependencyException>(
+                    testCode: everythingTask.AsTask);
+
+            // then
+            actualPatientServiceDependencyException.Should()
+                .BeEquivalentTo(expectedPatientServiceDependencyException);
+
+            patientServiceMock.Verify(service =>
+                service.ExecuteWithTimeoutAsync(
+                    this.ddsFhirProviderMock.Object.Patients,
+                    default,
+                    inputNhsNumber,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null),
+                        Times.Once());
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceDependencyException))),
+                        Times.Once);
+
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            patientServiceMock.VerifyNoOtherCalls();
+        }
+
         [Fact]
         public async Task ShouldThrowServiceExceptionOnEverythingIfServiceErrorOccursAndLogItAsync()
         {
@@ -62,11 +219,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ThrowsAsync(serviceException);
 
-            PatientService patientService = patientServiceMock.Object;
+            PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             ValueTask<List<Bundle>> everythingTask =
-                patientService.Everything(
+                mockedPatientService.Everything(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
