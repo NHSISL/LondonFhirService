@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients
 
                 List<Bundle> bundles = await this.patientService.Everything(
                     providerNames: activeProviderNames,
-                    nhsNumber: id,
+                    id: id,
                     cancellationToken: cancellationToken,
                     start: start,
                     end: end,
