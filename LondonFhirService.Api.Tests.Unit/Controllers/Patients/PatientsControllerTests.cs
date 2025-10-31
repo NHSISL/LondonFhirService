@@ -60,5 +60,22 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
                     innerException: someInnerException)
             };
         }
+
+        public static TheoryData<Xeption> ServerExceptions()
+        {
+            var someInnerException = new Xeption();
+            string someMessage = GetRandomString();
+
+            return new TheoryData<Xeption>
+            {
+                new PatientCoordinationDependencyException(
+                    message: someMessage,
+                    innerException: someInnerException),
+
+                new PatientCoordinationServiceException(
+                    message: someMessage,
+                    innerException: someInnerException)
+            };
+        }
     }
 }
