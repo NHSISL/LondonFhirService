@@ -124,32 +124,34 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             DateTimeOffset? since = null,
             int? count = null)
         {
-            var everythingTask = resource
-                .Everything(id, start, end, typeFilter, since, count, globalToken).AsTask();
-
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
-            var timeoutTask = Task.Delay(maxWaitTimeout);
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
+            timeoutCts.CancelAfter(maxWaitTimeout);
 
-            var completed = await Task.WhenAny(everythingTask, timeoutTask).ConfigureAwait(false);
-
-            if (completed == everythingTask)
+            try
             {
-                try
-                {
-                    var bundle = await everythingTask.ConfigureAwait(false);
-                    return (bundle, null);
-                }
-                catch (OperationCanceledException operationCancelledException)
-                {
-                    return (null, operationCancelledException);
-                }
-                catch (Exception exception)
-                {
-                    return (null, exception);
-                }
-            }
+                var bundle = await resource.Everything(id, start, end, typeFilter, since, count, timeoutCts.Token)
+                    .ConfigureAwait(false);
 
-            return (null, new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds."));
+                return (bundle, null);
+            }
+            catch (OperationCanceledException operationCancelledException)
+                when (timeoutCts.IsCancellationRequested && !globalToken.IsCancellationRequested)
+            {
+                TimeoutException timeoutException =
+                    new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds.",
+                        operationCancelledException);
+
+                return (null, timeoutException);
+            }
+            catch (OperationCanceledException operationCancelledException)
+            {
+                return (null, operationCancelledException);
+            }
+            catch (Exception exception)
+            {
+                return (null, exception);
+            }
         }
     }
 }

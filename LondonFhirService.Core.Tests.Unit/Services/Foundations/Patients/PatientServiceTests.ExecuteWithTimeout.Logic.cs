@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -33,7 +34,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 null,
                 null,
-                default))
+                It.IsAny<CancellationToken>()))
                     .ReturnsAsync(outputBundle);
 
             // when
@@ -58,7 +59,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 null,
                 null,
-                default),
+                It.IsAny<CancellationToken>()),
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -83,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 null,
                 null,
-                default))
+                It.IsAny<CancellationToken>()))
                     .ThrowsAsync(operationCanceledException);
 
             // when
@@ -108,7 +109,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 null,
                 null,
-                default),
+                It.IsAny<CancellationToken>()),
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -133,7 +134,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 null,
                 null,
-                default))
+                It.IsAny<CancellationToken>()))
                     .ThrowsAsync(exception);
 
             // when
@@ -158,7 +159,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 null,
                 null,
-                default),
+                It.IsAny<CancellationToken>()),
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -173,11 +174,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             this.patientServiceConfig.MaxProviderWaitTimeMilliseconds = timeoutMilliseconds;
             string randomId = GetRandomString();
             string inputId = randomId;
-            var timeoutException = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
-            var taskCompletionSource = new TaskCompletionSource<Bundle>();
-            var fhirProvider = this.ddsFhirProviderMock.Object;
 
-            (Bundle Bundle, Exception Exception) expectedResult = (null, timeoutException);
+            OperationCanceledException operationCanceledException =
+                new OperationCanceledException("A task was canceled.");
+
+            var timeoutException = new TimeoutException(
+                $"Provider call exceeded {timeoutMilliseconds} milliseconds.",
+                operationCanceledException);
+
+            var fhirProvider = this.ddsFhirProviderMock.Object;
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
                 inputId,
@@ -186,8 +191,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 null,
                 null,
-                default))
-                    .Returns(new ValueTask<Bundle>(taskCompletionSource.Task));
+                It.IsAny<CancellationToken>()))
+                     .Returns(async (string id,
+                        DateTimeOffset? start,
+                        DateTimeOffset? end,
+                        string typeFiler,
+                        DateTimeOffset? since,
+                        int? count,
+                        CancellationToken token) =>
+                         {
+                             await Task.Delay(Timeout.Infinite, token);
+                             return default(Bundle);
+                         });
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
@@ -202,7 +217,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null);
 
             // then
-            actualResult.Should().BeEquivalentTo(expectedResult);
+            actualResult.Bundle.Should().BeNull();
+            actualResult.Exception.Should().BeOfType<TimeoutException>();
+
+            actualResult.Exception.Message.Should().Be(
+                $"Provider call exceeded {timeoutMilliseconds} milliseconds.");
+
+            actualResult.Exception.InnerException.Should().BeOfType<TaskCanceledException>();
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
                 inputId,
@@ -211,7 +232,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 null,
                 null,
-                default),
+                It.IsAny<CancellationToken>()),
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
