@@ -5,10 +5,12 @@
 using System;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Controllers;
+using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients;
 using Moq;
 using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;
+using Xeptions;
 
 namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 {
@@ -42,5 +44,21 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
                 Total = GetRandomNumber()
             };
 
+        public static TheoryData<Xeption> ValidationExceptions()
+        {
+            var someInnerException = new Xeption();
+            string someMessage = GetRandomString();
+
+            return new TheoryData<Xeption>
+            {
+                new PatientCoordinationValidationException(
+                    message: someMessage,
+                    innerException: someInnerException),
+
+                new PatientCoordinationDependencyValidationException(
+                    message: someMessage,
+                    innerException: someInnerException)
+            };
+        }
     }
 }
