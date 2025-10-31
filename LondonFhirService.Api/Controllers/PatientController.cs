@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
@@ -17,28 +18,30 @@ namespace LondonFhirService.Api.Controllers
     [Authorize]
     [ApiController]
     [Route("api/R4/[controller]")]
-    public class PatientsController : RESTFulController
+    public class PatientController : RESTFulController
     {
         private readonly IPatientCoordinationService patientCoordinationService;
 
-        public PatientsController(IPatientCoordinationService patientCoordinationService)
+        public PatientController(IPatientCoordinationService patientCoordinationService)
         {
             this.patientCoordinationService = patientCoordinationService;
         }
 
-        [HttpGet]
+        [HttpPost("{id}/$everything")]
         [Authorize(Policy = "Patient.Everything")]
         public async Task<ActionResult<Bundle>> Everything(
             string id,
-            [FromQuery] DateTimeOffset? start = null,
-            [FromQuery] DateTimeOffset? end = null,
-            [FromQuery] string typeFilter = null,
-            [FromQuery] DateTimeOffset? since = null,
-            [FromQuery] int? count = null,
+            [FromBody] Parameters parameters,
             CancellationToken cancellationToken = default)
         {
             try
             {
+                DateTimeOffset? start = ExtractDateTimeParameter(parameters, "start");
+                DateTimeOffset? end = ExtractDateTimeParameter(parameters, "end");
+                string typeFilter = ExtractStringParameter(parameters, "_type");
+                DateTimeOffset? since = ExtractDateTimeParameter(parameters, "_since");
+                int? count = ExtractIntParameter(parameters, "_count");
+
                 Bundle bundle = await this.patientCoordinationService.Everything(
                     id,
                     start,
@@ -67,6 +70,37 @@ namespace LondonFhirService.Api.Controllers
             {
                 return InternalServerError(patientCoordinationServiceException);
             }
+        }
+
+        private static string ExtractStringParameter(Parameters parameters, string name)
+        {
+            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
+
+            return parameter?.Value is FhirString fhirString ? fhirString.Value : null;
+        }
+
+        private static DateTimeOffset? ExtractDateTimeParameter(Parameters parameters, string name)
+        {
+            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
+
+            if (parameter?.Value is FhirDateTime fhirDateTime && fhirDateTime.Value != null)
+            {
+                return DateTimeOffset.Parse(fhirDateTime.Value);
+            }
+
+            if (parameter?.Value is Date date && date.Value != null)
+            {
+                return DateTimeOffset.Parse(date.Value);
+            }
+
+            return null;
+        }
+
+        private static int? ExtractIntParameter(Parameters parameters, string name)
+        {
+            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
+
+            return parameter?.Value is Integer integer ? integer.Value : null;
         }
     }
 }

@@ -13,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 {
-    public partial class PatientsControllerTests
+    public partial class PatientControllerTests
     {
         [Fact]
         public async Task ShouldReturnBundleOnGetRecordAsync()
@@ -21,12 +21,25 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
             // given
             string randomId = GetRandomString();
             string inputId = randomId;
-            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
-            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
-            string inputTypeFilter = GetRandomString();
-            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
-            int? inputCount = GetRandomNumber();
+            DateTimeOffset randomInputStart = GetRandomDateTimeOffset();
+            DateTimeOffset inputStart = randomInputStart;
+            DateTimeOffset randomInputEnd = GetRandomDateTimeOffset();
+            DateTimeOffset inputEnd = randomInputEnd;
+            string randomInputTypeFilter = GetRandomString();
+            string inputTypeFilter = randomInputTypeFilter;
+            DateTimeOffset randomInputSince = GetRandomDateTimeOffset();
+            DateTimeOffset inputSince = randomInputSince;
+            int randomInputCount = GetRandomNumber();
+            int inputCount = randomInputCount;
             CancellationToken cancellationToken = CancellationToken.None;
+
+            Parameters inputParameters = CreateRandomParameters(
+                start: inputStart,
+                end: inputEnd,
+                typeFilter: inputTypeFilter,
+                since: inputSince,
+                count: inputCount);
+
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
             var expectedObjectResult = new OkObjectResult(expectedBundle);
@@ -45,14 +58,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 
             // when
             ActionResult<Bundle> actualActionResult =
-                await this.patientsController.Everything(
-                    inputId,
-                    inputStart,
-                    inputEnd,
-                    inputTypeFilter,
-                    inputSince,
-                    inputCount,
-                    cancellationToken);
+                await this.patientController.Everything(inputId, inputParameters, cancellationToken);
 
             // then
             actualActionResult.Result.Should().BeOfType<OkObjectResult>();

@@ -14,7 +14,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 {
-    public partial class PatientsControllerTests
+    public partial class PatientControllerTests
     {
         [Theory]
         [MemberData(nameof(ValidationExceptions))]
@@ -24,12 +24,26 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
             // given
             string randomId = GetRandomString();
             string inputId = randomId;
-            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
-            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
-            string inputTypeFilter = GetRandomString();
-            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
-            int? inputCount = GetRandomNumber();
+            DateTimeOffset randomInputStart = GetRandomDateTimeOffset();
+            DateTimeOffset inputStart = randomInputStart;
+            DateTimeOffset randomInputEnd = GetRandomDateTimeOffset();
+            DateTimeOffset inputEnd = randomInputEnd;
+            string randomInputTypeFilter = GetRandomString();
+            string inputTypeFilter = randomInputTypeFilter;
+            DateTimeOffset randomInputSince = GetRandomDateTimeOffset();
+            DateTimeOffset inputSince = randomInputSince;
+            int randomInputCount = GetRandomNumber();
+            int inputCount = randomInputCount;
             CancellationToken cancellationToken = CancellationToken.None;
+
+            Parameters randomParameters = CreateRandomParameters(
+                start: inputStart,
+                end: inputEnd,
+                typeFilter: inputTypeFilter,
+                since: inputSince,
+                count: inputCount);
+
+            Parameters inputParameters = randomParameters;
 
             BadRequestObjectResult expectedBadRequestObjectResult =
                 BadRequest(validationException.InnerException);
@@ -49,14 +63,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 
             // when
             ActionResult<Bundle> actualActionResult =
-                await this.patientsController.Everything(
-                    inputId,
-                    inputStart,
-                    inputEnd,
-                    inputTypeFilter,
-                    inputSince,
-                    inputCount,
-                    cancellationToken);
+                await this.patientController.Everything(inputId, inputParameters, cancellationToken);
 
             // then
             actualActionResult.Should().BeEquivalentTo(expectedActionResult);
@@ -83,12 +90,26 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
             // given
             string randomId = GetRandomString();
             string inputId = randomId;
-            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
-            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
-            string inputTypeFilter = GetRandomString();
-            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
-            int? inputCount = GetRandomNumber();
+            DateTimeOffset randomInputStart = GetRandomDateTimeOffset();
+            DateTimeOffset inputStart = randomInputStart;
+            DateTimeOffset randomInputEnd = GetRandomDateTimeOffset();
+            DateTimeOffset inputEnd = randomInputEnd;
+            string randomInputTypeFilter = GetRandomString();
+            string inputTypeFilter = randomInputTypeFilter;
+            DateTimeOffset randomInputSince = GetRandomDateTimeOffset();
+            DateTimeOffset inputSince = randomInputSince;
+            int randomInputCount = GetRandomNumber();
+            int inputCount = randomInputCount;
             CancellationToken cancellationToken = CancellationToken.None;
+
+            Parameters randomParameters = CreateRandomParameters(
+                start: inputStart,
+                end: inputEnd,
+                typeFilter: inputTypeFilter,
+                since: inputSince,
+                count: inputCount);
+
+            Parameters inputParameters = randomParameters;
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
                 InternalServerError(serverException);
@@ -108,14 +129,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 
             // when
             ActionResult<Bundle> actualActionResult =
-                await this.patientsController.Everything(
-                    inputId,
-                    inputStart,
-                    inputEnd,
-                    inputTypeFilter,
-                    inputSince,
-                    inputCount,
-                    cancellationToken);
+                await this.patientController.Everything(inputId, inputParameters, cancellationToken);
 
             // then
             actualActionResult.Should().BeEquivalentTo(expectedActionResult);

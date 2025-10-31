@@ -14,16 +14,16 @@ using Xeptions;
 
 namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 {
-    public partial class PatientsControllerTests : RESTFulController
+    public partial class PatientControllerTests : RESTFulController
     {
         private readonly Mock<IPatientCoordinationService> patientCoordinationServiceMock;
-        private readonly PatientsController patientsController;
+        private readonly PatientController patientController;
 
-        public PatientsControllerTests()
+        public PatientControllerTests()
         {
             this.patientCoordinationServiceMock = new Mock<IPatientCoordinationService>();
 
-            this.patientsController = new PatientsController(
+            this.patientController = new PatientController(
                 this.patientCoordinationServiceMock.Object);
         }
 
@@ -43,6 +43,43 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
                 Type = Bundle.BundleType.Searchset,
                 Total = GetRandomNumber()
             };
+
+        private static Parameters CreateRandomParameters(
+            DateTimeOffset? start = null,
+            DateTimeOffset? end = null,
+            string typeFilter = null,
+            DateTimeOffset? since = null,
+            int? count = null)
+        {
+            var parameters = new Parameters();
+
+            if (start.HasValue)
+            {
+                parameters.Add("start", new FhirDateTime(start.Value));
+            }
+
+            if (end.HasValue)
+            {
+                parameters.Add("end", new FhirDateTime(end.Value));
+            }
+
+            if (!string.IsNullOrWhiteSpace(typeFilter))
+            {
+                parameters.Add("_type", new FhirString(typeFilter));
+            }
+
+            if (since.HasValue)
+            {
+                parameters.Add("_since", new FhirDateTime(since.Value));
+            }
+
+            if (count.HasValue)
+            {
+                parameters.Add("_count", new Integer(count.Value));
+            }
+
+            return parameters;
+        }
 
         public static TheoryData<Xeption> ValidationExceptions()
         {

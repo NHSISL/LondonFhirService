@@ -12,13 +12,13 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 {
-    public partial class PatientsControllerTests
+    public partial class PatientControllerTests
     {
         [Fact]
         public void GetShouldHavePolicyAttribute()
         {
             // given
-            var controllerType = typeof(PatientsController);
+            var controllerType = typeof(PatientController);
             var methodInfo = controllerType.GetMethod("Everything");
             Type attributeType = typeof(AuthorizeAttribute);
             string attributeProperty = "Policy";
@@ -59,7 +59,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
         public void GetShouldNotHaveInvisibleApiAttribute()
         {
             // Given
-            var controllerType = typeof(PatientsController);
+            var controllerType = typeof(PatientController);
             var methodInfo = controllerType.GetMethod("Everything");
             Type attributeType = typeof(InvisibleApiAttribute);
 
