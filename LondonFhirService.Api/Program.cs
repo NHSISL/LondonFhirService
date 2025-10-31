@@ -7,7 +7,6 @@ using System.IO;
 using System.Text.Json;
 using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
-using Hl7.Fhir.Model.CdsHooks;
 using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
