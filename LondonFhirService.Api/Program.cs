@@ -7,12 +7,23 @@ using System.IO;
 using System.Text.Json;
 using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
+using Hl7.Fhir.Model.CdsHooks;
 using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Services.Coordinations.Patients;
+using LondonFhirService.Core.Services.Foundations.Audits;
+using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
+using LondonFhirService.Core.Services.Foundations.Consumers;
+using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
+using LondonFhirService.Core.Services.Foundations.OdsDatas;
+using LondonFhirService.Core.Services.Foundations.PdsDatas;
+using LondonFhirService.Core.Services.Foundations.Providers;
+using LondonFhirService.Core.Services.Orchestrations.Accesses;
+using LondonFhirService.Core.Services.Orchestrations.Patients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OData;
@@ -181,16 +192,29 @@ namespace LondonFhirService.Api
         }
 
         private static void AddFoundationServices(IServiceCollection services)
-        { }
+        {
+            services.AddTransient<IAuditService, AuditService>();
+            services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
+            services.AddTransient<IConsumerService, ConsumerService>();
+            services.AddTransient<IFhirReconciliationService, FhirReconciliationService>();
+            services.AddTransient<IOdsDataService, OdsDataService>();
+            services.AddTransient<IPdsDataService, PdsDataService>();
+            services.AddTransient<IProviderService, ProviderService>();
+        }
 
         private static void AddProcessingServices(IServiceCollection services)
         { }
 
         private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
-        { }
+        {
+            services.AddTransient<IAccessOrchestrationService, AccessOrchestrationService>();
+            services.AddTransient<IPatientOrchestrationService, PatientOrchestrationService>();
+        }
 
         private static void AddCoordinationServices(IServiceCollection services, IConfiguration configuration)
-        { }
+        {
+            services.AddTransient<IPatientCoordinationService, PatientCoordinationService>();
+        }
 
         private static void AddClients(IServiceCollection services)
         { }
