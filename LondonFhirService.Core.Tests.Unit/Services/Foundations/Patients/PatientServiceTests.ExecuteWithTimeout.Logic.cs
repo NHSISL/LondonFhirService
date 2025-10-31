@@ -67,6 +67,49 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
         }
 
         [Fact]
+        public async Task ShouldReturnNullAndOperationCancelledExceptionOnExecuteWithTimeoutWhenTokenCancelled()
+        {
+            // given
+            Bundle randomBundle = CreateRandomBundle();
+            Bundle outputBundle = randomBundle.DeepClone();
+            string randomId = GetRandomString();
+            string inputId = randomId;
+            CancellationToken alreadyCanceledToken = new CancellationToken(true);
+            OperationCanceledException operationCanceledException = new OperationCanceledException(alreadyCanceledToken);
+            var fhirProvider = this.ddsFhirProviderMock.Object;
+
+            (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
+
+            // when
+            (Bundle Bundle, Exception Exception) actualResult =
+                await this.patientService.ExecuteWithTimeoutAsync(
+                    fhirProvider.Patients,
+                    alreadyCanceledToken,
+                    inputId,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
+
+            // then
+            actualResult.Should().BeEquivalentTo(expectedResult);
+
+            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                alreadyCanceledToken),
+                    Times.Never());
+
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.ddsFhirProviderMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
         public async Task ShouldReturnNullAndOperationCancelledExceptionOnExecuteWithTimeoutWhenCancelled()
         {
             // given

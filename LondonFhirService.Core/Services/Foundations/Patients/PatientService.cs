@@ -124,9 +124,18 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             DateTimeOffset? since = null,
             int? count = null)
         {
+            if (globalToken.IsCancellationRequested)
+            {
+                return (null, new OperationCanceledException(globalToken));
+            }
+
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
-            timeoutCts.CancelAfter(maxWaitTimeout);
+
+            if (maxWaitTimeout > 0)
+            {
+                timeoutCts.CancelAfter(maxWaitTimeout);
+            }
 
             try
             {
