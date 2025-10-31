@@ -63,7 +63,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
         [InlineData("")]
         [InlineData(" ")]
 
-        public async Task EverythingShouldThrowWhenInvalidNhsNumber(string invalidText)
+        public async Task EverythingShouldThrowWhenInvalidId(string invalidText)
         {
             // given
             List<string> randomProviderNames = new List<string>
