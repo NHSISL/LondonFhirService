@@ -48,7 +48,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
-                    ddsFhirProviderMock.Object.Patients,
+                    ddsFhirProviderMock.Object,
                     default,
                     inputId,
                     null,
@@ -60,7 +60,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             patientServiceMock.Setup(service =>
                 service.ExecuteWithTimeoutAsync(
-                    ldsFhirProviderMock.Object.Patients,
+                    ldsFhirProviderMock.Object,
                     default,
                     inputId,
                     null,
@@ -84,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             patientServiceMock.Verify(service =>
                 service.ExecuteWithTimeoutAsync(
-                    this.ddsFhirProviderMock.Object.Patients,
+                    this.ddsFhirProviderMock.Object,
                     default,
                     inputId,
                     null,
@@ -96,7 +96,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 
             patientServiceMock.Verify(service =>
                 service.ExecuteWithTimeoutAsync(
-                    this.ldsFhirProviderMock.Object.Patients,
+                    this.ldsFhirProviderMock.Object,
                     default,
                     inputId,
                     null,
