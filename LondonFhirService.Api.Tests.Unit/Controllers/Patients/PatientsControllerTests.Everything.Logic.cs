@@ -45,7 +45,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
 
             // when
             ActionResult<Bundle> actualActionResult =
-                await this.patientsController.GetRecord(
+                await this.patientsController.Everything(
                     inputId,
                     inputStart,
                     inputEnd,

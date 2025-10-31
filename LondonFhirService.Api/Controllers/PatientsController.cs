@@ -25,22 +25,23 @@ namespace LondonFhirService.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Bundle>> GetRecord(
+        [Authorize(Policy = "Patient.Everything")]
+        public async Task<ActionResult<Bundle>> Everything(
             string id,
             [FromQuery] DateTimeOffset? start = null,
             [FromQuery] DateTimeOffset? end = null,
-            [FromQuery] string _type = null,
-            [FromQuery] DateTimeOffset? _since = null,
-            [FromQuery] int? _count = null,
+            [FromQuery] string typeFilter = null,
+            [FromQuery] DateTimeOffset? since = null,
+            [FromQuery] int? count = null,
             CancellationToken cancellationToken = default)
         {
             Bundle bundle = await this.patientCoordinationService.Everything(
                 id,
                 start,
                 end,
-                typeFilter: _type,
-                since: _since,
-                count: _count,
+                typeFilter,
+                since,
+                count,
                 cancellationToken);
 
             return Ok(bundle);
