@@ -86,6 +86,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 values: "Text is required");
 
             invalidProviderServiceException.AddData(
+                key: nameof(Provider.System),
+                values: "Text is required");
+
+            invalidProviderServiceException.AddData(
+                key: nameof(Provider.Code),
+                values: "Text is required");
+
+            invalidProviderServiceException.AddData(
                 key: nameof(Provider.CreatedDate),
                 values: "Date is required");
 
