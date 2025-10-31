@@ -19,6 +19,7 @@ using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Consumers;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
 using LondonFhirService.Core.Services.Foundations.OdsDatas;
+using LondonFhirService.Core.Services.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
@@ -197,6 +198,7 @@ namespace LondonFhirService.Api
             services.AddTransient<IConsumerService, ConsumerService>();
             services.AddTransient<IFhirReconciliationService, FhirReconciliationService>();
             services.AddTransient<IOdsDataService, OdsDataService>();
+            services.AddTransient<IPatientService, PatientService>();
             services.AddTransient<IPdsDataService, PdsDataService>();
             services.AddTransient<IProviderService, ProviderService>();
         }
