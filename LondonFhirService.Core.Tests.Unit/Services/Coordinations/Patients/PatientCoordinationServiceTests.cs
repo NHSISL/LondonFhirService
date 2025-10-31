@@ -44,6 +44,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();
+        
         private static Expression<Func<Xeption, bool>> IsSameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
 
