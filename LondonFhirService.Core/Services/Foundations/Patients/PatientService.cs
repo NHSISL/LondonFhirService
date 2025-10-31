@@ -138,8 +138,15 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
 
             try
             {
-                var bundle = await provider.Patients.Everything(id, start, end, typeFilter, since, count, timeoutCts.Token)
-                    .ConfigureAwait(false);
+                var bundle = await provider.Patients.Everything(
+                    id,
+                    start,
+                    end,
+                    typeFilter,
+                    since,
+                    count,
+                    timeoutCts.Token)
+                        .ConfigureAwait(false);
 
                 Coding coding = new Coding
                 {
