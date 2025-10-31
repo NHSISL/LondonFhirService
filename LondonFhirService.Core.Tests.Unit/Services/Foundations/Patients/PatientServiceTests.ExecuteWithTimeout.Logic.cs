@@ -21,11 +21,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // given
             Bundle randomBundle = CreateRandomBundle();
             Bundle outputBundle = randomBundle.DeepClone();
+            Bundle expectedBundle = outputBundle.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            var fhirProviderCopy = this.ddsFhirProviderMock.Object.DeepClone();
+            expectedBundle.Meta.Source = fhirProviderCopy.Source;
 
-            (Bundle Bundle, Exception Exception) expectedResult = (outputBundle, null);
+            expectedBundle.Meta.Tag = new System.Collections.Generic.List<Coding>
+            {
+                new Coding
+                {
+                    System = fhirProviderCopy.System,
+                    Code = fhirProviderCopy.Code,
+                    Display = fhirProviderCopy.ProviderName
+                }
+            };
+
+            (Bundle Bundle, Exception Exception) expectedResult = (expectedBundle, null);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
                 inputId,
@@ -40,7 +53,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteWithTimeoutAsync(
-                    fhirProvider.Patients,
+                    fhirProvider,
                     default,
                     inputId,
                     null,
@@ -61,6 +74,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.System,
+                    Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.Code,
+                    Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.ProviderName,
+                    Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.Source,
+                    Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
@@ -83,7 +112,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteWithTimeoutAsync(
-                    fhirProvider.Patients,
+                    fhirProvider,
                     alreadyCanceledToken,
                     inputId,
                     null,
@@ -133,7 +162,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteWithTimeoutAsync(
-                    fhirProvider.Patients,
+                    fhirProvider,
                     default,
                     inputId,
                     null,
@@ -183,7 +212,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteWithTimeoutAsync(
-                    fhirProvider.Patients,
+                    fhirProvider,
                     default,
                     inputId,
                     null,
@@ -250,7 +279,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteWithTimeoutAsync(
-                    fhirProvider.Patients,
+                    fhirProvider,
                     default,
                     inputId,
                     null,

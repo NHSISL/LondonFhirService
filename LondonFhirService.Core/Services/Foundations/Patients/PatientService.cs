@@ -13,7 +13,6 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Extensions;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Resources;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients
@@ -77,7 +76,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
                 }
 
                 var tasks = providers.Select(provider => ExecuteWithTimeoutAsync(
-                    provider.Patients,
+                    provider,
                     cancellationToken,
                     id,
                     start,
@@ -115,7 +114,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             });
 
         virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteWithTimeoutAsync(
-            IPatientResource resource,
+            IFhirProvider provider,
             CancellationToken globalToken,
             string id,
             DateTimeOffset? start = null,
@@ -139,8 +138,25 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
 
             try
             {
-                var bundle = await resource.Everything(id, start, end, typeFilter, since, count, timeoutCts.Token)
-                    .ConfigureAwait(false);
+                var bundle = await provider.Patients.Everything(
+                    id,
+                    start,
+                    end,
+                    typeFilter,
+                    since,
+                    count,
+                    timeoutCts.Token)
+                        .ConfigureAwait(false);
+
+                Coding coding = new Coding
+                {
+                    System = provider.System,
+                    Code = provider.Code,
+                    Display = provider.ProviderName
+                };
+
+                bundle.Meta.Source = provider.Source;
+                bundle.Meta.Tag.Add(coding);
 
                 return (bundle, null);
             }

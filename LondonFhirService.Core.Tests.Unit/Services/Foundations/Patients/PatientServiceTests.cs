@@ -117,6 +117,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 }
             };
 
+            bundle.Meta = new Meta
+            {
+                LastUpdated = DateTimeOffset.UtcNow,
+                Source = GetRandomString()
+            };
+
 
             return bundle;
         }
@@ -138,6 +144,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             var mock = new Mock<IFhirProvider>(MockBehavior.Strict);
             mock.SetupGet(p => p.ProviderName).Returns(name);
             mock.SetupGet(p => p.Capabilities).Returns(providerCaps);
+            mock.SetupGet(p => p.Code).Returns(GetRandomString());
+            mock.SetupGet(p => p.Source).Returns(GetRandomString());
+            mock.SetupGet(p => p.System).Returns(GetRandomString());
 
             mock.Setup(p => p.Patients.Everything(
                 It.IsAny<string>(),
