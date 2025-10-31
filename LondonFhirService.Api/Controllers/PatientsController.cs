@@ -6,6 +6,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,16 +36,30 @@ namespace LondonFhirService.Api.Controllers
             [FromQuery] int? count = null,
             CancellationToken cancellationToken = default)
         {
-            Bundle bundle = await this.patientCoordinationService.Everything(
-                id,
-                start,
-                end,
-                typeFilter,
-                since,
-                count,
-                cancellationToken);
+            try
+            {
 
-            return Ok(bundle);
+
+                Bundle bundle = await this.patientCoordinationService.Everything(
+                    id,
+                    start,
+                    end,
+                    typeFilter,
+                    since,
+                    count,
+                    cancellationToken);
+
+                return Ok(bundle);
+            }
+            catch (PatientCoordinationValidationException patientCoordinationValidationException)
+            {
+                return BadRequest(patientCoordinationValidationException.InnerException);
+            }
+            catch (PatientCoordinationDependencyValidationException
+                   patientCoordinationDependencyValidationException)
+            {
+                return BadRequest(patientCoordinationDependencyValidationException.InnerException);
+            }
         }
     }
 }
