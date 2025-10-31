@@ -10,13 +10,14 @@ using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RESTFulSense.Controllers;
 
 namespace LondonFhirService.Api.Controllers
 {
     [Authorize]
     [ApiController]
     [Route("api/R4/[controller]")]
-    public class PatientsController : ControllerBase
+    public class PatientsController : RESTFulController
     {
         private readonly IPatientCoordinationService patientCoordinationService;
 
@@ -38,8 +39,6 @@ namespace LondonFhirService.Api.Controllers
         {
             try
             {
-
-
                 Bundle bundle = await this.patientCoordinationService.Everything(
                     id,
                     start,
@@ -59,6 +58,14 @@ namespace LondonFhirService.Api.Controllers
                    patientCoordinationDependencyValidationException)
             {
                 return BadRequest(patientCoordinationDependencyValidationException.InnerException);
+            }
+            catch (PatientCoordinationDependencyException patientCoordinationDependencyException)
+            {
+                return InternalServerError(patientCoordinationDependencyException);
+            }
+            catch (PatientCoordinationServiceException patientCoordinationServiceException)
+            {
+                return InternalServerError(patientCoordinationServiceException);
             }
         }
     }
