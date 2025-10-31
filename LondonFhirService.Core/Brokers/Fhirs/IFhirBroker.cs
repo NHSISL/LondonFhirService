@@ -1,12 +1,15 @@
 ﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
+using System.Collections.Generic;
+using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Resources;
 
 namespace LondonFhirService.Core.Brokers.Fhirs
 {
     public interface IFhirBroker
     {
+        IReadOnlyCollection<IFhirProvider> FhirProviders { get; }
         IAccountResource Accounts(string providerName);
         IActivityDefinitionResource ActivityDefinitions(string providerName);
         IAdverseEventResource AdverseEvents(string providerName);

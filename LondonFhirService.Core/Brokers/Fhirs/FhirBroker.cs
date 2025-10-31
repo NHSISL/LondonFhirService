@@ -13,7 +13,8 @@ namespace LondonFhirService.Core.Brokers.Fhirs
         private readonly IFhirAbstractionProvider fhirAbstractionProvider;
         public IReadOnlyCollection<IFhirProvider> FhirProviders { get; private set; }
 
-        public FhirBroker(IFhirAbstractionProvider fhirAbstractionProvider)
+        public FhirBroker(
+            IFhirAbstractionProvider fhirAbstractionProvider)
         {
             this.fhirAbstractionProvider = fhirAbstractionProvider;
             this.FhirProviders = fhirAbstractionProvider.FhirProviders;
