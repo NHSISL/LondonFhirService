@@ -27,24 +27,28 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentsPatientServiceException);
             }
-            catch (FhirAbstractionProviderValidationException fhirAbstractionProviderValidationException)
+            catch (Exception exception)
+                when (exception is IFhirValidationException)
             {
-                throw await CreateAndLogDependencyValidationException(fhirAbstractionProviderValidationException);
+                throw await CreateAndLogDependencyValidationException(exception as Xeption);
             }
-            catch (FhirAbstractionProviderDependencyException fhirAbstractionProviderDependencyException)
+            catch (Exception exception)
+               when (exception is IFhirDependencyException)
             {
-                throw await CreateAndLogDependencyException(fhirAbstractionProviderDependencyException);
+                throw await CreateAndLogDependencyException(exception as Xeption);
             }
-            catch (FhirAbstractionProviderServiceException fhirAbstractionProviderServiceException)
+            catch (Exception exception)
+               when (exception is IFhirServiceException)
             {
-                throw await CreateAndLogDependencyException(fhirAbstractionProviderServiceException);
+                throw await CreateAndLogDependencyException(exception as Xeption);
             }
             catch (Exception exception)
             {
                 var failedPatientServiceException =
                     new FailedPatientServiceException(
                         message: "Failed patient service error occurred, please contact support.",
-                        innerException: exception);
+                        innerException: exception,
+                        data: exception.Data);
 
                 throw await CreateAndLogServiceExceptionAsync(failedPatientServiceException);
             }

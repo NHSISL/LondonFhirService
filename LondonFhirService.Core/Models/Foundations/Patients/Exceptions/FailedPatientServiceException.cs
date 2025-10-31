@@ -3,14 +3,15 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections;
 using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Patients.Exceptions
 {
     public class FailedPatientServiceException : Xeption
     {
-        public FailedPatientServiceException(string message, Exception innerException)
-            : base(message, innerException)
+        public FailedPatientServiceException(string message, Exception innerException, IDictionary data)
+            : base(message, innerException, data)
         { }
     }
 }

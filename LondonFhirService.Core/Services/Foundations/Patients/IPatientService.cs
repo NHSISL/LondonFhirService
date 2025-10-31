@@ -20,8 +20,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
         /// <param name="providerNames">
         /// A list of names of the providers to be used to retrieve with <c>$everything</c>.
         /// </param>
-        /// <param name="nhsNumber">
-        /// NHS Number of the <see cref="Patient"/> resource on which to invoke <c>$everything</c>.
+        /// <param name="id">
+        /// Logical identifier of the <see cref="Patient"/> resource on which to invoke <c>$everything</c>.
         /// </param>
         /// <param name="cancellationToken">
         /// A cancellation token to allow cancelling of the request at any time.
@@ -52,7 +52,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
         /// </returns>
         ValueTask<List<Bundle>> Everything(
               List<string> providerNames,
-              string nhsNumber,
+              string id,
               CancellationToken cancellationToken,
               DateTimeOffset? start = null,
               DateTimeOffset? end = null,

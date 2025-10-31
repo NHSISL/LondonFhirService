@@ -20,14 +20,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // given
             Bundle randomBundle = CreateRandomBundle();
             Bundle outputBundle = randomBundle.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
             (Bundle Bundle, Exception Exception) expectedResult = (outputBundle, null);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
-                inputNhsNumber,
+                inputId,
                 null,
                 null,
                 null,
@@ -41,7 +41,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 await this.patientService.ExecuteWithTimeoutAsync(
                     fhirProvider.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -52,7 +52,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             actualResult.Should().BeEquivalentTo(expectedResult);
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-                inputNhsNumber,
+                inputId,
                 null,
                 null,
                 null,
@@ -69,15 +69,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
         public async Task ShouldReturnNullAndOperationCancelledExceptionOnExecuteWithTimeoutWhenCancelled()
         {
             // given
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             OperationCanceledException operationCanceledException = new OperationCanceledException();
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
-                inputNhsNumber,
+                inputId,
                 null,
                 null,
                 null,
@@ -91,7 +91,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 await this.patientService.ExecuteWithTimeoutAsync(
                     fhirProvider.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -102,7 +102,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             actualResult.Should().BeEquivalentTo(expectedResult);
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-                inputNhsNumber,
+                inputId,
                 null,
                 null,
                 null,
@@ -119,15 +119,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
         public async Task ShouldReturnNullAndExceptionOnExecuteWithTimeoutWhenException()
         {
             // given
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             Exception exception = new Exception(GetRandomString());
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, exception);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
-                inputNhsNumber,
+                inputId,
                 null,
                 null,
                 null,
@@ -141,7 +141,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 await this.patientService.ExecuteWithTimeoutAsync(
                     fhirProvider.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -152,7 +152,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             actualResult.Should().BeEquivalentTo(expectedResult);
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-                inputNhsNumber,
+                inputId,
                 null,
                 null,
                 null,
@@ -171,8 +171,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // given
             var timeoutMilliseconds = 1;
             this.patientServiceConfig.MaxProviderWaitTimeMilliseconds = timeoutMilliseconds;
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             var timeoutException = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
             var taskCompletionSource = new TaskCompletionSource<Bundle>();
             var fhirProvider = this.ddsFhirProviderMock.Object;
@@ -180,7 +180,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             (Bundle Bundle, Exception Exception) expectedResult = (null, timeoutException);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
-                inputNhsNumber,
+                inputId,
                 null,
                 null,
                 null,
@@ -194,7 +194,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 await this.patientService.ExecuteWithTimeoutAsync(
                     fhirProvider.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -205,7 +205,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             actualResult.Should().BeEquivalentTo(expectedResult);
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-                inputNhsNumber,
+                inputId,
                 null,
                 null,
                 null,

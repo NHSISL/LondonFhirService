@@ -11,7 +11,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
 {
     public partial class PatientService
     {
-        public static void ValidateOnGetStructuredRecord(List<string> providerNames, string nhsNumber)
+        public static void ValidateOnGetStructuredRecord(List<string> providerNames, string id)
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
@@ -19,8 +19,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
                         "Invalid argument patient service exception, " +
                         "please correct the errors and try again."),
 
-            (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
-            (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)));
+                (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
+                (Rule: IsInvalid(id), Parameter: nameof(id)));
         }
 
         private static dynamic IsInvalid(List<string> strings) => new

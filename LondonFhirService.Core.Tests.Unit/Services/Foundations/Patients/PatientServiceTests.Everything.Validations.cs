@@ -22,8 +22,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
         {
             // given
             List<string> providerNames = null;
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             var invalidArgumentsPatientServiceException = new InvalidArgumentsPatientServiceException(
                 message: "Invalid argument patient service exception, " +
@@ -41,7 +41,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // when
             ValueTask<List<Bundle>> everythingTask = patientService.Everything(
                     providerNames: providerNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             PatientServiceValidationException actualPatientServiceValidationException =
@@ -79,7 +79,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     "please correct the errors and try again.");
 
             invalidArgumentsPatientServiceException.AddData(
-                key: "nhsNumber",
+                key: "id",
                 values: "Text is invalid");
 
             var expectedPatientServiceValidationException =
@@ -90,7 +90,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             // when
             ValueTask<List<Bundle>> everythingTask = patientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: invalidText,
+                    id: invalidText,
                     cancellationToken: default);
 
             PatientServiceValidationException actualPatientServiceValidationException =
@@ -120,8 +120,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             List<Bundle> expectedBundles = new List<Bundle>
             {
@@ -140,7 +140,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -154,7 +154,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<Bundle> actualBundles =
                 await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             // then
@@ -164,7 +164,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -181,7 +181,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.unsupportedFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -206,8 +206,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             List<Bundle> expectedBundles = new List<Bundle>
             {
@@ -226,7 +226,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -240,7 +240,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<Bundle> actualBundles =
                 await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             // then
@@ -250,7 +250,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -267,7 +267,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.unsupportedErrorFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -296,8 +296,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             List<Bundle> expectedBundles = new List<Bundle>
             {
@@ -325,7 +325,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -337,7 +337,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -351,7 +351,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<Bundle> actualBundles =
                 await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             // then
@@ -361,7 +361,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -373,7 +373,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -405,8 +405,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             List<Bundle> expectedBundles = new List<Bundle>();
 
             List<Exception> exceptions = new List<Exception>
@@ -431,7 +431,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -443,7 +443,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -457,7 +457,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<Bundle> actualBundles =
                 await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             // then
@@ -467,7 +467,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -479,7 +479,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -510,8 +510,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             List<Bundle> expectedBundles = new List<Bundle>
             {
@@ -539,7 +539,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -551,7 +551,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -565,7 +565,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<Bundle> actualBundles =
                 await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             // then
@@ -575,7 +575,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -587,7 +587,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -617,8 +617,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             List<Bundle> expectedBundles = new List<Bundle>();
 
             List<Exception> exceptions = new List<Exception>
@@ -643,7 +643,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -655,7 +655,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -669,7 +669,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<Bundle> actualBundles =
                 await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             // then
@@ -679,7 +679,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -691,7 +691,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,

@@ -30,8 +30,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             var expectedPatientServiceDependencyValidationException =
                 new PatientServiceDependencyValidationException(
@@ -50,7 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -64,7 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             ValueTask<List<Bundle>> everythingTask =
                 mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             PatientServiceDependencyValidationException actualPatientServiceDependencyValidationException =
@@ -79,7 +79,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -108,8 +108,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             var expectedPatientServiceDependencyException =
                 new PatientServiceDependencyException(
@@ -128,7 +128,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -142,7 +142,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             ValueTask<List<Bundle>> everythingTask =
                 mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             PatientServiceDependencyException actualPatientServiceDependencyException =
@@ -157,7 +157,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -184,15 +184,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             var serviceException = new Exception();
 
             var failedPatientServiceException =
                 new FailedPatientServiceException(
                     message: "Failed patient service error occurred, please contact support.",
-                    innerException: serviceException);
+                    innerException: serviceException,
+                    data: serviceException.Data);
 
             var expectedPatientServiceException =
                 new PatientServiceException(
@@ -211,7 +212,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -225,7 +226,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             ValueTask<List<Bundle>> everythingTask =
                 mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             PatientServiceException actualPatientServiceException =
@@ -240,7 +241,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,

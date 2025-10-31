@@ -29,8 +29,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             Bundle randomLdsBundle = CreateRandomBundle();
             Bundle outputLdsBundle = randomLdsBundle.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
 
             List<Bundle> expectedBundles = new List<Bundle>
             {
@@ -50,7 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -62,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -76,7 +76,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             List<Bundle> actualBundles =
                 await mockedPatientService.Everything(
                     providerNames: inputProviderNames,
-                    nhsNumber: inputNhsNumber,
+                    id: inputId,
                     cancellationToken: default);
 
             // then
@@ -86,7 +86,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,
@@ -98,7 +98,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 service.ExecuteWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object.Patients,
                     default,
-                    inputNhsNumber,
+                    inputId,
                     null,
                     null,
                     null,

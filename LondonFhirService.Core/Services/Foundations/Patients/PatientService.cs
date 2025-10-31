@@ -36,7 +36,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
 
         public ValueTask<List<Bundle>> Everything(
             List<string> providerNames,
-            string nhsNumber,
+            string id,
             CancellationToken cancellationToken,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -45,8 +45,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             int? count = null) =>
             TryCatch(async () =>
             {
-                ValidateOnGetStructuredRecord(providerNames, nhsNumber);
-
+                ValidateOnGetStructuredRecord(providerNames, id);
                 var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
 
                 List<IFhirProvider> providers = fhirBroker.FhirProviders
@@ -80,7 +79,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
                 var tasks = providers.Select(provider => ExecuteWithTimeoutAsync(
                     provider.Patients,
                     cancellationToken,
-                    nhsNumber,
+                    id,
                     start,
                     end,
                     typeFilter,
@@ -88,7 +87,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
                     count)).ToArray();
 
                 var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
-
                 var bundles = new List<Bundle>(outcomes.Length);
                 var exceptions = new List<Exception>();
 
@@ -119,7 +117,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
         virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteWithTimeoutAsync(
             IPatientResource resource,
             CancellationToken globalToken,
-            string nhsNumber,
+            string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
@@ -127,7 +125,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients
             int? count = null)
         {
             var everythingTask = resource
-                .Everything(nhsNumber, start, end, typeFilter, since, count, globalToken).AsTask();
+                .Everything(id, start, end, typeFilter, since, count, globalToken).AsTask();
 
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
             var timeoutTask = Task.Delay(maxWaitTimeout);
