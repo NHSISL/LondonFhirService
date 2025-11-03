@@ -11,21 +11,21 @@ using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
-using LondonFhirService.Core.Services.Foundations.Patients.R4;
+using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Providers;
 
-namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
+namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
-    public partial class R4PatientOrchestrationService : IR4PatientOrchestrationService
+    public partial class Stu3PatientOrchestrationService : IStu3PatientOrchestrationService
     {
         private readonly IProviderService providerService;
-        private readonly IR4PatientService patientService;
+        private readonly IStu3PatientService patientService;
         private readonly IFhirReconciliationService fhirReconciliationService;
         private readonly ILoggingBroker loggingBroker;
 
-        public R4PatientOrchestrationService(
+        public Stu3PatientOrchestrationService(
             IProviderService providerService,
-            IR4PatientService patientService,
+            IStu3PatientService patientService,
             IFhirReconciliationService fhirReconciliationService,
             ILoggingBroker loggingBroker)
         {

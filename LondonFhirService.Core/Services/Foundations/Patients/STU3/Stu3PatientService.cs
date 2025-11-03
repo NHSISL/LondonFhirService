@@ -8,23 +8,22 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Brokers.Fhirs.R4;
+using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Patients;
-using LondonFhirService.Providers.FHIR.R4.Abstractions;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Extensions;
-using Task = System.Threading.Tasks.Task;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions.Extensions;
 
-namespace LondonFhirService.Core.Services.Foundations.Patients.R4
+namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
-    public partial class R4PatientService : IR4PatientService
+    public partial class Stu3PatientService : IStu3PatientService
     {
-        private readonly IR4FhirBroker fhirBroker;
+        private readonly IStu3FhirBroker fhirBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly PatientServiceConfig patientServiceConfig;
 
-        public R4PatientService(
-            IR4FhirBroker fhirBroker,
+        public Stu3PatientService(
+            IStu3FhirBroker fhirBroker,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
@@ -138,15 +137,17 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
 
             try
             {
-                var bundle = await provider.Patients.Everything(
-                    id,
-                    start,
-                    end,
-                    typeFilter,
-                    since,
-                    count,
-                    timeoutCts.Token)
-                        .ConfigureAwait(false);
+                //var bundle = await provider.Patients.Everything(
+                //    id,
+                //    start,
+                //    end,
+                //    typeFilter,
+                //    since,
+                //    count,
+                //    timeoutCts.Token)
+                //        .ConfigureAwait(false);
+
+                var bundle = new Bundle();
 
                 Coding coding = new Coding
                 {

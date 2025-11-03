@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using Xeptions;
 
-namespace LondonFhirService.Core.Services.Foundations.Patients.R4
+namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
-    public partial class R4PatientService
+    public partial class Stu3PatientService
     {
         public static void ValidateOnGetStructuredRecord(List<string> providerNames, string id)
         {

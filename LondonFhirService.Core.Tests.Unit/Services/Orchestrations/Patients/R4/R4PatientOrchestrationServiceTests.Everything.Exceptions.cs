@@ -11,7 +11,7 @@ using Moq;
 using Xeptions;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
+namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
 {
     public partial class R4PatientOrchestrationServiceTests
     {

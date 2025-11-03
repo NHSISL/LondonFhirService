@@ -13,7 +13,7 @@ using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
+namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
 {
     public partial class R4PatientOrchestrationServiceTests
     {

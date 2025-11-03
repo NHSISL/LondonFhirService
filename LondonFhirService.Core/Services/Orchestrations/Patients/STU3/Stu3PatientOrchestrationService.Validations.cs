@@ -9,9 +9,9 @@ using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using Xeptions;
 
-namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
+namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
-    public partial class R4PatientOrchestrationService
+    public partial class Stu3PatientOrchestrationService
     {
         private static void ValidateArgsOnEverything(string id)
         {

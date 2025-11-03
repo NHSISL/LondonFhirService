@@ -14,13 +14,12 @@ using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
 using LondonFhirService.Core.Services.Foundations.Patients.R4;
 using LondonFhirService.Core.Services.Foundations.Providers;
-using LondonFhirService.Core.Services.Orchestrations.Patients;
 using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
+namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
 {
     public partial class R4PatientOrchestrationServiceTests
     {

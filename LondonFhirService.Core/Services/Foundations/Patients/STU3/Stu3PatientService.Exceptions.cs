@@ -10,9 +10,9 @@ using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Exceptions;
 using Xeptions;
 
-namespace LondonFhirService.Core.Services.Foundations.Patients.R4
+namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
-    public partial class R4PatientService
+    public partial class Stu3PatientService
     {
         private delegate ValueTask<List<Bundle>> ReturningBundleListFunction();
 

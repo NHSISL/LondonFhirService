@@ -2,41 +2,40 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirR4;
+extern alias FhirStu3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Brokers.Fhirs.R4;
+using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Patients;
-using LondonFhirService.Core.Services.Foundations.Patients.R4;
-using LondonFhirService.Providers.FHIR.R4.Abstractions;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Capabilities;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Exceptions;
+using LondonFhirService.Core.Services.Foundations.Patients.STU3;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Capabilities;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Exceptions;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
-using AdministrativeGender = FhirR4::Hl7.Fhir.Model.AdministrativeGender;
-using Patient = FhirR4::Hl7.Fhir.Model.Patient;
+using AdministrativeGender = FhirStu3::Hl7.Fhir.Model.AdministrativeGender;
+using Patient = FhirStu3::Hl7.Fhir.Model.Patient;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 {
-    public partial class R4PatientServiceTests
+    public partial class Stu3PatientServiceTests
     {
         private readonly Mock<IFhirAbstractionProvider> fhirAbstractionProviderMock;
         private readonly Mock<IFhirProvider> ddsFhirProviderMock;
         private readonly Mock<IFhirProvider> ldsFhirProviderMock;
         private readonly Mock<IFhirProvider> unsupportedFhirProviderMock;
         private readonly Mock<IFhirProvider> unsupportedErrorFhirProviderMock;
-        private readonly R4FhirBroker fhirBroker;
+        private readonly Stu3FhirBroker fhirBroker;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly PatientServiceConfig patientServiceConfig;
-        private readonly R4PatientService patientService;
+        private readonly Stu3PatientService patientService;
 
-        public R4PatientServiceTests()
+        public Stu3PatientServiceTests()
         {
             this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
@@ -62,9 +61,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             this.fhirAbstractionProviderMock.SetupGet(provider => provider.FhirProviders)
                 .Returns(fhirProviders);
 
-            this.fhirBroker = new R4FhirBroker(fhirAbstractionProviderMock.Object);
+            this.fhirBroker = new Stu3FhirBroker(fhirAbstractionProviderMock.Object);
 
-            this.patientService = new R4PatientService(
+            this.patientService = new Stu3PatientService(
                 fhirBroker: this.fhirBroker,
                 loggingBroker: this.loggingBrokerMock.Object,
                 patientServiceConfig: this.patientServiceConfig);
@@ -147,15 +146,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             mock.SetupGet(p => p.Source).Returns(GetRandomString());
             mock.SetupGet(p => p.System).Returns(GetRandomString());
 
-            mock.Setup(p => p.Patients.Everything(
-                It.IsAny<string>(),
-                It.IsAny<DateTimeOffset>(),
-                It.IsAny<DateTimeOffset>(),
-                It.IsAny<string>(),
-                It.IsAny<DateTimeOffset>(),
-                It.IsAny<int>(),
-                It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(CreateRandomBundle());
+            //mock.Setup(p => p.Patients.Everything(
+            //    It.IsAny<string>(),
+            //    It.IsAny<DateTimeOffset>(),
+            //    It.IsAny<DateTimeOffset>(),
+            //    It.IsAny<string>(),
+            //    It.IsAny<DateTimeOffset>(),
+            //    It.IsAny<int>(),
+            //    It.IsAny<CancellationToken>()))
+            //        .ReturnsAsync(CreateRandomBundle());
 
             // If IFhirProvider has more required members, add minimal setups here.
 
