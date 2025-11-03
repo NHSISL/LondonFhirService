@@ -8,9 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 
-namespace LondonFhirService.Core.Services.Foundations.Patients
+namespace LondonFhirService.Core.Services.Foundations.Patients.R4
 {
-    public interface IPatientService
+    public interface IR4PatientService
     {
         /// <summary>
         /// Executes the FHIR R4 <c>$everything</c> operation for a given <see cref="Patient"/> resource.

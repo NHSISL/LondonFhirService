@@ -8,7 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Brokers.Fhirs;
+using LondonFhirService.Core.Brokers.Fhirs.R4;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.Patients;
@@ -21,19 +21,19 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 {
-    public partial class PatientServiceTests
+    public partial class R4PatientServiceTests
     {
         private readonly Mock<IFhirAbstractionProvider> fhirAbstractionProviderMock;
         private readonly Mock<IFhirProvider> ddsFhirProviderMock;
         private readonly Mock<IFhirProvider> ldsFhirProviderMock;
         private readonly Mock<IFhirProvider> unsupportedFhirProviderMock;
         private readonly Mock<IFhirProvider> unsupportedErrorFhirProviderMock;
-        private readonly FhirBroker fhirBroker;
+        private readonly R4FhirBroker fhirBroker;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly PatientServiceConfig patientServiceConfig;
-        private readonly PatientService patientService;
+        private readonly R4PatientService patientService;
 
-        public PatientServiceTests()
+        public R4PatientServiceTests()
         {
             this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
@@ -59,9 +59,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
             this.fhirAbstractionProviderMock.SetupGet(provider => provider.FhirProviders)
                 .Returns(fhirProviders);
 
-            this.fhirBroker = new FhirBroker(fhirAbstractionProviderMock.Object);
+            this.fhirBroker = new R4FhirBroker(fhirAbstractionProviderMock.Object);
 
-            this.patientService = new PatientService(
+            this.patientService = new R4PatientService(
                 fhirBroker: this.fhirBroker,
                 loggingBroker: this.loggingBrokerMock.Object,
                 patientServiceConfig: this.patientServiceConfig);

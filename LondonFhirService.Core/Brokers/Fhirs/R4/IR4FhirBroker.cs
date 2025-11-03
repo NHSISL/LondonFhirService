@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Resources;
 
-namespace LondonFhirService.Core.Brokers.Fhirs
+namespace LondonFhirService.Core.Brokers.Fhirs.R4
 {
-    public interface IFhirBroker
+    public interface IR4FhirBroker
     {
         IReadOnlyCollection<IFhirProvider> FhirProviders { get; }
         IAccountResource Accounts(string providerName);

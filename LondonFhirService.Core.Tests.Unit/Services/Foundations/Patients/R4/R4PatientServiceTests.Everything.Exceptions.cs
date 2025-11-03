@@ -16,7 +16,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 {
-    public partial class PatientServiceTests
+    public partial class R4PatientServiceTests
     {
         [Theory]
         [MemberData(nameof(DependencyValidationExceptions))]
@@ -38,7 +38,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     message: "Patient service dependency validation error occurred, please try again.",
                     innerException: dependencyValidationException);
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -58,7 +58,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ThrowsAsync(dependencyValidationException);
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             ValueTask<List<Bundle>> everythingTask =
@@ -116,7 +116,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     message: "Patient service dependency error occurred, contact support.",
                     innerException: dependencyException);
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -136,7 +136,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ThrowsAsync(dependencyException);
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             ValueTask<List<Bundle>> everythingTask =
@@ -200,7 +200,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     message: "Patient service error occurred, contact support.",
                     innerException: failedPatientServiceException);
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -220,7 +220,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ThrowsAsync(serviceException);
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             ValueTask<List<Bundle>> everythingTask =

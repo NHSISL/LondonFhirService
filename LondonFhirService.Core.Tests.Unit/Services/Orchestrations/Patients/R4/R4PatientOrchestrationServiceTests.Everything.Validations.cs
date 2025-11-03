@@ -15,7 +15,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
 {
-    public partial class PatientOrchestrationServiceTests
+    public partial class R4PatientOrchestrationServiceTests
     {
         [Theory]
         [InlineData(null)]

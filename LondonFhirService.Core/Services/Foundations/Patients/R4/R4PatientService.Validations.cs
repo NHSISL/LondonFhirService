@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients
 {
-    public partial class PatientService
+    public partial class R4PatientService
     {
         public static void ValidateOnGetStructuredRecord(List<string> providerNames, string id)
         {

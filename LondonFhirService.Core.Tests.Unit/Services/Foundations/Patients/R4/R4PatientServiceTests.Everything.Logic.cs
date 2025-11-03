@@ -12,7 +12,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 {
-    public partial class PatientServiceTests
+    public partial class R4PatientServiceTests
     {
         [Fact]
         public async Task EverythingShouldReturnBundles()
@@ -38,7 +38,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 outputLdsBundle
             };
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -70,7 +70,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((outputLdsBundle, null));
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =

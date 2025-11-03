@@ -13,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 {
-    public partial class PatientServiceTests
+    public partial class R4PatientServiceTests
     {
         [Fact]
         public async Task ShouldExecuteWithTimeout()

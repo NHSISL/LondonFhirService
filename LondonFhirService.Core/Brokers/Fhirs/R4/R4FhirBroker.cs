@@ -6,18 +6,18 @@ using System.Collections.Generic;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Resources;
 
-namespace LondonFhirService.Core.Brokers.Fhirs
+namespace LondonFhirService.Core.Brokers.Fhirs.R4
 {
-    public class FhirBroker : IFhirBroker
+    public class R4FhirBroker : IR4FhirBroker
     {
         private readonly IFhirAbstractionProvider fhirAbstractionProvider;
         public IReadOnlyCollection<IFhirProvider> FhirProviders { get; private set; }
 
-        public FhirBroker(
+        public R4FhirBroker(
             IFhirAbstractionProvider fhirAbstractionProvider)
         {
             this.fhirAbstractionProvider = fhirAbstractionProvider;
-            this.FhirProviders = fhirAbstractionProvider.FhirProviders;
+            FhirProviders = fhirAbstractionProvider.FhirProviders;
         }
 
         public IAccountResource Accounts(string providerName) =>

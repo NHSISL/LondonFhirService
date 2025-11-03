@@ -15,7 +15,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
 {
-    public partial class PatientServiceTests
+    public partial class R4PatientServiceTests
     {
         [Fact]
         public async Task EverythingShouldThrowWhenNullProviderNames()
@@ -128,7 +128,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 outputDdsBundle
             };
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -148,7 +148,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((outputDdsBundle, null));
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
@@ -214,7 +214,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 outputDdsBundle
             };
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -234,7 +234,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((outputDdsBundle, null));
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
@@ -313,7 +313,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 "One or more provider calls failed or timed out.",
                 exceptions);
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -345,7 +345,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((null, timeoutException));
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
@@ -419,7 +419,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 "One or more provider calls failed or timed out.",
                 exceptions);
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -451,7 +451,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((null, timeoutException2));
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
@@ -527,7 +527,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 "One or more provider calls failed or timed out.",
                 exceptions);
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -559,7 +559,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((null, exception));
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =
@@ -631,7 +631,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                 "One or more provider calls failed or timed out.",
                 exceptions);
 
-            var patientServiceMock = new Mock<PatientService>(
+            var patientServiceMock = new Mock<R4PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -663,7 +663,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients
                     null))
                 .ReturnsAsync((null, exception2));
 
-            PatientService mockedPatientService = patientServiceMock.Object;
+            R4PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
             List<Bundle> actualBundles =

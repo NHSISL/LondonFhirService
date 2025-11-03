@@ -12,31 +12,32 @@ using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
-using LondonFhirService.Core.Services.Foundations.Patients;
+using LondonFhirService.Core.Services.Foundations.Patients.R4;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Patients;
+using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients
 {
-    public partial class PatientOrchestrationServiceTests
+    public partial class R4PatientOrchestrationServiceTests
     {
         private readonly Mock<IProviderService> providerServiceMock;
-        private readonly Mock<IPatientService> patientServiceMock;
+        private readonly Mock<IR4PatientService> patientServiceMock;
         private readonly Mock<IFhirReconciliationService> fhirReconciliationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly IPatientOrchestrationService patientOrchestrationService;
+        private readonly IR4PatientOrchestrationService patientOrchestrationService;
 
-        public PatientOrchestrationServiceTests()
+        public R4PatientOrchestrationServiceTests()
         {
             this.providerServiceMock = new Mock<IProviderService>();
-            this.patientServiceMock = new Mock<IPatientService>();
+            this.patientServiceMock = new Mock<IR4PatientService>();
             this.fhirReconciliationServiceMock = new Mock<IFhirReconciliationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-            this.patientOrchestrationService = new PatientOrchestrationService(
+            this.patientOrchestrationService = new R4PatientOrchestrationService(
                 providerService: providerServiceMock.Object,
                 patientService: patientServiceMock.Object,
                 fhirReconciliationService: fhirReconciliationServiceMock.Object,

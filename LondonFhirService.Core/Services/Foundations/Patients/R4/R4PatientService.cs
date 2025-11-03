@@ -8,23 +8,24 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Brokers.Fhirs;
+using LondonFhirService.Core.Brokers.Fhirs.R4;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Patients;
+using LondonFhirService.Core.Services.Foundations.Patients.R4;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Extensions;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients
 {
-    public partial class PatientService : IPatientService
+    public partial class R4PatientService : IR4PatientService
     {
-        private readonly IFhirBroker fhirBroker;
+        private readonly IR4FhirBroker fhirBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly PatientServiceConfig patientServiceConfig;
 
-        public PatientService(
-            IFhirBroker fhirBroker,
+        public R4PatientService(
+            IR4FhirBroker fhirBroker,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {

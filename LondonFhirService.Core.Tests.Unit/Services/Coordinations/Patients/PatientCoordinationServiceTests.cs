@@ -10,7 +10,7 @@ using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
-using LondonFhirService.Core.Services.Orchestrations.Patients;
+using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
@@ -20,14 +20,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
     public partial class PatientCoordinationServiceTests
     {
         private readonly Mock<IAccessOrchestrationService> accessOrchestrationServiceMock;
-        private readonly Mock<IPatientOrchestrationService> patientOrchestrationServiceMock;
+        private readonly Mock<IR4PatientOrchestrationService> patientOrchestrationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly IPatientCoordinationService patientCoordinationService;
 
         public PatientCoordinationServiceTests()
         {
             this.accessOrchestrationServiceMock = new Mock<IAccessOrchestrationService>();
-            this.patientOrchestrationServiceMock = new Mock<IPatientOrchestrationService>();
+            this.patientOrchestrationServiceMock = new Mock<IR4PatientOrchestrationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.patientCoordinationService = new PatientCoordinationService(

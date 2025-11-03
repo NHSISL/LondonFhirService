@@ -12,7 +12,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients
 {
-    public partial class PatientService
+    public partial class R4PatientService
     {
         private delegate ValueTask<List<Bundle>> ReturningBundleListFunction();
 

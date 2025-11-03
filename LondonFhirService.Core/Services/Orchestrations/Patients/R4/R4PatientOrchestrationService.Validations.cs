@@ -11,7 +11,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Patients
 {
-    public partial class PatientOrchestrationService
+    public partial class R4PatientOrchestrationService
     {
         private static void ValidateArgsOnEverything(string id)
         {
