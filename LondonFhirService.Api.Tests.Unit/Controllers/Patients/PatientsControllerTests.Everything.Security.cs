@@ -15,13 +15,13 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
     public partial class PatientControllerTests
     {
         [Fact]
-        public void GetShouldHavePolicyAttribute()
+        public void GetShouldHaveRolesAttribute()
         {
             // given
             var controllerType = typeof(PatientController);
             var methodInfo = controllerType.GetMethod("Everything");
             Type attributeType = typeof(AuthorizeAttribute);
-            string attributeProperty = "Policy";
+            string attributeProperty = "Roles";
 
             List<string> expectedAttributeValues = new List<string>
             {

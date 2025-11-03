@@ -28,7 +28,7 @@ namespace LondonFhirService.Api.Controllers
         }
 
         [HttpPost("{id}/$everything")]
-        [Authorize(Policy = "Patient.Everything")]
+        [Authorize(Roles = "Patient.Everything")]
         public async Task<ActionResult<Bundle>> Everything(
             string id,
             [FromBody] Parameters parameters,
