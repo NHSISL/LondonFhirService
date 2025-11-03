@@ -1,0 +1,76 @@
+﻿// ---------------------------------------------------------
+// Copyright (c) North East London ICB. All rights reserved.
+// ---------------------------------------------------------
+
+using System;
+using FluentAssertions;
+using Hl7.Fhir.Model;
+using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
+using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Foundations.OdsDatas;
+using LondonFhirService.Core.Models.Foundations.PdsDatas;
+using Task = System.Threading.Tasks.Task;
+
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
+{
+    public partial class PatientTests
+    {
+        [Fact]
+        public async Task ShouldGetPatientEverythingAsync()
+        {
+            // given
+            string nhsNumber = GenerateRandom10DigitNumber();
+            string inputId = nhsNumber;
+            string orgCode = GetRandomStringWithLengthOf(15);
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            string userId = TestAuthHandler.TestUserId;
+            DateTimeOffset randomInputStart = GetRandomDateTimeOffset();
+            DateTimeOffset inputStart = randomInputStart;
+            DateTimeOffset randomInputEnd = GetRandomDateTimeOffset();
+            DateTimeOffset inputEnd = randomInputEnd;
+            string randomInputTypeFilter = GetRandomString();
+            string inputTypeFilter = randomInputTypeFilter;
+            DateTimeOffset randomInputSince = GetRandomDateTimeOffset();
+            DateTimeOffset inputSince = randomInputSince;
+            int randomInputCount = GetRandomNumber();
+            int inputCount = randomInputCount;
+
+            Parameters inputParameters = CreateRandomParameters(
+                start: inputStart,
+                end: inputEnd,
+                typeFilter: inputTypeFilter,
+                since: inputSince,
+                count: inputCount);
+
+            Consumer consumer = await CreateRandomConsumer(now, userId);
+            OdsData odsData = await CreateRandomOdsData(orgCode, now);
+
+            ConsumerAccess consumerAccess = await CreateRandomConsumerAccess(
+                consumer.Id,
+                orgCode,
+                now,
+                userId);
+
+            PdsData pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now);
+
+            // when
+            Bundle actualBundle =
+                await this.apiBroker.EverythingAsync(inputId, inputParameters);
+
+            // then
+            actualBundle.Should().NotBeNull();
+            actualBundle.Type.Should().Be(Bundle.BundleType.Searchset);
+            actualBundle.Entry.Should().NotBeNullOrEmpty();
+            actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
+            actualBundle.Meta.Should().NotBeNull();
+            actualBundle.Entry[0].Resource.Should().BeOfType<Patient>();
+            var patient = actualBundle.Entry[0].Resource as Patient;
+            patient!.Id.Should().Be(inputId);
+            patient.Meta.Should().NotBeNull();
+            await CleanupPdsDataAsync(pdsData);
+            await CleanupOdsDataAsync(odsData);
+            await CleanupConsumerAccessAsync(consumerAccess);
+            await CleanupConsumerAsync(consumer);
+        }
+    }
+}

@@ -22,6 +22,9 @@ namespace LondonFhirService.Api.Tests.Acceptance
         private static string email = "TestEmail@test.com";
         private static string jobTitle = "TestJobTitle";
 
+        public static string TestUserId =>
+            securityOid.ToString();
+
         private static List<Claim> claims = new List<Claim>
         {
             new Claim("oid", securityOid.ToString()),
@@ -32,7 +35,9 @@ namespace LondonFhirService.Api.Tests.Acceptance
             new Claim("jobTitle", jobTitle),
             new Claim(ClaimTypes.Name, "TestUser"),
             new Claim(ClaimTypes.Role, "LondonDataServices.IDecide.Portal.Server.Administrators"),
-            new Claim(ClaimTypes.Role, "LondonDataServices.IDecide.Portal.Server.Users")
+            new Claim(ClaimTypes.Role, "LondonDataServices.IDecide.Portal.Server.Users"),
+            new Claim(ClaimTypes.Role, "LondonFhirServiceApiConsumer"),
+            new Claim(ClaimTypes.Role, "Patient.Everything")
         };
 
         public TestAuthHandler(

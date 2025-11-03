@@ -7,12 +7,19 @@ using System.IO;
 using System.Text.Json;
 using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
+using ISL.Providers.Captcha.Abstractions;
+using ISL.Providers.Captcha.FakeCaptcha.Providers.FakeCaptcha;
+using ISL.Providers.Captcha.GoogleReCaptcha.Models.Brokers.GoogleReCaptcha;
+using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
+using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Fhirs;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Coordinations.Patients;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
@@ -24,6 +31,8 @@ using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.Patients;
+using LondonFhirService.Providers.FHIR.R4.Abstractions;
+using LondonFhirService.Api.Formatters;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OData;
@@ -109,7 +118,6 @@ namespace LondonFhirService.Api
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddControllers();
             AddProviders(builder.Services, builder.Configuration);
             AddBrokers(builder.Services, builder.Configuration);
             AddFoundationServices(builder.Services);
@@ -122,7 +130,11 @@ namespace LondonFhirService.Api
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
             JsonNamingPolicy jsonNamingPolicy = JsonNamingPolicy.CamelCase;
 
-            builder.Services.AddControllers()
+            builder.Services.AddControllers(options =>
+            {
+                options.InputFormatters.Insert(0, new FhirJsonInputFormatter());
+                options.OutputFormatters.Insert(0, new FhirJsonOutputFormatter());
+            })
                 .AddOData(options =>
                 {
                     options.AddRouteComponents("odata", GetEdmModel());
@@ -177,13 +189,40 @@ namespace LondonFhirService.Api
         }
 
         private static void AddProviders(IServiceCollection services, IConfiguration configuration)
-        { }
+        {
+            PatientServiceConfig patientServiceConfig = configuration.GetSection("PatientServiceConfig")
+                .Get<PatientServiceConfig>();
+
+            services.AddSingleton(patientServiceConfig);
+            services.AddTransient<IFhirAbstractionProvider, FhirAbstractionProvider>();
+
+            bool fakeCaptchaProviderMode = configuration
+                .GetSection("FakeCaptchaProviderMode").Get<bool>();
+
+            services.AddTransient<ICaptchaAbstractionProvider, CaptchaAbstractionProvider>();
+
+            if (fakeCaptchaProviderMode == true)
+            {
+                services.AddTransient<ICaptchaProvider, FakeCaptchaProvider>();
+            }
+            else
+            {
+                GoogleReCaptchaConfigurations reCaptchaConfigurations = configuration
+                    .GetSection("googleReCaptchaConfigurations")
+                        .Get<GoogleReCaptchaConfigurations>();
+
+                services.AddSingleton(reCaptchaConfigurations);
+                services.AddTransient<ICaptchaProvider, GoogleReCaptchaProvider>();
+            }
+        }
 
         private static void AddBrokers(IServiceCollection services, IConfiguration configuration)
         {
             SecurityConfigurations securityConfigurations = new SecurityConfigurations();
             services.AddSingleton(securityConfigurations);
+            services.AddTransient<IAuditBroker, AuditBroker>();
             services.AddTransient<IDateTimeBroker, DateTimeBroker>();
+            services.AddTransient<IFhirBroker, FhirBroker>();
             services.AddTransient<IIdentifierBroker, IdentifierBroker>();
             services.AddTransient<ILoggingBroker, LoggingBroker>();
             services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();

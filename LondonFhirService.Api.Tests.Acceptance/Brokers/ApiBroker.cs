@@ -4,6 +4,7 @@
 
 using System.Net.Http;
 using Attrify.InvisibleApi.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RESTFulSense.Clients;
 
@@ -15,6 +16,9 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
         private readonly HttpClient httpClient;
         private readonly IRESTFulApiFactoryClient apiFactoryClient;
         internal readonly InvisibleApiKey invisibleApiKey;
+        internal readonly IConfiguration configuration;
+
+        internal TestWebApplicationFactory<Program> WebApplicationFactory => webApplicationFactory;
 
         public ApiBroker()
         {
@@ -23,6 +27,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             httpClient = webApplicationFactory.CreateClient();
             httpClient.DefaultRequestHeaders.Add(invisibleApiKey.Key, invisibleApiKey.Value);
             apiFactoryClient = new RESTFulApiFactoryClient(httpClient);
+            configuration = webApplicationFactory.Services.GetService<IConfiguration>();
         }
     }
 }

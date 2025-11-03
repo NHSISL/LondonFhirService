@@ -3,14 +3,21 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
+using ISL.Providers.Captcha.Abstractions;
+using LondonFhirService.Core.Brokers.Fhirs;
+using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Models.Foundations.Patients;
+using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
@@ -35,6 +42,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             builder.ConfigureServices((context, services) =>
             {
                 OverrideSecurityForTesting(services);
+                OverrideFhirProvidersForTesting(services);
+                MockExternalClientsForTesting(services);
             });
         }
 
@@ -77,6 +86,63 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             {
                 options.AddPolicy("TestPolicy", policy => policy.RequireAssertion(_ => true));
             });
+        }
+
+        private static void OverrideFhirProvidersForTesting(IServiceCollection services)
+        {
+            var fhirAbstractionProviderDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(IFhirAbstractionProvider));
+
+            if (fhirAbstractionProviderDescriptor != null)
+            {
+                services.Remove(fhirAbstractionProviderDescriptor);
+            }
+
+            var fhirBrokerDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(IFhirBroker));
+
+            if (fhirBrokerDescriptor != null)
+            {
+                services.Remove(fhirBrokerDescriptor);
+            }
+
+            var patientServiceConfigDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(PatientServiceConfig));
+
+            if (patientServiceConfigDescriptor != null)
+            {
+                services.Remove(patientServiceConfigDescriptor);
+            }
+
+            var testProviders = new List<IFhirProvider>
+            {
+                TestFhirProviderFactory.CreateTestProvider("DDS"),
+                TestFhirProviderFactory.CreateTestProvider("LDS")
+            };
+
+            services.AddSingleton<IFhirAbstractionProvider>(
+                new FhirAbstractionProvider(testProviders));
+
+            services.AddTransient<IFhirBroker, FhirBroker>();
+
+            services.AddSingleton(new PatientServiceConfig
+            {
+                MaxProviderWaitTimeMilliseconds = 30000
+            });
+        }
+
+        private static void MockExternalClientsForTesting(IServiceCollection services)
+        {
+             var auditClientDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(IAuditClient));
+
+            if (auditClientDescriptor != null)
+            {
+                services.Remove(auditClientDescriptor);
+            }
+
+            var mockAuditClient = new Mock<IAuditClient>();
+            services.AddTransient<IAuditClient>(_ => mockAuditClient.Object);
         }
     }
 }
