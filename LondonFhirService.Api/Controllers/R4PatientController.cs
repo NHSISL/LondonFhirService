@@ -18,11 +18,11 @@ namespace LondonFhirService.Api.Controllers
     [Authorize]
     [ApiController]
     [Route("api/R4/[controller]")]
-    public class PatientController : RESTFulController
+    public class R4PatientController : RESTFulController
     {
         private readonly IR4PatientCoordinationService patientCoordinationService;
 
-        public PatientController(IR4PatientCoordinationService patientCoordinationService)
+        public R4PatientController(IR4PatientCoordinationService patientCoordinationService)
         {
             this.patientCoordinationService = patientCoordinationService;
         }

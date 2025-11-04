@@ -12,9 +12,9 @@ using RESTFulSense.Models;
 using Xeptions;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
+namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
 {
-    public partial class PatientControllerTests
+    public partial class R4PatientControllerTests
     {
         [Theory]
         [MemberData(nameof(ValidationExceptions))]

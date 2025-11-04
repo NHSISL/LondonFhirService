@@ -12,18 +12,18 @@ using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;
 using Xeptions;
 
-namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
+namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
 {
-    public partial class PatientControllerTests : RESTFulController
+    public partial class R4PatientControllerTests : RESTFulController
     {
         private readonly Mock<IR4PatientCoordinationService> patientCoordinationServiceMock;
-        private readonly PatientController patientController;
+        private readonly R4PatientController patientController;
 
-        public PatientControllerTests()
+        public R4PatientControllerTests()
         {
             this.patientCoordinationServiceMock = new Mock<IR4PatientCoordinationService>();
 
-            this.patientController = new PatientController(
+            this.patientController = new R4PatientController(
                 this.patientCoordinationServiceMock.Object);
         }
 
