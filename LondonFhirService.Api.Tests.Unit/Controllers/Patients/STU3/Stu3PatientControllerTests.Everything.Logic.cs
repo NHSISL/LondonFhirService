@@ -11,9 +11,9 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
+namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 {
-    public partial class PatientControllerTests
+    public partial class Stu3PatientControllerTests
     {
         [Fact]
         public async Task ShouldReturnBundleOnGetRecordAsync()

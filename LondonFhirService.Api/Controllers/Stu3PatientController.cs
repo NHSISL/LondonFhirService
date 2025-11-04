@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
-using LondonFhirService.Core.Services.Coordinations.Patients.R4;
+using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
@@ -17,18 +17,18 @@ namespace LondonFhirService.Api.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/R4/[controller]")]
-    public class PatientController : RESTFulController
+    [Route("api/STU3/[controller]")]
+    public class Stu3PatientController : RESTFulController
     {
-        private readonly IR4PatientCoordinationService patientCoordinationService;
+        private readonly IStu3PatientCoordinationService patientCoordinationService;
 
-        public PatientController(IR4PatientCoordinationService patientCoordinationService)
+        public Stu3PatientController(IStu3PatientCoordinationService patientCoordinationService)
         {
             this.patientCoordinationService = patientCoordinationService;
         }
 
         [HttpPost("{id}/$everything")]
-        [Authorize(Roles = "Patient.Everything")]
+        [Authorize(Roles = "Patients.Everything")]
         public async Task<ActionResult<Bundle>> Everything(
             string id,
             [FromBody] Parameters parameters,

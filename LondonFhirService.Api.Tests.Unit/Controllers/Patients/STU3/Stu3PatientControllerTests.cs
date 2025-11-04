@@ -6,24 +6,24 @@ using System;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Controllers;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
-using LondonFhirService.Core.Services.Coordinations.Patients.R4;
+using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using Moq;
 using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;
 using Xeptions;
 
-namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
+namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 {
-    public partial class PatientControllerTests : RESTFulController
+    public partial class Stu3PatientControllerTests : RESTFulController
     {
-        private readonly Mock<IR4PatientCoordinationService> patientCoordinationServiceMock;
-        private readonly PatientController patientController;
+        private readonly Mock<IStu3PatientCoordinationService> patientCoordinationServiceMock;
+        private readonly Stu3PatientController patientController;
 
-        public PatientControllerTests()
+        public Stu3PatientControllerTests()
         {
-            this.patientCoordinationServiceMock = new Mock<IR4PatientCoordinationService>();
+            this.patientCoordinationServiceMock = new Mock<IStu3PatientCoordinationService>();
 
-            this.patientController = new PatientController(
+            this.patientController = new Stu3PatientController(
                 this.patientCoordinationServiceMock.Object);
         }
 

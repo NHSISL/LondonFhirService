@@ -10,22 +10,22 @@ using FluentAssertions;
 using LondonFhirService.Api.Controllers;
 using Microsoft.AspNetCore.Authorization;
 
-namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
+namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 {
-    public partial class PatientControllerTests
+    public partial class Stu3PatientControllerTests
     {
         [Fact]
         public void GetShouldHaveRolesAttribute()
         {
             // given
-            var controllerType = typeof(PatientController);
+            var controllerType = typeof(Stu3PatientController);
             var methodInfo = controllerType.GetMethod("Everything");
             Type attributeType = typeof(AuthorizeAttribute);
             string attributeProperty = "Roles";
 
             List<string> expectedAttributeValues = new List<string>
             {
-                "Patient.Everything"
+                "Patients.Everything"
             };
 
             // when
@@ -59,7 +59,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients
         public void GetShouldNotHaveInvisibleApiAttribute()
         {
             // Given
-            var controllerType = typeof(PatientController);
+            var controllerType = typeof(Stu3PatientController);
             var methodInfo = controllerType.GetMethod("Everything");
             Type attributeType = typeof(InvisibleApiAttribute);
 
