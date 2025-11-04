@@ -100,7 +100,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         {
             // given
             Bundle randomBundle = CreateRandomBundle();
-            Bundle outputBundle = randomBundle.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
             CancellationToken alreadyCanceledToken = new CancellationToken(true);
@@ -249,10 +248,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             OperationCanceledException operationCanceledException =
                 new OperationCanceledException("A task was canceled.");
-
-            var timeoutException = new TimeoutException(
-                $"Provider call exceeded {timeoutMilliseconds} milliseconds.",
-                operationCanceledException);
 
             var fhirProvider = this.ddsFhirProviderMock.Object;
 

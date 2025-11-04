@@ -13,17 +13,21 @@ using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Core.Services.Coordinations.Patients;
+using LondonFhirService.Core.Services.Coordinations.Patients.R4;
+using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
+using LondonFhirService.Core.Services.Foundations.FhirReconciliations.R4;
+using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.OdsDatas;
-using LondonFhirService.Core.Services.Foundations.Patients;
+using LondonFhirService.Core.Services.Foundations.Patients.R4;
+using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
-using LondonFhirService.Core.Services.Orchestrations.Patients;
+using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
+using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OData;
@@ -196,9 +200,11 @@ namespace LondonFhirService.Api
             services.AddTransient<IAuditService, AuditService>();
             services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
             services.AddTransient<IConsumerService, ConsumerService>();
-            services.AddTransient<IFhirReconciliationService, FhirReconciliationService>();
+            services.AddTransient<IR4FhirReconciliationService, R4FhirReconciliationService>();
+            services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
             services.AddTransient<IOdsDataService, OdsDataService>();
-            services.AddTransient<IPatientService, PatientService>();
+            services.AddTransient<IR4PatientService, R4PatientService>();
+            services.AddTransient<IStu3PatientService, Stu3PatientService>();
             services.AddTransient<IPdsDataService, PdsDataService>();
             services.AddTransient<IProviderService, ProviderService>();
         }
@@ -209,12 +215,14 @@ namespace LondonFhirService.Api
         private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
         {
             services.AddTransient<IAccessOrchestrationService, AccessOrchestrationService>();
-            services.AddTransient<IPatientOrchestrationService, PatientOrchestrationService>();
+            services.AddTransient<IR4PatientOrchestrationService, R4PatientOrchestrationService>();
+            services.AddTransient<IStu3PatientOrchestrationService, Stu3PatientOrchestrationService>();
         }
 
         private static void AddCoordinationServices(IServiceCollection services, IConfiguration configuration)
         {
-            services.AddTransient<IPatientCoordinationService, PatientCoordinationService>();
+            services.AddTransient<IR4PatientCoordinationService, R4PatientCoordinationService>();
+            services.AddTransient<IStu3PatientCoordinationService, Stu3PatientCoordinationService>();
         }
 
         private static void AddClients(IServiceCollection services)
