@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Exceptions;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients.STU3

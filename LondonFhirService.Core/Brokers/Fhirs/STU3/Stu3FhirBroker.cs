@@ -26,9 +26,6 @@ namespace LondonFhirService.Core.Brokers.Fhirs.STU3
         public IActivityDefinitionResource ActivityDefinitions(string providerName) =>
             fhirAbstractionProvider.ActivityDefinitions(providerName);
 
-        public IAdverseEventResource AdverseEvents(string providerName) =>
-            fhirAbstractionProvider.AdverseEvents(providerName);
-
         public IAllergyIntoleranceResource AllergyIntolerances(string providerName) =>
             fhirAbstractionProvider.AllergyIntolerances(providerName);
 
@@ -58,9 +55,6 @@ namespace LondonFhirService.Core.Brokers.Fhirs.STU3
 
         public ICareTeamResource CareTeams(string providerName) =>
             fhirAbstractionProvider.CareTeams(providerName);
-
-        public IChargeItemResource ChargeItems(string providerName) =>
-            fhirAbstractionProvider.ChargeItems(providerName);
 
         public IClaimResponseResource ClaimResponses(string providerName) =>
             fhirAbstractionProvider.ClaimResponses(providerName);
@@ -237,7 +231,7 @@ namespace LondonFhirService.Core.Brokers.Fhirs.STU3
             fhirAbstractionProvider.Organizations(providerName);
 
         public IParametersResource Parameters(string providerName) =>
-            fhirAbstractionProvider.Parameters(providerName);
+            fhirAbstractionProvider.Parameterss(providerName);
 
         public IPatientResource Patients(string providerName) =>
             fhirAbstractionProvider.Patients(providerName);

@@ -13,7 +13,6 @@ namespace LondonFhirService.Core.Brokers.Fhirs.STU3
         IReadOnlyCollection<IFhirProvider> FhirProviders { get; }
         IAccountResource Accounts(string providerName);
         IActivityDefinitionResource ActivityDefinitions(string providerName);
-        IAdverseEventResource AdverseEvents(string providerName);
         IAllergyIntoleranceResource AllergyIntolerances(string providerName);
         IAppointmentResponseResource AppointmentResponses(string providerName);
         IAppointmentResource Appointments(string providerName);
@@ -24,7 +23,6 @@ namespace LondonFhirService.Core.Brokers.Fhirs.STU3
         ICapabilityStatementResource CapabilityStatements(string providerName);
         ICarePlanResource CarePlans(string providerName);
         ICareTeamResource CareTeams(string providerName);
-        IChargeItemResource ChargeItems(string providerName);
         IClaimResponseResource ClaimResponses(string providerName);
         IClaimResource Claims(string providerName);
         IClinicalImpressionResource ClinicalImpressions(string providerName);

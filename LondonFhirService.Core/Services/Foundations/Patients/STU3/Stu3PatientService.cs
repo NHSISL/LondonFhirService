@@ -137,17 +137,15 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
             try
             {
-                //var bundle = await provider.Patients.Everything(
-                //    id,
-                //    start,
-                //    end,
-                //    typeFilter,
-                //    since,
-                //    count,
-                //    timeoutCts.Token)
-                //        .ConfigureAwait(false);
-
-                var bundle = new Bundle();
+                var bundle = await provider.Patients.Everything(
+                    id,
+                    start,
+                    end,
+                    typeFilter,
+                    since,
+                    count,
+                    timeoutCts.Token)
+                        .ConfigureAwait(false);
 
                 Coding coding = new Coding
                 {

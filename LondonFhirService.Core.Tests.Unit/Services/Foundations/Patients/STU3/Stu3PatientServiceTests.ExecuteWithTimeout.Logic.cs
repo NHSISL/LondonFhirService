@@ -40,15 +40,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             (Bundle Bundle, Exception Exception) expectedResult = (expectedBundle, null);
 
-            //this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    It.IsAny<CancellationToken>()))
-            //        .ReturnsAsync(outputBundle);
+            this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(outputBundle);
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
@@ -65,15 +65,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            //this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    It.IsAny<CancellationToken>()),
-            //        Times.Once());
+            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()),
+                    Times.Once());
 
             this.ddsFhirProviderMock.Verify(provider =>
                 provider.System,
@@ -124,15 +124,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            //this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    alreadyCanceledToken),
-            //        Times.Never());
+            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                alreadyCanceledToken),
+                    Times.Never());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
@@ -149,15 +149,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
 
-            //this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    It.IsAny<CancellationToken>()))
-            //        .ThrowsAsync(operationCanceledException);
+            this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(operationCanceledException);
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
@@ -174,15 +174,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            //this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    It.IsAny<CancellationToken>()),
-            //        Times.Once());
+            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()),
+                    Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
@@ -199,15 +199,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, exception);
 
-            //this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    It.IsAny<CancellationToken>()))
-            //        .ThrowsAsync(exception);
+            this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(exception);
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
@@ -224,15 +224,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            //this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    It.IsAny<CancellationToken>()),
-            //        Times.Once());
+            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()),
+                    Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
@@ -256,25 +256,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
-            //this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    It.IsAny<CancellationToken>()))
-            //         .Returns(async (string id,
-            //            DateTimeOffset? start,
-            //            DateTimeOffset? end,
-            //            string typeFiler,
-            //            DateTimeOffset? since,
-            //            int? count,
-            //            CancellationToken token) =>
-            //             {
-            //                 await Task.Delay(Timeout.Infinite, token);
-            //                 return default(Bundle);
-            //             });
+            this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()))
+                     .Returns(async (string id,
+                        DateTimeOffset? start,
+                        DateTimeOffset? end,
+                        string typeFiler,
+                        DateTimeOffset? since,
+                        int? count,
+                        CancellationToken token) =>
+                         {
+                             await Task.Delay(Timeout.Infinite, token);
+                             return default(Bundle);
+                         });
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
@@ -297,15 +297,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             actualResult.Exception.InnerException.Should().BeOfType<TaskCanceledException>();
 
-            //this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
-            //    inputId,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    null,
-            //    It.IsAny<CancellationToken>()),
-            //        Times.Once());
+            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+                inputId,
+                null,
+                null,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()),
+                    Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
