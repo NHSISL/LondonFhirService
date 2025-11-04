@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Providers;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations.R4;
+using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Providers;
 
@@ -20,13 +20,13 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
     {
         private readonly IProviderService providerService;
         private readonly IStu3PatientService patientService;
-        private readonly IR4FhirReconciliationService fhirReconciliationService;
+        private readonly IStu3FhirReconciliationService fhirReconciliationService;
         private readonly ILoggingBroker loggingBroker;
 
         public Stu3PatientOrchestrationService(
             IProviderService providerService,
             IStu3PatientService patientService,
-            IR4FhirReconciliationService fhirReconciliationService,
+            IStu3FhirReconciliationService fhirReconciliationService,
             ILoggingBroker loggingBroker)
         {
             this.providerService = providerService;

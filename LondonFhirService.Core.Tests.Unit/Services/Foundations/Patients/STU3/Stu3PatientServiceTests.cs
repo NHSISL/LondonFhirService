@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -109,7 +110,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bundle.Entry = new List<Bundle.EntryComponent> {
                 new Bundle.EntryComponent
                 {
-                    FullUrl = $"https://api.service.nhs.uk/personal-demographics/FHIR/R4/Patient/{patient.Id}",
+                    FullUrl = $"https://api.service.nhs.uk/personal-demographics/FHIR/STU3/Patient/{patient.Id}",
                     Search = new Bundle.SearchComponent { Score = 1 },
                     Resource = patient
                 }
@@ -146,15 +147,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             mock.SetupGet(p => p.Source).Returns(GetRandomString());
             mock.SetupGet(p => p.System).Returns(GetRandomString());
 
-            //mock.Setup(p => p.Patients.Everything(
-            //    It.IsAny<string>(),
-            //    It.IsAny<DateTimeOffset>(),
-            //    It.IsAny<DateTimeOffset>(),
-            //    It.IsAny<string>(),
-            //    It.IsAny<DateTimeOffset>(),
-            //    It.IsAny<int>(),
-            //    It.IsAny<CancellationToken>()))
-            //        .ReturnsAsync(CreateRandomBundle());
+            mock.Setup(p => p.Patients.Everything(
+                It.IsAny<string>(),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<string>(),
+                It.IsAny<DateTimeOffset>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(CreateRandomBundle());
 
             // If IFhirProvider has more required members, add minimal setups here.
 

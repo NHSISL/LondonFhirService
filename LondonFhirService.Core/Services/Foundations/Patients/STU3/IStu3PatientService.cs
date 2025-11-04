@@ -13,7 +13,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
     public interface IStu3PatientService
     {
         /// <summary>
-        /// Executes the FHIR R4 <c>$everything</c> operation for a given <see cref="Patient"/> resource.
+        /// Executes the FHIR STU3 <c>$everything</c> operation for a given <see cref="Patient"/> resource.
         /// Returns a <see cref="Bundle"/> containing the patient’s consolidated health record,
         /// optionally restricted by date range, resource types, or last update time.
         /// </summary>
