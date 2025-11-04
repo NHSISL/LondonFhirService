@@ -25,7 +25,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
 
             List<string> expectedAttributeValues = new List<string>
             {
-                "Patient.Everything"
+                "Patients.Everything"
             };
 
             // when
