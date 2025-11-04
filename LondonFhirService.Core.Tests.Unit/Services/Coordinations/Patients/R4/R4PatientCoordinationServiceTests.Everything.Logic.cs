@@ -10,9 +10,9 @@ using Hl7.Fhir.Model;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
+namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
 {
-    public partial class PatientCoordinationServiceTests
+    public partial class R4PatientCoordinationServiceTests
     {
         [Fact]
         public async Task ShouldCallEverythingAsync()

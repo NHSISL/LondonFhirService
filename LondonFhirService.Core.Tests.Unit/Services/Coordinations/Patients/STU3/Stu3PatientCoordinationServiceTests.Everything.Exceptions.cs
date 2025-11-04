@@ -11,9 +11,9 @@ using Moq;
 using Xeptions;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
+namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 {
-    public partial class PatientCoordinationServiceTests
+    public partial class Stu3PatientCoordinationServiceTests
     {
         [Theory]
         [MemberData(nameof(DependencyValidationExceptions))]

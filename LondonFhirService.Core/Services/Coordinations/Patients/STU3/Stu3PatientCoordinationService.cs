@@ -8,19 +8,19 @@ using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
-using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
+using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
 
-namespace LondonFhirService.Core.Services.Coordinations.Patients
+namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
-    public partial class PatientCoordinationService : IPatientCoordinationService
+    public partial class Stu3PatientCoordinationService : IStu3PatientCoordinationService
     {
         private readonly IAccessOrchestrationService accessOrchestrationService;
-        private readonly IR4PatientOrchestrationService patientOrchestrationService;
+        private readonly IStu3PatientOrchestrationService patientOrchestrationService;
         private readonly ILoggingBroker loggingBroker;
 
-        public PatientCoordinationService(
+        public Stu3PatientCoordinationService(
             IAccessOrchestrationService accessOrchestrationService,
-            IR4PatientOrchestrationService patientOrchestrationService,
+            IStu3PatientOrchestrationService patientOrchestrationService,
             ILoggingBroker loggingBroker)
         {
             this.accessOrchestrationService = accessOrchestrationService;

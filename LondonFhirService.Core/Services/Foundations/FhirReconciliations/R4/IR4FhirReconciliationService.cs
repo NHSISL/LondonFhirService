@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 
-namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations
+namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.R4
 {
-    public interface IFhirReconciliationService
+    public interface IR4FhirReconciliationService
     {
         ValueTask<Bundle> Reconcile(List<Bundle> bundles, string primaryProviderName);
     }

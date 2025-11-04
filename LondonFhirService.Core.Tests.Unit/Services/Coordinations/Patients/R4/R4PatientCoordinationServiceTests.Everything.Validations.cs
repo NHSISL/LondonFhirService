@@ -9,9 +9,9 @@ using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
+namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
 {
-    public partial class PatientCoordinationServiceTests
+    public partial class R4PatientCoordinationServiceTests
     {
         [Theory]
         [InlineData(null)]

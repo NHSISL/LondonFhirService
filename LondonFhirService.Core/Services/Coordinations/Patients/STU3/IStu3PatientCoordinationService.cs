@@ -7,9 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 
-namespace LondonFhirService.Core.Services.Coordinations.Patients
+namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
-    public interface IPatientCoordinationService
+    public interface IStu3PatientCoordinationService
     {
         ValueTask<Bundle> Everything(
             string id,

@@ -6,9 +6,9 @@ using System;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using Xeptions;
 
-namespace LondonFhirService.Core.Services.Coordinations.Patients
+namespace LondonFhirService.Core.Services.Coordinations.Patients.R4
 {
-    public partial class PatientCoordinationService
+    public partial class R4PatientCoordinationService
     {
         private static void ValidateArgsOnEverything(string id)
         {

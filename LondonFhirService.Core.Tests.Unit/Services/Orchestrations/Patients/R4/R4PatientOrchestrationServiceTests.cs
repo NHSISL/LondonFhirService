@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations;
+using LondonFhirService.Core.Services.Foundations.FhirReconciliations.R4;
 using LondonFhirService.Core.Services.Foundations.Patients.R4;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
@@ -25,7 +25,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
     {
         private readonly Mock<IProviderService> providerServiceMock;
         private readonly Mock<IR4PatientService> patientServiceMock;
-        private readonly Mock<IFhirReconciliationService> fhirReconciliationServiceMock;
+        private readonly Mock<IR4FhirReconciliationService> fhirReconciliationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly IR4PatientOrchestrationService patientOrchestrationService;
 
@@ -33,7 +33,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
         {
             this.providerServiceMock = new Mock<IProviderService>();
             this.patientServiceMock = new Mock<IR4PatientService>();
-            this.fhirReconciliationServiceMock = new Mock<IFhirReconciliationService>();
+            this.fhirReconciliationServiceMock = new Mock<IR4FhirReconciliationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.patientOrchestrationService = new R4PatientOrchestrationService(

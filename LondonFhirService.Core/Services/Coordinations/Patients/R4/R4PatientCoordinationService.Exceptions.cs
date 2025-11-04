@@ -10,9 +10,9 @@ using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using Xeptions;
 
-namespace LondonFhirService.Core.Services.Coordinations.Patients
+namespace LondonFhirService.Core.Services.Coordinations.Patients.R4
 {
-    public partial class PatientCoordinationService
+    public partial class R4PatientCoordinationService
     {
         private delegate ValueTask<Bundle> ReturningBundleFunction();
 

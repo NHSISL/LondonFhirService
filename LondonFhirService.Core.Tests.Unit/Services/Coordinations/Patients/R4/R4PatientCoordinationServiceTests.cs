@@ -8,29 +8,29 @@ using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
-using LondonFhirService.Core.Services.Coordinations.Patients;
+using LondonFhirService.Core.Services.Coordinations.Patients.R4;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients
+namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
 {
-    public partial class PatientCoordinationServiceTests
+    public partial class R4PatientCoordinationServiceTests
     {
         private readonly Mock<IAccessOrchestrationService> accessOrchestrationServiceMock;
         private readonly Mock<IR4PatientOrchestrationService> patientOrchestrationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly IPatientCoordinationService patientCoordinationService;
+        private readonly IR4PatientCoordinationService patientCoordinationService;
 
-        public PatientCoordinationServiceTests()
+        public R4PatientCoordinationServiceTests()
         {
             this.accessOrchestrationServiceMock = new Mock<IAccessOrchestrationService>();
             this.patientOrchestrationServiceMock = new Mock<IR4PatientOrchestrationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-            this.patientCoordinationService = new PatientCoordinationService(
+            this.patientCoordinationService = new R4PatientCoordinationService(
                 accessOrchestrationService: accessOrchestrationServiceMock.Object,
                 patientOrchestrationService: patientOrchestrationServiceMock.Object,
                 loggingBroker: loggingBrokerMock.Object);
