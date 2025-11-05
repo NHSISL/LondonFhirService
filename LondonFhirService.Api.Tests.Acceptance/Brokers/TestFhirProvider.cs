@@ -2,16 +2,16 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+extern alias FhirR4;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Capabilities;
 using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Resources;
 using Moq;
+using Patient = FhirR4::Hl7.Fhir.Model.Patient;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {

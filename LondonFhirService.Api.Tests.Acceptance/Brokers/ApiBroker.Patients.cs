@@ -2,23 +2,28 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+extern alias FhirR4;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using ModelInfo = FhirR4::Hl7.Fhir.Model.ModelInfo;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
     public partial class ApiBroker
     {
-        private const string PatientRelativeUrl = "api/R4/Patient";
+        private const string PatientRelativeUrl = "api/R4/R4Patient";
 
         public async ValueTask<Bundle> EverythingAsync(string id, Parameters parameters)
         {
+            var options = new JsonSerializerOptions()
+                       .ForFhir(ModelInfo.ModelInspector);
+
             string url = $"{PatientRelativeUrl}/{id}/$everything";
-            var fhirJsonSerializer = new FhirJsonSerializer();
-            string jsonContent = await fhirJsonSerializer.SerializeToStringAsync(parameters);
+            string jsonContent = JsonSerializer.Serialize(parameters, options);
 
             var content = new StringContent(
                 jsonContent,
@@ -35,9 +40,9 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                     $"Response: {responseContent}");
             }
 
-            var fhirJsonParser = new FhirJsonParser();
+            var bundle = JsonSerializer.Deserialize<Bundle>(responseContent, options);
 
-            return fhirJsonParser.Parse<Bundle>(responseContent);
+            return bundle;
         }
     }
 }

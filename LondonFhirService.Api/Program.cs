@@ -2,6 +2,8 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+extern alias FhirR4;
+extern alias FhirSTU3;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -15,6 +17,8 @@ using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Api.Formatters;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Fhirs.R4;
+using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
@@ -35,7 +39,6 @@ using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
-using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OData;
@@ -46,6 +49,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
+using R4FhirAbstractions = LondonFhirService.Providers.FHIR.R4.Abstractions;
+using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api
 {
@@ -197,7 +202,12 @@ namespace LondonFhirService.Api
                 .Get<PatientServiceConfig>();
 
             services.AddSingleton(patientServiceConfig);
-            services.AddTransient<IFhirAbstractionProvider, FhirAbstractionProvider>();
+
+            services.AddTransient<R4FhirAbstractions.IFhirAbstractionProvider,
+                R4FhirAbstractions.FhirAbstractionProvider>();
+
+            services.AddTransient<STU3FhirAbstractions.IFhirAbstractionProvider,
+                STU3FhirAbstractions.FhirAbstractionProvider>();
 
             bool fakeCaptchaProviderMode = configuration
                 .GetSection("FakeCaptchaProviderMode").Get<bool>();
@@ -225,7 +235,8 @@ namespace LondonFhirService.Api
             services.AddSingleton(securityConfigurations);
             services.AddTransient<IAuditBroker, AuditBroker>();
             services.AddTransient<IDateTimeBroker, DateTimeBroker>();
-            services.AddTransient<IFhirBroker, FhirBroker>();
+            services.AddTransient<IR4FhirBroker, R4FhirBroker>();
+            services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
             services.AddTransient<IIdentifierBroker, IdentifierBroker>();
             services.AddTransient<ILoggingBroker, LoggingBroker>();
             services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();

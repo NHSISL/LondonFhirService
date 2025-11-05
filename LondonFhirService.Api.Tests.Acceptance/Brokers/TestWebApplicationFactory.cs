@@ -7,8 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
-using ISL.Providers.Captcha.Abstractions;
-using LondonFhirService.Core.Brokers.Fhirs;
+using LondonFhirService.Core.Brokers.Fhirs.R4;
 using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Providers.FHIR.R4.Abstractions;
@@ -99,7 +98,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             }
 
             var fhirBrokerDescriptor = services
-                .FirstOrDefault(d => d.ServiceType == typeof(IFhirBroker));
+                .FirstOrDefault(d => d.ServiceType == typeof(IR4FhirBroker));
 
             if (fhirBrokerDescriptor != null)
             {
@@ -123,7 +122,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             services.AddSingleton<IFhirAbstractionProvider>(
                 new FhirAbstractionProvider(testProviders));
 
-            services.AddTransient<IFhirBroker, FhirBroker>();
+            services.AddTransient<IR4FhirBroker, R4FhirBroker>();
 
             services.AddSingleton(new PatientServiceConfig
             {
@@ -133,8 +132,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void MockExternalClientsForTesting(IServiceCollection services)
         {
-             var auditClientDescriptor = services
-                .FirstOrDefault(d => d.ServiceType == typeof(IAuditClient));
+            var auditClientDescriptor = services
+               .FirstOrDefault(d => d.ServiceType == typeof(IAuditClient));
 
             if (auditClientDescriptor != null)
             {

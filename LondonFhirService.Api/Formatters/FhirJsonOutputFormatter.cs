@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+extern alias FhirR4;
 using System;
 using System.Text;
 using Hl7.Fhir.Model;
@@ -9,6 +10,7 @@ using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Net.Http.Headers;
+using FhirJsonSerializer = FhirR4::Hl7.Fhir.Serialization.FhirJsonSerializer;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Api.Formatters
