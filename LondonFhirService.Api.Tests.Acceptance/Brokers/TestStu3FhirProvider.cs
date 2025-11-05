@@ -2,20 +2,20 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirR4;
+extern alias FhirSTU3;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using Hl7.Fhir.Model;
-using LondonFhirService.Providers.FHIR.R4.Abstractions;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Capabilities;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Resources;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Capabilities;
+using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Resources;
 using Moq;
-using Patient = FhirR4::Hl7.Fhir.Model.Patient;
+using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
-    public static class TestFhirProviderFactory
+    public static class TestStu3FhirProviderFactory
     {
         public static IFhirProvider CreateTestProvider(string providerName)
         {

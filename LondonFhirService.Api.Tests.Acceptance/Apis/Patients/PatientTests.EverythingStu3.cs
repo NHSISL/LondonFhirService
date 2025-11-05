@@ -2,7 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirR4;
+extern alias FhirSTU3;
 using System;
 using FluentAssertions;
 using Hl7.Fhir.Model;
@@ -10,7 +10,7 @@ using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
-using Patient = FhirR4::Hl7.Fhir.Model.Patient;
+using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
@@ -18,7 +18,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
     public partial class PatientTests
     {
         [Fact]
-        public async Task ShouldGetPatientEverythingAsync()
+        public async Task ShouldGetPatientEverythingStu3Async()
         {
             // given
             string nhsNumber = GenerateRandom10DigitNumber();
@@ -57,7 +57,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
 
             // when
             Bundle actualBundle =
-                await this.apiBroker.EverythingAsync(inputId, inputParameters);
+                await this.apiBroker.EverythingR4Async(inputId, inputParameters);
 
             // then
             actualBundle.Should().NotBeNull();

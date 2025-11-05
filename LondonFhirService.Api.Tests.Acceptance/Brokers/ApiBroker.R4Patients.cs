@@ -15,14 +15,14 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
     public partial class ApiBroker
     {
-        private const string PatientRelativeUrl = "api/R4/R4Patient";
+        private const string R4PatientRelativeUrl = "api/R4/R4Patient";
 
-        public async ValueTask<Bundle> EverythingAsync(string id, Parameters parameters)
+        public async ValueTask<Bundle> EverythingR4Async(string id, Parameters parameters)
         {
             var options = new JsonSerializerOptions()
                        .ForFhir(ModelInfo.ModelInspector);
 
-            string url = $"{PatientRelativeUrl}/{id}/$everything";
+            string url = $"{R4PatientRelativeUrl}/{id}/$everything";
             string jsonContent = JsonSerializer.Serialize(parameters, options);
 
             using var content = new StringContent(
