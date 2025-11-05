@@ -205,8 +205,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
                 .OnProperty(pdsData => pdsData.NhsNumber).Use(nhsNumber)
                 .OnProperty(pdsData => pdsData.OrgCode).Use(organisationCode)
+
                 .OnProperty(pdsData => pdsData.RelationshipWithOrganisationEffectiveFromDate)
                     .Use(dateTimeOffset.AddDays(-30))
+
                 .OnProperty(pdsData => pdsData.RelationshipWithOrganisationEffectiveToDate)
                     .Use(dateTimeOffset.AddDays(30));
 
