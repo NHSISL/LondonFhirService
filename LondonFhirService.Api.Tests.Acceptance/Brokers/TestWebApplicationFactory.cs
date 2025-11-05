@@ -8,15 +8,17 @@ using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Fhirs.R4;
+using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
-using LondonFhirService.Providers.FHIR.R4.Abstractions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using FhirR4Abstractions = LondonFhirService.Providers.FHIR.R4.Abstractions;
+using FhirStu3Abstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
@@ -89,20 +91,36 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void OverrideFhirProvidersForTesting(IServiceCollection services)
         {
-            var fhirAbstractionProviderDescriptor = services
-                .FirstOrDefault(d => d.ServiceType == typeof(IFhirAbstractionProvider));
+            var fhirR4AbstractionProviderDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(FhirR4Abstractions.IFhirAbstractionProvider));
 
-            if (fhirAbstractionProviderDescriptor != null)
+            if (fhirR4AbstractionProviderDescriptor != null)
             {
-                services.Remove(fhirAbstractionProviderDescriptor);
+                services.Remove(fhirR4AbstractionProviderDescriptor);
             }
 
-            var fhirBrokerDescriptor = services
+            var fhirStu3AbstractionProviderDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(FhirStu3Abstractions.IFhirAbstractionProvider));
+
+            if (fhirStu3AbstractionProviderDescriptor != null)
+            {
+                services.Remove(fhirStu3AbstractionProviderDescriptor);
+            }
+
+            var fhirR4BrokerDescriptor = services
                 .FirstOrDefault(d => d.ServiceType == typeof(IR4FhirBroker));
 
-            if (fhirBrokerDescriptor != null)
+            if (fhirR4BrokerDescriptor != null)
             {
-                services.Remove(fhirBrokerDescriptor);
+                services.Remove(fhirR4BrokerDescriptor);
+            }
+
+            var fhirStu3BrokerDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(IStu3FhirBroker));
+
+            if (fhirStu3BrokerDescriptor != null)
+            {
+                services.Remove(fhirStu3BrokerDescriptor);
             }
 
             var patientServiceConfigDescriptor = services
@@ -113,16 +131,27 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 services.Remove(patientServiceConfigDescriptor);
             }
 
-            var testProviders = new List<IFhirProvider>
+            var testR4Providers = new List<FhirR4Abstractions.IFhirProvider>
             {
-                TestFhirProviderFactory.CreateTestProvider("DDS"),
-                TestFhirProviderFactory.CreateTestProvider("LDS")
+                TestR4FhirProviderFactory.CreateTestProvider("DDS"),
+                TestR4FhirProviderFactory.CreateTestProvider("LDS")
             };
 
-            services.AddSingleton<IFhirAbstractionProvider>(
-                new FhirAbstractionProvider(testProviders));
+            services.AddSingleton<FhirR4Abstractions.IFhirAbstractionProvider>(
+                new FhirR4Abstractions.FhirAbstractionProvider(testR4Providers));
 
             services.AddTransient<IR4FhirBroker, R4FhirBroker>();
+
+            var testStu3Providers = new List<FhirStu3Abstractions.IFhirProvider>
+            {
+                TestStu3FhirProviderFactory.CreateTestProvider("DDS"),
+                TestStu3FhirProviderFactory.CreateTestProvider("LDS")
+            };
+
+            services.AddSingleton<FhirStu3Abstractions.IFhirAbstractionProvider>(
+                new FhirStu3Abstractions.FhirAbstractionProvider(testStu3Providers));
+
+            services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
 
             services.AddSingleton(new PatientServiceConfig
             {
