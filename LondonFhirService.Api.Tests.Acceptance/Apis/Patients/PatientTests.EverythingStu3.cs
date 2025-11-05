@@ -57,7 +57,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
 
             // when
             Bundle actualBundle =
-                await this.apiBroker.EverythingR4Async(inputId, inputParameters);
+                await this.apiBroker.EverythingStu3Async(inputId, inputParameters);
 
             // then
             actualBundle.Should().NotBeNull();
