@@ -2,17 +2,28 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+extern alias FhirR4;
+extern alias FhirSTU3;
 using System;
 using System.IO;
 using System.Text.Json;
 using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
+using ISL.Providers.Captcha.Abstractions;
+using ISL.Providers.Captcha.FakeCaptcha.Providers.FakeCaptcha;
+using ISL.Providers.Captcha.GoogleReCaptcha.Models.Brokers.GoogleReCaptcha;
+using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
+using LondonFhirService.Api.Formatters;
+using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Fhirs.R4;
+using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Coordinations.Patients.R4;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
@@ -38,6 +49,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
+using R4FhirAbstractions = LondonFhirService.Providers.FHIR.R4.Abstractions;
+using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api
 {
@@ -113,7 +126,6 @@ namespace LondonFhirService.Api
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddControllers();
             AddProviders(builder.Services, builder.Configuration);
             AddBrokers(builder.Services, builder.Configuration);
             AddFoundationServices(builder.Services);
@@ -126,7 +138,11 @@ namespace LondonFhirService.Api
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
             JsonNamingPolicy jsonNamingPolicy = JsonNamingPolicy.CamelCase;
 
-            builder.Services.AddControllers()
+            builder.Services.AddControllers(options =>
+            {
+                options.InputFormatters.Insert(0, new FhirJsonInputFormatter());
+                options.OutputFormatters.Insert(0, new FhirJsonOutputFormatter());
+            })
                 .AddOData(options =>
                 {
                     options.AddRouteComponents("odata", GetEdmModel());
@@ -181,13 +197,46 @@ namespace LondonFhirService.Api
         }
 
         private static void AddProviders(IServiceCollection services, IConfiguration configuration)
-        { }
+        {
+            PatientServiceConfig patientServiceConfig = configuration.GetSection("PatientServiceConfig")
+                .Get<PatientServiceConfig>();
+
+            services.AddSingleton(patientServiceConfig);
+
+            services.AddTransient<R4FhirAbstractions.IFhirAbstractionProvider,
+                R4FhirAbstractions.FhirAbstractionProvider>();
+
+            services.AddTransient<STU3FhirAbstractions.IFhirAbstractionProvider,
+                STU3FhirAbstractions.FhirAbstractionProvider>();
+
+            bool fakeCaptchaProviderMode = configuration
+                .GetSection("FakeCaptchaProviderMode").Get<bool>();
+
+            services.AddTransient<ICaptchaAbstractionProvider, CaptchaAbstractionProvider>();
+
+            if (fakeCaptchaProviderMode == true)
+            {
+                services.AddTransient<ICaptchaProvider, FakeCaptchaProvider>();
+            }
+            else
+            {
+                GoogleReCaptchaConfigurations reCaptchaConfigurations = configuration
+                    .GetSection("googleReCaptchaConfigurations")
+                        .Get<GoogleReCaptchaConfigurations>();
+
+                services.AddSingleton(reCaptchaConfigurations);
+                services.AddTransient<ICaptchaProvider, GoogleReCaptchaProvider>();
+            }
+        }
 
         private static void AddBrokers(IServiceCollection services, IConfiguration configuration)
         {
             SecurityConfigurations securityConfigurations = new SecurityConfigurations();
             services.AddSingleton(securityConfigurations);
+            services.AddTransient<IAuditBroker, AuditBroker>();
             services.AddTransient<IDateTimeBroker, DateTimeBroker>();
+            services.AddTransient<IR4FhirBroker, R4FhirBroker>();
+            services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
             services.AddTransient<IIdentifierBroker, IdentifierBroker>();
             services.AddTransient<ILoggingBroker, LoggingBroker>();
             services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
