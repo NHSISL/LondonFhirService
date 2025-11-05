@@ -25,7 +25,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             string url = $"{PatientRelativeUrl}/{id}/$everything";
             string jsonContent = JsonSerializer.Serialize(parameters, options);
 
-            var content = new StringContent(
+            using var content = new StringContent(
                 jsonContent,
                 Encoding.UTF8,
                 "application/fhir+json");
