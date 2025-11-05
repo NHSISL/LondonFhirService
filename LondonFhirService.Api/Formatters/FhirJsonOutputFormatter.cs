@@ -22,7 +22,6 @@ namespace LondonFhirService.Api.Formatters
         public FhirJsonOutputFormatter()
         {
             this.fhirJsonSerializer = new FhirJsonSerializer();
-
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/fhir+json"));
             SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
             SupportedEncodings.Add(Encoding.UTF8);

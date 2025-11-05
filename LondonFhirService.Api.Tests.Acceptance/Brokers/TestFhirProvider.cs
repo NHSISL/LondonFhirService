@@ -34,7 +34,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
             var providerMock = new Mock<IFhirProvider>(MockBehavior.Strict);
             var patientResourceMock = new Mock<IPatientResource>(MockBehavior.Strict);
-
             providerMock.SetupGet(p => p.ProviderName).Returns(providerName);
             providerMock.SetupGet(p => p.Capabilities).Returns(providerCapabilities);
             providerMock.SetupGet(p => p.System).Returns($"http://test.system/{providerName}");
