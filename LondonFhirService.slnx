@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/Build/">
+    <File Path=".editorconfig" />
+    <File Path=".github/copilot-instructions.md" />
+    <File Path=".github/dependabot.yml" />
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/prLinter.yml" />
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+    <Project Path="LondonFhirService.Infrastructure/LondonFhirService.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="LondonFhirService.Core.Tests.Unit/LondonFhirService.Core.Tests.Unit.csproj" />
+    <Project Path="LondonFhirService.Core/LondonFhirService.Core.csproj" />
+  </Folder>
+  <Folder Name="/Documentation/" />
+  <Folder Name="/WebApps/" />
+  <Folder Name="/WebApps/APIs/">
+    <Project Path="LondonFhirService.Api.Tests.Acceptance/LondonFhirService.Api.Tests.Acceptance.csproj" />
+    <Project Path="LondonFhirService.Api.Tests.Integration/LondonFhirService.Api.Tests.Integration.csproj" />
+    <Project Path="LondonFhirService.Api.Tests.Unit/LondonFhirService.Api.Tests.Unit.csproj" />
+    <Project Path="LondonFhirService.Api/LondonFhirService.Api.csproj" />
+  </Folder>
+  <Folder Name="/WebApps/Management/">
+    <Project Path="LondonFhirService.Manage.Client/LondonFhirService.Manage.Client.esproj">
+      <Build />
+      <Deploy />
+    </Project>
+    <Project Path="LondonFhirService.Manage.Tests.Acceptance/LondonFhirService.Manage.Tests.Acceptance.csproj" />
+    <Project Path="LondonFhirService.Manage.Tests.Integration/LondonFhirService.Manage.Tests.Integration.csproj" />
+    <Project Path="LondonFhirService.Manage.Tests.Unit/LondonFhirService.Manage.Tests.Unit.csproj" />
+    <Project Path="LondonFhirService.Manage/LondonFhirService.Manage.csproj" />
+  </Folder>
+</Solution>
