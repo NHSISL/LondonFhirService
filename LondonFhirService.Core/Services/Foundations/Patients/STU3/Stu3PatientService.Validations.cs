@@ -11,7 +11,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
     public partial class Stu3PatientService
     {
-        public static void ValidateOnGetStructuredRecord(List<string> providerNames, string id)
+        public static void ValidateOnEverything(List<string> providerNames, string id)
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
@@ -21,6 +21,18 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                 (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
                 (Rule: IsInvalid(id), Parameter: nameof(id)));
+        }
+
+        public static void ValidateOnGetStructuredRecord(List<string> providerNames, string nhsNumber)
+        {
+            Validate(
+                createException: () => new InvalidArgumentsPatientServiceException(
+                    message:
+                        "Invalid argument patient service exception, " +
+                        "please correct the errors and try again."),
+
+                (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
+                (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)));
         }
 
         private static dynamic IsInvalid(List<string> strings) => new

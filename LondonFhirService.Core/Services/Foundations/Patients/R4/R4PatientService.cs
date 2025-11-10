@@ -69,7 +69,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
                     if (!isSupported)
                     {
                         await loggingBroker.LogInformationAsync($"Removing '{provider.ProviderName}': " +
-                            "Patients/$everything not supported.");
+                            "Patients/$Everything not supported.");
 
                         providers.RemoveAt(i);
                     }

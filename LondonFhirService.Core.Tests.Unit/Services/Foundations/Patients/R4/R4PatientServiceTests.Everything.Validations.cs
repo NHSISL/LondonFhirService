@@ -174,7 +174,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogInformationAsync($"Removing '{this.unsupportedFhirProviderMock.Object.ProviderName}': " +
-                    "Patients/$everything not supported."),
+                    "Patients/$Everything not supported."),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
@@ -260,7 +260,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogInformationAsync($"Removing '{this.unsupportedErrorFhirProviderMock.Object.ProviderName}': " +
-                    "Patients/$everything not supported."),
+                    "Patients/$Everything not supported."),
                         Times.Once());
 
             patientServiceMock.Verify(service =>

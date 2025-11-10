@@ -15,7 +15,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
     public partial class Stu3PatientServiceTests
     {
         [Fact]
-        public async Task EverythingShouldReturnBundles()
+        public async Task GetStructuredRecordShouldReturnBundles()
         {
             // given
             List<string> randomProviderNames = new List<string>
@@ -29,8 +29,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             Bundle randomLdsBundle = CreateRandomBundle();
             Bundle outputLdsBundle = randomLdsBundle.DeepClone();
-            string randomId = GetRandomString();
-            string inputId = randomId;
+            string randomNhsNumber = GetRandomString();
+            string inputnhsNumber = randomNhsNumber;
 
             List<Bundle> expectedBundles = new List<Bundle>
             {
@@ -47,24 +47,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
-                    inputId,
-                    null,
-                    null,
+                    inputnhsNumber,
                     null,
                     null,
                     null))
                 .ReturnsAsync((outputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
-                    inputId,
-                    null,
-                    null,
+                    inputnhsNumber,
                     null,
                     null,
                     null))
@@ -74,33 +70,29 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.Everything(
+                await mockedPatientService.GetStructuredRecord(
                     providerNames: inputProviderNames,
-                    id: inputId,
+                    nhsNumber: inputnhsNumber,
                     cancellationToken: default);
 
             // then
             actualBundles.Should().BeEquivalentTo(expectedBundles);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
-                    inputId,
-                    null,
-                    null,
+                    inputnhsNumber,
                     null,
                     null,
                     null),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
-                    inputId,
-                    null,
-                    null,
+                    inputnhsNumber,
                     null,
                     null,
                     null),

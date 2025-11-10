@@ -16,7 +16,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
     public partial class Stu3PatientServiceTests
     {
         [Fact]
-        public async Task ShouldExecuteWithTimeout()
+        public async Task ShouldExecuteEverythingWithTimeout()
         {
             // given
             Bundle randomBundle = CreateRandomBundle();
@@ -52,7 +52,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteWithTimeoutAsync(
+                await this.patientService.ExecuteEverythingWithTimeoutAsync(
                     fhirProvider,
                     default,
                     inputId,
@@ -96,21 +96,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         [Fact]
-        public async Task ShouldReturnNullAndOperationCancelledExceptionOnExecuteWithTimeoutWhenTokenCancelled()
+        public async Task
+            ShouldReturnNullAndOperationCancelledExceptionOnExecuteEverythingWithTimeoutWhenTokenCancelled()
         {
             // given
             Bundle randomBundle = CreateRandomBundle();
             string randomId = GetRandomString();
             string inputId = randomId;
             CancellationToken alreadyCanceledToken = new CancellationToken(true);
-            OperationCanceledException operationCanceledException = new OperationCanceledException(alreadyCanceledToken);
+
+            OperationCanceledException operationCanceledException =
+                new OperationCanceledException(alreadyCanceledToken);
+
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteWithTimeoutAsync(
+                await this.patientService.ExecuteEverythingWithTimeoutAsync(
                     fhirProvider,
                     alreadyCanceledToken,
                     inputId,
@@ -138,7 +142,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         [Fact]
-        public async Task ShouldReturnNullAndOperationCancelledExceptionOnExecuteWithTimeoutWhenCancelled()
+        public async Task ShouldReturnNullAndOperationCancelledExceptionOnExecuteEverythingWithTimeoutWhenCancelled()
         {
             // given
             string randomId = GetRandomString();
@@ -160,7 +164,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteWithTimeoutAsync(
+                await this.patientService.ExecuteEverythingWithTimeoutAsync(
                     fhirProvider,
                     default,
                     inputId,
@@ -188,7 +192,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         [Fact]
-        public async Task ShouldReturnNullAndExceptionOnExecuteWithTimeoutWhenException()
+        public async Task ShouldReturnNullAndExceptionOnExecuteEverythingWithTimeoutWhenException()
         {
             // given
             string randomId = GetRandomString();
@@ -210,7 +214,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteWithTimeoutAsync(
+                await this.patientService.ExecuteEverythingWithTimeoutAsync(
                     fhirProvider,
                     default,
                     inputId,
@@ -238,7 +242,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         [Fact]
-        public async Task ShouldReturnNullAndTimeoutExceptionOnExecuteWithTimeoutWhenEverythingTimesOut()
+        public async Task ShouldReturnNullAndTimeoutExceptionOnExecuteEverythingWithTimeoutWhenEverythingTimesOut()
         {
             // given
             var timeoutMilliseconds = 1;
@@ -273,7 +277,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteWithTimeoutAsync(
+                await this.patientService.ExecuteEverythingWithTimeoutAsync(
                     fhirProvider,
                     default,
                     inputId,
