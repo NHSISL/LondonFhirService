@@ -9,7 +9,7 @@ namespace LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions
 {
     public class PatientOrchestrationServiceException : Xeption
     {
-        public PatientOrchestrationServiceException(string message, Exception? innerException)
+        public PatientOrchestrationServiceException(string message, Exception innerException)
             : base(message, innerException)
         { }
     }
