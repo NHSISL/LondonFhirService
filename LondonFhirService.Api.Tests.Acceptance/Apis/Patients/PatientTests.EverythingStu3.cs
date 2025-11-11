@@ -10,6 +10,7 @@ using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
+using LondonFhirService.Core.Models.Foundations.Providers;
 using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 
@@ -36,6 +37,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             DateTimeOffset inputSince = randomInputSince;
             int randomInputCount = GetRandomNumber();
             int inputCount = randomInputCount;
+            string providerName = "LDS";
 
             Parameters inputParameters = CreateRandomParameters(
                 start: inputStart,
@@ -54,6 +56,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
                 userId);
 
             PdsData pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now);
+            Provider provider = await CreateRandomActiveProvider(providerName, now);
 
             // when
             Bundle actualBundle =
@@ -73,6 +76,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             await CleanupOdsDataAsync(odsData);
             await CleanupConsumerAccessAsync(consumerAccess);
             await CleanupConsumerAsync(consumer);
+            await CleanupProviderAsync(provider);
         }
     }
 }

@@ -56,7 +56,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
                 userId);
 
             PdsData pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now);
-
             Provider provider = await CreateRandomActiveProvider(providerName, now);
 
             // when
