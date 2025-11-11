@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations.R4;
@@ -22,17 +23,20 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
         private readonly IR4PatientService patientService;
         private readonly IR4FhirReconciliationService fhirReconciliationService;
         private readonly ILoggingBroker loggingBroker;
+        private readonly IDateTimeBroker dateTimeBroker;
 
         public R4PatientOrchestrationService(
             IProviderService providerService,
             IR4PatientService patientService,
             IR4FhirReconciliationService fhirReconciliationService,
-            ILoggingBroker loggingBroker)
+            ILoggingBroker loggingBroker,
+            IDateTimeBroker dateTimeBroker)
         {
             this.providerService = providerService;
             this.patientService = patientService;
             this.fhirReconciliationService = fhirReconciliationService;
             this.loggingBroker = loggingBroker;
+            this.dateTimeBroker = dateTimeBroker;
         }
 
         public ValueTask<Bundle> Everything(
@@ -54,7 +58,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                     .OrderByDescending(provider => provider.IsPrimary)
                     .ToList();
 
-                DateTimeOffset now = DateTimeOffset.UtcNow;
+                DateTimeOffset now = await dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
                 List<Provider> primaryProviders = orderedProviders
                     .Where(provider =>

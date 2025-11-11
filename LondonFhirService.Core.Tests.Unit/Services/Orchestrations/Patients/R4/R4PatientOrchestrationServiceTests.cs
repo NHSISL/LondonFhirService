@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
@@ -27,6 +28,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
         private readonly Mock<IR4PatientService> patientServiceMock;
         private readonly Mock<IR4FhirReconciliationService> fhirReconciliationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly IR4PatientOrchestrationService patientOrchestrationService;
 
         public R4PatientOrchestrationServiceTests()
@@ -35,12 +37,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.patientServiceMock = new Mock<IR4PatientService>();
             this.fhirReconciliationServiceMock = new Mock<IR4FhirReconciliationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
 
             this.patientOrchestrationService = new R4PatientOrchestrationService(
                 providerService: providerServiceMock.Object,
                 patientService: patientServiceMock.Object,
                 fhirReconciliationService: fhirReconciliationServiceMock.Object,
-                loggingBroker: loggingBrokerMock.Object);
+                loggingBroker: loggingBrokerMock.Object,
+                dateTimeBroker: dateTimeBrokerMock.Object);
         }
 
         private static int GetRandomNumber() =>
@@ -86,25 +90,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                 Total = GetRandomNumber()
             };
 
-        private static Provider CreateRandomActiveProvider() =>
-            CreateProviderFiller(isActive: true).Create();
+        private static Provider CreateRandomActiveProvider(DateTimeOffset randomDateTime) =>
+            CreateProviderFiller(randomDateTime, isActive: true).Create();
 
-        private static Provider CreateRandomPrimaryProvider() =>
-            CreateProviderFiller(isActive: true, isPrimary: true).Create();
+        private static Provider CreateRandomPrimaryProvider(DateTimeOffset randomDateTime) =>
+            CreateProviderFiller(randomDateTime, isActive: true, isPrimary: true).Create();
 
-        private static Provider CreateRandomInactiveProvider() =>
-            CreateProviderFiller().Create();
+        private static Provider CreateRandomInactiveProvider(DateTimeOffset randomDateTime) =>
+            CreateProviderFiller(randomDateTime).Create();
 
-        private static Filler<Provider> CreateProviderFiller(bool isActive = false, bool isPrimary = false)
+        private static Filler<Provider> CreateProviderFiller(
+            DateTimeOffset randomDateTime,
+            bool isActive = false,
+            bool isPrimary = false)
         {
-            DateTimeOffset now = DateTimeOffset.Now;
             var filler = new Filler<Provider>();
 
-            DateTimeOffset activeFrom = isActive ? now.AddDays(-30) : now.AddDays(-60);
-            DateTimeOffset activeTo = isActive ? now.AddDays(30) : now.AddDays(-30);
+            DateTimeOffset activeFrom = isActive ? randomDateTime.AddDays(-30) : randomDateTime.AddDays(-60);
+            DateTimeOffset activeTo = isActive ? randomDateTime.AddDays(30) : randomDateTime.AddDays(-30);
 
             filler.Setup()
-                .OnType<DateTimeOffset>().Use(now)
+                .OnType<DateTimeOffset>().Use(randomDateTime)
                 .OnProperty(provider => provider.Name).Use(GetRandomStringWithLengthOf(500))
                 .OnProperty(provider => provider.System).Use(GetRandomStringWithLengthOf(1000))
                 .OnProperty(provider => provider.Code).Use(GetRandomStringWithLengthOf(64))

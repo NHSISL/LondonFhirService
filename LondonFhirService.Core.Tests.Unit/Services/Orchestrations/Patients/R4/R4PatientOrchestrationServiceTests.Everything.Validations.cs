@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -60,6 +61,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -68,10 +70,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             // given
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             CancellationToken cancellationToken = CancellationToken.None;
 
-            Provider randomActiveProvider = CreateRandomActiveProvider();
-            Provider randomInactiveProvider = CreateRandomInactiveProvider();
+            Provider randomActiveProvider = CreateRandomActiveProvider(randomDateTimeOffset);
+            Provider randomInactiveProvider = CreateRandomInactiveProvider(randomDateTimeOffset);
 
             IQueryable<Provider> allProviders = new List<Provider>
             {
@@ -82,6 +85,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.providerServiceMock.Setup(service =>
                 service.RetrieveAllProvidersAsync())
                     .ReturnsAsync(allProviders);
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
 
             var invalidPrimaryProviderPatientOrchestrationException =
                 new InvalidPrimaryProviderPatientOrchestrationException(
@@ -108,6 +115,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                 service.RetrieveAllProvidersAsync(),
                     Times.Once);
 
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedPatientOrchestrationValidationException))),
@@ -117,6 +128,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -125,10 +137,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             // given
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             CancellationToken cancellationToken = CancellationToken.None;
 
-            Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
-            Provider anotherRandomPrimaryProvider = CreateRandomPrimaryProvider();
+            Provider randomPrimaryProvider = CreateRandomPrimaryProvider(randomDateTimeOffset);
+            Provider anotherRandomPrimaryProvider = CreateRandomPrimaryProvider(randomDateTimeOffset);
 
             IQueryable<Provider> allProviders = new List<Provider>
             {
@@ -139,6 +152,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.providerServiceMock.Setup(service =>
                 service.RetrieveAllProvidersAsync())
                     .ReturnsAsync(allProviders);
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
 
             var invalidPrimaryProviderPatientOrchestrationException =
                 new InvalidPrimaryProviderPatientOrchestrationException(
@@ -168,6 +185,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                 service.RetrieveAllProvidersAsync(),
                     Times.Once);
 
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedPatientOrchestrationValidationException))),
@@ -177,6 +198,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

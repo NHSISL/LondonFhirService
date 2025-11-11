@@ -60,6 +60,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -107,6 +108,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -159,6 +161,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

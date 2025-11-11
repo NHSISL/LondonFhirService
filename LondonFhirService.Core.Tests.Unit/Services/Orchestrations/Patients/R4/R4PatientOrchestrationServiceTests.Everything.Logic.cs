@@ -23,6 +23,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             // given
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset now = GetRandomDateTimeOffset();
             DateTimeOffset? inputStart = GetRandomDateTimeOffset();
             DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
             string inputTypeFilter = GetRandomString();
@@ -33,9 +34,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
 
-            Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
-            Provider randomActiveProvider = CreateRandomActiveProvider();
-            Provider randomInactiveProvider = CreateRandomInactiveProvider();
+            Provider randomPrimaryProvider = CreateRandomPrimaryProvider(now);
+            Provider randomActiveProvider = CreateRandomActiveProvider(now);
+            Provider randomInactiveProvider = CreateRandomInactiveProvider(now);
 
             IQueryable<Provider> allProviders = new List<Provider>
             {
@@ -47,6 +48,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.providerServiceMock.Setup(service =>
                 service.RetrieveAllProvidersAsync())
                     .ReturnsAsync(allProviders);
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(now);
 
             List<string> activeProviderNames = new List<string>
             {
@@ -89,6 +94,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                 service.RetrieveAllProvidersAsync(),
                     Times.Once);
 
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
             this.patientServiceMock.Verify(service =>
                 service.Everything(
                     activeProviderNames,
@@ -106,6 +115,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                     randomBundles,
                     randomPrimaryProvider.Name),
                     Times.Once);
+
+            this.providerServiceMock.VerifyNoOtherCalls();
+            this.patientServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
