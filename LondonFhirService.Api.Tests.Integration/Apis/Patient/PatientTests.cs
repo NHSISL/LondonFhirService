@@ -5,7 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
-using LondonFhirService.Api.Tests.Acceptance.Brokers;
+using LondonFhirService.Api.Tests.Integration.Brokers;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Consumers;
@@ -15,16 +15,21 @@ using LondonFhirService.Core.Models.Foundations.Providers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
+using Xunit.Abstractions;
 
-namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
+namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
 {
     [Collection(nameof(ApiTestCollection))]
     public partial class PatientTests
     {
         private readonly ApiBroker apiBroker;
+        private readonly ITestOutputHelper testOutputHelper;
 
-        public PatientTests(ApiBroker apiBroker) =>
+        public PatientTests(ApiBroker apiBroker, ITestOutputHelper testOutputHelper)
+        {
             this.apiBroker = apiBroker;
+            this.testOutputHelper = testOutputHelper;
+        }
 
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();

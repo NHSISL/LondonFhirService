@@ -23,6 +23,7 @@ using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Coordinations.Patients.R4;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
@@ -275,6 +276,8 @@ namespace LondonFhirService.Api
         }
 
         private static void AddClients(IServiceCollection services)
-        { }
+        {
+            services.AddTransient<IAuditClient, AuditClient>();
+        }
     }
 }

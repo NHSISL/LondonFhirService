@@ -11,10 +11,9 @@ using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
-using Patient = FhirR4::Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
+namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
 {
     public partial class PatientTests
     {
@@ -68,8 +67,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             actualBundle.Entry.Should().NotBeNullOrEmpty();
             actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
             actualBundle.Meta.Should().NotBeNull();
-            actualBundle.Entry[0].Resource.Should().BeOfType<Patient>();
-            var patient = actualBundle.Entry[0].Resource as Patient;
+            actualBundle.Entry[0].Resource.Should().BeOfType<FhirR4::Hl7.Fhir.Model.Patient>();
+            var patient = actualBundle.Entry[0].Resource as FhirR4::Hl7.Fhir.Model.Patient;
             patient!.Id.Should().Be(inputId);
             patient.Meta.Should().NotBeNull();
             await CleanupPdsDataAsync(pdsData);
