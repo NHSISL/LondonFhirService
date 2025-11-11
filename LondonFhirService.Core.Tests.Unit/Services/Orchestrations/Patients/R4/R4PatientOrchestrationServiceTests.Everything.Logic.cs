@@ -58,12 +58,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                 service.Everything(
                     activeProviderNames,
                     inputId,
-                    cancellationToken,
                     inputStart,
                     inputEnd,
                     inputTypeFilter,
                     inputSince,
-                    inputCount))
+                    inputCount,
+                    cancellationToken))
                     .ReturnsAsync(randomBundles);
 
             this.fhirReconciliationServiceMock.Setup(service =>
@@ -93,12 +93,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                 service.Everything(
                     activeProviderNames,
                     inputId,
-                    cancellationToken,
                     inputStart,
                     inputEnd,
                     inputTypeFilter,
                     inputSince,
-                    inputCount),
+                    inputCount,
+                    cancellationToken),
                     Times.Once);
 
             this.fhirReconciliationServiceMock.Verify(service =>

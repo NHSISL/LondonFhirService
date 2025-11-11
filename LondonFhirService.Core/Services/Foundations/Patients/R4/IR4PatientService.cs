@@ -23,9 +23,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
         /// <param name="id">
         /// Logical identifier of the <see cref="Patient"/> resource on which to invoke <c>$everything</c>.
         /// </param>
-        /// <param name="cancellationToken">
-        /// A cancellation token to allow cancelling of the request at any time.
-        /// </param>
         /// <param name="start">
         /// Optional start date/time that constrains the resources to those with a clinical date
         /// on or after this value (e.g., encounter period, observation effective).
@@ -46,6 +43,9 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
         /// Optional maximum number of resources to include per page of results.
         /// Used for paging the returned <see cref="Bundle"/>.
         /// </param>
+        /// <param name="cancellationToken">
+        /// A cancellation token to allow cancelling of the request at any time.
+        /// </param>
         /// <returns>
         /// A <see cref="Bundle"/> representing the aggregated patient record,
         /// as returned by the FHIR <c>$everything</c> operation.
@@ -53,11 +53,11 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
         ValueTask<List<Bundle>> Everything(
               List<string> providerNames,
               string id,
-              CancellationToken cancellationToken,
               DateTimeOffset? start = null,
               DateTimeOffset? end = null,
               string typeFilter = null,
               DateTimeOffset? since = null,
-              int? count = null);
+              int? count = null,
+              CancellationToken cancellationToken = default);
     }
 }
