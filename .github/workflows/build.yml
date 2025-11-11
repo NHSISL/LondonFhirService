@@ -18,30 +18,6 @@ jobs:
     steps:
     - name: Enable long paths for Git
       run: git config --system core.longpaths true
-
-    - name: Hard purge EF tool caches (Windows)
-      if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        dotnet --info
-        dotnet nuget list source
-
-        # Uninstall if partially installed
-        dotnet tool uninstall --global dotnet-ef || echo "dotnet-ef not globally installed"
-
-        # Clear NuGet caches
-        dotnet nuget locals all --clear
-
-        # Remove tool stores & resolver cache
-        $paths = @(
-          "$env:USERPROFILE\.dotnet\tools\.store\dotnet-ef",
-          "$env:USERPROFILE\.dotnet\toolResolverCache",
-          "$env:USERPROFILE\.nuget\packages\dotnet-ef"
-        )
-        foreach ($p in $paths) {
-          if (Test-Path $p) { Remove-Item $p -Recurse -Force -ErrorAction SilentlyContinue }
-        }
-
     - name: Check out
       uses: actions/checkout@v3
     - name: Setup .Net
@@ -52,10 +28,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-    - name: Install EF Tools
-      run: dotnet tool install --global dotnet-ef
-    - name: Deploy Database
-      run: dotnet ef database update --project LondonFhirService.Core/LondonFhirService.Core.csproj --startup-project LondonFhirService.Core/LondonFhirService.Core.csproj
+
     - name: Run Unit Tests
       run: >-
         $projects = Get-ChildItem -Path . -Filter "*Tests.Unit*.csproj" -Recurse
