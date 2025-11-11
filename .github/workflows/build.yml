@@ -18,10 +18,20 @@ jobs:
     steps:
     - name: Enable long paths for Git
       run: git config --system core.longpaths true
-    - name: Clear NuGet tool cache
+
+    - name: Clear NuGet tool cache (Linux/macOS)
+      if: runner.os != 'Windows'
       run: |
         dotnet nuget locals all --clear
         rm -rf ~/.dotnet/tools/.store
+
+    - name: Clear NuGet tool cache (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        dotnet nuget locals all --clear
+        Remove-Item "$HOME\.dotnet\tools\.store" -Recurse -Force -ErrorAction SilentlyContinue
+
     - name: Check out
       uses: actions/checkout@v3
     - name: Setup .Net
