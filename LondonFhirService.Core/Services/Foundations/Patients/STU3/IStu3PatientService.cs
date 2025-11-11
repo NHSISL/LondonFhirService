@@ -24,9 +24,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         /// The logical identifier of the <see cref="Patient"/> resource on which
         /// <c>$everything</c> is invoked.
         /// </param>
-        /// <param name="cancellationToken">
-        /// A token used to observe cancellation while the operation is in progress.
-        /// </param>
         /// <param name="start">
         /// Optional clinical start date/time used to restrict returned resources
         /// to those occurring on or after this value.
@@ -47,6 +44,9 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         /// <param name="count">
         /// Optional maximum number of resources per page in the returned bundle(s).
         /// </param>
+        /// <param name="cancellationToken">
+        /// A token used to observe cancellation while the operation is in progress.
+        /// </param>
         /// <returns>
         /// A list of <see cref="Bundle"/> instances representing the aggregated
         /// patient record as returned by the FHIR STU3 <c>$everything</c>
@@ -55,12 +55,12 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         ValueTask<List<Bundle>> Everything(
             List<string> providerNames,
             string id,
-            CancellationToken cancellationToken,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
             DateTimeOffset? since = null,
-            int? count = null);
+            int? count = null,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Retrieves a patient's structured record using the GP Connect / CareConnect

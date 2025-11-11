@@ -36,12 +36,12 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
         public ValueTask<List<Bundle>> Everything(
             List<string> providerNames,
             string id,
-            CancellationToken cancellationToken,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
             DateTimeOffset? since = null,
-            int? count = null) =>
+            int? count = null,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateOnGetStructuredRecord(providerNames, id);

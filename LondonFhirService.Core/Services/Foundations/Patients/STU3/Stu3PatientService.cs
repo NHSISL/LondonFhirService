@@ -35,12 +35,12 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         public ValueTask<List<Bundle>> Everything(
             List<string> providerNames,
             string id,
-            CancellationToken cancellationToken,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
             DateTimeOffset? since = null,
-            int? count = null) =>
+            int? count = null,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateOnEverything(providerNames, id);
