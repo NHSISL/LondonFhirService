@@ -25,6 +25,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 (Rule: IsInvalid(provider.Name), Parameter: nameof(Provider.Name)),
                 (Rule: IsInvalid(provider.System), Parameter: nameof(Provider.System)),
                 (Rule: IsInvalid(provider.Code), Parameter: nameof(Provider.Code)),
+                (Rule: IsInvalid(provider.FhirVersion), Parameter: nameof(Provider.FhirVersion)),
                 (Rule: IsInvalid(provider.CreatedDate), Parameter: nameof(Provider.CreatedDate)),
                 (Rule: IsInvalid(provider.CreatedBy), Parameter: nameof(Provider.CreatedBy)),
                 (Rule: IsInvalid(provider.UpdatedDate), Parameter: nameof(Provider.UpdatedDate)),
@@ -32,6 +33,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 (Rule: IsGreaterThan(provider.Name, 500), Parameter: nameof(Provider.Name)),
                 (Rule: IsGreaterThan(provider.System, 1000), Parameter: nameof(Provider.System)),
                 (Rule: IsGreaterThan(provider.Code, 64), Parameter: nameof(Provider.Code)),
+                (Rule: IsGreaterThan(provider.FhirVersion, 10), Parameter: nameof(Provider.FhirVersion)),
                 (Rule: IsGreaterThan(provider.CreatedBy, 255), Parameter: nameof(Provider.CreatedBy)),
                 (Rule: IsGreaterThan(provider.UpdatedBy, 255), Parameter: nameof(Provider.UpdatedBy)),
 
@@ -68,6 +70,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 (Rule: IsInvalid(provider.Name), Parameter: nameof(Provider.Name)),
                 (Rule: IsInvalid(provider.System), Parameter: nameof(Provider.System)),
                 (Rule: IsInvalid(provider.Code), Parameter: nameof(Provider.Code)),
+                (Rule: IsInvalid(provider.FhirVersion), Parameter: nameof(Provider.FhirVersion)),
                 (Rule: IsInvalid(provider.CreatedDate), Parameter: nameof(Provider.CreatedDate)),
                 (Rule: IsInvalid(provider.CreatedBy), Parameter: nameof(Provider.CreatedBy)),
                 (Rule: IsInvalid(provider.UpdatedDate), Parameter: nameof(Provider.UpdatedDate)),
@@ -75,6 +78,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
                 (Rule: IsGreaterThan(provider.Name, 500), Parameter: nameof(Provider.Name)),
                 (Rule: IsGreaterThan(provider.System, 1000), Parameter: nameof(Provider.System)),
                 (Rule: IsGreaterThan(provider.Code, 64), Parameter: nameof(Provider.Code)),
+                (Rule: IsGreaterThan(provider.FhirVersion, 10), Parameter: nameof(Provider.FhirVersion)),
                 (Rule: IsGreaterThan(provider.CreatedBy, 255), Parameter: nameof(Provider.CreatedBy)),
                 (Rule: IsGreaterThan(provider.UpdatedBy, 255), Parameter: nameof(Provider.UpdatedBy)),
 
