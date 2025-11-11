@@ -36,21 +36,42 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             DateTimeOffset? since = null,
             int? count = null,
             CancellationToken cancellationToken = default) =>
-            TryCatch(async () =>
-            {
-                ValidateArgsOnEverything(id);
-                await this.accessOrchestrationService.ValidateAccess(id);
+        TryCatch(async () =>
+        {
+            ValidateArgsOnEverything(id);
+            await this.accessOrchestrationService.ValidateAccess(id);
 
-                Bundle bundle = await this.patientOrchestrationService.Everything(
-                    id,
-                    start,
-                    end,
-                    typeFilter,
-                    since,
-                    count,
-                    cancellationToken);
+            Bundle bundle = await this.patientOrchestrationService.Everything(
+                id,
+                start,
+                end,
+                typeFilter,
+                since,
+                count,
+                cancellationToken);
 
-                return bundle;
-            });
+            return bundle;
+        });
+
+        public ValueTask<Bundle> GetStructuredRecord(
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null,
+            CancellationToken cancellationToken = default) =>
+        TryCatch(async () =>
+        {
+            ValidateArgsOnGetStructuredRecord(nhsNumber);
+            await this.accessOrchestrationService.ValidateAccess(nhsNumber);
+
+            Bundle bundle = await this.patientOrchestrationService.GetStructuredRecord(
+                nhsNumber,
+                dateOfBirth,
+                demographicsOnly,
+                includeInactivePatients,
+                cancellationToken);
+
+            return bundle;
+        });
     }
 }
