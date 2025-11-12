@@ -34,7 +34,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 {
                     System = fhirProviderCopy.System,
                     Code = fhirProviderCopy.Code,
-                    Display = fhirProviderCopy.ProviderName
+                    Display = fhirProviderCopy.ProviderName,
+                    Version = fhirProviderCopy.FhirVersion
                 }
             };
 
@@ -83,6 +84,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.ddsFhirProviderMock.Verify(provider =>
                 provider.Source,
+                    Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.FhirVersion,
                     Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
