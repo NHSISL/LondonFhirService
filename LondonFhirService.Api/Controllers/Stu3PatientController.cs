@@ -72,6 +72,45 @@ namespace LondonFhirService.Api.Controllers
             }
         }
 
+        [HttpPost("{id}/get-structured-record")]
+        [Authorize(Roles = "Patients.GetStructuredPatient")]
+        public async Task<ActionResult<Bundle>> GetStructuredRecord(
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool demographicsOnly = false,
+            bool includeInactivePatients = false,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                Bundle bundle = await this.patientCoordinationService.GetStructuredRecord(
+                    nhsNumber,
+                    dateOfBirth,
+                    demographicsOnly,
+                    includeInactivePatients,
+                    cancellationToken);
+
+                return Ok(bundle);
+            }
+            catch (PatientCoordinationValidationException patientCoordinationValidationException)
+            {
+                return BadRequest(patientCoordinationValidationException.InnerException);
+            }
+            catch (PatientCoordinationDependencyValidationException
+                   patientCoordinationDependencyValidationException)
+            {
+                return BadRequest(patientCoordinationDependencyValidationException.InnerException);
+            }
+            catch (PatientCoordinationDependencyException patientCoordinationDependencyException)
+            {
+                return InternalServerError(patientCoordinationDependencyException);
+            }
+            catch (PatientCoordinationServiceException patientCoordinationServiceException)
+            {
+                return InternalServerError(patientCoordinationServiceException);
+            }
+        }
+
         private static string ExtractStringParameter(Parameters parameters, string name)
         {
             var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
