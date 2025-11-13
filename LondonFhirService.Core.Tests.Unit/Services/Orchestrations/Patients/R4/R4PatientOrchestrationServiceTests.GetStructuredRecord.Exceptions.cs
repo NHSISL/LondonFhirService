@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Hl7.Fhir.Model;
@@ -99,6 +100,58 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(IsSameExceptionAs(
                     expectedPatientOrchestrationDependencyException))),
+                        Times.Once);
+
+            this.providerServiceMock.VerifyNoOtherCalls();
+            this.patientServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowServiceExceptionOnGetStructuredRecordIfErrorsAndLogItAsync()
+        {
+            // given
+            string randomString = GetRandomString();
+            string inputNhsNumber = randomString;
+            string randomExceptionMessage = GetRandomString();
+            Exception serviceException = new Exception(randomExceptionMessage);
+
+            this.providerServiceMock.Setup(service =>
+                service.RetrieveAllProvidersAsync())
+                    .ThrowsAsync(serviceException);
+
+            var failedPatientOrchestrationException =
+                new FailedPatientOrchestrationException(
+                    message: "Failed patient orchestration error occurred, please contact support.",
+                    innerException: serviceException,
+                    data: serviceException.Data);
+
+            var expectedPatientOrchestrationServiceException =
+                new PatientOrchestrationServiceException(
+                    message: "Patient orchestration service error occurred, please contact support.",
+                    innerException: failedPatientOrchestrationException);
+
+            // when
+            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+                this.patientOrchestrationService
+                    .GetStructuredRecord(nhsNumber: inputNhsNumber);
+
+            PatientOrchestrationServiceException actualPatientOrchestrationServiceException =
+                await Assert.ThrowsAsync<PatientOrchestrationServiceException>(
+                    retrieveListOfDocumentsToProcessTask.AsTask);
+
+            // then
+            actualPatientOrchestrationServiceException.Should()
+                .BeEquivalentTo(expectedPatientOrchestrationServiceException);
+
+            this.providerServiceMock.Verify(service =>
+                service.RetrieveAllProvidersAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(IsSameExceptionAs(
+                    expectedPatientOrchestrationServiceException))),
                         Times.Once);
 
             this.providerServiceMock.VerifyNoOtherCalls();
