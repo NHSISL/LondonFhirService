@@ -93,14 +93,54 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                 return reconciledBundle;
             });
 
-        public ValueTask<Bundle> GetStructuredRecord(
+        public async ValueTask<Bundle> GetStructuredRecord(
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
             CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            IQueryable<Provider> allProviders =
+                await this.providerService.RetrieveAllProvidersAsync();
+
+            List<Provider> orderedProviders = allProviders
+                .OrderByDescending(provider => provider.IsPrimary)
+                .ToList();
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+
+            List<Provider> primaryProviders = orderedProviders
+                .Where(provider =>
+                    provider.IsPrimary &&
+                    provider.IsActive &&
+                    provider.ActiveFrom <= now &&
+                    provider.ActiveTo >= now)
+                .ToList();
+
+            string primaryProviderName = primaryProviders.First().Name;
+
+            List<string> activeProviderNames = orderedProviders
+                .Where(provider =>
+                    provider.IsActive &&
+                    provider.ActiveFrom <= now &&
+                    provider.ActiveTo >= now &&
+                    !provider.IsForComparisonOnly)
+                .Select(provider => provider.Name)
+                .ToList();
+
+            List<Bundle> bundles = await this.patientService.GetStructuredRecord(
+                providerNames: activeProviderNames,
+                nhsNumber,
+                dateOfBirth,
+                demographicsOnly,
+                includeInactivePatients,
+                cancellationToken: cancellationToken);
+
+            Bundle reconciledBundle = await this.fhirReconciliationService.Reconcile(
+                bundles: bundles,
+                primaryProviderName: primaryProviderName);
+
+            return reconciledBundle;
         }
     }
 }
