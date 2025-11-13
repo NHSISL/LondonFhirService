@@ -120,6 +120,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                         provider.ActiveTo >= now)
                     .ToList();
 
+                ValidatePrimaryProviders(primaryProviders);
                 string primaryProviderName = primaryProviders.First().Name;
 
                 List<string> activeProviderNames = orderedProviders
