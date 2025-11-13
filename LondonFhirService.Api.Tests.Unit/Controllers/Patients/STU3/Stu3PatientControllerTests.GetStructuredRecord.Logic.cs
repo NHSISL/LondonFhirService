@@ -16,7 +16,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
     public partial class Stu3PatientControllerTests
     {
         [Fact]
-        public async Task ShouldReturnBundleOnGetStrucuredRecordAsync()
+        public async Task ShouldReturnBundleOnGetStructuredRecordAsync()
         {
             // given
             string randomNhsNumber = GetRandomString();

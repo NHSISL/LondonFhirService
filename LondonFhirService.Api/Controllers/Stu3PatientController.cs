@@ -72,22 +72,23 @@ namespace LondonFhirService.Api.Controllers
             }
         }
 
-        [HttpPost("{id}/get-structured-record")]
+        [HttpPost("{nhsNumber}/$get-structured-record")]
         [Authorize(Roles = "Patients.GetStructuredPatient")]
         public async Task<ActionResult<Bundle>> GetStructuredRecord(
             string nhsNumber,
-           [FromBody] Parameters parameters,
+            [FromBody] Parameters parameters,
             CancellationToken cancellationToken = default)
         {
             try
             {
                 DateTimeOffset? dateOfBirth = ExtractDateTimeParameter(parameters, "dateOfBirth");
+                DateTime? dateOfBirthDateTime = dateOfBirth.HasValue ? dateOfBirth.Value.DateTime : null;
                 bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
                 bool? includeInactivePatients = ExtractBoolParameter(parameters, "includeInactivePatients");
 
                 Bundle bundle = await this.patientCoordinationService.GetStructuredRecord(
                     nhsNumber,
-                    dateOfBirth.Value.DateTime,
+                    dateOfBirthDateTime,
                     demographicsOnly,
                     includeInactivePatients,
                     cancellationToken);
