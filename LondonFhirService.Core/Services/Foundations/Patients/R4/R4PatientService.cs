@@ -152,7 +152,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
                 {
                     System = provider.System,
                     Code = provider.Code,
-                    Display = provider.ProviderName
+                    Display = provider.ProviderName,
+                    Version = provider.FhirVersion,
                 };
 
                 bundle.Meta.Source = provider.Source;

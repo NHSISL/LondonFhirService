@@ -19,5 +19,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             DateTimeOffset? since = null,
             int? count = null,
             CancellationToken cancellationToken = default);
+
+        ValueTask<Bundle> GetStructuredRecord(
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null,
+            CancellationToken cancellationToken = default);
     }
 }
