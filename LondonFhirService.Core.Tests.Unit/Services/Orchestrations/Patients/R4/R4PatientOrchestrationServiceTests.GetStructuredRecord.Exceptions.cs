@@ -59,5 +59,52 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Theory]
+        [MemberData(nameof(DependencyExceptions))]
+        public async Task ShouldThrowDependencyExceptionOnGetStructuredRecordIfErrorsAndLogItAsync(
+            Xeption dependencyException)
+        {
+            // given
+            string randomString = GetRandomString();
+            string inputNhsNumber = randomString;
+
+            var expectedPatientOrchestrationDependencyException =
+                new PatientOrchestrationDependencyException(
+                    message: "Patient orchestration dependency error occurred, fix the errors and try again.",
+                    innerException: dependencyException.InnerException as Xeption);
+
+            this.providerServiceMock.Setup(service =>
+                service.RetrieveAllProvidersAsync())
+                    .ThrowsAsync(dependencyException);
+
+            // when
+            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+                this.patientOrchestrationService
+                    .GetStructuredRecord(nhsNumber: inputNhsNumber);
+
+            PatientOrchestrationDependencyException
+                actualPatientOrchestrationDependencyException =
+                    await Assert.ThrowsAsync<PatientOrchestrationDependencyException>(
+                        retrieveListOfDocumentsToProcessTask.AsTask);
+
+            // then
+            actualPatientOrchestrationDependencyException.Should()
+                .BeEquivalentTo(expectedPatientOrchestrationDependencyException);
+
+            this.providerServiceMock.Verify(service =>
+                service.RetrieveAllProvidersAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(IsSameExceptionAs(
+                    expectedPatientOrchestrationDependencyException))),
+                        Times.Once);
+
+            this.providerServiceMock.VerifyNoOtherCalls();
+            this.patientServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
