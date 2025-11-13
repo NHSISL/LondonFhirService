@@ -76,16 +76,18 @@ namespace LondonFhirService.Api.Controllers
         [Authorize(Roles = "Patients.GetStructuredPatient")]
         public async Task<ActionResult<Bundle>> GetStructuredRecord(
             string nhsNumber,
-            DateTime? dateOfBirth = null,
-            bool demographicsOnly = false,
-            bool includeInactivePatients = false,
+           [FromBody] Parameters parameters,
             CancellationToken cancellationToken = default)
         {
             try
             {
+                DateTimeOffset? dateOfBirth = ExtractDateTimeParameter(parameters, "dateOfBirth");
+                bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
+                bool? includeInactivePatients = ExtractBoolParameter(parameters, "includeInactivePatients");
+
                 Bundle bundle = await this.patientCoordinationService.GetStructuredRecord(
                     nhsNumber,
-                    dateOfBirth,
+                    dateOfBirth.Value.DateTime,
                     demographicsOnly,
                     includeInactivePatients,
                     cancellationToken);
@@ -140,6 +142,13 @@ namespace LondonFhirService.Api.Controllers
             var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
 
             return parameter?.Value is Integer integer ? integer.Value : null;
+        }
+
+        private static bool? ExtractBoolParameter(Parameters parameters, string name)
+        {
+            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
+
+            return parameter?.Value is FhirBoolean fhirBoolean ? fhirBoolean.Value : null;
         }
     }
 }
