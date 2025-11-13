@@ -93,54 +93,57 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                 return reconciledBundle;
             });
 
-        public async ValueTask<Bundle> GetStructuredRecord(
+        public ValueTask<Bundle> GetStructuredRecord(
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
-            CancellationToken cancellationToken = default)
-        {
-            IQueryable<Provider> allProviders =
-                await this.providerService.RetrieveAllProvidersAsync();
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+            {
+                ValidateArgsOnGetStructuredRecord(nhsNumber);
 
-            List<Provider> orderedProviders = allProviders
-                .OrderByDescending(provider => provider.IsPrimary)
-                .ToList();
+                IQueryable<Provider> allProviders =
+                    await this.providerService.RetrieveAllProvidersAsync();
 
-            DateTimeOffset now = DateTimeOffset.UtcNow;
+                List<Provider> orderedProviders = allProviders
+                    .OrderByDescending(provider => provider.IsPrimary)
+                    .ToList();
 
-            List<Provider> primaryProviders = orderedProviders
-                .Where(provider =>
-                    provider.IsPrimary &&
-                    provider.IsActive &&
-                    provider.ActiveFrom <= now &&
-                    provider.ActiveTo >= now)
-                .ToList();
+                DateTimeOffset now = DateTimeOffset.UtcNow;
 
-            string primaryProviderName = primaryProviders.First().Name;
+                List<Provider> primaryProviders = orderedProviders
+                    .Where(provider =>
+                        provider.IsPrimary &&
+                        provider.IsActive &&
+                        provider.ActiveFrom <= now &&
+                        provider.ActiveTo >= now)
+                    .ToList();
 
-            List<string> activeProviderNames = orderedProviders
-                .Where(provider =>
-                    provider.IsActive &&
-                    provider.ActiveFrom <= now &&
-                    provider.ActiveTo >= now &&
-                    !provider.IsForComparisonOnly)
-                .Select(provider => provider.Name)
-                .ToList();
+                string primaryProviderName = primaryProviders.First().Name;
 
-            List<Bundle> bundles = await this.patientService.GetStructuredRecord(
-                providerNames: activeProviderNames,
-                nhsNumber,
-                dateOfBirth,
-                demographicsOnly,
-                includeInactivePatients,
-                cancellationToken: cancellationToken);
+                List<string> activeProviderNames = orderedProviders
+                    .Where(provider =>
+                        provider.IsActive &&
+                        provider.ActiveFrom <= now &&
+                        provider.ActiveTo >= now &&
+                        !provider.IsForComparisonOnly)
+                    .Select(provider => provider.Name)
+                    .ToList();
 
-            Bundle reconciledBundle = await this.fhirReconciliationService.Reconcile(
-                bundles: bundles,
-                primaryProviderName: primaryProviderName);
+                List<Bundle> bundles = await this.patientService.GetStructuredRecord(
+                    providerNames: activeProviderNames,
+                    nhsNumber,
+                    dateOfBirth,
+                    demographicsOnly,
+                    includeInactivePatients,
+                    cancellationToken: cancellationToken);
 
-            return reconciledBundle;
-        }
+                Bundle reconciledBundle = await this.fhirReconciliationService.Reconcile(
+                    bundles: bundles,
+                    primaryProviderName: primaryProviderName);
+
+                return reconciledBundle;
+            });
     }
 }

@@ -22,6 +22,15 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                 (Rule: IsInvalid(id), Parameter: "Id"));
         }
 
+        private static void ValidateArgsOnGetStructuredRecord(string nhsNumber)
+        {
+            Validate(
+                createException: () => new InvalidArgumentPatientOrchestrationException(
+                    message: "Invalid patient orchestration argument, please correct the errors and try again."),
+
+                (Rule: IsInvalid(nhsNumber), Parameter: "NhsNumber"));
+        }
+
         private static void ValidatePrimaryProviders(List<Provider> primaryProviders)
         {
             if (primaryProviders.Count != 1)
