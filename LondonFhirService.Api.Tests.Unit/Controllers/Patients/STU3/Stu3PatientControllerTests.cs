@@ -81,6 +81,31 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             return parameters;
         }
 
+        private static Parameters CreateRandomGetStructuredRecordParameters(
+            DateTimeOffset? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null)
+        {
+            var parameters = new Parameters();
+
+            if (dateOfBirth.HasValue)
+            {
+                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth.Value));
+            }
+
+            if (demographicsOnly.HasValue)
+            {
+                parameters.Add("demographicsOnly", new FhirBoolean(demographicsOnly.Value));
+            }
+
+            if (includeInactivePatients.HasValue)
+            {
+                parameters.Add("includeInactivePatients", new FhirBoolean(includeInactivePatients.Value));
+            }
+
+            return parameters;
+        }
+
         public static TheoryData<Xeption> ValidationExceptions()
         {
             var someInnerException = new Xeption();
