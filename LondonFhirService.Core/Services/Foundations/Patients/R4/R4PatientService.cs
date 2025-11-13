@@ -113,6 +113,17 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
                 return bundles;
             });
 
+        public ValueTask<List<Bundle>> GetStructuredRecord(
+            List<string> providerNames,
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
+
         virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteWithTimeoutAsync(
             IFhirProvider provider,
             CancellationToken globalToken,

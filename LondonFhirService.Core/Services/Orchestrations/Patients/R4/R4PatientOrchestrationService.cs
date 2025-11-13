@@ -92,5 +92,15 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
 
                 return reconciledBundle;
             });
+
+        public ValueTask<Bundle> GetStructuredRecord(
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null,
+            CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
