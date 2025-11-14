@@ -20,7 +20,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
         public async ValueTask<Bundle> EverythingStu3Async(string id, Parameters parameters)
         {
             var options = new JsonSerializerOptions()
-                       .ForFhir(ModelInfo.ModelInspector);
+                .ForFhir(ModelInfo.ModelInspector);
 
             string url = $"{Stu3PatientRelativeUrl}/{id}/$everything";
             string jsonContent = JsonSerializer.Serialize(parameters, options);

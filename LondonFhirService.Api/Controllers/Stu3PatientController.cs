@@ -32,7 +32,7 @@ namespace LondonFhirService.Api.Controllers
         public async Task<ActionResult<Bundle>> Everything(
             string id,
             [FromBody] Parameters parameters,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -77,7 +77,7 @@ namespace LondonFhirService.Api.Controllers
         public async Task<ActionResult<Bundle>> GetStructuredRecord(
             string nhsNumber,
             [FromBody] Parameters parameters,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             try
             {

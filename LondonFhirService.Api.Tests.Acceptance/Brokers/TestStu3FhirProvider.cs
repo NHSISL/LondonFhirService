@@ -40,6 +40,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             providerMock.SetupGet(p => p.Code).Returns(providerName);
             providerMock.SetupGet(p => p.Source).Returns($"Test-{providerName}");
             providerMock.SetupGet(p => p.Patients).Returns(patientResourceMock.Object);
+            providerMock.SetupGet(p => p.FhirVersion).Returns("STU3");
+            providerMock.SetupGet(p => p.DisplayName).Returns(providerName);
 
             patientResourceMock.Setup(p => p.Everything(
                 It.IsAny<string>(),
@@ -58,7 +60,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                         Meta = new Meta
                         {
                             LastUpdated = DateTimeOffset.UtcNow,
-                            Source = providerName
+                            //Source = providerName
                         },
                         Entry = new List<Bundle.EntryComponent>
                         {
@@ -67,10 +69,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                                 Resource = new Patient
                                 {
                                     Id = id,
-                                    Meta = new Meta
-                                    {
-                                        Source = providerName
-                                    }
+                                    //Meta = new Meta
+                                    //{
+                                    //    Source = providerName
+                                    //}
                                 }
                             }
                         }

@@ -88,46 +88,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             return parameters;
         }
 
-        private async Task<Provider> CreateProvider(string providerName)
-        {
-            Provider randomProvider = CreateProviderFiller(
-                providerName,
-                isActive: true,
-                isPrimary: true)
-                .Create();
-
-            Provider createdProvider = await SeedProviderAsync(randomProvider);
-
-            return createdProvider;
-        }
-
-        private static Filler<Provider> CreateProviderFiller(
-            string providerName,
-            bool isActive = false,
-            bool isPrimary = false)
-        {
-            DateTimeOffset now = DateTimeOffset.Now;
-            var filler = new Filler<Provider>();
-
-            DateTimeOffset activeFrom = isActive ? now.AddDays(-30) : now.AddDays(-60);
-            DateTimeOffset activeTo = isActive ? now.AddDays(30) : now.AddDays(-30);
-
-            filler.Setup()
-                .OnType<DateTimeOffset>().Use(now)
-                .OnProperty(provider => provider.Name).Use(providerName)
-                .OnProperty(provider => provider.System).Use(GetRandomStringWithLengthOf(1000))
-                .OnProperty(provider => provider.Code).Use(GetRandomStringWithLengthOf(64))
-                .OnProperty(provider => provider.IsActive).Use(isActive)
-                .OnProperty(provider => provider.ActiveFrom).Use(activeFrom)
-                .OnProperty(provider => provider.ActiveTo).Use(activeTo)
-                .OnProperty(provider => provider.IsForComparisonOnly).Use(false)
-                .OnProperty(provider => provider.IsPrimary).Use(isPrimary)
-                .OnProperty(provider => provider.CreatedBy).Use(GetRandomString())
-                .OnProperty(provider => provider.UpdatedBy).Use(GetRandomString());
-
-            return filler;
-        }
-
         private async Task<Consumer> CreateRandomConsumer(DateTimeOffset dateTimeOffset, string userId = "")
         {
             Consumer randomConsumer = CreateConsumerFiller(dateTimeOffset, userId).Create();
@@ -256,14 +216,40 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             return filler;
         }
 
-        private async ValueTask<Provider> SeedProviderAsync(Provider provider)
+        private async Task<Provider> CreateRandomActiveProvider(
+            string providerName,
+            string fhirVersion,
+            DateTimeOffset dateTimeOffset)
         {
-            using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
-            {
-                var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+            Provider randomProvider = CreateActiveProviderFiller(providerName, fhirVersion, dateTimeOffset).Create();
+            Provider createdProvider = await SeedProviderAsync(randomProvider);
 
-                return await storageBroker.InsertProviderAsync(provider);
-            }
+            return createdProvider;
+        }
+
+        private static Filler<Provider> CreateActiveProviderFiller(
+            string providerName,
+            string fhirVersion,
+            DateTimeOffset dateTimeOffset)
+        {
+            var filler = new Filler<Provider>();
+
+            filler.Setup()
+                .OnType<DateTimeOffset>().Use(dateTimeOffset)
+                .OnType<DateTimeOffset?>().Use(dateTimeOffset)
+                .OnProperty(provider => provider.Name).Use(providerName)
+                .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
+                .OnProperty(provider => provider.IsActive).Use(true)
+                .OnProperty(provider => provider.IsPrimary).Use(true)
+                .OnProperty(provider => provider.IsForComparisonOnly).Use(false)
+
+                .OnProperty(provider => provider.ActiveFrom)
+                    .Use(dateTimeOffset.AddDays(-30))
+
+                .OnProperty(provider => provider.ActiveTo)
+                    .Use(dateTimeOffset.AddDays(30));
+
+            return filler;
         }
 
         private async ValueTask<Consumer> SeedConsumerAsync(Consumer consumer)
@@ -306,13 +292,13 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             }
         }
 
-        private async ValueTask<Provider> CleanupProviderAsync(Provider provider)
+        private async ValueTask<Provider> SeedProviderAsync(Provider provider)
         {
             using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
             {
                 var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
 
-                return await storageBroker.DeleteProviderAsync(provider);
+                return await storageBroker.InsertProviderAsync(provider);
             }
         }
 
@@ -353,6 +339,16 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
                 var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
 
                 return await storageBroker.DeleteOdsDataAsync(odsData);
+            }
+        }
+
+        private async ValueTask<Provider> CleanupProviderAsync(Provider provider)
+        {
+            using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
+            {
+                var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+
+                return await storageBroker.DeleteProviderAsync(provider);
             }
         }
     }

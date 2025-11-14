@@ -32,7 +32,7 @@ namespace LondonFhirService.Api.Controllers
         public async Task<ActionResult<Bundle>> Everything(
             string id,
             [FromBody] Parameters parameters,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             try
             {

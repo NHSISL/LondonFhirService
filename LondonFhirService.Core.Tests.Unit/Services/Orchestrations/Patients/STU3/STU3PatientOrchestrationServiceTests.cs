@@ -108,6 +108,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 .OnProperty(provider => provider.Name).Use(GetRandomStringWithLengthOf(500))
                 .OnProperty(provider => provider.System).Use(GetRandomStringWithLengthOf(1000))
                 .OnProperty(provider => provider.Code).Use(GetRandomStringWithLengthOf(64))
+                .OnProperty(provider => provider.FhirVersion).Use("STU3")
                 .OnProperty(provider => provider.IsActive).Use(isActive)
                 .OnProperty(provider => provider.ActiveFrom).Use(activeFrom)
                 .OnProperty(provider => provider.ActiveTo).Use(activeTo)

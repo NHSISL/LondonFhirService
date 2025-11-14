@@ -38,6 +38,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             int randomInputCount = GetRandomNumber();
             int inputCount = randomInputCount;
             string providerName = "DDS";
+            string fhirVersion = "R4";
 
             Parameters inputParameters = CreateRandomParameters(
                 start: inputStart,
@@ -46,7 +47,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
                 since: inputSince,
                 count: inputCount);
 
-            Provider provider = await CreateProvider(providerName);
             Consumer consumer = await CreateRandomConsumer(now, userId);
             OdsData odsData = await CreateRandomOdsData(orgCode, now);
 
@@ -57,6 +57,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
                 userId);
 
             PdsData pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now);
+            Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
 
             // when
             Bundle actualBundle =
