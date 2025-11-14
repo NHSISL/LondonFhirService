@@ -227,7 +227,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     Version = provider.FhirVersion,
                 };
 
-                bundle.Meta.Source = provider.Source;
                 bundle.Meta.Tag.Add(coding);
 
                 return (bundle, null);
@@ -293,7 +292,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     Display = provider.ProviderName
                 };
 
-                bundle.Meta.Source = provider.Source;
                 bundle.Meta.Tag.Add(coding);
 
                 return (bundle, null);
