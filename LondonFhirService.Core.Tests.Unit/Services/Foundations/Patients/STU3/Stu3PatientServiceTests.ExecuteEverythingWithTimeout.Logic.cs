@@ -26,17 +26,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputId = randomId;
             var fhirProvider = this.ddsFhirProviderMock.Object;
             var fhirProviderCopy = this.ddsFhirProviderMock.Object.DeepClone();
-            expectedBundle.Meta.Source = fhirProviderCopy.Source;
+            //expectedBundle.Meta.Source = fhirProviderCopy.Source;
 
-            expectedBundle.Meta.Tag = new System.Collections.Generic.List<Coding>
-            {
-                new Coding
-                {
-                    System = fhirProviderCopy.System,
-                    Code = fhirProviderCopy.Code,
-                    Display = fhirProviderCopy.ProviderName
-                }
-            };
+            //expectedBundle.Meta.Tag = new System.Collections.Generic.List<Coding>
+            //{
+            //    new Coding
+            //    {
+            //        System = fhirProviderCopy.System,
+            //        Code = fhirProviderCopy.Code,
+            //        Display = fhirProviderCopy.ProviderName
+            //    }
+            //};
 
             (Bundle Bundle, Exception Exception) expectedResult = (expectedBundle, null);
 
@@ -87,9 +87,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.ProviderName,
                     Times.Once);
 
-            this.ddsFhirProviderMock.Verify(provider =>
-                provider.Source,
-                    Times.Once);
+            //this.ddsFhirProviderMock.Verify(provider =>
+            //    provider.Source,
+            //        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();

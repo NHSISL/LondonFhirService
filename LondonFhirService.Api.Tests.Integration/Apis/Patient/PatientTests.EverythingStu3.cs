@@ -2,7 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirR4;
+extern alias FhirSTU3;
 using System;
 using FluentAssertions;
 using Hl7.Fhir.Model;
@@ -18,11 +18,10 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
     public partial class PatientTests
     {
         [Fact]
-        public async Task ShouldGetPatientEverythingR4Async()
+        public async Task ShouldGetPatientEverythingStu3Async()
         {
             // given
-            string nhsNumber = GenerateRandom10DigitNumber();
-            string inputId = nhsNumber;
+            string inputId = "9435797881";
             string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
             string userId = TestAuthHandler.TestUserId;
@@ -36,16 +35,12 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             DateTimeOffset inputSince = randomInputSince;
             int randomInputCount = GetRandomNumber();
             int inputCount = randomInputCount;
-            string providerName = "DDS";
+            string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
+            string fhirVersion = "STU3";
 
-            Parameters inputParameters = CreateRandomParameters(
-                start: inputStart,
-                end: inputEnd,
-                typeFilter: inputTypeFilter,
-                since: inputSince,
-                count: inputCount);
+            Parameters inputParameters = null;
 
-            Provider provider = await CreateProvider(providerName);
+            Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
             Consumer consumer = await CreateRandomConsumer(now, userId);
             OdsData odsData = await CreateRandomOdsData(orgCode, now);
 
@@ -55,20 +50,21 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
                 now,
                 userId);
 
-            PdsData pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now);
+            PdsData pdsData = await CreateRandomPdsData(inputId, orgCode, now);
 
             // when
             Bundle actualBundle =
-                await this.apiBroker.EverythingR4Async(inputId, inputParameters);
+                await this.apiBroker.EverythingStu3Async(inputId, inputParameters);
 
             // then
             actualBundle.Should().NotBeNull();
-            actualBundle.Type.Should().Be(Bundle.BundleType.Searchset);
+            //actualBundle.Type.Should().Be(Bundle.BundleType.Searchset);
+            actualBundle.Type.Should().Be(Bundle.BundleType.Collection);
             actualBundle.Entry.Should().NotBeNullOrEmpty();
             actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
             actualBundle.Meta.Should().NotBeNull();
-            actualBundle.Entry[0].Resource.Should().BeOfType<FhirR4::Hl7.Fhir.Model.Patient>();
-            var patient = actualBundle.Entry[0].Resource as FhirR4::Hl7.Fhir.Model.Patient;
+            actualBundle.Entry[0].Resource.Should().BeOfType<FhirSTU3::Hl7.Fhir.Model.Patient>();
+            var patient = actualBundle.Entry[0].Resource as FhirSTU3::Hl7.Fhir.Model.Patient;
             patient!.Id.Should().Be(inputId);
             patient.Meta.Should().NotBeNull();
             await CleanupPdsDataAsync(pdsData);

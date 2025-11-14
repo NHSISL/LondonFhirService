@@ -93,42 +93,38 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             return parameters;
         }
 
-        private async Task<Provider> CreateProvider(string providerName)
+        private async Task<Provider> CreateRandomActiveProvider(
+            string providerName,
+            string fhirVersion,
+            DateTimeOffset dateTimeOffset)
         {
-            Provider randomProvider = CreateProviderFiller(
-                providerName,
-                isActive: true,
-                isPrimary: true)
-                .Create();
-
+            Provider randomProvider = CreateActiveProviderFiller(providerName, fhirVersion, dateTimeOffset).Create();
             Provider createdProvider = await SeedProviderAsync(randomProvider);
 
             return createdProvider;
         }
 
-        private static Filler<Provider> CreateProviderFiller(
+        private static Filler<Provider> CreateActiveProviderFiller(
             string providerName,
-            bool isActive = false,
-            bool isPrimary = false)
+            string fhirVersion,
+            DateTimeOffset dateTimeOffset)
         {
-            DateTimeOffset now = DateTimeOffset.Now;
             var filler = new Filler<Provider>();
 
-            DateTimeOffset activeFrom = isActive ? now.AddDays(-30) : now.AddDays(-60);
-            DateTimeOffset activeTo = isActive ? now.AddDays(30) : now.AddDays(-30);
-
             filler.Setup()
-                .OnType<DateTimeOffset>().Use(now)
+                .OnType<DateTimeOffset>().Use(dateTimeOffset)
+                .OnType<DateTimeOffset?>().Use(dateTimeOffset)
                 .OnProperty(provider => provider.Name).Use(providerName)
-                .OnProperty(provider => provider.System).Use(GetRandomStringWithLengthOf(1000))
-                .OnProperty(provider => provider.Code).Use(GetRandomStringWithLengthOf(64))
-                .OnProperty(provider => provider.IsActive).Use(isActive)
-                .OnProperty(provider => provider.ActiveFrom).Use(activeFrom)
-                .OnProperty(provider => provider.ActiveTo).Use(activeTo)
+                .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
+                .OnProperty(provider => provider.IsActive).Use(true)
+                .OnProperty(provider => provider.IsPrimary).Use(true)
                 .OnProperty(provider => provider.IsForComparisonOnly).Use(false)
-                .OnProperty(provider => provider.IsPrimary).Use(isPrimary)
-                .OnProperty(provider => provider.CreatedBy).Use(GetRandomString())
-                .OnProperty(provider => provider.UpdatedBy).Use(GetRandomString());
+
+                .OnProperty(provider => provider.ActiveFrom)
+                    .Use(dateTimeOffset.AddDays(-30))
+
+                .OnProperty(provider => provider.ActiveTo)
+                    .Use(dateTimeOffset.AddDays(30));
 
             return filler;
         }
@@ -261,16 +257,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             return filler;
         }
 
-        private async ValueTask<Provider> SeedProviderAsync(Provider provider)
-        {
-            using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
-            {
-                var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
-
-                return await storageBroker.InsertProviderAsync(provider);
-            }
-        }
-
         private async ValueTask<Consumer> SeedConsumerAsync(Consumer consumer)
         {
             using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
@@ -311,13 +297,13 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             }
         }
 
-        private async ValueTask<Provider> CleanupProviderAsync(Provider provider)
+        private async ValueTask<Provider> SeedProviderAsync(Provider provider)
         {
             using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
             {
                 var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
 
-                return await storageBroker.DeleteProviderAsync(provider);
+                return await storageBroker.InsertProviderAsync(provider);
             }
         }
 
@@ -358,6 +344,16 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
                 var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
 
                 return await storageBroker.DeleteOdsDataAsync(odsData);
+            }
+        }
+
+        private async ValueTask<Provider> CleanupProviderAsync(Provider provider)
+        {
+            using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
+            {
+                var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+
+                return await storageBroker.DeleteProviderAsync(provider);
             }
         }
     }

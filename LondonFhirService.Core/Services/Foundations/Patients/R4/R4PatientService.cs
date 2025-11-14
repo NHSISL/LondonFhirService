@@ -44,7 +44,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
-                ValidateOnGetStructuredRecord(providerNames, id);
+                ValidateOnEverything(providerNames, id);
                 var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
 
                 List<IFhirProvider> providers = fhirBroker.FhirProviders

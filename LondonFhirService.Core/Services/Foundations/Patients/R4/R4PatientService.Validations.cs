@@ -11,7 +11,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
 {
     public partial class R4PatientService
     {
-        public static void ValidateOnGetStructuredRecord(List<string> providerNames, string id)
+        public static void ValidateOnEverything(List<string> providerNames, string id)
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
