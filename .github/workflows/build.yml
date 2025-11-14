@@ -28,7 +28,6 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-
     - name: Run Unit Tests
       run: >-
         $projects = Get-ChildItem -Path . -Filter "*Tests.Unit*.csproj" -Recurse

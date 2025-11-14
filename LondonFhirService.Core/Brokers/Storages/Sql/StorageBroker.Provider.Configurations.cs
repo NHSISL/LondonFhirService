@@ -39,6 +39,11 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .IsRequired();
 
             model
+                .Property(provider => provider.FhirVersion)
+                .HasMaxLength(10)
+                .IsRequired();
+
+            model
                 .Property(provider => provider.IsActive)
                 .IsRequired();
 
@@ -75,6 +80,12 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             model
                 .Property(provider => provider.UpdatedDate)
                 .IsRequired();
+
+            model
+                .HasIndex(provider => provider.FhirVersion)
+                .HasDatabaseName("UX_Provider_FhirVersion_PrimaryOnly")
+                .IsUnique()
+                .HasFilter($"[{nameof(Provider.IsPrimary)}] = 1");
         }
     }
 }
