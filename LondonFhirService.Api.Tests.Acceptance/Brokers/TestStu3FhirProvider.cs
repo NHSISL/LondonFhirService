@@ -27,7 +27,11 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                     new ResourceCapabilities
                     {
                         ResourceName = "Patients",
-                        SupportedOperations = new List<string> { "Everything" }
+                        SupportedOperations = new List<string>
+                        {
+                            "Everything",
+                            "GetStructuredRecord"
+                        }
                     }
                 }
             };
@@ -45,7 +49,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             providerMock.SetupGet(p => p.FhirVersion).Returns("STU3");
             providerMock.SetupGet(p => p.DisplayName).Returns(providerName);
 
-            patientResourceMock.Setup(p => p.Everything(
+            patientResourceMock.Setup(patientResource => patientResource.Everything(
                 It.IsAny<string>(),
                 It.IsAny<DateTimeOffset?>(),
                 It.IsAny<DateTimeOffset?>(),
@@ -53,10 +57,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 It.IsAny<DateTimeOffset?>(),
                 It.IsAny<int?>(),
                 It.IsAny<CancellationToken>()))
-                .ReturnsAsync((string id, DateTimeOffset? start, DateTimeOffset? end, string typeFilter,
-                    DateTimeOffset? since, int? count, CancellationToken ct) =>
-                {
-                    var bundle = new Bundle
+                .ReturnsAsync(
+                    (string id, DateTimeOffset? start, DateTimeOffset? end,
+                        string typeFilter, DateTimeOffset? since, int? count,
+                        CancellationToken cancellationToken) =>
                     {
                         Type = Bundle.BundleType.Collection,
                         Meta = new Meta
@@ -67,16 +71,54 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                         {
                             new Bundle.EntryComponent
                             {
-                                Resource = new Patient
+                                LastUpdated = DateTimeOffset.UtcNow
+                            },
+
+                            Entry = new List<Bundle.EntryComponent>
+                            {
+                                new Bundle.EntryComponent
                                 {
                                     Id = id,
                                 }
                             }
-                        }
-                    };
+                        };
 
-                    return bundle;
-                });
+                        return bundle;
+                    });
+
+            patientResourceMock.Setup(patientResource => patientResource.GetStructuredRecord(
+                It.IsAny<string>(),
+                It.IsAny<DateTime>(),
+                It.IsAny<bool>(),
+                It.IsAny<bool>(),
+                It.IsAny<CancellationToken>()))
+                .ReturnsAsync(
+                    (string nhsNumber, DateTime dateOfBirth, bool demographicsOnly,
+                        bool includeInactivePatients, CancellationToken cancellationToken) =>
+                    {
+                        var bundle = new Bundle
+                        {
+                            Type = Bundle.BundleType.Searchset,
+
+                            Meta = new Meta
+                            {
+                                LastUpdated = DateTimeOffset.UtcNow
+                            },
+
+                            Entry = new List<Bundle.EntryComponent>
+                            {
+                                new Bundle.EntryComponent
+                                {
+                                    Resource = new Patient
+                                    {
+                                        Id = nhsNumber
+                                    }
+                                }
+                            }
+                        };
+
+                        return bundle;
+                    });
 
             return providerMock.Object;
         }

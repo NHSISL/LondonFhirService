@@ -14,12 +14,14 @@ using LondonFhirService.Core.Models.Foundations.Providers;
 using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
 {
-    public partial class Stu3PatientTests
+    extern alias FhirSTU3;
+
+    public partial class PatientTests
     {
         [Fact]
-        public async Task ShouldGetPatientEverythingStu3Async()
+        public async Task ShouldGetPatientStructuredRecordStu3Async()
         {
             // given
             string nhsNumber = GenerateRandom10DigitNumber();
@@ -27,25 +29,17 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
             string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
             string userId = TestAuthHandler.TestUserId;
-            DateTimeOffset randomInputStart = now.AddDays(-1);
-            DateTimeOffset inputStart = randomInputStart;
-            DateTimeOffset randomInputEnd = now.AddDays(1);
-            DateTimeOffset inputEnd = randomInputEnd;
-            string randomInputTypeFilter = GetRandomString();
-            string inputTypeFilter = randomInputTypeFilter;
-            DateTimeOffset randomInputSince = now.AddDays(-1);
-            DateTimeOffset inputSince = randomInputSince;
-            int randomInputCount = GetRandomNumber();
-            int inputCount = randomInputCount;
+            DateTimeOffset randomDateOfBirth = now.AddYears(-20);
+            DateTimeOffset inputDateOfBirth = randomDateOfBirth;
+            bool demographicsOnly = false;
+            bool includeInactivePatients = false;
             string providerName = "LDS";
             string fhirVersion = "STU3";
 
-            Parameters inputParameters = CreateRandomEverythingParameters(
-                start: inputStart,
-                end: inputEnd,
-                typeFilter: inputTypeFilter,
-                since: inputSince,
-                count: inputCount);
+            Parameters inputParameters = CreateRandomGetStructuredRecordParameters(
+                dateOfBirth: inputDateOfBirth,
+                demographicsOnly,
+                includeInactivePatients);
 
             Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
             Consumer consumer = await CreateRandomConsumer(now, userId);
@@ -58,22 +52,21 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 userId);
 
             PdsData pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now);
-            Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
 
             // when
             Bundle actualBundle =
-                await this.apiBroker.EverythingStu3Async(inputId, inputParameters);
+                await this.apiBroker.GetStructuredRecordStu3Async(inputId, inputParameters);
 
             // then
             actualBundle.Should().NotBeNull();
-            actualBundle.Type.Should().Be(Bundle.BundleType.Collection);
+            actualBundle.Type.Should().Be(Bundle.BundleType.Searchset);
             actualBundle.Entry.Should().NotBeNullOrEmpty();
             actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
             actualBundle.Meta.Should().NotBeNull();
-            actualBundle.Meta.Extension.Should().HaveCount(1);
             actualBundle.Entry[0].Resource.Should().BeOfType<Patient>();
             var patient = actualBundle.Entry[0].Resource as Patient;
             patient!.Id.Should().Be(inputId);
+
             await CleanupPdsDataAsync(pdsData);
             await CleanupOdsDataAsync(odsData);
             await CleanupConsumerAccessAsync(consumerAccess);

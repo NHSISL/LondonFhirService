@@ -119,7 +119,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bundle.Meta = new Meta
             {
                 LastUpdated = DateTimeOffset.UtcNow,
-                Source = GetRandomString()
             };
 
 

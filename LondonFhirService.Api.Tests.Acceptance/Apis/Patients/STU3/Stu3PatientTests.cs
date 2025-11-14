@@ -51,7 +51,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: new DateTime()).GetValue();
 
-        private static Parameters CreateRandomParameters(
+        private static Parameters CreateRandomEverythingParameters(
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
@@ -83,6 +83,31 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
             if (count.HasValue)
             {
                 parameters.Add("_count", new Integer(count.Value));
+            }
+
+            return parameters;
+        }
+
+        private static Parameters CreateRandomGetStructuredRecordParameters(
+            DateTimeOffset? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null)
+        {
+            var parameters = new Parameters();
+
+            if (dateOfBirth.HasValue)
+            {
+                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth.Value));
+            }
+
+            if (demographicsOnly.HasValue)
+            {
+                parameters.Add("demographicsOnly", new FhirBoolean(demographicsOnly.Value));
+            }
+
+            if (includeInactivePatients.HasValue)
+            {
+                parameters.Add("includeInactivePatients", new FhirBoolean(includeInactivePatients.Value));
             }
 
             return parameters;

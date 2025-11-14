@@ -44,5 +44,33 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
             return bundle;
         }
+
+        public async ValueTask<Bundle> GetStructuredRecordStu3Async(string nhsNumber, Parameters parameters)
+        {
+            var options = new JsonSerializerOptions()
+                .ForFhir(ModelInfo.ModelInspector);
+
+            string url = $"{Stu3PatientRelativeUrl}/{nhsNumber}/$get-structured-record";
+            string jsonContent = JsonSerializer.Serialize(parameters, options);
+
+            using var content = new StringContent(
+                jsonContent,
+                Encoding.UTF8,
+                "application/fhir+json");
+
+            HttpResponseMessage response = await this.httpClient.PostAsync(url, content);
+            string responseContent = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException(
+                    $"Request failed with status code {response.StatusCode}. " +
+                    $"Response: {responseContent}");
+            }
+
+            var bundle = JsonSerializer.Deserialize<Bundle>(responseContent, options);
+
+            return bundle;
+        }
     }
 }

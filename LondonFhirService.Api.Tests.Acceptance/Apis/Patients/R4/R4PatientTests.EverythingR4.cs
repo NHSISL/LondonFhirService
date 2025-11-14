@@ -40,7 +40,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.R4
             string providerName = "DDS";
             string fhirVersion = "R4";
 
-            Parameters inputParameters = CreateRandomParameters(
+            Parameters inputParameters = CreateRandomEverythingParameters(
                 start: inputStart,
                 end: inputEnd,
                 typeFilter: inputTypeFilter,
