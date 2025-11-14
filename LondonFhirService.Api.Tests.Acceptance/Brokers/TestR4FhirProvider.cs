@@ -34,12 +34,13 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
             var providerMock = new Mock<IFhirProvider>(MockBehavior.Strict);
             var patientResourceMock = new Mock<IPatientResource>(MockBehavior.Strict);
-            providerMock.SetupGet(p => p.ProviderName).Returns(providerName);
-            providerMock.SetupGet(p => p.Capabilities).Returns(providerCapabilities);
-            providerMock.SetupGet(p => p.System).Returns($"http://test.system/{providerName}");
-            providerMock.SetupGet(p => p.Code).Returns(providerName);
-            providerMock.SetupGet(p => p.Source).Returns($"Test-{providerName}");
-            providerMock.SetupGet(p => p.Patients).Returns(patientResourceMock.Object);
+            providerMock.SetupGet(provider => provider.ProviderName).Returns(providerName);
+            providerMock.SetupGet(provider => provider.Capabilities).Returns(providerCapabilities);
+            providerMock.SetupGet(provider => provider.System).Returns($"http://test.system/{providerName}");
+            providerMock.SetupGet(provider => provider.Code).Returns(providerName);
+            providerMock.SetupGet(provider => provider.Source).Returns($"Test-{providerName}");
+            providerMock.SetupGet(provider => provider.FhirVersion).Returns("R4");
+            providerMock.SetupGet(provider => provider.Patients).Returns(patientResourceMock.Object);
 
             patientResourceMock.Setup(p => p.Everything(
                 It.IsAny<string>(),

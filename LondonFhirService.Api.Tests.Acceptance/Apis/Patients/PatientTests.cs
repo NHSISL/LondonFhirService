@@ -11,6 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
+using LondonFhirService.Core.Models.Foundations.Providers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
@@ -50,7 +51,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: new DateTime()).GetValue();
 
-        private static Parameters CreateRandomParameters(
+        private static Parameters CreateRandomEverythingParameters(
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
@@ -82,6 +83,31 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             if (count.HasValue)
             {
                 parameters.Add("_count", new Integer(count.Value));
+            }
+
+            return parameters;
+        }
+
+        private static Parameters CreateRandomGetStructuredRecordParameters(
+            DateTimeOffset? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null)
+        {
+            var parameters = new Parameters();
+
+            if (dateOfBirth.HasValue)
+            {
+                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth.Value));
+            }
+
+            if (demographicsOnly.HasValue)
+            {
+                parameters.Add("demographicsOnly", new FhirBoolean(demographicsOnly.Value));
+            }
+
+            if (includeInactivePatients.HasValue)
+            {
+                parameters.Add("includeInactivePatients", new FhirBoolean(includeInactivePatients.Value));
             }
 
             return parameters;
@@ -215,6 +241,42 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             return filler;
         }
 
+        private async Task<Provider> CreateRandomActiveProvider(
+            string providerName,
+            string fhirVersion,
+            DateTimeOffset dateTimeOffset)
+        {
+            Provider randomProvider = CreateActiveProviderFiller(providerName, fhirVersion, dateTimeOffset).Create();
+            Provider createdProvider = await SeedProviderAsync(randomProvider);
+
+            return createdProvider;
+        }
+
+        private static Filler<Provider> CreateActiveProviderFiller(
+            string providerName,
+            string fhirVersion,
+            DateTimeOffset dateTimeOffset)
+        {
+            var filler = new Filler<Provider>();
+
+            filler.Setup()
+                .OnType<DateTimeOffset>().Use(dateTimeOffset)
+                .OnType<DateTimeOffset?>().Use(dateTimeOffset)
+                .OnProperty(provider => provider.Name).Use(providerName)
+                .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
+                .OnProperty(provider => provider.IsActive).Use(true)
+                .OnProperty(provider => provider.IsPrimary).Use(true)
+                .OnProperty(provider => provider.IsForComparisonOnly).Use(false)
+
+                .OnProperty(provider => provider.ActiveFrom)
+                .Use(dateTimeOffset.AddDays(-30))
+
+                .OnProperty(provider => provider.ActiveTo)
+                .Use(dateTimeOffset.AddDays(30));
+
+            return filler;
+        }
+
         private async ValueTask<Consumer> SeedConsumerAsync(Consumer consumer)
         {
             using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
@@ -255,6 +317,16 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             }
         }
 
+        private async ValueTask<Provider> SeedProviderAsync(Provider provider)
+        {
+            using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
+            {
+                var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+
+                return await storageBroker.InsertProviderAsync(provider);
+            }
+        }
+
         private async ValueTask<Consumer> CleanupConsumerAsync(Consumer consumer)
         {
             using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
@@ -292,6 +364,16 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
                 var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
 
                 return await storageBroker.DeleteOdsDataAsync(odsData);
+            }
+        }
+
+        private async ValueTask<Provider> CleanupProviderAsync(Provider provider)
+        {
+            using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
+            {
+                var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+
+                return await storageBroker.DeleteProviderAsync(provider);
             }
         }
     }
