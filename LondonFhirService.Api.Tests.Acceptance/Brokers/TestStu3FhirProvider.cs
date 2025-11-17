@@ -32,13 +32,15 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 }
             };
 
+            var providerSource = $"Test-{providerName}";
+
             var providerMock = new Mock<IFhirProvider>(MockBehavior.Strict);
             var patientResourceMock = new Mock<IPatientResource>(MockBehavior.Strict);
             providerMock.SetupGet(p => p.ProviderName).Returns(providerName);
             providerMock.SetupGet(p => p.Capabilities).Returns(providerCapabilities);
             providerMock.SetupGet(p => p.System).Returns($"http://test.system/{providerName}");
             providerMock.SetupGet(p => p.Code).Returns(providerName);
-            providerMock.SetupGet(p => p.Source).Returns($"Test-{providerName}");
+            providerMock.SetupGet(p => p.Source).Returns(providerSource);
             providerMock.SetupGet(p => p.Patients).Returns(patientResourceMock.Object);
             providerMock.SetupGet(p => p.FhirVersion).Returns("STU3");
             providerMock.SetupGet(p => p.DisplayName).Returns(providerName);
@@ -56,11 +58,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 {
                     var bundle = new Bundle
                     {
-                        Type = Bundle.BundleType.Searchset,
+                        Type = Bundle.BundleType.Collection,
                         Meta = new Meta
                         {
                             LastUpdated = DateTimeOffset.UtcNow,
-                            //Source = providerName
                         },
                         Entry = new List<Bundle.EntryComponent>
                         {
@@ -69,10 +70,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                                 Resource = new Patient
                                 {
                                     Id = id,
-                                    //Meta = new Meta
-                                    //{
-                                    //    Source = providerName
-                                    //}
                                 }
                             }
                         }

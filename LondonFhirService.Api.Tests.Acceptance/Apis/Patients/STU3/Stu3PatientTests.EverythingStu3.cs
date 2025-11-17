@@ -65,7 +65,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
 
             // then
             actualBundle.Should().NotBeNull();
-            actualBundle.Type.Should().Be(Bundle.BundleType.Searchset);
+            actualBundle.Type.Should().Be(Bundle.BundleType.Collection);
             actualBundle.Entry.Should().NotBeNullOrEmpty();
             actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
             actualBundle.Meta.Should().NotBeNull();
