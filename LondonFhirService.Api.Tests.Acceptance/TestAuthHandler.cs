@@ -15,12 +15,12 @@ namespace LondonFhirService.Api.Tests.Acceptance
 {
     public class TestAuthHandler : AuthenticationHandler<CustomAuthenticationSchemeOptions>
     {
-        private static Guid securityOid = Guid.Parse("65b5ccfb-b501-4ad5-8dd7-2a33ff64eaa3");
-        private static string givenName = "TestGivenName";
-        private static string surname = "TesSurname";
-        private static string displayName = "TestDisplayName";
-        private static string email = "TestEmail@test.com";
-        private static string jobTitle = "TestJobTitle";
+        private static readonly Guid securityOid = Guid.Parse("65b5ccfb-b501-4ad5-8dd7-2a33ff64eaa3");
+        private static readonly string givenName = "TestGivenName";
+        private static readonly string surname = "TestSurname";
+        private static readonly string displayName = "TestDisplayName";
+        private static readonly string email = "TestEmail@test.com";
+        private static readonly string jobTitle = "TestJobTitle";
 
         public static string TestUserId =>
             securityOid.ToString();

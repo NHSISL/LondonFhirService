@@ -26,16 +26,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
             string userId = TestAuthHandler.TestUserId;
-            DateTimeOffset randomInputStart = now.AddDays(-1);
-            DateTimeOffset inputStart = randomInputStart;
-            DateTimeOffset randomInputEnd = now.AddDays(1);
-            DateTimeOffset inputEnd = randomInputEnd;
-            string randomInputTypeFilter = GetRandomString();
-            string inputTypeFilter = randomInputTypeFilter;
-            DateTimeOffset randomInputSince = now.AddDays(-1);
-            DateTimeOffset inputSince = randomInputSince;
-            int randomInputCount = GetRandomNumber();
-            int inputCount = randomInputCount;
             string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
             string fhirVersion = "STU3";
 
@@ -59,7 +49,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
 
             // then
             actualBundle.Should().NotBeNull();
-            //actualBundle.Type.Should().Be(Bundle.BundleType.Searchset);
             actualBundle.Type.Should().Be(Bundle.BundleType.Collection);
             actualBundle.Entry.Should().NotBeNullOrEmpty();
             actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
