@@ -69,10 +69,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             actualBundle.Entry.Should().NotBeNullOrEmpty();
             actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
             actualBundle.Meta.Should().NotBeNull();
+            actualBundle.Meta.Extension.Should().HaveCount(1);
             actualBundle.Entry[0].Resource.Should().BeOfType<Patient>();
             var patient = actualBundle.Entry[0].Resource as Patient;
             patient!.Id.Should().Be(inputId);
-            //patient.Meta.Should().NotBeNull();
             await CleanupPdsDataAsync(pdsData);
             await CleanupOdsDataAsync(odsData);
             await CleanupConsumerAccessAsync(consumerAccess);
