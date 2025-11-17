@@ -4,6 +4,7 @@
 
 extern alias FhirSTU3;
 using System;
+using System.Linq;
 using FluentAssertions;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
@@ -65,7 +66,11 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             actualBundle.Meta.Should().NotBeNull();
             actualBundle.Entry[0].Resource.Should().BeOfType<FhirSTU3::Hl7.Fhir.Model.Patient>();
             var patient = actualBundle.Entry[0].Resource as FhirSTU3::Hl7.Fhir.Model.Patient;
-            patient!.Id.Should().Be(inputId);
+
+            var nhsNumberIdentifier = patient!.Identifier
+                .FirstOrDefault(id => id.System == "https://fhir.hl7.org.uk/Id/nhs-number");
+
+            nhsNumberIdentifier.Value.Should().Be(inputId);
             patient.Meta.Should().NotBeNull();
             await CleanupPdsDataAsync(pdsData);
             await CleanupOdsDataAsync(odsData);
