@@ -16,14 +16,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
 
-namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.R4
 {
     [Collection(nameof(ApiTestCollection))]
-    public partial class PatientTests
+    public partial class R4PatientTests
     {
         private readonly ApiBroker apiBroker;
 
-        public PatientTests(ApiBroker apiBroker) =>
+        public R4PatientTests(ApiBroker apiBroker) =>
             this.apiBroker = apiBroker;
 
         private static int GetRandomNumber() =>

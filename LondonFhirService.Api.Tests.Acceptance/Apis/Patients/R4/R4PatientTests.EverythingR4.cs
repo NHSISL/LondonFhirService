@@ -2,7 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirSTU3;
+extern alias FhirR4;
 using System;
 using FluentAssertions;
 using Hl7.Fhir.Model;
@@ -11,15 +11,15 @@ using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
-using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
+using Patient = FhirR4::Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.R4
 {
-    public partial class PatientTests
+    public partial class R4PatientTests
     {
         [Fact]
-        public async Task ShouldGetPatientEverythingStu3Async()
+        public async Task ShouldGetPatientEverythingR4Async()
         {
             // given
             string nhsNumber = GenerateRandom10DigitNumber();
@@ -37,8 +37,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             DateTimeOffset inputSince = randomInputSince;
             int randomInputCount = GetRandomNumber();
             int inputCount = randomInputCount;
-            string providerName = "LDS";
-            string fhirVersion = "STU3";
+            string providerName = "DDS";
+            string fhirVersion = "R4";
 
             Parameters inputParameters = CreateRandomParameters(
                 start: inputStart,
@@ -61,7 +61,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
 
             // when
             Bundle actualBundle =
-                await this.apiBroker.EverythingStu3Async(inputId, inputParameters);
+                await this.apiBroker.EverythingR4Async(inputId, inputParameters);
 
             // then
             actualBundle.Should().NotBeNull();
@@ -69,10 +69,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
             actualBundle.Entry.Should().NotBeNullOrEmpty();
             actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
             actualBundle.Meta.Should().NotBeNull();
-            actualBundle.Meta.Extension.Should().HaveCount(1);
             actualBundle.Entry[0].Resource.Should().BeOfType<Patient>();
             var patient = actualBundle.Entry[0].Resource as Patient;
             patient!.Id.Should().Be(inputId);
+            patient.Meta.Should().NotBeNull();
             await CleanupPdsDataAsync(pdsData);
             await CleanupOdsDataAsync(odsData);
             await CleanupConsumerAccessAsync(consumerAccess);

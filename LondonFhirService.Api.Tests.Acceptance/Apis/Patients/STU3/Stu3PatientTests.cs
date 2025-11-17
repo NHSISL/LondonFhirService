@@ -5,7 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
-using LondonFhirService.Api.Tests.Integration.Brokers;
+using LondonFhirService.Api.Tests.Acceptance.Brokers;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Consumers;
@@ -15,21 +15,16 @@ using LondonFhirService.Core.Models.Foundations.Providers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
-using Xunit.Abstractions;
 
-namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
 {
     [Collection(nameof(ApiTestCollection))]
-    public partial class PatientTests
+    public partial class Stu3PatientTests
     {
         private readonly ApiBroker apiBroker;
-        private readonly ITestOutputHelper testOutputHelper;
 
-        public PatientTests(ApiBroker apiBroker, ITestOutputHelper testOutputHelper)
-        {
+        public Stu3PatientTests(ApiBroker apiBroker) =>
             this.apiBroker = apiBroker;
-            this.testOutputHelper = testOutputHelper;
-        }
 
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();
@@ -91,42 +86,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             }
 
             return parameters;
-        }
-
-        private async Task<Provider> CreateRandomActiveProvider(
-            string providerName,
-            string fhirVersion,
-            DateTimeOffset dateTimeOffset)
-        {
-            Provider randomProvider = CreateActiveProviderFiller(providerName, fhirVersion, dateTimeOffset).Create();
-            Provider createdProvider = await SeedProviderAsync(randomProvider);
-
-            return createdProvider;
-        }
-
-        private static Filler<Provider> CreateActiveProviderFiller(
-            string providerName,
-            string fhirVersion,
-            DateTimeOffset dateTimeOffset)
-        {
-            var filler = new Filler<Provider>();
-
-            filler.Setup()
-                .OnType<DateTimeOffset>().Use(dateTimeOffset)
-                .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                .OnProperty(provider => provider.Name).Use(providerName)
-                .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
-                .OnProperty(provider => provider.IsActive).Use(true)
-                .OnProperty(provider => provider.IsPrimary).Use(true)
-                .OnProperty(provider => provider.IsForComparisonOnly).Use(false)
-
-                .OnProperty(provider => provider.ActiveFrom)
-                    .Use(dateTimeOffset.AddDays(-30))
-
-                .OnProperty(provider => provider.ActiveTo)
-                    .Use(dateTimeOffset.AddDays(30));
-
-            return filler;
         }
 
         private async Task<Consumer> CreateRandomConsumer(DateTimeOffset dateTimeOffset, string userId = "")
@@ -252,6 +211,42 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
                     .Use(dateTimeOffset.AddDays(-30))
 
                 .OnProperty(pdsData => pdsData.RelationshipWithOrganisationEffectiveToDate)
+                    .Use(dateTimeOffset.AddDays(30));
+
+            return filler;
+        }
+
+        private async Task<Provider> CreateRandomActiveProvider(
+            string providerName,
+            string fhirVersion,
+            DateTimeOffset dateTimeOffset)
+        {
+            Provider randomProvider = CreateActiveProviderFiller(providerName, fhirVersion, dateTimeOffset).Create();
+            Provider createdProvider = await SeedProviderAsync(randomProvider);
+
+            return createdProvider;
+        }
+
+        private static Filler<Provider> CreateActiveProviderFiller(
+            string providerName,
+            string fhirVersion,
+            DateTimeOffset dateTimeOffset)
+        {
+            var filler = new Filler<Provider>();
+
+            filler.Setup()
+                .OnType<DateTimeOffset>().Use(dateTimeOffset)
+                .OnType<DateTimeOffset?>().Use(dateTimeOffset)
+                .OnProperty(provider => provider.Name).Use(providerName)
+                .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
+                .OnProperty(provider => provider.IsActive).Use(true)
+                .OnProperty(provider => provider.IsPrimary).Use(true)
+                .OnProperty(provider => provider.IsForComparisonOnly).Use(false)
+
+                .OnProperty(provider => provider.ActiveFrom)
+                    .Use(dateTimeOffset.AddDays(-30))
+
+                .OnProperty(provider => provider.ActiveTo)
                     .Use(dateTimeOffset.AddDays(30));
 
             return filler;

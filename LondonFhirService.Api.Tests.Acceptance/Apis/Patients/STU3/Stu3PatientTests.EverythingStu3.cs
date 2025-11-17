@@ -4,7 +4,6 @@
 
 extern alias FhirSTU3;
 using System;
-using System.Linq;
 using FluentAssertions;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
@@ -12,17 +11,19 @@ using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
+using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
 {
-    public partial class PatientTests
+    public partial class Stu3PatientTests
     {
         [Fact]
         public async Task ShouldGetPatientEverythingStu3Async()
         {
             // given
-            string inputId = "9435797881";
+            string nhsNumber = GenerateRandom10DigitNumber();
+            string inputId = nhsNumber;
             string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
             string userId = TestAuthHandler.TestUserId;
@@ -36,12 +37,16 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             DateTimeOffset inputSince = randomInputSince;
             int randomInputCount = GetRandomNumber();
             int inputCount = randomInputCount;
-            string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
+            string providerName = "LDS";
             string fhirVersion = "STU3";
 
-            Parameters inputParameters = null;
+            Parameters inputParameters = CreateRandomParameters(
+                start: inputStart,
+                end: inputEnd,
+                typeFilter: inputTypeFilter,
+                since: inputSince,
+                count: inputCount);
 
-            Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
             Consumer consumer = await CreateRandomConsumer(now, userId);
             OdsData odsData = await CreateRandomOdsData(orgCode, now);
 
@@ -51,7 +56,8 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
                 now,
                 userId);
 
-            PdsData pdsData = await CreateRandomPdsData(inputId, orgCode, now);
+            PdsData pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now);
+            Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
 
             // when
             Bundle actualBundle =
@@ -59,19 +65,14 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
 
             // then
             actualBundle.Should().NotBeNull();
-            //actualBundle.Type.Should().Be(Bundle.BundleType.Searchset);
-            actualBundle.Type.Should().Be(Bundle.BundleType.Collection);
+            actualBundle.Type.Should().Be(Bundle.BundleType.Searchset);
             actualBundle.Entry.Should().NotBeNullOrEmpty();
             actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
             actualBundle.Meta.Should().NotBeNull();
-            actualBundle.Entry[0].Resource.Should().BeOfType<FhirSTU3::Hl7.Fhir.Model.Patient>();
-            var patient = actualBundle.Entry[0].Resource as FhirSTU3::Hl7.Fhir.Model.Patient;
-
-            var nhsNumberIdentifier = patient!.Identifier
-                .FirstOrDefault(id => id.System == "https://fhir.hl7.org.uk/Id/nhs-number");
-
-            nhsNumberIdentifier.Value.Should().Be(inputId);
-            patient.Meta.Should().NotBeNull();
+            actualBundle.Meta.Extension.Should().HaveCount(1);
+            actualBundle.Entry[0].Resource.Should().BeOfType<Patient>();
+            var patient = actualBundle.Entry[0].Resource as Patient;
+            patient!.Id.Should().Be(inputId);
             await CleanupPdsDataAsync(pdsData);
             await CleanupOdsDataAsync(odsData);
             await CleanupConsumerAccessAsync(consumerAccess);

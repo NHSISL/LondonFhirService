@@ -14,9 +14,9 @@ using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
+namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
 {
-    public partial class PatientTests
+    public partial class Stu3PatientTests
     {
         [Fact]
         public async Task ShouldGetStructuredRecordStu3Async()
