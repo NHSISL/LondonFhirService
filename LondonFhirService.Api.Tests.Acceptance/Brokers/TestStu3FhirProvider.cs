@@ -49,7 +49,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             providerMock.SetupGet(p => p.FhirVersion).Returns("STU3");
             providerMock.SetupGet(p => p.DisplayName).Returns(providerName);
 
-            patientResourceMock.Setup(patientResource => patientResource.Everything(
+            patientResourceMock.Setup(p => p.Everything(
                 It.IsAny<string>(),
                 It.IsAny<DateTimeOffset?>(),
                 It.IsAny<DateTimeOffset?>(),
@@ -57,10 +57,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 It.IsAny<DateTimeOffset?>(),
                 It.IsAny<int?>(),
                 It.IsAny<CancellationToken>()))
-                .ReturnsAsync(
-                    (string id, DateTimeOffset? start, DateTimeOffset? end,
-                        string typeFilter, DateTimeOffset? since, int? count,
-                        CancellationToken cancellationToken) =>
+                .ReturnsAsync((string id, DateTimeOffset? start, DateTimeOffset? end, string typeFilter,
+                    DateTimeOffset? since, int? count, CancellationToken ct) =>
+                {
+                    var bundle = new Bundle
                     {
                         Type = Bundle.BundleType.Collection,
                         Meta = new Meta
@@ -71,20 +71,16 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                         {
                             new Bundle.EntryComponent
                             {
-                                LastUpdated = DateTimeOffset.UtcNow
-                            },
-
-                            Entry = new List<Bundle.EntryComponent>
-                            {
-                                new Bundle.EntryComponent
+                                Resource = new Patient
                                 {
                                     Id = id,
                                 }
                             }
-                        };
+                        }
+                    };
 
-                        return bundle;
-                    });
+                    return bundle;
+                });
 
             patientResourceMock.Setup(patientResource => patientResource.GetStructuredRecord(
                 It.IsAny<string>(),

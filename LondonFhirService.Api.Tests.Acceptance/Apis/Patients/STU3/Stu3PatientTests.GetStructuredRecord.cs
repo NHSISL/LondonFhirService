@@ -14,11 +14,9 @@ using LondonFhirService.Core.Models.Foundations.Providers;
 using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
 {
-    extern alias FhirSTU3;
-
-    public partial class PatientTests
+    public partial class Stu3PatientTests
     {
         [Fact]
         public async Task ShouldGetPatientStructuredRecordStu3Async()
