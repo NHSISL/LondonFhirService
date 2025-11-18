@@ -61,7 +61,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                         provider.IsPrimary &&
                         provider.IsActive &&
                         provider.ActiveFrom <= now &&
-                        provider.ActiveTo >= now)
+                        provider.ActiveTo >= now &&
+                        provider.FhirVersion == "R4")
                     .ToList();
 
                 ValidatePrimaryProviders(primaryProviders);
@@ -72,6 +73,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                         provider.IsActive &&
                         provider.ActiveFrom <= now &&
                         provider.ActiveTo >= now &&
+                        provider.FhirVersion == "R4" &&
                         !provider.IsForComparisonOnly)
                     .Select(provider => provider.Name)
                     .ToList();

@@ -5,6 +5,7 @@
 extern alias FhirR4;
 extern alias FhirSTU3;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using Attrify.Extensions;
@@ -23,6 +24,7 @@ using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Coordinations.Patients.R4;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
@@ -39,6 +41,8 @@ using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.Patients.R4;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
+using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Models.Brokers.DdsHttp;
+using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.OData;
@@ -201,13 +205,22 @@ namespace LondonFhirService.Api
             PatientServiceConfig patientServiceConfig = configuration.GetSection("PatientServiceConfig")
                 .Get<PatientServiceConfig>();
 
+            DdsConfigurations ddsConfig = configuration.GetSection("DdsConfigurations")
+                .Get<DdsConfigurations>();
+
             services.AddSingleton(patientServiceConfig);
+            services.AddSingleton(ddsConfig);
+
+            var stu3Providers = new List<STU3FhirAbstractions.IFhirProvider>
+            {
+                new DdsStu3Provider(ddsConfig)
+            };
 
             services.AddTransient<R4FhirAbstractions.IFhirAbstractionProvider,
                 R4FhirAbstractions.FhirAbstractionProvider>();
 
-            services.AddTransient<STU3FhirAbstractions.IFhirAbstractionProvider,
-                STU3FhirAbstractions.FhirAbstractionProvider>();
+            services.AddSingleton<STU3FhirAbstractions.IFhirAbstractionProvider>(
+                new STU3FhirAbstractions.FhirAbstractionProvider(stu3Providers));
 
             bool fakeCaptchaProviderMode = configuration
                 .GetSection("FakeCaptchaProviderMode").Get<bool>();
@@ -275,6 +288,8 @@ namespace LondonFhirService.Api
         }
 
         private static void AddClients(IServiceCollection services)
-        { }
+        {
+            services.AddTransient<IAuditClient, AuditClient>();
+        }
     }
 }

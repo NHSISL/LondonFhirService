@@ -24,6 +24,7 @@
 		<PackageReference Include="ISL.Providers.Captcha.GoogleReCaptcha" Version="1.0.0.3" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.R4.Abstractions" Version="0.5.0" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.Abstractions" Version="0.4.0" />
+		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService" Version="0.1.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.HierarchyId" Version="10.0.0" />

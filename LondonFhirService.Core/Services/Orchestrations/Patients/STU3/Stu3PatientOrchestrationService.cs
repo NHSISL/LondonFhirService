@@ -61,7 +61,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         provider.IsPrimary &&
                         provider.IsActive &&
                         provider.ActiveFrom <= now &&
-                        provider.ActiveTo >= now)
+                        provider.ActiveTo >= now &&
+                        provider.FhirVersion == "STU3")
                     .ToList();
 
                 ValidatePrimaryProviders(primaryProviders);
@@ -72,6 +73,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         provider.IsActive &&
                         provider.ActiveFrom <= now &&
                         provider.ActiveTo >= now &&
+                        provider.FhirVersion == "STU3" &&
                         !provider.IsForComparisonOnly)
                     .Select(provider => provider.Name)
                     .ToList();
@@ -117,7 +119,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     provider.IsPrimary &&
                     provider.IsActive &&
                     provider.ActiveFrom <= now &&
-                    provider.ActiveTo >= now)
+                    provider.ActiveTo >= now &&
+                    provider.FhirVersion == "STU3")
                 .ToList();
 
             ValidatePrimaryProviders(primaryProviders);
@@ -128,6 +131,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     provider.IsActive &&
                     provider.ActiveFrom <= now &&
                     provider.ActiveTo >= now &&
+                    provider.FhirVersion == "STU3" &&
                     !provider.IsForComparisonOnly)
                 .Select(provider => provider.Name)
                 .ToList();

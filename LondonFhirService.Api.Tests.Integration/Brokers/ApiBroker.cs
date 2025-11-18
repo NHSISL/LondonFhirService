@@ -3,20 +3,21 @@
 // ---------------------------------------------------------
 
 using System.Net.Http;
-using Microsoft.AspNetCore.Mvc.Testing;
+using LondonFhirService.Api.Tests.Integration.Apis.Patient;
 using RESTFulSense.Clients;
 
 namespace LondonFhirService.Api.Tests.Integration.Brokers
 {
     public partial class ApiBroker
     {
-        private readonly WebApplicationFactory<Program> webApplicationFactory;
+        private readonly TestWebApplicationFactory<Program> webApplicationFactory;
         private readonly HttpClient httpClient;
         private readonly IRESTFulApiFactoryClient apiFactoryClient;
+        internal TestWebApplicationFactory<Program> WebApplicationFactory => webApplicationFactory;
 
         public ApiBroker()
         {
-            webApplicationFactory = new WebApplicationFactory<Program>();
+            webApplicationFactory = new TestWebApplicationFactory<Program>();
             httpClient = webApplicationFactory.CreateClient();
             apiFactoryClient = new RESTFulApiFactoryClient(httpClient);
         }
