@@ -13,7 +13,6 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
         private readonly TestWebApplicationFactory<Program> webApplicationFactory;
         private readonly HttpClient httpClient;
         private readonly IRESTFulApiFactoryClient apiFactoryClient;
-
         internal TestWebApplicationFactory<Program> WebApplicationFactory => webApplicationFactory;
 
         public ApiBroker()
