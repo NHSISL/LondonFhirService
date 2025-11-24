@@ -287,7 +287,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         CancellationToken token) =>
                          {
                              await Task.Delay(Timeout.Infinite, token);
-                             return default(Bundle);
+                             return default(string);
                          });
 
             // when
@@ -311,7 +311,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             actualResult.Exception.InnerException.Should().BeOfType<TaskCanceledException>();
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingAsync(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingSerialisedAsync(
                 inputId,
                 null,
                 null,
