@@ -157,7 +157,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             (string Json, Exception Exception) expectedResult = (null, operationCanceledException);
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
+            this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordSerialisedAsync(
                 inputId,
                 null,
                 null,
