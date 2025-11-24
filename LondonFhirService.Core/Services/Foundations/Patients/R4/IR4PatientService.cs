@@ -50,7 +50,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
         /// A <see cref="Bundle"/> representing the aggregated patient record,
         /// as returned by the FHIR <c>$everything</c> operation.
         /// </returns>
-        ValueTask<List<Bundle>> Everything(
+        ValueTask<List<Bundle>> EverythingAsync(
               List<string> providerNames,
               string id,
               DateTimeOffset? start = null,

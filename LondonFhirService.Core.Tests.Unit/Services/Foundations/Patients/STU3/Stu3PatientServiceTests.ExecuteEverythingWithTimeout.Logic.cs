@@ -49,7 +49,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             (Bundle Bundle, Exception Exception) expectedResult = (expectedBundle, null);
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,
@@ -74,7 +74,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,
@@ -136,7 +136,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,
@@ -161,7 +161,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,
@@ -186,7 +186,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,
@@ -211,7 +211,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, exception);
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,
@@ -236,7 +236,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,
@@ -264,7 +264,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,
@@ -305,7 +305,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             actualResult.Exception.InnerException.Should().BeOfType<TaskCanceledException>();
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.Everything(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingAsync(
                 inputId,
                 null,
                 null,

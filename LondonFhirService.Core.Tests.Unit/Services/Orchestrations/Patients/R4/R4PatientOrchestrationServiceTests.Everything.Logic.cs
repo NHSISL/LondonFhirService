@@ -55,7 +55,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             };
 
             this.patientServiceMock.Setup(service =>
-                service.Everything(
+                service.EverythingAsync(
                     activeProviderNames,
                     inputId,
                     inputStart,
@@ -90,7 +90,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                     Times.Once);
 
             this.patientServiceMock.Verify(service =>
-                service.Everything(
+                service.EverythingAsync(
                     activeProviderNames,
                     inputId,
                     inputStart,

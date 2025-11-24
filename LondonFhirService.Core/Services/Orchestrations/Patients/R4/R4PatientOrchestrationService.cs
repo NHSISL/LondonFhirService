@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                     .Select(provider => provider.Name)
                     .ToList();
 
-                List<Bundle> bundles = await this.patientService.Everything(
+                List<Bundle> bundles = await this.patientService.EverythingAsync(
                     providerNames: activeProviderNames,
                     id: id,
                     cancellationToken: cancellationToken,

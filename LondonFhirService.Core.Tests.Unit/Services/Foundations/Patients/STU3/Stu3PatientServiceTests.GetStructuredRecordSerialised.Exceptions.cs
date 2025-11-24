@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
-using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
@@ -22,7 +21,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
     {
         [Theory]
         [MemberData(nameof(DependencyValidationExceptions))]
-        public async Task ShouldThrowDependencyValidationOnEverythingAndLogItAsync(
+        public async Task ShouldThrowDependencyValidationOnGetStructuredRecordSerialisedAndLogItAsync(
             Xeption dependencyValidationException)
         {
             // given
@@ -32,8 +31,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
-            string randomId = GetRandomString();
-            string inputId = randomId;
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
 
             var expectedPatientServiceDependencyValidationException =
                 new PatientServiceDependencyValidationException(
@@ -49,44 +48,40 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<int?>()))
+                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool?>(),
+                    It.IsAny<bool?>()))
                 .ThrowsAsync(dependencyValidationException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.EverythingAsync(
+            ValueTask<List<string>> getStructuredRecordTask =
+                mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
-                    id: inputId,
+                    nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
             PatientServiceDependencyValidationException actualPatientServiceDependencyValidationException =
                 await Assert.ThrowsAsync<PatientServiceDependencyValidationException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: getStructuredRecordTask.AsTask);
 
             // then
             actualPatientServiceDependencyValidationException.Should()
                 .BeEquivalentTo(expectedPatientServiceDependencyValidationException);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<int?>()),
+                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool?>(),
+                    It.IsAny<bool?>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -100,7 +95,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
         [Theory]
         [MemberData(nameof(DependencyExceptions))]
-        public async Task ShouldThrowDependencyOnEverythingAndLogItAsync(
+        public async Task ShouldThrowDependencyOnGetStructuredRecordSerialisedAndLogItAsync(
             Xeption dependencyException)
         {
             // given
@@ -110,8 +105,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
-            string randomId = GetRandomString();
-            string inputId = randomId;
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
 
             var expectedPatientServiceDependencyException =
                 new PatientServiceDependencyException(
@@ -127,44 +122,40 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<int?>()))
+                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool?>(),
+                    It.IsAny<bool?>()))
                 .ThrowsAsync(dependencyException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.EverythingAsync(
+            ValueTask<List<string>> getStructuredRecordTask =
+                mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
-                    id: inputId,
+                    nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
             PatientServiceDependencyException actualPatientServiceDependencyException =
                 await Assert.ThrowsAsync<PatientServiceDependencyException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: getStructuredRecordTask.AsTask);
 
             // then
             actualPatientServiceDependencyException.Should()
                 .BeEquivalentTo(expectedPatientServiceDependencyException);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<int?>()),
+                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool?>(),
+                    It.IsAny<bool?>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -177,7 +168,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnEverythingIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnGetStructuredRecordSerialisedIfServiceErrorOccursAndLogItAsync()
         {
             // given
             List<string> randomProviderNames = new List<string>
@@ -186,9 +177,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
-            string randomId = GetRandomString();
-            string inputId = randomId;
-
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
             var serviceException = new Exception();
 
             var failedPatientServiceException =
@@ -211,44 +201,40 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<int?>()))
+                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool?>(),
+                    It.IsAny<bool?>()))
                 .ThrowsAsync(serviceException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.EverythingAsync(
+            ValueTask<List<string>> getStructuredRecordTask =
+                mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
-                    id: inputId,
+                    nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
             PatientServiceException actualPatientServiceException =
                 await Assert.ThrowsAsync<PatientServiceException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: getStructuredRecordTask.AsTask);
 
             // then
             actualPatientServiceException.Should()
                 .BeEquivalentTo(expectedPatientServiceException);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<string>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<int?>()),
+                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool?>(),
+                    It.IsAny<bool?>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>

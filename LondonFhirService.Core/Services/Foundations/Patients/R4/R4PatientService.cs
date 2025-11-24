@@ -33,7 +33,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
             this.patientServiceConfig = patientServiceConfig;
         }
 
-        public ValueTask<List<Bundle>> Everything(
+        public ValueTask<List<Bundle>> EverythingAsync(
             List<string> providerNames,
             string id,
             DateTimeOffset? start = null,
@@ -138,7 +138,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
 
             try
             {
-                var bundle = await provider.Patients.Everything(
+                var bundle = await provider.Patients.EverythingAsync(
                     id,
                     start,
                     end,

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
@@ -17,14 +18,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
     public partial class Stu3PatientServiceTests
     {
         [Fact]
-        public async Task ShouldExecuteGetStructuredRecordWithTimeout()
+        public async Task ShouldExecuteEverythingSerialisedWithTimeout()
         {
             // given
             Bundle randomBundle = CreateRandomBundle();
             Bundle outputBundle = randomBundle.DeepClone();
             Bundle expectedBundle = outputBundle.DeepClone();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             var fhirProvider = this.ddsFhirProviderMock.Object;
             var fhirProviderCopy = this.ddsFhirProviderMock.Object.DeepClone();
 
@@ -43,27 +44,33 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 {
                     System = fhirProviderCopy.System,
                     Code = fhirProviderCopy.Code,
-                    Display = fhirProviderCopy.ProviderName,
-                    Version = fhirProviderCopy.FhirVersion
+                    Display = fhirProviderCopy.ProviderName
                 }
             };
 
-            (Bundle Bundle, Exception Exception) expectedResult = (expectedBundle, null);
+            string rawOutputBundle = this.fhirJsonSerializer.SerializeToString(expectedBundle);
+            string rawExpectedBundle = rawOutputBundle;
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
-                inputNhsNumber,
+            (string Json, Exception Exception) expectedResult = (rawExpectedBundle, null);
+
+            this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingSerialisedAsync(
+                inputId,
+                null,
+                null,
                 null,
                 null,
                 null,
                 It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(outputBundle);
+                    .ReturnsAsync(rawOutputBundle);
 
             // when
-            (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+            (string Json, Exception Exception) actualResult =
+                await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     default,
-                    inputNhsNumber,
+                    inputId,
+                    null,
+                    null,
                     null,
                     null,
                     null);
@@ -71,33 +78,31 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
-                inputNhsNumber,
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingSerialisedAsync(
+                inputId,
+                null,
+                null,
                 null,
                 null,
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            this.ddsFhirProviderMock.Verify(provider =>
-                provider.System,
-                    Times.Once);
+            //this.ddsFhirProviderMock.Verify(provider =>
+            //    provider.System,
+            //        Times.Once);
 
-            this.ddsFhirProviderMock.Verify(provider =>
-                provider.Code,
-                    Times.Once);
+            //this.ddsFhirProviderMock.Verify(provider =>
+            //    provider.Code,
+            //        Times.Once);
 
-            this.ddsFhirProviderMock.Verify(provider =>
-                provider.ProviderName,
-                    Times.Once);
+            //this.ddsFhirProviderMock.Verify(provider =>
+            //    provider.ProviderName,
+            //        Times.Once);
 
-            this.ddsFhirProviderMock.Verify(provider =>
-                provider.Source,
-                    Times.Once);
-
-            this.ddsFhirProviderMock.Verify(provider =>
-                provider.FhirVersion,
-                    Times.Once);
+            //this.ddsFhirProviderMock.Verify(provider =>
+            //    provider.Source,
+            //        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
@@ -105,12 +110,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
         [Fact]
         public async Task
-            ShouldReturnNullAndOperationCancelledExceptionOnExecuteGetStructuredRecordWithTimeoutWhenTokenCancelled()
+            ShouldReturnNullAndOperationCancelledExceptionOnExecuteEverythingSerialisedWithTimeoutWhenTokenCancelled()
         {
             // given
             Bundle randomBundle = CreateRandomBundle();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             CancellationToken alreadyCanceledToken = new CancellationToken(true);
 
             OperationCanceledException operationCanceledException =
@@ -118,14 +123,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
-            (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
+            (string Json, Exception Exception) expectedResult = (null, operationCanceledException);
 
             // when
-            (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+            (string Json, Exception Exception) actualResult =
+                await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     alreadyCanceledToken,
-                    inputNhsNumber,
+                    inputId,
+                    null,
+                    null,
                     null,
                     null,
                     null);
@@ -133,8 +140,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
-                inputNhsNumber,
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingSerialisedAsync(
+                inputId,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -147,7 +156,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
         [Fact]
         public async Task
-            ShouldReturnNullAndOperationCancelledExceptionOnExecuteGetStructuredRecordWithTimeoutWhenCancelled()
+            ShouldReturnNullAndOperationCancelledExceptionOnExecuteEverythingSerialisedWithTimeoutWhenCancelled()
         {
             // given
             string randomId = GetRandomString();
@@ -155,10 +164,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             OperationCanceledException operationCanceledException = new OperationCanceledException();
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
-            (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
+            (string Json, Exception Exception) expectedResult = (null, operationCanceledException);
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
+            this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingSerialisedAsync(
                 inputId,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -166,11 +177,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     .ThrowsAsync(operationCanceledException);
 
             // when
-            (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+            (string Json, Exception Exception) actualResult =
+                await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     default,
                     inputId,
+                    null,
+                    null,
                     null,
                     null,
                     null);
@@ -178,8 +191,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingSerialisedAsync(
                 inputId,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -191,7 +206,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         [Fact]
-        public async Task ShouldReturnNullAndExceptionOnExecuteGetStructuredRecordWithTimeoutWhenException()
+        public async Task ShouldReturnNullAndExceptionOnExecuteEverythingSerialisedWithTimeoutWhenException()
         {
             // given
             string randomId = GetRandomString();
@@ -199,10 +214,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Exception exception = new Exception(GetRandomString());
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
-            (Bundle Bundle, Exception Exception) expectedResult = (null, exception);
+            (string Json, Exception Exception) expectedResult = (null, exception);
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
+            this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingSerialisedAsync(
                 inputId,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -210,11 +227,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     .ThrowsAsync(exception);
 
             // when
-            (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+            (string Json, Exception Exception) actualResult =
+                await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     default,
                     inputId,
+                    null,
+                    null,
                     null,
                     null,
                     null);
@@ -222,8 +241,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingSerialisedAsync(
                 inputId,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -236,7 +257,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
         [Fact]
         public async Task
-            ShouldReturnNullAndTimeoutExceptionOnExecuteGetStructuredRecordWithTimeoutWhenEverythingTimesOut()
+            ShouldReturnNullAndTimeoutExceptionOnExecuteEverythingSerialisedWithTimeoutWhenEverythingTimesOut()
         {
             // given
             var timeoutMilliseconds = 1;
@@ -249,17 +270,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
-            this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
+            this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingSerialisedAsync(
                 inputId,
                 null,
                 null,
                 null,
+                null,
+                null,
                 It.IsAny<CancellationToken>()))
-                     .Returns(async
-                        (string nhsNumber,
-                        DateTime? dateOfBirth,
-                        bool? demographicsOnly,
-                        bool? includeInactivePatients,
+                     .Returns(async (string id,
+                        DateTimeOffset? start,
+                        DateTimeOffset? end,
+                        string typeFiler,
+                        DateTimeOffset? since,
+                        int? count,
                         CancellationToken token) =>
                          {
                              await Task.Delay(Timeout.Infinite, token);
@@ -267,17 +291,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                          });
 
             // when
-            (Bundle Bundle, Exception Exception) actualResult =
-                await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+            (string Json, Exception Exception) actualResult =
+                await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     default,
                     inputId,
                     null,
                     null,
+                    null,
+                    null,
                     null);
 
             // then
-            actualResult.Bundle.Should().BeNull();
+            actualResult.Json.Should().BeNull();
             actualResult.Exception.Should().BeOfType<TimeoutException>();
 
             actualResult.Exception.Message.Should().Be(
@@ -285,8 +311,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             actualResult.Exception.InnerException.Should().BeOfType<TaskCanceledException>();
 
-            this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
+            this.ddsFhirProviderMock.Verify(p => p.Patients.EverythingAsync(
                 inputId,
+                null,
+                null,
                 null,
                 null,
                 null,

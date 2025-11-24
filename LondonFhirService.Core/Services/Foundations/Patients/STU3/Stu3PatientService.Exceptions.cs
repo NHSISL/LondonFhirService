@@ -15,6 +15,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
     public partial class Stu3PatientService
     {
         private delegate ValueTask<List<Bundle>> ReturningBundleListFunction();
+        private delegate ValueTask<List<string>> ReturningStringListFunction();
 
         private async ValueTask<List<Bundle>> TryCatch(
             ReturningBundleListFunction returningBundleListFunction)
@@ -22,6 +23,44 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             try
             {
                 return await returningBundleListFunction();
+            }
+            catch (InvalidArgumentsPatientServiceException invalidArgumentsPatientServiceException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(invalidArgumentsPatientServiceException);
+            }
+            catch (Exception exception)
+                when (exception is IFhirValidationException)
+            {
+                throw await CreateAndLogDependencyValidationException(exception as Xeption);
+            }
+            catch (Exception exception)
+               when (exception is IFhirDependencyException)
+            {
+                throw await CreateAndLogDependencyException(exception as Xeption);
+            }
+            catch (Exception exception)
+               when (exception is IFhirServiceException)
+            {
+                throw await CreateAndLogDependencyException(exception as Xeption);
+            }
+            catch (Exception exception)
+            {
+                var failedPatientServiceException =
+                    new FailedPatientServiceException(
+                        message: "Failed patient service error occurred, please contact support.",
+                        innerException: exception,
+                        data: exception.Data);
+
+                throw await CreateAndLogServiceExceptionAsync(failedPatientServiceException);
+            }
+        }
+
+        private async ValueTask<List<string>> TryCatch(
+            ReturningStringListFunction returningStringListFunction)
+        {
+            try
+            {
+                return await returningStringListFunction();
             }
             catch (InvalidArgumentsPatientServiceException invalidArgumentsPatientServiceException)
             {

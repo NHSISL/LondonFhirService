@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     .Select(provider => provider.Name)
                     .ToList();
 
-                List<Bundle> bundles = await this.patientService.Everything(
+                List<Bundle> bundles = await this.patientService.EverythingAsync(
                     providerNames: activeProviderNames,
                     id: id,
                     cancellationToken: cancellationToken,
@@ -136,7 +136,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 .Select(provider => provider.Name)
                 .ToList();
 
-            List<Bundle> bundles = await this.patientService.GetStructuredRecord(
+            List<Bundle> bundles = await this.patientService.GetStructuredRecordAsync(
                 providerNames: activeProviderNames,
                 nhsNumber,
                 dateOfBirth,

@@ -53,7 +53,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             };
 
             this.patientServiceMock.Setup(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     activeProviderNames,
                     inputNhsNumber,
                     inputDateOfBirth,
@@ -84,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     Times.Once);
 
             this.patientServiceMock.Verify(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     activeProviderNames,
                     inputNhsNumber,
                     inputDateOfBirth,

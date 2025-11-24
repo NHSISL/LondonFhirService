@@ -23,11 +23,15 @@ jobs:
     - name: Setup .Net
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 9.0.100
+        dotnet-version: 10.0.100
     - name: Restore
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - name: Install EF Tools
+      run: dotnet tool install --global dotnet-ef
+    - name: Deploy Database
+      run: dotnet ef database update --project LondonFhirService.Core/LondonFhirService.Core.csproj --startup-project LondonFhirService.Core/LondonFhirService.Core.csproj
     - name: Run Unit Tests
       run: >-
         $projects = Get-ChildItem -Path . -Filter "*Tests.Unit*.csproj" -Recurse
