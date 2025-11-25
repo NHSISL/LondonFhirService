@@ -22,22 +22,33 @@ using FhirStu3Abstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
-    public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
+    // Non-generic – we always host Program
+    public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            // Make sure the app runs in a predictable test environment
+            builder.UseEnvironment("Test");
+
             builder.ConfigureAppConfiguration((context, config) =>
             {
                 var testProjectPath =
                     Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
 
+                // Optional: extra test-specific JSON (if you have Acceptance settings)
                 config
-                    .AddJsonFile("appsettings.json", optional: true)
-                    .AddJsonFile("appsettings.Development.json", optional: true)
-                    .AddJsonFile("appsettings.Acceptance.json", optional: true)
-                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.json"), optional: true)
-                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.Development.json"), optional: true)
-                    .AddEnvironmentVariables();
+                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.json"), optional: true);
+
+                // Strong overrides: these values win over everything else
+                var overrides = new Dictionary<string, string?>
+                {
+                    // TODO: put your real keys here
+                    // ["AzureAd:TenantId"] = "TEST-TENANT",
+                    // ["AzureAd:Instance"] = "https://login.microsoftonline.com/",
+                    // ["AzureAd:Scopes"]   = "api://test/.default"
+                };
+
+                config.AddInMemoryCollection(overrides);
             });
 
             builder.ConfigureServices((context, services) =>

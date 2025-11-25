@@ -12,17 +12,17 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
     public partial class ApiBroker
     {
-        private readonly TestWebApplicationFactory<Program> webApplicationFactory;
+        private readonly TestWebApplicationFactory webApplicationFactory;
         private readonly HttpClient httpClient;
         private readonly IRESTFulApiFactoryClient apiFactoryClient;
         internal readonly InvisibleApiKey invisibleApiKey;
         internal readonly IConfiguration configuration;
 
-        internal TestWebApplicationFactory<Program> WebApplicationFactory => webApplicationFactory;
+        internal TestWebApplicationFactory WebApplicationFactory => webApplicationFactory;
 
         public ApiBroker()
         {
-            webApplicationFactory = new TestWebApplicationFactory<Program>();
+            webApplicationFactory = new TestWebApplicationFactory();
             invisibleApiKey = webApplicationFactory.Services.GetService<InvisibleApiKey>();
             httpClient = webApplicationFactory.CreateClient();
             httpClient.DefaultRequestHeaders.Add(invisibleApiKey.Key, invisibleApiKey.Value);
