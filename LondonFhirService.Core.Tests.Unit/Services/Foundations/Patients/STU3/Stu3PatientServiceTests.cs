@@ -49,8 +49,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 MaxProviderWaitTimeMilliseconds = 3000
             };
 
-            this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "Everything", "GetStructuredRecord" }));
-            this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "Everything", "GetStructuredRecord" }));
+            this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "EverythingAsync", "GetStructuredRecordAsync" }));
+            this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "EverythingAsync", "GetStructuredRecordAsync" }));
             this.unsupportedFhirProviderMock = MakeProvider("Unsupported", ("Patients", new[] { "Read" }));
             this.unsupportedErrorFhirProviderMock = MakeProvider("UnsupportedError", ("Patients", null));
 

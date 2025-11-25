@@ -30,7 +30,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                 service.ValidateAccess(inputNhsNumber));
 
             this.patientOrchestrationServiceMock.Setup(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -39,7 +39,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                         .ReturnsAsync(expectedBundle);
 
             // when
-            Bundle actualBundle = await this.patientCoordinationService.GetStructuredRecord(
+            Bundle actualBundle = await this.patientCoordinationService.GetStructuredRecordAsync(
                 inputNhsNumber,
                 inputDateOfBirth,
                 inputDemographicsOnly,
@@ -54,7 +54,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     Times.Once);
 
             this.patientOrchestrationServiceMock.Verify(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,

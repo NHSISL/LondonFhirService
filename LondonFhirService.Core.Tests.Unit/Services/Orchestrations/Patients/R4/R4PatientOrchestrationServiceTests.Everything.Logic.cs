@@ -67,13 +67,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                     .ReturnsAsync(randomBundles);
 
             this.fhirReconciliationServiceMock.Setup(service =>
-                service.Reconcile(
+                service.ReconcileAsync(
                     randomBundles,
                     randomPrimaryProvider.Name))
                     .ReturnsAsync(expectedBundle);
 
             // when
-            Bundle actualBundle = await this.patientOrchestrationService.Everything(
+            Bundle actualBundle = await this.patientOrchestrationService.EverythingAsync(
                 inputId,
                 inputStart,
                 inputEnd,
@@ -102,7 +102,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
                     Times.Once);
 
             this.fhirReconciliationServiceMock.Verify(service =>
-                service.Reconcile(
+                service.ReconcileAsync(
                     randomBundles,
                     randomPrimaryProvider.Name),
                     Times.Once);

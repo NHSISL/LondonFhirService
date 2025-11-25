@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using ModelInfo = FhirSTU3::Hl7.Fhir.Model.ModelInfo;
@@ -40,7 +41,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                     $"Response: {responseContent}");
             }
 
-            var bundle = JsonSerializer.Deserialize<Bundle>(responseContent, options);
+            FhirJsonDeserializer fhirJsonDeserializer = new();
+            Bundle bundle = fhirJsonDeserializer.Deserialize<Bundle>(responseContent);
 
             return bundle;
         }

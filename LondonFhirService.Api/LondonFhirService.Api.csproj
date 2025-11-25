@@ -38,4 +38,10 @@
 		</Content>
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Acceptance" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Integration" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+
 </Project>

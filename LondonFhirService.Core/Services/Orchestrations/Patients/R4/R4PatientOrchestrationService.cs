@@ -35,7 +35,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<Bundle> Everything(
+        public ValueTask<Bundle> EverythingAsync(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -88,11 +88,22 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                     since: since,
                     count: count);
 
-                Bundle reconciledBundle = await this.fhirReconciliationService.Reconcile(
+                Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
                     bundles: bundles,
                     primaryProviderName: primaryProviderName);
 
                 return reconciledBundle;
             });
+
+
+        public ValueTask<string> EverythingSerialisedAsync(
+            string id,
+            DateTimeOffset? start = null,
+            DateTimeOffset? end = null,
+            string typeFilter = null,
+            DateTimeOffset? since = null,
+            int? count = null,
+            CancellationToken cancellationToken = default) =>
+               throw new NotImplementedException();
     }
 }

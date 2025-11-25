@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Tests.Integration.Brokers;
@@ -302,6 +303,38 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
             {
                 var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+                var providerQuery = await storageBroker.SelectAllProvidersAsync();
+
+                // If seeding a primary, check by FhirVersion alone
+                if (provider.IsPrimary)
+                {
+                    var existingPrimary = providerQuery
+                        .FirstOrDefault(p => p.FhirVersion == provider.FhirVersion && p.IsPrimary);
+
+                    if (existingPrimary is not null)
+                    {
+                        // Either return the existing one...
+                        return existingPrimary;
+
+                        // ...or throw a clearer exception instead of letting SQL do it:
+                        // throw new InvalidOperationException(
+                        //     $"A primary provider for FHIR version '{provider.FhirVersion}' already exists.");
+                    }
+                }
+
+                // For non-primary, keep your original "idempotent by Name + FhirVersion"
+                var providerExists = providerQuery
+                    .FirstOrDefault(p =>
+                        p.Name == provider.Name &&
+                        p.FhirVersion == provider.FhirVersion &&
+                        p.IsPrimary == provider.IsPrimary);
+
+                if (providerExists is not null)
+                {
+                    return providerExists;
+                }
+
+                return await storageBroker.InsertProviderAsync(provider);
 
                 return await storageBroker.InsertProviderAsync(provider);
             }

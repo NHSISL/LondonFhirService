@@ -38,7 +38,7 @@ namespace LondonFhirService.Api.Tests.Integration
             new Claim(ClaimTypes.Role, "LondonDataServices.IDecide.Portal.Server.Users"),
             new Claim(ClaimTypes.Role, "LondonFhirServiceApiConsumer"),
             new Claim(ClaimTypes.Role, "Patients.Everything"),
-            new Claim(ClaimTypes.Role, "Patients.GetStructuredPatient")
+            new Claim(ClaimTypes.Role, "Patients.GetStructuredRecord")
         };
 
         public TestAuthHandler(

@@ -46,7 +46,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
             var expectedActionResult = new ActionResult<Bundle>(expectedObjectResult);
 
             this.patientCoordinationServiceMock.Setup(coordination =>
-                coordination.Everything(
+                coordination.EverythingAsync(
                     inputId,
                     inputStart,
                     inputEnd,
@@ -67,7 +67,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
             okResult.Value.Should().BeEquivalentTo(expectedBundle);
 
             this.patientCoordinationServiceMock.Verify(coordination =>
-                coordination.Everything(
+                coordination.EverythingAsync(
                     inputId,
                     inputStart,
                     inputEnd,

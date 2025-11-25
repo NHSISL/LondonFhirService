@@ -10,6 +10,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.R4
 {
     public interface IR4FhirReconciliationService
     {
-        ValueTask<Bundle> Reconcile(List<Bundle> bundles, string primaryProviderName);
+        ValueTask<Bundle> ReconcileAsync(List<Bundle> bundles, string primaryProviderName);
+        ValueTask<string> ReconcileSerialisedAsync(List<string> bundles, string primaryProviderName);
     }
 }

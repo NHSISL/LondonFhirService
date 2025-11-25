@@ -33,7 +33,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
                 service.ValidateAccess(inputId));
 
             this.patientOrchestrationServiceMock.Setup(service =>
-                service.Everything(
+                service.EverythingAsync(
                     inputId,
                     inputStart,
                     inputEnd,
@@ -44,7 +44,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
                     .ReturnsAsync(expectedBundle);
 
             // when
-            Bundle actualBundle = await this.patientCoordinationService.Everything(
+            Bundle actualBundle = await this.patientCoordinationService.EverythingAsync(
                 inputId,
                 inputStart,
                 inputEnd,
@@ -61,7 +61,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
                     Times.Once);
 
             this.patientOrchestrationServiceMock.Verify(service =>
-                service.Everything(
+                service.EverythingAsync(
                     inputId,
                     inputStart,
                     inputEnd,

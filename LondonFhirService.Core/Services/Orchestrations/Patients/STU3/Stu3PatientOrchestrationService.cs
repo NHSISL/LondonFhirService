@@ -35,7 +35,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<Bundle> Everything(
+        public ValueTask<Bundle> EverythingAsync(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -88,14 +88,74 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     since: since,
                     count: count);
 
-                Bundle reconciledBundle = await this.fhirReconciliationService.Reconcile(
+                Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
                     bundles: bundles,
                     primaryProviderName: primaryProviderName);
 
                 return reconciledBundle;
             });
 
-        public ValueTask<Bundle> GetStructuredRecord(
+        public ValueTask<string> EverythingSerialisedAsync(
+            string id,
+            DateTimeOffset? start = null,
+            DateTimeOffset? end = null,
+            string typeFilter = null,
+            DateTimeOffset? since = null,
+            int? count = null,
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+            {
+                ValidateArgsOnEverything(id);
+
+                IQueryable<Provider> allProviders =
+                    await this.providerService.RetrieveAllProvidersAsync();
+
+                List<Provider> orderedProviders = allProviders
+                    .OrderByDescending(provider => provider.IsPrimary)
+                    .ToList();
+
+                DateTimeOffset now = DateTimeOffset.UtcNow;
+
+                List<Provider> primaryProviders = orderedProviders
+                    .Where(provider =>
+                        provider.IsPrimary &&
+                        provider.IsActive &&
+                        provider.ActiveFrom <= now &&
+                        provider.ActiveTo >= now &&
+                        provider.FhirVersion == "STU3")
+                    .ToList();
+
+                ValidatePrimaryProviders(primaryProviders);
+                string primaryProviderName = primaryProviders.First().Name;
+
+                List<string> activeProviderNames = orderedProviders
+                    .Where(provider =>
+                        provider.IsActive &&
+                        provider.ActiveFrom <= now &&
+                        provider.ActiveTo >= now &&
+                        provider.FhirVersion == "STU3" &&
+                        !provider.IsForComparisonOnly)
+                    .Select(provider => provider.Name)
+                    .ToList();
+
+                List<string> bundles = await this.patientService.EverythingSerialisedAsync(
+                    providerNames: activeProviderNames,
+                    id: id,
+                    cancellationToken: cancellationToken,
+                    start: start,
+                    end: end,
+                    typeFilter: typeFilter,
+                    since: since,
+                    count: count);
+
+                string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
+                    bundles: bundles,
+                    primaryProviderName: primaryProviderName);
+
+                return reconciledBundle;
+            });
+
+        public ValueTask<Bundle> GetStructuredRecordAsync(
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -144,7 +204,63 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 includeInactivePatients,
                 cancellationToken: cancellationToken);
 
-            Bundle reconciledBundle = await this.fhirReconciliationService.Reconcile(
+            Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
+                bundles: bundles,
+                primaryProviderName: primaryProviderName);
+
+            return reconciledBundle;
+        });
+
+        public ValueTask<string> GetStructuredRecordSerialisedAsync(
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null,
+            CancellationToken cancellationToken = default) =>
+        TryCatch(async () =>
+        {
+            ValidateArgsOnGetStructuredRecord(nhsNumber);
+
+            IQueryable<Provider> allProviders =
+                await this.providerService.RetrieveAllProvidersAsync();
+
+            List<Provider> orderedProviders = allProviders
+                .OrderByDescending(provider => provider.IsPrimary)
+                .ToList();
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+
+            List<Provider> primaryProviders = orderedProviders
+                .Where(provider =>
+                    provider.IsPrimary &&
+                    provider.IsActive &&
+                    provider.ActiveFrom <= now &&
+                    provider.ActiveTo >= now &&
+                    provider.FhirVersion == "STU3")
+                .ToList();
+
+            ValidatePrimaryProviders(primaryProviders);
+            string primaryProviderName = primaryProviders.First().Name;
+
+            List<string> activeProviderNames = orderedProviders
+                .Where(provider =>
+                    provider.IsActive &&
+                    provider.ActiveFrom <= now &&
+                    provider.ActiveTo >= now &&
+                    provider.FhirVersion == "STU3" &&
+                    !provider.IsForComparisonOnly)
+                .Select(provider => provider.Name)
+                .ToList();
+
+            List<string> bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
+                providerNames: activeProviderNames,
+                nhsNumber,
+                dateOfBirth,
+                demographicsOnly,
+                includeInactivePatients,
+                cancellationToken: cancellationToken);
+
+            string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
                 bundles: bundles,
                 primaryProviderName: primaryProviderName);
 

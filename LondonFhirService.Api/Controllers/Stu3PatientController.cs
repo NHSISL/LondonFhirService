@@ -29,7 +29,7 @@ namespace LondonFhirService.Api.Controllers
 
         [HttpPost("{id}/$everything")]
         [Authorize(Roles = "Patients.Everything")]
-        public async Task<ActionResult<Bundle>> Everything(
+        public async Task<ActionResult<string>> Everything(
             string id,
             [FromBody] Parameters parameters,
             CancellationToken cancellationToken)
@@ -42,7 +42,7 @@ namespace LondonFhirService.Api.Controllers
                 DateTimeOffset? since = ExtractDateTimeParameter(parameters, "_since");
                 int? count = ExtractIntParameter(parameters, "_count");
 
-                Bundle bundle = await this.patientCoordinationService.Everything(
+                string bundle = await this.patientCoordinationService.EverythingSerialisedAsync(
                     id,
                     start,
                     end,
@@ -72,8 +72,8 @@ namespace LondonFhirService.Api.Controllers
             }
         }
 
-        [HttpPost("{nhsNumber}/$get-structured-record")]
-        [Authorize(Roles = "Patients.GetStructuredPatient")]
+        [HttpPost("{nhsNumber}/$getstructuredrecord")]
+        [Authorize(Roles = "Patients.GetStructuredRecord")]
         public async Task<ActionResult<Bundle>> GetStructuredRecord(
             string nhsNumber,
             [FromBody] Parameters parameters,
@@ -86,7 +86,7 @@ namespace LondonFhirService.Api.Controllers
                 bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
                 bool? includeInactivePatients = ExtractBoolParameter(parameters, "includeInactivePatients");
 
-                Bundle bundle = await this.patientCoordinationService.GetStructuredRecord(
+                string bundle = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
                     nhsNumber,
                     dateOfBirthDateTime,
                     demographicsOnly,

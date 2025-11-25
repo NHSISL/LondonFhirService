@@ -11,7 +11,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
     public interface IStu3PatientOrchestrationService
     {
-        ValueTask<Bundle> Everything(
+        ValueTask<Bundle> EverythingAsync(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -20,7 +20,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             int? count = null,
             CancellationToken cancellationToken = default);
 
-        ValueTask<Bundle> GetStructuredRecord(
+        ValueTask<string> EverythingSerialisedAsync(
+            string id,
+            DateTimeOffset? start = null,
+            DateTimeOffset? end = null,
+            string typeFilter = null,
+            DateTimeOffset? since = null,
+            int? count = null,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<Bundle> GetStructuredRecordAsync(
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<string> GetStructuredRecordSerialisedAsync(
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,

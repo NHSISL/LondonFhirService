@@ -18,7 +18,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.R4
 {
     public partial class R4PatientTests
     {
-        [Fact]
+        [Fact(Skip = "R4 out of scope for MVP. Skipped for now.")]
         public async Task ShouldGetPatientEverythingR4Async()
         {
             // given

@@ -57,7 +57,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     try
                     {
-                        isSupported = provider.SupportsResource("Patients", "Everything");
+                        isSupported = provider.SupportsResource("Patients", "EverythingAsync");
                     }
                     catch (Exception exception)
                     {
@@ -137,7 +137,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     try
                     {
-                        isSupported = provider.SupportsResource("Patients", "Everything");
+                        isSupported = provider.SupportsResource("Patients", "EverythingAsync");
                     }
                     catch (Exception exception)
                     {
@@ -215,7 +215,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     try
                     {
-                        isSupported = provider.SupportsResource("Patients", "GetStructuredRecord");
+                        isSupported = provider.SupportsResource("Patients", "GetStructuredRecordAsync");
                     }
                     catch (Exception exception)
                     {
@@ -291,7 +291,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     try
                     {
-                        isSupported = provider.SupportsResource("Patients", "GetStructuredRecord");
+                        isSupported = provider.SupportsResource("Patients", "GetStructuredRecordAsync");
                     }
                     catch (Exception exception)
                     {

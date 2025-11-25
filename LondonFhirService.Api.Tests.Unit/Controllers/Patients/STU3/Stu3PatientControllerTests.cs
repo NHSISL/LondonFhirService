@@ -2,7 +2,9 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+extern alias FhirSTU3;
 using System;
+using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Controllers;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
@@ -18,6 +20,8 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
     {
         private readonly Mock<IStu3PatientCoordinationService> patientCoordinationServiceMock;
         private readonly Stu3PatientController patientController;
+        private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
+        private readonly FhirJsonSerializer fhirJsonSerializer = new();
 
         public Stu3PatientControllerTests()
         {

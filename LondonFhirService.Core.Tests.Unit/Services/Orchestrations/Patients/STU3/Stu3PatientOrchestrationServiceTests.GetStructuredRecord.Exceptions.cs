@@ -36,7 +36,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecord(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
 
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
@@ -83,7 +83,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecord(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
 
             PatientOrchestrationDependencyException
                 actualPatientOrchestrationDependencyException =
@@ -136,7 +136,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // When
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecord(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
 
             PatientOrchestrationServiceException actualPatientOrchestrationServiceException =
                 await Assert.ThrowsAsync<PatientOrchestrationServiceException>(

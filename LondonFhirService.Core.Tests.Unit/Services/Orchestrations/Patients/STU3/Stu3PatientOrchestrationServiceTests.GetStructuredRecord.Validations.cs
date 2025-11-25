@@ -41,7 +41,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientOrchestrationService.GetStructuredRecord(nhsNumber: invalidNhsNumber);
+                this.patientOrchestrationService.GetStructuredRecordAsync(nhsNumber: invalidNhsNumber);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -94,7 +94,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask = this.patientOrchestrationService
-                .GetStructuredRecord(nhsNumber: inputNhsNumber, cancellationToken: cancellationToken);
+                .GetStructuredRecordAsync(nhsNumber: inputNhsNumber, cancellationToken: cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -154,7 +154,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask = this.patientOrchestrationService
-                .GetStructuredRecord(nhsNumber: inputId, cancellationToken: cancellationToken);
+                .GetStructuredRecordAsync(nhsNumber: inputId, cancellationToken: cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(

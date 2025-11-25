@@ -113,6 +113,17 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.R4
                 return bundles;
             });
 
+        public ValueTask<List<string>> EverythingSerialisedAsync(
+            List<string> providerNames,
+            string id,
+            DateTimeOffset? start = null,
+            DateTimeOffset? end = null,
+            string typeFilter = null,
+            DateTimeOffset? since = null,
+            int? count = null,
+            CancellationToken cancellationToken = default) =>
+                throw new NotImplementedException();
+
         virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteWithTimeoutAsync(
             IFhirProvider provider,
             CancellationToken globalToken,

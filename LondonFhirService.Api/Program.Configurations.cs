@@ -58,6 +58,13 @@ using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 public partial class Program
 {
+    internal static Action<WebApplicationBuilder>? TestConfigurationOverrides { get; set; }
+
+    internal static void ConfigurationOverridesForTesting(WebApplicationBuilder builder)
+    {
+        TestConfigurationOverrides?.Invoke(builder);
+    }
+
     internal static void ConfigureServices(WebApplicationBuilder builder)
     {
         IConfiguration configuration = builder.Configuration;
@@ -242,6 +249,7 @@ public partial class Program
 
     private static void AddProcessingServices(IServiceCollection services)
     {
+        // intentionally empty for now
     }
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)

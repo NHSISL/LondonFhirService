@@ -11,7 +11,16 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
 {
     public interface IR4PatientOrchestrationService
     {
-        ValueTask<Bundle> Everything(
+        ValueTask<Bundle> EverythingAsync(
+            string id,
+            DateTimeOffset? start = null,
+            DateTimeOffset? end = null,
+            string typeFilter = null,
+            DateTimeOffset? since = null,
+            int? count = null,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<string> EverythingSerialisedAsync(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,

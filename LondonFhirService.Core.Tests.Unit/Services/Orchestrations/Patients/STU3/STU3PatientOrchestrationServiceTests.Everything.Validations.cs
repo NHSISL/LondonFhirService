@@ -41,7 +41,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientOrchestrationService.Everything(id: invalidId);
+                this.patientOrchestrationService.EverythingAsync(id: invalidId);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -94,7 +94,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientOrchestrationService.Everything(id: inputId, cancellationToken: cancellationToken);
+                this.patientOrchestrationService.EverythingAsync(id: inputId, cancellationToken: cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -154,7 +154,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientOrchestrationService.Everything(id: inputId, cancellationToken: cancellationToken);
+                this.patientOrchestrationService.EverythingAsync(id: inputId, cancellationToken: cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(

@@ -25,31 +25,34 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
     // Non-generic – we always host Program
     public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        static TestWebApplicationFactory()
         {
-            // Make sure the app runs in a predictable test environment
-            builder.UseEnvironment("Test");
-
-            builder.ConfigureAppConfiguration((context, config) =>
+            // Configure configuration *before* the app’s builder is used
+            Program.TestConfigurationOverrides = builder =>
             {
                 var testProjectPath =
                     Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
 
-                // Optional: extra test-specific JSON (if you have Acceptance settings)
-                config
-                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.json"), optional: true);
+                // This runs inside Program.cs right after CreateBuilder(...)
+                // This lets us override any configuration values for testing
+                builder.Configuration
+                    .AddJsonFile(
+                        Path.Combine(testProjectPath, "appsettings.json"),
+                        optional: true)
+                    .AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        // Put your strong overrides here
+                        //["AzureAd:TenantId"] = "TEST-TENANT",
+                        //["AzureAd:Instance"] = "https://login.microsoftonline.com/",
+                        //["AzureAd:Scopes"]   = "api://test/.default"
+                    });
+            };
+        }
 
-                // Strong overrides: these values win over everything else
-                var overrides = new Dictionary<string, string?>
-                {
-                    // TODO: put your real keys here
-                    // ["AzureAd:TenantId"] = "TEST-TENANT",
-                    // ["AzureAd:Instance"] = "https://login.microsoftonline.com/",
-                    // ["AzureAd:Scopes"]   = "api://test/.default"
-                };
-
-                config.AddInMemoryCollection(overrides);
-            });
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            // Make sure the app runs in a predictable test environment
+            builder.UseEnvironment("Test");
 
             builder.ConfigureServices((context, services) =>
             {

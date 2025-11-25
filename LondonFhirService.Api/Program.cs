@@ -4,6 +4,7 @@
 
 extern alias FhirR4;
 extern alias FhirSTU3;
+
 using System.IO;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Storages.Sql;
@@ -23,6 +24,8 @@ if (File.Exists(launchSettingsPath))
     builder.Configuration.AddJsonFile(launchSettingsPath, optional: true);
 }
 
+Program.ConfigurationOverridesForTesting(builder);
+
 // Shared InvisibleApiKey instance, also available via DI
 var invisibleApiKey = new InvisibleApiKey();
 builder.Services.AddSingleton(invisibleApiKey);
@@ -32,7 +35,7 @@ Program.ConfigureServices(builder);
 
 var app = builder.Build();
 
-// Always run migrations at startup (as per option B)
+// Always run migrations at startup
 using (var scope = app.Services.CreateScope())
 {
     var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
@@ -44,3 +47,5 @@ Program.ConfigurePipeline(app);
 
 app.Run();
 
+// Exposed so WebApplicationFactory<Program> has a concrete entry point type
+public partial class Program { }
