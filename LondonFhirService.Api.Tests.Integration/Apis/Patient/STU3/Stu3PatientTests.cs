@@ -335,8 +335,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                 }
 
                 return await storageBroker.InsertProviderAsync(provider);
-
-                return await storageBroker.InsertProviderAsync(provider);
             }
         }
 
