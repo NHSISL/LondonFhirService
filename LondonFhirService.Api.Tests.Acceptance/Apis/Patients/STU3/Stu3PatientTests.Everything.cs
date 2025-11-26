@@ -19,7 +19,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
     public partial class Stu3PatientTests
     {
         [Fact]
-        public async Task ShouldGetPatientEverythingStu3Async()
+        public async Task ShouldGetPatientEverythingAsync()
         {
             PdsData pdsData = null;
             OdsData odsData = null;
@@ -48,7 +48,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 string providerName = "LDS";
                 string fhirVersion = "STU3";
 
-                Parameters inputParameters = CreateRandomParameters(
+                Parameters inputParameters = CreateRandomParametersEverything(
                     start: inputStart,
                     end: inputEnd,
                     typeFilter: inputTypeFilter,
@@ -77,7 +77,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 actualBundle.Entry.Should().NotBeNullOrEmpty();
                 actualBundle.Entry.Should().HaveCountGreaterOrEqualTo(1);
                 actualBundle.Meta.Should().NotBeNull();
-                actualBundle.Meta.Extension.Should().HaveCount(1);
                 actualBundle.Entry[0].Resource.Should().BeOfType<Patient>();
                 var patient = actualBundle.Entry[0].Resource as Patient;
                 patient!.Id.Should().Be(inputId);

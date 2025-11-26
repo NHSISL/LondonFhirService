@@ -7,10 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Capabilities;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Resources;
 using Moq;
+using FhirJsonSerializer = FhirSTU3::Hl7.Fhir.Serialization.FhirJsonSerializer;
 using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
@@ -27,7 +29,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                     new ResourceCapabilities
                     {
                         ResourceName = "Patients",
-                        SupportedOperations = new List<string> { "Everything" }
+                        SupportedOperations = new List<string> { "EverythingAsync", "EverythingSerialisedAsync", "GetStructuredRecordAsync", "GetStructuredRecordSerialisedAsync" }
                     }
                 }
             };
@@ -108,19 +110,24 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                         }
                     };
 
-                    return bundle;
+                    var fhirJsonSerializer = new FhirJsonSerializer();
+                    var json = fhirJsonSerializer.SerializeToString(bundle);
+
+                    return json;
                 });
 
             patientResourceMock.Setup(p => p.GetStructuredRecordAsync(
                 It.IsAny<string>(),
-                It.IsAny<DateTimeOffset?>(),
-                It.IsAny<DateTimeOffset?>(),
-                It.IsAny<string>(),
-                It.IsAny<DateTimeOffset?>(),
-                It.IsAny<int?>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<bool?>(),
+                It.IsAny<bool?>(),
                 It.IsAny<CancellationToken>()))
-                .ReturnsAsync((string id, DateTimeOffset? start, DateTimeOffset? end, string typeFilter,
-                    DateTimeOffset? since, int? count, CancellationToken ct) =>
+                .ReturnsAsync((
+                    string nhsNumber,
+                    DateTime? dateOfBirth,
+                    bool? demographicsOnly,
+                    bool? includeInactivePatients,
+                    CancellationToken cancellationToken) =>
                 {
                     var bundle = new Bundle
                     {
@@ -135,7 +142,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                             {
                                 Resource = new Patient
                                 {
-                                    Id = id,
+                                    Id = nhsNumber,
                                 }
                             }
                         }
@@ -146,14 +153,16 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
             patientResourceMock.Setup(p => p.GetStructuredRecordSerialisedAsync(
                 It.IsAny<string>(),
-                It.IsAny<DateTimeOffset?>(),
-                It.IsAny<DateTimeOffset?>(),
-                It.IsAny<string>(),
-                It.IsAny<DateTimeOffset?>(),
-                It.IsAny<int?>(),
+                It.IsAny<DateTime?>(),
+                It.IsAny<bool?>(),
+                It.IsAny<bool?>(),
                 It.IsAny<CancellationToken>()))
-                .ReturnsAsync((string id, DateTimeOffset? start, DateTimeOffset? end, string typeFilter,
-                    DateTimeOffset? since, int? count, CancellationToken ct) =>
+                .ReturnsAsync((
+                    string nhsNumber,
+                    DateTime? dateOfBirth,
+                    bool? demographicsOnly,
+                    bool? includeInactivePatients,
+                    CancellationToken cancellationToken) =>
                 {
                     var bundle = new Bundle
                     {
@@ -168,13 +177,16 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                             {
                                 Resource = new Patient
                                 {
-                                    Id = id,
+                                    Id = nhsNumber,
                                 }
                             }
                         }
                     };
 
-                    return bundle;
+                    var fhirJsonSerializer = new FhirJsonSerializer();
+                    var json = fhirJsonSerializer.SerializeToString(bundle);
+
+                    return json;
                 });
 
             return providerMock.Object;
