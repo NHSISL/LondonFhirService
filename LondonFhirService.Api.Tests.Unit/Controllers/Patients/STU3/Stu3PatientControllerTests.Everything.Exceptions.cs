@@ -51,7 +51,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             var expectedActionResult = new ActionResult<Bundle>(expectedBadRequestObjectResult);
 
             this.patientCoordinationServiceMock.Setup(coordination =>
-                coordination.Everything(
+                coordination.EverythingSerialisedAsync(
                     inputId,
                     inputStart,
                     inputEnd,
@@ -62,14 +62,14 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                     .ThrowsAsync(validationException);
 
             // when
-            ActionResult<Bundle> actualActionResult =
+            ActionResult<string> actualActionResult =
                 await this.patientController.Everything(inputId, inputParameters, cancellationToken);
 
             // then
             actualActionResult.Should().BeEquivalentTo(expectedActionResult);
 
             this.patientCoordinationServiceMock.Verify(coordination =>
-                coordination.Everything(
+                coordination.EverythingSerialisedAsync(
                     inputId,
                     inputStart,
                     inputEnd,
@@ -117,7 +117,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             var expectedActionResult = new ActionResult<Bundle>(expectedInternalServerErrorObjectResult);
 
             this.patientCoordinationServiceMock.Setup(coordination =>
-                coordination.Everything(
+                coordination.EverythingSerialisedAsync(
                     inputId,
                     inputStart,
                     inputEnd,
@@ -128,14 +128,14 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                     .ThrowsAsync(serverException);
 
             // when
-            ActionResult<Bundle> actualActionResult =
+            ActionResult<string> actualActionResult =
                 await this.patientController.Everything(inputId, inputParameters, cancellationToken);
 
             // then
             actualActionResult.Should().BeEquivalentTo(expectedActionResult);
 
             this.patientCoordinationServiceMock.Verify(coordination =>
-                coordination.Everything(
+                coordination.EverythingSerialisedAsync(
                     inputId,
                     inputStart,
                     inputEnd,

@@ -36,7 +36,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientCoordinationService
-                    .GetStructuredRecord(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
 
             PatientCoordinationDependencyValidationException
                 actualPatientCoordinationDependencyValidationException =
@@ -82,7 +82,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientCoordinationService
-                    .GetStructuredRecord(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
 
             PatientCoordinationDependencyException actualPatientCoordinationDependencyException =
                 await Assert.ThrowsAsync<PatientCoordinationDependencyException>(
@@ -133,7 +133,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // When
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientCoordinationService
-                    .GetStructuredRecord(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
 
             PatientCoordinationServiceException actualPatientCoordinationServiceException =
                 await Assert.ThrowsAsync<PatientCoordinationServiceException>(

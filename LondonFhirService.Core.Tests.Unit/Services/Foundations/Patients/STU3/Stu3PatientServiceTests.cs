@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using FhirStu3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -35,6 +36,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly PatientServiceConfig patientServiceConfig;
         private readonly Stu3PatientService patientService;
+        private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
+        private readonly FhirJsonSerializer fhirJsonSerializer = new();
 
         public Stu3PatientServiceTests()
         {
@@ -46,8 +49,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 MaxProviderWaitTimeMilliseconds = 3000
             };
 
-            this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "Everything", "GetStructuredRecord" }));
-            this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "Everything", "GetStructuredRecord" }));
+            this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "EverythingAsync", "GetStructuredRecordAsync" }));
+            this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "EverythingAsync", "GetStructuredRecordAsync" }));
             this.unsupportedFhirProviderMock = MakeProvider("Unsupported", ("Patients", new[] { "Read" }));
             this.unsupportedErrorFhirProviderMock = MakeProvider("UnsupportedError", ("Patients", null));
 
@@ -141,15 +144,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             var mock = new Mock<IFhirProvider>(MockBehavior.Strict);
-            mock.SetupGet(p => p.ProviderName).Returns(name);
-            mock.SetupGet(p => p.Capabilities).Returns(providerCaps);
-            mock.SetupGet(p => p.Code).Returns(GetRandomString());
-            mock.SetupGet(p => p.Source).Returns(GetRandomString());
-            mock.SetupGet(p => p.System).Returns(GetRandomString());
-            mock.SetupGet(p => p.DisplayName).Returns(GetRandomString());
-            mock.SetupGet(p => p.FhirVersion).Returns(GetRandomString());
+            mock.SetupGet(patient => patient.ProviderName).Returns(name);
+            mock.SetupGet(patient => patient.Capabilities).Returns(providerCaps);
+            mock.SetupGet(patient => patient.Code).Returns(GetRandomString());
+            mock.SetupGet(patient => patient.Source).Returns(GetRandomString());
+            mock.SetupGet(patient => patient.System).Returns(GetRandomString());
+            mock.SetupGet(patient => patient.DisplayName).Returns(GetRandomString());
+            mock.SetupGet(patient => patient.FhirVersion).Returns(GetRandomString());
 
-            mock.Setup(p => p.Patients.Everything(
+            mock.Setup(patient => patient.Patients.EverythingAsync(
                 It.IsAny<string>(),
                 It.IsAny<DateTimeOffset>(),
                 It.IsAny<DateTimeOffset>(),

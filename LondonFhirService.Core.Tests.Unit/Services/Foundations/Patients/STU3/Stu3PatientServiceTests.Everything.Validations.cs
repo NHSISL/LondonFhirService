@@ -39,7 +39,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<Bundle>> everythingTask = patientService.Everything(
+            ValueTask<List<Bundle>> everythingTask = patientService.EverythingAsync(
                     providerNames: providerNames,
                     id: inputId,
                     cancellationToken: default);
@@ -87,7 +87,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<Bundle>> everythingTask = patientService.Everything(
+            ValueTask<List<Bundle>> everythingTask = patientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: invalidText,
                     cancellationToken: default);
@@ -151,7 +151,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.Everything(
+                await mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
@@ -237,7 +237,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.Everything(
+                await mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
@@ -348,7 +348,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.Everything(
+                await mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
@@ -454,7 +454,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.Everything(
+                await mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
@@ -562,7 +562,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.Everything(
+                await mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
@@ -666,7 +666,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.Everything(
+                await mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);

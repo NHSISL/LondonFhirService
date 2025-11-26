@@ -11,7 +11,12 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
 {
     public class Stu3FhirReconciliationService : IStu3FhirReconciliationService
     {
-        public async ValueTask<Bundle> Reconcile(List<Bundle> bundles, string primaryProviderName)
+        public async ValueTask<Bundle> ReconcileAsync(List<Bundle> bundles, string primaryProviderName)
+        {
+            return bundles.FirstOrDefault();
+        }
+
+        public async ValueTask<string> ReconcileSerialisedAsync(List<string> bundles, string primaryProviderName)
         {
             return bundles.FirstOrDefault();
         }

@@ -42,7 +42,7 @@ namespace LondonFhirService.Api.Controllers
                 DateTimeOffset? since = ExtractDateTimeParameter(parameters, "_since");
                 int? count = ExtractIntParameter(parameters, "_count");
 
-                Bundle bundle = await this.patientCoordinationService.Everything(
+                Bundle bundle = await this.patientCoordinationService.EverythingAsync(
                     id,
                     start,
                     end,

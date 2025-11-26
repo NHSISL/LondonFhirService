@@ -25,7 +25,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             List<string> expectedAttributeValues = new List<string>
             {
-                "Patients.GetStructuredPatient"
+                "Patients.GetStructuredRecord"
             };
 
             // when

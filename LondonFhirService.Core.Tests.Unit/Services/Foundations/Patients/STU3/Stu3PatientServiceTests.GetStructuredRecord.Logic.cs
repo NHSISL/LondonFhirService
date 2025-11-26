@@ -70,7 +70,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.GetStructuredRecord(
+                await mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputnhsNumber,
                     cancellationToken: default);

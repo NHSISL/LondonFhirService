@@ -20,7 +20,6 @@
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.0" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
 		<PackageReference Include="Moq" Version="4.20.72" />
 		<PackageReference Include="RESTFulSense" Version="3.2.0" />
@@ -39,5 +38,11 @@
 
 	<ItemGroup>
 		<Using Include="Xunit" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="appsettings.Acceptance.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 </Project>

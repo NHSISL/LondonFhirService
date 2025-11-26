@@ -37,7 +37,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientCoordinationService.Everything(id: invalidId);
+                this.patientCoordinationService.EverythingAsync(id: invalidId);
 
             PatientCoordinationValidationException actualPatientCoordinationValidationException =
                 await Assert.ThrowsAsync<PatientCoordinationValidationException>(

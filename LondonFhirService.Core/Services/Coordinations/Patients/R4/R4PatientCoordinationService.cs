@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.R4
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<Bundle> Everything(
+        public ValueTask<Bundle> EverythingAsync(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -41,7 +41,33 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.R4
                 ValidateArgsOnEverything(id);
                 await this.accessOrchestrationService.ValidateAccess(id);
 
-                Bundle bundle = await this.patientOrchestrationService.Everything(
+                Bundle bundle = await this.patientOrchestrationService.EverythingAsync(
+                    id,
+                    start,
+                    end,
+                    typeFilter,
+                    since,
+                    count,
+                    cancellationToken);
+
+                return bundle;
+            });
+
+
+        public ValueTask<string> EverythingSerialisedAsync(
+            string id,
+            DateTimeOffset? start = null,
+            DateTimeOffset? end = null,
+            string typeFilter = null,
+            DateTimeOffset? since = null,
+            int? count = null,
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+            {
+                ValidateArgsOnEverything(id);
+                await this.accessOrchestrationService.ValidateAccess(id);
+
+                string bundle = await this.patientOrchestrationService.EverythingSerialisedAsync(
                     id,
                     start,
                     end,

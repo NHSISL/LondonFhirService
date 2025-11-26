@@ -39,7 +39,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<Bundle>> everythingTask = patientService.GetStructuredRecord(
+            ValueTask<List<Bundle>> everythingTask = patientService.GetStructuredRecordAsync(
                     providerNames: providerNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -87,7 +87,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<Bundle>> everythingTask = patientService.GetStructuredRecord(
+            ValueTask<List<Bundle>> everythingTask = patientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: invalidText,
                     cancellationToken: default);
@@ -149,7 +149,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.GetStructuredRecord(
+                await mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -229,7 +229,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.GetStructuredRecord(
+                await mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -332,7 +332,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.GetStructuredRecord(
+                await mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -430,7 +430,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.GetStructuredRecord(
+                await mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -530,7 +530,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.GetStructuredRecord(
+                await mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -626,7 +626,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.GetStructuredRecord(
+                await mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);

@@ -13,6 +13,8 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="Hl7.Fhir.R4" Version="6.0.1" Aliases="FhirR4" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.1" Aliases="FhirSTU3" />
 		<PackageReference Include="FluentAssertions" Version="7.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />

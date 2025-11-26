@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using ModelInfo = FhirSTU3::Hl7.Fhir.Model.ModelInfo;
@@ -40,7 +41,8 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
                     $"Response: {responseContent}");
             }
 
-            var bundle = JsonSerializer.Deserialize<Bundle>(responseContent, options);
+            FhirJsonDeserializer fhirJsonDeserializer = new();
+            Bundle bundle = fhirJsonDeserializer.Deserialize<Bundle>(responseContent);
 
             return bundle;
         }
@@ -50,7 +52,7 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
             var options = new JsonSerializerOptions()
                 .ForFhir(ModelInfo.ModelInspector);
 
-            string url = $"{Stu3PatientRelativeUrl}/{nhsNumber}/$get-structured-record";
+            string url = $"{Stu3PatientRelativeUrl}/{nhsNumber}/$getstructuredrecord";
             string jsonContent = JsonSerializer.Serialize(parameters, options);
 
             using var content = new StringContent(
@@ -68,7 +70,8 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
                     $"Response: {responseContent}");
             }
 
-            var bundle = JsonSerializer.Deserialize<Bundle>(responseContent, options);
+            FhirJsonDeserializer fhirJsonDeserializer = new();
+            Bundle bundle = fhirJsonDeserializer.Deserialize<Bundle>(responseContent);
 
             return bundle;
         }

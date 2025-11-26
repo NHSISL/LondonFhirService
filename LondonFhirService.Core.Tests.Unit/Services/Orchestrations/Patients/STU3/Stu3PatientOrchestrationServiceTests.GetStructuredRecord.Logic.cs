@@ -53,7 +53,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             };
 
             this.patientServiceMock.Setup(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     activeProviderNames,
                     inputNhsNumber,
                     inputDateOfBirth,
@@ -63,13 +63,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     .ReturnsAsync(randomBundles);
 
             this.fhirReconciliationServiceMock.Setup(service =>
-                service.Reconcile(
+                service.ReconcileAsync(
                     randomBundles,
                     randomPrimaryProvider.Name))
                     .ReturnsAsync(expectedBundle);
 
             // when
-            Bundle actualBundle = await this.patientOrchestrationService.GetStructuredRecord(
+            Bundle actualBundle = await this.patientOrchestrationService.GetStructuredRecordAsync(
                 inputNhsNumber,
                 inputDateOfBirth,
                 inputDemographicsOnly,
@@ -84,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     Times.Once);
 
             this.patientServiceMock.Verify(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     activeProviderNames,
                     inputNhsNumber,
                     inputDateOfBirth,
@@ -94,7 +94,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     Times.Once);
 
             this.fhirReconciliationServiceMock.Verify(service =>
-                service.Reconcile(
+                service.ReconcileAsync(
                     randomBundles,
                     randomPrimaryProvider.Name),
                     Times.Once);

@@ -8,17 +8,18 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
-using LondonFhirService.Core.Services.Foundations.Patients.R4;
+using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 {
-    public partial class R4PatientServiceTests
+    public partial class Stu3PatientServiceTests
     {
         [Fact]
-        public async Task EverythingShouldThrowWhenNullProviderNames()
+        public async Task EverythingSerialisedShouldThrowWhenNullProviderNames()
         {
             // given
             List<string> providerNames = null;
@@ -39,14 +40,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<Bundle>> everythingTask = patientService.EverythingAsync(
+            ValueTask<List<string>> everythingSerialisedTask = patientService.EverythingSerialisedAsync(
                     providerNames: providerNames,
                     id: inputId,
                     cancellationToken: default);
 
             PatientServiceValidationException actualPatientServiceValidationException =
                 await Assert.ThrowsAsync<PatientServiceValidationException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: everythingSerialisedTask.AsTask);
 
             // then
             actualPatientServiceValidationException.Should().BeEquivalentTo(expectedPatientServiceValidationException);
@@ -62,8 +63,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-
-        public async Task EverythingShouldThrowWhenInvalidId(string invalidText)
+        public async Task EverythingSerialisedShouldThrowWhenInvalidId(string invalidText)
         {
             // given
             List<string> randomProviderNames = new List<string>
@@ -88,14 +88,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<Bundle>> everythingTask = patientService.EverythingAsync(
+            ValueTask<List<string>> everythingSerialisedTask = patientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: invalidText,
                     cancellationToken: default);
 
             PatientServiceValidationException actualPatientServiceValidationException =
                 await Assert.ThrowsAsync<PatientServiceValidationException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: everythingSerialisedTask.AsTask);
 
             // then
             actualPatientServiceValidationException.Should().BeEquivalentTo(expectedPatientServiceValidationException);
@@ -108,7 +108,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
         }
 
         [Fact]
-        public async Task EverythingShouldReturnSingleBundleWhenUnsupportedProvider()
+        public async Task EverythingSerialisedShouldReturnSingleBundleWhenUnsupportedProvider()
         {
             // given
             List<string> randomProviderNames = new List<string>
@@ -120,15 +120,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
+            string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomId = GetRandomString();
             string inputId = randomId;
 
-            List<Bundle> expectedBundles = new List<Bundle>
+            List<string> expectedBundles = new List<string>
             {
-                outputDdsBundle
+                rawOutputDdsBundle
             };
 
-            var patientServiceMock = new Mock<R4PatientService>(
+            var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -137,7 +138,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -146,22 +147,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     null,
                     null,
                     null))
-                .ReturnsAsync((outputDdsBundle, null));
+                .ReturnsAsync((rawOutputDdsBundle, null));
 
-            R4PatientService mockedPatientService = patientServiceMock.Object;
+            Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<Bundle> actualBundles =
-                await mockedPatientService.EverythingAsync(
+            List<string> actualJson =
+                await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
 
             // then
-            actualBundles.Should().BeEquivalentTo(expectedBundles);
+            actualJson.Should().BeEquivalentTo(expectedBundles);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -178,7 +179,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                         Times.Once());
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.unsupportedFhirProviderMock.Object,
                     default,
                     inputId,
@@ -194,7 +195,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
         }
 
         [Fact]
-        public async Task EverythingShouldReturnSingleBundleWhenUnsupportedProviderDueToError()
+        public async Task EverythingSerialisedShouldReturnSingleBundleWhenUnsupportedProviderDueToError()
         {
             // given
             List<string> randomProviderNames = new List<string>
@@ -206,15 +207,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
+            string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomId = GetRandomString();
             string inputId = randomId;
 
-            List<Bundle> expectedBundles = new List<Bundle>
+            List<string> expectedBundles = new List<string>
             {
-                outputDdsBundle
+                rawOutputDdsBundle
             };
 
-            var patientServiceMock = new Mock<R4PatientService>(
+            var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -223,7 +225,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -232,22 +234,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     null,
                     null,
                     null))
-                .ReturnsAsync((outputDdsBundle, null));
+                .ReturnsAsync((rawOutputDdsBundle, null));
 
-            R4PatientService mockedPatientService = patientServiceMock.Object;
+            Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<Bundle> actualBundles =
-                await mockedPatientService.EverythingAsync(
+            List<string> actualJson =
+                await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
 
             // then
-            actualBundles.Should().BeEquivalentTo(expectedBundles);
+            actualJson.Should().BeEquivalentTo(expectedBundles);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -264,7 +266,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                         Times.Once());
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.unsupportedErrorFhirProviderMock.Object,
                     default,
                     inputId,
@@ -280,7 +282,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
         }
 
         [Fact]
-        public async Task EverythingShouldReturnSingleBundleWhenOneProviderTimesOut()
+        public async Task EverythingSerialisedShouldReturnSingleBundleWhenOneProviderTimesOut()
         {
             // given
             var timeoutMilliseconds = 1;
@@ -296,12 +298,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
+            string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomId = GetRandomString();
             string inputId = randomId;
 
-            List<Bundle> expectedBundles = new List<Bundle>
+            List<string> expectedBundles = new List<string>
             {
-                outputDdsBundle
+                rawOutputDdsBundle
             };
 
             List<Exception> exceptions = new List<Exception>
@@ -313,7 +316,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                 "One or more provider calls failed or timed out.",
                 exceptions);
 
-            var patientServiceMock = new Mock<R4PatientService>(
+            var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -322,7 +325,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -331,10 +334,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     null,
                     null,
                     null))
-                .ReturnsAsync((outputDdsBundle, null));
+                .ReturnsAsync((rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -345,20 +348,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     null))
                 .ReturnsAsync((null, timeoutException));
 
-            R4PatientService mockedPatientService = patientServiceMock.Object;
+            Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<Bundle> actualBundles =
-                await mockedPatientService.EverythingAsync(
+            List<string> actualJson =
+                await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
 
             // then
-            actualBundles.Should().BeEquivalentTo(expectedBundles);
+            actualJson.Should().BeEquivalentTo(expectedBundles);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -370,7 +373,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                         Times.Once());
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -390,7 +393,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
         }
 
         [Fact]
-        public async Task EverythingShouldReturnEmptyBundleListWhenAllProvidersTimesOut()
+        public async Task EverythingSerialisedShouldReturnEmptyBundleListWhenAllProvidersTimesOut()
         {
             // given
             var timeoutMilliseconds = 1;
@@ -419,7 +422,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                 "One or more provider calls failed or timed out.",
                 exceptions);
 
-            var patientServiceMock = new Mock<R4PatientService>(
+            var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -428,7 +431,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -440,7 +443,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                 .ReturnsAsync((null, timeoutException));
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -451,20 +454,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     null))
                 .ReturnsAsync((null, timeoutException2));
 
-            R4PatientService mockedPatientService = patientServiceMock.Object;
+            Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<Bundle> actualBundles =
-                await mockedPatientService.EverythingAsync(
+            List<string> actualJson =
+                await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
 
             // then
-            actualBundles.Should().BeEquivalentTo(expectedBundles);
+            actualJson.Should().BeEquivalentTo(expectedBundles);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -476,7 +479,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                         Times.Once());
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -496,7 +499,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
         }
 
         [Fact]
-        public async Task EverythingShouldReturnSingleBundleWhenOneProviderHasException()
+        public async Task EverythingSerialisedShouldReturnSingleBundleWhenOneProviderHasException()
         {
             // given
             Exception exception = new Exception(GetRandomString());
@@ -510,12 +513,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
+            string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomId = GetRandomString();
             string inputId = randomId;
 
-            List<Bundle> expectedBundles = new List<Bundle>
+            List<string> expectedBundles = new List<string>
             {
-                outputDdsBundle
+                rawOutputDdsBundle
             };
 
             List<Exception> exceptions = new List<Exception>
@@ -527,7 +531,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                 "One or more provider calls failed or timed out.",
                 exceptions);
 
-            var patientServiceMock = new Mock<R4PatientService>(
+            var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -536,7 +540,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -545,10 +549,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     null,
                     null,
                     null))
-                .ReturnsAsync((outputDdsBundle, null));
+                .ReturnsAsync((rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -559,11 +563,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     null))
                 .ReturnsAsync((null, exception));
 
-            R4PatientService mockedPatientService = patientServiceMock.Object;
+            Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<Bundle> actualBundles =
-                await mockedPatientService.EverythingAsync(
+            List<string> actualBundles =
+                await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
@@ -572,7 +576,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             actualBundles.Should().BeEquivalentTo(expectedBundles);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -584,7 +588,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                         Times.Once());
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -604,7 +608,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
         }
 
         [Fact]
-        public async Task EverythingShouldReturnEmptyBundleListWhenAllProvidersError()
+        public async Task EverythingSerialisedShouldReturnEmptyBundleListWhenAllProvidersError()
         {
             // given
             Exception exception = new Exception(GetRandomString());
@@ -631,7 +635,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                 "One or more provider calls failed or timed out.",
                 exceptions);
 
-            var patientServiceMock = new Mock<R4PatientService>(
+            var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
@@ -640,7 +644,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -652,7 +656,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                 .ReturnsAsync((null, exception));
 
             patientServiceMock.Setup(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -663,20 +667,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                     null))
                 .ReturnsAsync((null, exception2));
 
-            R4PatientService mockedPatientService = patientServiceMock.Object;
+            Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<Bundle> actualBundles =
-                await mockedPatientService.EverythingAsync(
+            List<string> actualJson =
+                await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
 
             // then
-            actualBundles.Should().BeEquivalentTo(expectedBundles);
+            actualJson.Should().BeEquivalentTo(expectedBundles);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
                     inputId,
@@ -688,7 +692,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
                         Times.Once());
 
             patientServiceMock.Verify(service =>
-                service.ExecuteWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
                     inputId,

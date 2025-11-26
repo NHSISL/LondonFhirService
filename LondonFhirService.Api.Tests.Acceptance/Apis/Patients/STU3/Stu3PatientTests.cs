@@ -3,6 +3,8 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Tests.Acceptance.Brokers;
@@ -51,7 +53,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: new DateTime()).GetValue();
 
-        private static Parameters CreateRandomParameters(
+        private static Parameters CreateRandomParametersEverything(
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
             string typeFilter = null,
@@ -83,6 +85,75 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
             if (count.HasValue)
             {
                 parameters.Add("_count", new Integer(count.Value));
+            }
+
+            return parameters;
+        }
+
+        private static Parameters CreateRandomParametersGetStructuredData(
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null)
+        {
+            var parameters = new Parameters();
+
+            if (!string.IsNullOrWhiteSpace(nhsNumber))
+            {
+                parameters.Parameter.Add(new Parameters.ParameterComponent
+                {
+                    Name = "patientNHSNumber",
+                    Value = new Identifier
+                    {
+                        System = "https://fhir.hl7.org.uk/Id/nhs-number",
+                        Value = nhsNumber
+                    }
+                });
+            }
+
+            if (dateOfBirth.HasValue)
+            {
+                parameters.Parameter.Add(new Parameters.ParameterComponent
+                {
+                    Name = "patientDOB",
+                    Value = new Identifier
+                    {
+                        System = "https://fhir.hl7.org.uk/Id/dob",
+                        Value = dateOfBirth.Value.ToString("yyyy-MM-dd")
+                    }
+                });
+            }
+
+            if (demographicsOnly.HasValue)
+            {
+                parameters.Parameter.Add(new Parameters.ParameterComponent
+                {
+                    Name = "demographicsOnly",
+                    Part = new List<Parameters.ParameterComponent>
+                    {
+                        new Parameters.ParameterComponent
+                        {
+                            Name = "includeDemographicsOnly",
+                            Value = new FhirBoolean(demographicsOnly.Value)
+                        }
+                    }
+                });
+            }
+
+            if (includeInactivePatients.HasValue)
+            {
+                parameters.Parameter.Add(new Parameters.ParameterComponent
+                {
+                    Name = "includeInactivePatients",
+                    Part = new List<Parameters.ParameterComponent>
+                    {
+                        new Parameters.ParameterComponent
+                        {
+                            Name = "includeInactivePatients",
+                            Value = new FhirBoolean(includeInactivePatients.Value)
+                        }
+                    }
+                });
             }
 
             return parameters;
@@ -297,6 +368,36 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
             using (var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope())
             {
                 var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+                IQueryable<Provider> providerQuery = await storageBroker.SelectAllProvidersAsync();
+
+                // If seeding a primary, check by FhirVersion alone
+                if (provider.IsPrimary)
+                {
+                    var existingPrimary = providerQuery
+                        .FirstOrDefault(p => p.FhirVersion == provider.FhirVersion && p.IsPrimary);
+
+                    if (existingPrimary is not null)
+                    {
+                        // Either return the existing one...
+                        return existingPrimary;
+
+                        // ...or throw a clearer exception instead of letting SQL do it:
+                        // throw new InvalidOperationException(
+                        //     $"A primary provider for FHIR version '{provider.FhirVersion}' already exists.");
+                    }
+                }
+
+                // For non-primary, keep your original "idempotent by Name + FhirVersion"
+                var providerExists = providerQuery
+                    .FirstOrDefault(p =>
+                        p.Name == provider.Name &&
+                        p.FhirVersion == provider.FhirVersion &&
+                        p.IsPrimary == provider.IsPrimary);
+
+                if (providerExists is not null)
+                {
+                    return providerExists;
+                }
 
                 return await storageBroker.InsertProviderAsync(provider);
             }

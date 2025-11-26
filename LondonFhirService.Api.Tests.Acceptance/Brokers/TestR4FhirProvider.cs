@@ -43,7 +43,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             providerMock.SetupGet(p => p.FhirVersion).Returns("R4");
             providerMock.SetupGet(p => p.DisplayName).Returns(providerName);
 
-            patientResourceMock.Setup(p => p.Everything(
+            patientResourceMock.Setup(p => p.EverythingAsync(
                 It.IsAny<string>(),
                 It.IsAny<DateTimeOffset?>(),
                 It.IsAny<DateTimeOffset?>(),

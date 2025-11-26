@@ -62,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             ValueTask<List<Bundle>> getStructuredRecordTask =
-                mockedPatientService.GetStructuredRecord(
+                mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -136,7 +136,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             ValueTask<List<Bundle>> getStructuredRecordTask =
-                mockedPatientService.GetStructuredRecord(
+                mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -215,7 +215,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             ValueTask<List<Bundle>> getStructuredRecordTask =
-                mockedPatientService.GetStructuredRecord(
+                mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);

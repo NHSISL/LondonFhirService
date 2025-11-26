@@ -37,7 +37,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientCoordinationService.GetStructuredRecord(nhsNumber: invalidId);
+                this.patientCoordinationService.GetStructuredRecordAsync(nhsNumber: invalidId);
 
             PatientCoordinationValidationException actualPatientCoordinationValidationException =
                 await Assert.ThrowsAsync<PatientCoordinationValidationException>(

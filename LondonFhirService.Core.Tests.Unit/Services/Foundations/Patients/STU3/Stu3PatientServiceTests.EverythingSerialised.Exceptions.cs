@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
-using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
@@ -22,7 +21,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
     {
         [Theory]
         [MemberData(nameof(DependencyValidationExceptions))]
-        public async Task ShouldThrowDependencyValidationOnEverythingAndLogItAsync(
+        public async Task ShouldThrowDependencyValidationOnEverythingSerialisedAndLogItAsync(
             Xeption dependencyValidationException)
         {
             // given
@@ -49,7 +48,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
@@ -63,22 +62,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.EverythingAsync(
+            ValueTask<List<string>> everythingSerialisedTask =
+                mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
 
             PatientServiceDependencyValidationException actualPatientServiceDependencyValidationException =
                 await Assert.ThrowsAsync<PatientServiceDependencyValidationException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: everythingSerialisedTask.AsTask);
 
             // then
             actualPatientServiceDependencyValidationException.Should()
                 .BeEquivalentTo(expectedPatientServiceDependencyValidationException);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
@@ -100,7 +99,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
         [Theory]
         [MemberData(nameof(DependencyExceptions))]
-        public async Task ShouldThrowDependencyOnEverythingAndLogItAsync(
+        public async Task ShouldThrowDependencyOnEverythingSerialisedAndLogItAsync(
             Xeption dependencyException)
         {
             // given
@@ -127,7 +126,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
@@ -141,22 +140,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.EverythingAsync(
+            ValueTask<List<string>> everythingSerialisedTask =
+                mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
 
             PatientServiceDependencyException actualPatientServiceDependencyException =
                 await Assert.ThrowsAsync<PatientServiceDependencyException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: everythingSerialisedTask.AsTask);
 
             // then
             actualPatientServiceDependencyException.Should()
                 .BeEquivalentTo(expectedPatientServiceDependencyException);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
@@ -177,7 +176,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnEverythingIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnEverythingSerialisedIfServiceErrorOccursAndLogItAsync()
         {
             // given
             List<string> randomProviderNames = new List<string>
@@ -211,7 +210,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             patientServiceMock.Setup(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),
@@ -225,22 +224,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.EverythingAsync(
+            ValueTask<List<string>> everythingSerialisedTask =
+                mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
 
             PatientServiceException actualPatientServiceException =
                 await Assert.ThrowsAsync<PatientServiceException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: everythingSerialisedTask.AsTask);
 
             // then
             actualPatientServiceException.Should()
                 .BeEquivalentTo(expectedPatientServiceException);
 
             patientServiceMock.Verify(service =>
-                service.ExecuteEverythingWithTimeoutAsync(
+                service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<string>(),

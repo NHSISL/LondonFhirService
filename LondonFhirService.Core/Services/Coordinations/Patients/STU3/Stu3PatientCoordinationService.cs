@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<Bundle> Everything(
+        public ValueTask<Bundle> EverythingAsync(
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -41,7 +41,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             ValidateArgsOnEverything(id);
             await this.accessOrchestrationService.ValidateAccess(id);
 
-            Bundle bundle = await this.patientOrchestrationService.Everything(
+            Bundle bundle = await this.patientOrchestrationService.EverythingAsync(
                 id,
                 start,
                 end,
@@ -53,7 +53,33 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             return bundle;
         });
 
-        public ValueTask<Bundle> GetStructuredRecord(
+        public ValueTask<string> EverythingSerialisedAsync(
+            string id,
+            DateTimeOffset? start = null,
+            DateTimeOffset? end = null,
+            string typeFilter = null,
+            DateTimeOffset? since = null,
+            int? count = null,
+            CancellationToken cancellationToken = default) =>
+        TryCatch(async () =>
+        {
+            ValidateArgsOnEverything(id);
+            await this.accessOrchestrationService.ValidateAccess(id);
+
+            string bundle = await this.patientOrchestrationService.EverythingSerialisedAsync(
+                id,
+                start,
+                end,
+                typeFilter,
+                since,
+                count,
+                cancellationToken);
+
+            return bundle;
+        });
+
+
+        public ValueTask<Bundle> GetStructuredRecordAsync(
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -64,7 +90,28 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             ValidateArgsOnGetStructuredRecord(nhsNumber);
             await this.accessOrchestrationService.ValidateAccess(nhsNumber);
 
-            Bundle bundle = await this.patientOrchestrationService.GetStructuredRecord(
+            Bundle bundle = await this.patientOrchestrationService.GetStructuredRecordAsync(
+                nhsNumber,
+                dateOfBirth,
+                demographicsOnly,
+                includeInactivePatients,
+                cancellationToken);
+
+            return bundle;
+        });
+
+        public ValueTask<string> GetStructuredRecordSerialisedAsync(
+            string nhsNumber,
+            DateTime? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null,
+            CancellationToken cancellationToken = default) =>
+        TryCatch(async () =>
+        {
+            ValidateArgsOnGetStructuredRecord(nhsNumber);
+            await this.accessOrchestrationService.ValidateAccess(nhsNumber);
+
+            string bundle = await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
                 nhsNumber,
                 dateOfBirth,
                 demographicsOnly,
