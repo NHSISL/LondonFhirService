@@ -18,7 +18,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.R4
 {
     public partial class R4PatientTests
     {
-        [Fact(Skip = "R4 out of scope for MVP. Skipped for now.")]
+        [Fact(Skip = "TODO: Fix allowing this test to run in parallel with STU3, works in isolation")]
         public async Task ShouldGetPatientEverythingR4Async()
         {
             // given

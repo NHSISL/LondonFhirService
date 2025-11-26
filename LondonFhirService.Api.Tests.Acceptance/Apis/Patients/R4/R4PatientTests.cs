@@ -48,9 +48,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.R4
             return result.Length > length ? result.Substring(0, length) : result;
         }
 
-        private static DateTimeOffset GetRandomDateTimeOffset() =>
-            new DateTimeRange(earliestDate: new DateTime()).GetValue();
-
         private static Parameters CreateRandomParameters(
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
