@@ -124,7 +124,7 @@ steps:
   - task: UseDotNet@2
     displayName: "Install .NET Core SDK"
     inputs:
-      version: 9.x
+      version: 10.x
       performMultiLevelLookup: true
       includePreviewVersions: true # Required for preview versions
   - task: DotNetCoreCLI@2
@@ -134,55 +134,55 @@ steps:
       feedsToUse: "select"
       projects: "**/*.csproj"
       includeNuGetOrg: true
-  - task: NodeTool@0
-    displayName: 'Install Node.js'
-    inputs:
-      versionSpec: '24.x'
-  - script: |
-      npm ci
-      npx playwright install --with-deps
-      npx playwright test
-    workingDirectory: './LondonFhirService.Api.Client'
-    displayName: 'Playwright test'
-    env:
-        ASPNETCORE_ENVIRONMENT: ContinuousIntegration
+  # - task: NodeTool@0
+  #   displayName: 'Install Node.js'
+  #   inputs:
+  #     versionSpec: '24.x'
+  # - script: |
+  #     npm ci
+  #     npx playwright install --with-deps
+  #     npx playwright test
+  #   workingDirectory: './LondonFhirService.Api.Client'
+  #   displayName: 'Playwright test'
+  #   env:
+  #       ASPNETCORE_ENVIRONMENT: ContinuousIntegration
 
-  - task: Npm@1
-    displayName: 'Install client dependencies (patient portal)'
-    inputs:
-      command: 'install'
-      workingDir: 'LondonDataServices.IDecide.Portal.Client'
+  # - task: Npm@1
+  #   displayName: 'Install client dependencies (API Portal)'
+  #   inputs:
+  #     command: 'install'
+  #     workingDir: 'LondonFhirService.Api.Client'
 
-  - task: Npm@1
-    displayName: 'Install client dependencies (back office portal)'
-    inputs:
-      command: 'install'
-      workingDir: 'LondonDataServices.IDecide.Manage.Client'
+  # - task: Npm@1
+  #   displayName: 'Install client dependencies (Back Office Portal)'
+  #   inputs:
+  #     command: 'install'
+  #     workingDir: 'LondonFhirService.Manage.Client'
 
   - task: DotNetCoreCLI@2
-    displayName: "Dotnet Publish Patient Portal"
+    displayName: "Dotnet Publish Public FHIR API"
     inputs:
       command: "publish"
       publishWebProjects: false
-      projects: "**/LondonDataServices.IDecide.Portal.Server.csproj"
-      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_patient_portal"
+      projects: "**/LondonFhirService.Api.csproj"
+      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_fhir_api"
       zipAfterPublish: true
       modifyOutputPath: false
 
-  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_patient_portal
-    displayName: 'Publish Artifact - Patient Portal'
-    artifact: drop-patient-portal
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_fhir_api
+    displayName: 'Publish Artifact - Public FHIR API'
+    artifact: drop-public-fhir-api
 
   - task: DotNetCoreCLI@2
-    displayName: "Dotnet Publish Back Office Portal"
+    displayName: "Dotnet Publish Back Office Management Portal"
     inputs:
       command: "publish"
       publishWebProjects: false
-      projects: "**/LondonDataServices.IDecide.Manage.Server.csproj"
-      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backend_portal"
+      projects: "**/LondonFhirService.Manage.csproj"
+      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal"
       zipAfterPublish: true
       modifyOutputPath: false
 
-  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backend_portal
-    displayName: 'Publish Artifact - Back Office'
-    artifact: drop-backoffice-portal
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal
+    displayName: 'Publish Artifact - Back Office Management Portal'
+    artifact: drop-backoffice-management-portal
