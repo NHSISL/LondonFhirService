@@ -1,0 +1,188 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+  tags:
+    include:
+    - 'v*'
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  CI: true
+
+steps:
+  - bash: |
+      echo "Build $(Build.SourceBranch)"
+      RELEASE_REGEX="v[0-9](.[0-9]+){3}"
+      tagName=${BUILD_SOURCEBRANCH#refs/tags/}
+      if [[ "$(Build.SourceBranch)" =~ $RELEASE_REGEX ]] 
+      then
+       echo "##vso[build.updatebuildnumber]$tagName"
+       echo "##vso[build.addbuildtag]$tagName"
+       echo "##vso[build.addbuildtag]Release"
+      fi
+    displayName: Tag Releases
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+    displayName: 'Replace tokens in **/appsettings.json'
+    inputs:
+      sources: '**/appsettings.json'
+  - task: Bash@3
+    enabled: true
+    displayName: Install Docker
+    inputs:
+      targetType: inline
+      script: >-
+        sudo apt update
+          
+        sudo apt install apt-transport-https ca-certificates curl
+        software-properties-common -y
+        
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo
+        apt-key add -
+        
+        sudo add-apt-repository "deb [arch=amd64]
+        https://download.docker.com/linux/ubuntu bionic stable"
+        
+        sudo apt update
+        
+        apt-cache policy docker-ce
+        
+        sudo apt install docker-ce -y
+        
+        sudo systemctl start docker
+  - task: Bash@3
+    enabled: true
+    displayName: Pulling Required Docker Images for SQL Server
+    inputs:
+      targetType: inline
+      script: |-
+        sudo docker stop sql1
+ 
+        sudo docker rm sql1
+ 
+        sudo docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=1Password" \
+            -p 1433:1433 --name sql1 --hostname sql1 \
+            -d \
+            mcr.microsoft.com/mssql/server:2022-latest
+  - task: Bash@3
+    enabled: true
+    displayName: Docker SQL Connection Test
+    inputs:
+      targetType: inline
+      script: |
+        CONTAINER_NAME="sql1"
+        # Set the maximum number of retries
+        MAX_RETRIES=10
+        # Set the retry interval in seconds
+        RETRY_INTERVAL=5
+        # Initialize the retry counter
+        RETRY_COUNT=0
+        
+        while [[ $RETRY_COUNT -lt $MAX_RETRIES ]]; do
+        
+          # Check if the SQL container is running
+          container_status=$(sudo docker inspect -f '{{.State.Status}}' $CONTAINER_NAME)
+        
+          if [[ $container_status != "running" ]]; then
+            # The SQL container is not running
+            echo "SQL Server container is not running. Retrying...(retry $RETRY_COUNT/$MAX_RETRIES)"
+            sleep $RETRY_INTERVAL
+            ((RETRY_COUNT++))
+            continue
+          fi
+        
+          # The SQL container is running
+        
+          # Wait for the SQL container to be ready
+          if [[ "$(sudo docker logs $CONTAINER_NAME | grep 'SQL Server is now ready for client connections' | wc -l)" -eq 0 ]]; then
+            echo "Waiting for SQL Server log entry stating its ready for connections...(retry $RETRY_COUNT/$MAX_RETRIES)"
+            sleep $RETRY_INTERVAL
+            ((RETRY_COUNT++))
+          else
+            # The SQL container is ready
+            echo "SQL Server container is ready!"
+            break
+          fi
+        
+        done
+        
+        # If the retry counter is equal to the maximum number of retries, then the container failed to start
+        if [[ $RETRY_COUNT -eq $MAX_RETRIES ]]; then
+          echo "SQL Server container is not ready after $MAX_RETRIES retries"
+          exit 1
+        fi
+  - task: UseDotNet@2
+    displayName: "Install .NET Core SDK"
+    inputs:
+      version: 10.x
+      performMultiLevelLookup: true
+      includePreviewVersions: true # Required for preview versions
+  - task: DotNetCoreCLI@2
+    displayName: "Dotnet Restore"
+    inputs:
+      command: "restore"
+      feedsToUse: "select"
+      projects: "**/*.csproj"
+      includeNuGetOrg: true
+  # - task: NodeTool@0
+  #   displayName: 'Install Node.js'
+  #   inputs:
+  #     versionSpec: '24.x'
+  # - script: |
+  #     npm ci
+  #     npx playwright install --with-deps
+  #     npx playwright test
+  #   workingDirectory: './LondonFhirService.Api.Client'
+  #   displayName: 'Playwright test'
+  #   env:
+  #       ASPNETCORE_ENVIRONMENT: ContinuousIntegration
+
+  # - task: Npm@1
+  #   displayName: 'Install client dependencies (API Portal)'
+  #   inputs:
+  #     command: 'install'
+  #     workingDir: 'LondonFhirService.Api.Client'
+
+  # - task: Npm@1
+  #   displayName: 'Install client dependencies (Back Office Portal)'
+  #   inputs:
+  #     command: 'install'
+  #     workingDir: 'LondonFhirService.Manage.Client'
+
+  - task: DotNetCoreCLI@2
+    displayName: "Dotnet Publish Public FHIR API"
+    inputs:
+      command: "publish"
+      publishWebProjects: false
+      projects: "**/LondonFhirService.Api.csproj"
+      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_fhir_api"
+      zipAfterPublish: true
+      modifyOutputPath: false
+
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_fhir_api
+    displayName: 'Publish Artifact - Public FHIR API'
+    artifact: drop-public-fhir-api
+
+  - task: DotNetCoreCLI@2
+    displayName: "Dotnet Publish Back Office Management Portal"
+    inputs:
+      command: "publish"
+      publishWebProjects: false
+      projects: "**/LondonFhirService.Manage.csproj"
+      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal"
+      zipAfterPublish: true
+      modifyOutputPath: false
+
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal
+    displayName: 'Publish Artifact - Back Office Management Portal'
+    artifact: drop-backoffice-management-portal
