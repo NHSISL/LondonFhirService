@@ -623,6 +623,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
+            Guid inputCorrelationId = Guid.NewGuid();
             List<Bundle> expectedBundles = new List<Bundle>();
 
             List<Exception> exceptions = new List<Exception>
@@ -647,6 +648,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    inputCorrelationId,
                     inputId,
                     null,
                     null,
@@ -659,6 +661,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    inputCorrelationId,
                     inputId,
                     null,
                     null,
@@ -673,6 +676,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: inputCorrelationId,
                     id: inputId,
                     cancellationToken: default);
 
@@ -683,6 +687,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    inputCorrelationId,
                     inputId,
                     null,
                     null,
@@ -695,6 +700,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    inputCorrelationId,
                     inputId,
                     null,
                     null,

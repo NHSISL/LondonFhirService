@@ -34,6 +34,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         public ValueTask<List<Bundle>> EverythingAsync(
             List<string> providerNames,
+            Guid correlationId,
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -77,6 +78,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 var tasks = providers.Select(provider => ExecuteEverythingWithTimeoutAsync(
                     provider,
                     cancellationToken,
+                    correlationId,
                     id,
                     start,
                     end,
@@ -114,6 +116,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         public ValueTask<List<string>> EverythingSerialisedAsync(
             List<string> providerNames,
+            Guid correlationId,
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -157,6 +160,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 var tasks = providers.Select(provider => ExecuteEverythingSerialisedWithTimeoutAsync(
                     provider,
                     cancellationToken,
+                    correlationId,
                     id,
                     start,
                     end,
@@ -194,6 +198,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         public ValueTask<List<Bundle>> GetStructuredRecordAsync(
             List<string> providerNames,
+            Guid correlationId,
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -235,6 +240,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 var tasks = providers.Select(provider => ExecuteGetStructuredRecordWithTimeoutAsync(
                     provider,
                     cancellationToken,
+                    correlationId,
                     nhsNumber,
                     dateOfBirth,
                     demographicsOnly,
@@ -270,6 +276,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         public ValueTask<List<string>> GetStructuredRecordSerialisedAsync(
             List<string> providerNames,
+            Guid correlationId,
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -311,6 +318,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 var tasks = providers.Select(provider => ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     provider,
                     cancellationToken,
+                    correlationId,
                     nhsNumber,
                     dateOfBirth,
                     demographicsOnly,
@@ -347,6 +355,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteGetStructuredRecordWithTimeoutAsync(
             IFhirProvider provider,
             CancellationToken globalToken,
+            Guid correlationId,
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -415,6 +424,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         virtual internal async Task<(string Json, Exception Exception)> ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
             IFhirProvider provider,
             CancellationToken globalToken,
+            Guid correlationId,
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -485,6 +495,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteEverythingWithTimeoutAsync(
             IFhirProvider provider,
             CancellationToken globalToken,
+            Guid correlationId,
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -556,6 +567,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         virtual internal async Task<(string Json, Exception Exception)> ExecuteEverythingSerialisedWithTimeoutAsync(
             IFhirProvider provider,
             CancellationToken globalToken,
+            Guid correlationId,
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,

@@ -39,7 +39,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                     .AddJsonFile(
                         Path.Combine(testProjectPath, "appsettings.json"),
                         optional: true)
-                    .AddInMemoryCollection(new Dictionary<string, string?>
+                    .AddInMemoryCollection(new Dictionary<string, string>
                     {
                         // Put your strong overrides here
                         //["AzureAd:TenantId"] = "TEST-TENANT",
