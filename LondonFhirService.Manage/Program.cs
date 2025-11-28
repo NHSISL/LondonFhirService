@@ -19,6 +19,7 @@ using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -37,7 +38,15 @@ namespace LondonFhirService.Manage
             var builder = WebApplication.CreateBuilder(args);
             var invisibleApiKey = new InvisibleApiKey();
             ConfigureServices(builder, builder.Configuration, invisibleApiKey);
+
             var app = builder.Build();
+
+            app.MapGet("/", () => Results.Ok(new
+            {
+                Name = "London FHIR Service",
+                Version = "1.0",
+                Status = "Running"
+            }));
 
             using (var scope = app.Services.CreateScope())
             {
