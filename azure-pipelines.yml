@@ -65,3 +65,17 @@ steps:
   - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_fhir_api
     displayName: 'Publish Artifact - Public FHIR API'
     artifact: drop-public-fhir-api
+
+  - task: DotNetCoreCLI@2
+    displayName: "Dotnet Publish Back Office Management Portal"
+    inputs:
+      command: "publish"
+      publishWebProjects: false
+      projects: "**/LondonFhirService.Manage.csproj"
+      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal"
+      zipAfterPublish: true
+      modifyOutputPath: false
+
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal
+    displayName: 'Publish Artifact - Back Office Management Portal'
+    artifact: drop-backoffice-management-portal
