@@ -8,28 +8,28 @@
     <File Path=".gitignore" />
     <File Path="azure-pipelines.yml" />
     <File Path="README.md" />
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Infrastructure/LondonFhirService.Infrastructure.csproj" />
+    <Project Path="LondonFhirService.Infrastructure/LondonFhirService.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Core/">
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Core.Tests.Unit/LondonFhirService.Core.Tests.Unit.csproj" />
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Core/LondonFhirService.Core.csproj" />
+    <Project Path="LondonFhirService.Core.Tests.Unit/LondonFhirService.Core.Tests.Unit.csproj" />
+    <Project Path="LondonFhirService.Core/LondonFhirService.Core.csproj" />
   </Folder>
   <Folder Name="/Documentation/" />
   <Folder Name="/WebApps/" />
   <Folder Name="/WebApps/APIs/">
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Api.Tests.Acceptance/LondonFhirService.Api.Tests.Acceptance.csproj" />
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Api.Tests.Integration/LondonFhirService.Api.Tests.Integration.csproj" />
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Api.Tests.Unit/LondonFhirService.Api.Tests.Unit.csproj" />
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Api/LondonFhirService.Api.csproj" />
+    <Project Path="LondonFhirService.Api.Tests.Acceptance/LondonFhirService.Api.Tests.Acceptance.csproj" />
+    <Project Path="LondonFhirService.Api.Tests.Integration/LondonFhirService.Api.Tests.Integration.csproj" />
+    <Project Path="LondonFhirService.Api.Tests.Unit/LondonFhirService.Api.Tests.Unit.csproj" />
+    <Project Path="LondonFhirService.Api/LondonFhirService.Api.csproj" />
   </Folder>
   <Folder Name="/WebApps/Management/">
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Manage.Client/LondonFhirService.Manage.Client.esproj">
+    <Project Path="LondonFhirService.Manage.Client/LondonFhirService.Manage.Client.esproj">
       <Build />
       <Deploy />
     </Project>
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Manage.Tests.Acceptance/LondonFhirService.Manage.Tests.Acceptance.csproj" />
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Manage.Tests.Integration/LondonFhirService.Manage.Tests.Integration.csproj" />
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Manage.Tests.Unit/LondonFhirService.Manage.Tests.Unit.csproj" />
-    <Project Path="D:/Repos/NHSISL/LondonFhirService/LondonFhirService.Manage/LondonFhirService.Manage.csproj" />
+    <Project Path="LondonFhirService.Manage.Tests.Acceptance/LondonFhirService.Manage.Tests.Acceptance.csproj" />
+    <Project Path="LondonFhirService.Manage.Tests.Integration/LondonFhirService.Manage.Tests.Integration.csproj" />
+    <Project Path="LondonFhirService.Manage.Tests.Unit/LondonFhirService.Manage.Tests.Unit.csproj" />
+    <Project Path="LondonFhirService.Manage/LondonFhirService.Manage.csproj" />
   </Folder>
 </Solution>
