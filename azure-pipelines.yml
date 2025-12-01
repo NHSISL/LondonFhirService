@@ -53,21 +53,21 @@ steps:
       includeNuGetOrg: true
 
   - task: DotNetCoreCLI@2
-    displayName: "Dotnet Publish Public FHIR API"
+    displayName: "Dotnet Publish Public LFS FHIR API"
     inputs:
       command: "publish"
       publishWebProjects: false
       projects: "**/LondonFhirService.Api.csproj"
-      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_fhir_api"
+      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_lfs_fhir_api"
       zipAfterPublish: true
       modifyOutputPath: false
 
-  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_fhir_api
-    displayName: 'Publish Artifact - Public FHIR API'
-    artifact: drop-public-fhir-api
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_lfs_fhir_api
+    displayName: 'Publish Artifact - Public LFS FHIR API'
+    artifact: drop-public-lfs-fhir-api
 
   - task: DotNetCoreCLI@2
-    displayName: "Dotnet Publish Back Office Management Portal"
+    displayName: "Dotnet Publish Private LFS Back Office Management Portal"
     inputs:
       command: "publish"
       publishWebProjects: false
@@ -77,5 +77,5 @@ steps:
       modifyOutputPath: false
 
   - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal
-    displayName: 'Publish Artifact - Back Office Management Portal'
-    artifact: drop-backoffice-management-portal
+    displayName: 'Publish Artifact - Private LFS Back Office Management Portal'
+    artifact: drop-private-lfs-backoffice-management-portal
