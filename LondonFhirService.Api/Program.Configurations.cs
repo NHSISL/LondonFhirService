@@ -8,7 +8,6 @@ extern alias FhirSTU3;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
 using ISL.Providers.Captcha.Abstractions;
 using ISL.Providers.Captcha.FakeCaptcha.Providers.FakeCaptcha;
@@ -45,6 +44,7 @@ using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Models.Brokers.
 using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -140,6 +140,15 @@ public partial class Program
         // Resolve InvisibleApiKey from DI
         var invisibleApiKey = app.Services.GetRequiredService<InvisibleApiKey>();
 
+        app.MapGet("/", () => Results.Ok(new
+        {
+            Name = "London FHIR Service API",
+            Version = "1.0",
+            Status = "Running"
+        }));
+
+        app.MapHealthChecks("/health");               // Basic liveness check
+        app.MapHealthChecks("/health/ready");         // Readiness endpoint if needed
         app.UseDefaultFiles();
         app.UseStaticFiles();
 
@@ -162,9 +171,9 @@ public partial class Program
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseInvisibleApiMiddleware(invisibleApiKey);
+        //app.UseInvisibleApiMiddleware(invisibleApiKey);
         app.MapControllers();
-        app.MapFallbackToFile("/index.html");
+        //app.MapFallbackToFile("/index.html");
     }
 
     private static IEdmModel GetEdmModel()
