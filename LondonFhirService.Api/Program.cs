@@ -30,6 +30,9 @@ Program.ConfigurationOverridesForTesting(builder);
 var invisibleApiKey = new InvisibleApiKey();
 builder.Services.AddSingleton(invisibleApiKey);
 
+// Register health checks
+builder.Services.AddHealthChecks();
+
 // Register services using the host configuration (which tests can override)
 Program.ConfigureServices(builder);
 
