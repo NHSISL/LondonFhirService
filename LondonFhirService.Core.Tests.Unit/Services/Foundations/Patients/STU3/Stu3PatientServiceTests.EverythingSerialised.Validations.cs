@@ -23,6 +23,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         {
             // given
             List<string> providerNames = null;
+            Guid correlationId = Guid.NewGuid();
             string randomId = GetRandomString();
             string inputId = randomId;
 
@@ -42,6 +43,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> everythingSerialisedTask = patientService.EverythingSerialisedAsync(
                     providerNames: providerNames,
+                    correlationId: correlationId,
                     id: inputId,
                     cancellationToken: default);
 
@@ -57,6 +59,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -73,6 +77,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.Empty;
 
             var invalidArgumentsPatientServiceException = new InvalidArgumentsPatientServiceException(
                 message: "Invalid argument patient service exception, " +
@@ -82,6 +87,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 key: "id",
                 values: "Text is invalid");
 
+            invalidArgumentsPatientServiceException.AddData(
+                key: "correlationId",
+                values: "Id is invalid");
+
             var expectedPatientServiceValidationException =
                 new PatientServiceValidationException(
                     message: "Patient service validation error occurred, please fix the errors and try again.",
@@ -90,6 +99,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> everythingSerialisedTask = patientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: invalidText,
                     cancellationToken: default);
 
@@ -105,6 +115,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -118,6 +130,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -141,6 +154,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -155,6 +169,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
                     cancellationToken: default);
 
@@ -165,6 +180,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -182,6 +198,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.unsupportedFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -191,6 +208,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Never());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -205,6 +224,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -228,6 +248,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -242,6 +263,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
                     cancellationToken: default);
 
@@ -252,6 +274,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -269,6 +292,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.unsupportedErrorFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -278,6 +302,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Never());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -296,6 +322,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -328,6 +355,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -340,6 +368,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -354,6 +383,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
                     cancellationToken: default);
 
@@ -364,6 +394,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -376,6 +407,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -389,6 +421,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -408,6 +442,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             string randomId = GetRandomString();
             string inputId = randomId;
             List<Bundle> expectedBundles = new List<Bundle>();
@@ -434,6 +469,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -446,6 +482,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -460,6 +497,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
                     cancellationToken: default);
 
@@ -470,6 +508,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -482,6 +521,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -495,6 +535,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -511,6 +553,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -543,6 +586,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -555,6 +599,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -569,6 +614,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
                     cancellationToken: default);
 
@@ -579,6 +625,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -591,6 +638,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -604,6 +652,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -714,6 +764,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
     }

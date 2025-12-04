@@ -32,6 +32,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             List<Bundle> randomBundles = CreateRandomBundles();
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
@@ -57,6 +58,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.patientServiceMock.Setup(service =>
                 service.EverythingAsync(
                     activeProviderNames,
+                    correlationId,
                     inputId,
                     inputStart,
                     inputEnd,
@@ -74,6 +76,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             Bundle actualBundle = await this.patientOrchestrationService.EverythingAsync(
+                correlationId,
                 inputId,
                 inputStart,
                 inputEnd,
@@ -92,6 +95,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.patientServiceMock.Verify(service =>
                 service.EverythingAsync(
                     activeProviderNames,
+                    correlationId,
                     inputId,
                     inputStart,
                     inputEnd,

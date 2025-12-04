@@ -34,6 +34,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
+            Guid correlationId = Guid.NewGuid();
 
             var expectedPatientServiceDependencyValidationException =
                 new PatientServiceDependencyValidationException(
@@ -52,6 +53,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
+                    It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<bool?>(),
@@ -64,6 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             ValueTask<List<Bundle>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -79,6 +82,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
+                    It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<bool?>(),
@@ -91,6 +95,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -108,6 +114,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
+            Guid correlationId = Guid.NewGuid();
 
             var expectedPatientServiceDependencyException =
                 new PatientServiceDependencyException(
@@ -126,6 +133,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
+                    It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<bool?>(),
@@ -138,6 +146,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             ValueTask<List<Bundle>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -153,6 +162,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
+                    It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<bool?>(),
@@ -165,6 +175,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -180,6 +192,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> inputProviderNames = randomProviderNames.DeepClone();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
+            Guid correlationId = Guid.NewGuid();
             var serviceException = new Exception();
 
             var failedPatientServiceException =
@@ -205,6 +218,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
+                    It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<bool?>(),
@@ -217,6 +231,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             ValueTask<List<Bundle>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -232,6 +247,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
+                    It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<bool?>(),
@@ -244,6 +260,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
     }

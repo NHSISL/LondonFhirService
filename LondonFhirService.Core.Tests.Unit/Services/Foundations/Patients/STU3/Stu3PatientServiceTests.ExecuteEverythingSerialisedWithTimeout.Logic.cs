@@ -28,6 +28,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputId = randomId;
             var fhirProvider = this.ddsFhirProviderMock.Object;
             var fhirProviderCopy = this.ddsFhirProviderMock.Object.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             expectedBundle.Meta.Extension = new List<Extension>
             {
@@ -68,6 +69,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -117,6 +119,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomId = GetRandomString();
             string inputId = randomId;
             CancellationToken alreadyCanceledToken = new CancellationToken(true);
+            Guid correlationId = Guid.NewGuid();
 
             OperationCanceledException operationCanceledException =
                 new OperationCanceledException(alreadyCanceledToken);
@@ -130,6 +133,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     alreadyCanceledToken,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -163,6 +167,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputId = randomId;
             OperationCanceledException operationCanceledException = new OperationCanceledException();
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            Guid correlationId = Guid.NewGuid();
 
             (string Json, Exception Exception) expectedResult = (null, operationCanceledException);
 
@@ -181,6 +186,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -203,6 +209,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -213,6 +221,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputId = randomId;
             Exception exception = new Exception(GetRandomString());
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            Guid correlationId = Guid.NewGuid();
 
             (string Json, Exception Exception) expectedResult = (null, exception);
 
@@ -231,6 +240,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -253,6 +263,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -264,6 +276,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.patientServiceConfig.MaxProviderWaitTimeMilliseconds = timeoutMilliseconds;
             string randomId = GetRandomString();
             string inputId = randomId;
+            Guid correlationId = Guid.NewGuid();
 
             OperationCanceledException operationCanceledException =
                 new OperationCanceledException("A task was canceled.");
@@ -295,6 +308,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteEverythingSerialisedWithTimeoutAsync(
                     fhirProvider,
                     default,
+                    correlationId,
                     inputId,
                     null,
                     null,
@@ -323,6 +337,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

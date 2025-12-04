@@ -23,6 +23,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // given
             string randomString = GetRandomString();
             string inputNhsNumber = randomString;
+            Guid correlationId = Guid.NewGuid();
 
             var expectedPatientOrchestrationDependencyValidationException =
                 new PatientOrchestrationDependencyValidationException(
@@ -36,7 +37,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(correlationId: correlationId, nhsNumber: inputNhsNumber);
 
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
@@ -70,6 +71,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // given
             string randomString = GetRandomString();
             string inputNhsNumber = randomString;
+            Guid correlationId = Guid.NewGuid();
 
             var expectedPatientOrchestrationDependencyException =
                 new PatientOrchestrationDependencyException(
@@ -83,7 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(correlationId: correlationId, nhsNumber: inputNhsNumber);
 
             PatientOrchestrationDependencyException
                 actualPatientOrchestrationDependencyException =
@@ -116,6 +118,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             string randomString = GetRandomString();
             string inputNhsNumber = randomString;
             string randomExceptionMessage = GetRandomString();
+            Guid correlationId = Guid.NewGuid();
             Exception serviceException = new Exception(randomExceptionMessage);
 
             this.providerServiceMock.Setup(service =>
@@ -136,7 +139,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // When
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(correlationId: correlationId, nhsNumber: inputNhsNumber);
 
             PatientOrchestrationServiceException actualPatientOrchestrationServiceException =
                 await Assert.ThrowsAsync<PatientOrchestrationServiceException>(

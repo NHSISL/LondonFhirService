@@ -22,20 +22,20 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
     {
         private readonly IStu3FhirBroker fhirBroker;
         private readonly IAuditBroker auditBroker;
-        private readonly IIdentifierBroker identityBroker;
+        private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly PatientServiceConfig patientServiceConfig;
 
         public Stu3PatientService(
             IStu3FhirBroker fhirBroker,
             IAuditBroker auditBroker,
-            IIdentifierBroker identityBroker,
+            IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
             this.fhirBroker = fhirBroker;
             this.auditBroker = auditBroker;
-            this.identityBroker = identityBroker;
+            this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }

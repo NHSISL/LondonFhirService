@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -25,14 +26,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
         {
             // given
             string invalidId = invalidText;
+            Guid correlationId = Guid.Empty;
 
             var invalidArgumentPatientOrchestrationException =
                 new InvalidArgumentPatientOrchestrationException(
                     message: "Invalid patient orchestration argument, please correct the errors and try again.");
 
             invalidArgumentPatientOrchestrationException.AddData(
-                key: "Id",
+                key: "id",
                 values: "Text is required");
+
+            invalidArgumentPatientOrchestrationException.AddData(
+                key: "correlationId",
+                values: "Id is required");
 
             var expectedPatientOrchestrationValidationException =
                 new PatientOrchestrationValidationException(
@@ -41,7 +47,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientOrchestrationService.EverythingAsync(id: invalidId);
+                this.patientOrchestrationService.EverythingAsync(
+                    correlationId: correlationId,
+                    id: invalidId);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -69,7 +77,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             string randomId = GetRandomString();
             string inputId = randomId;
             CancellationToken cancellationToken = CancellationToken.None;
-
+            Guid correlationId = Guid.NewGuid();
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
 
@@ -94,7 +102,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientOrchestrationService.EverythingAsync(id: inputId, cancellationToken: cancellationToken);
+                this.patientOrchestrationService.EverythingAsync(
+                    correlationId: correlationId,
+                    id: inputId,
+                    cancellationToken: cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -126,7 +137,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             string randomId = GetRandomString();
             string inputId = randomId;
             CancellationToken cancellationToken = CancellationToken.None;
-
+            Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider anotherRandomPrimaryProvider = CreateRandomPrimaryProvider();
 
@@ -154,7 +165,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask<Bundle> everythingTask =
-                this.patientOrchestrationService.EverythingAsync(id: inputId, cancellationToken: cancellationToken);
+                this.patientOrchestrationService.EverythingAsync(
+                    correlationId: correlationId,
+                    id: inputId,
+                    cancellationToken: cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(

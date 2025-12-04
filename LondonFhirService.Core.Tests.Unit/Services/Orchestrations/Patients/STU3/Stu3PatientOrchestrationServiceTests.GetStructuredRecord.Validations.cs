@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -25,6 +26,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
         {
             // given
             string invalidNhsNumber = invalidText;
+            Guid correlationId = Guid.Empty;
 
             var invalidArgumentPatientOrchestrationException =
                 new InvalidArgumentPatientOrchestrationException(
@@ -34,14 +36,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 key: "NhsNumber",
                 values: "Text is required");
 
+            invalidArgumentPatientOrchestrationException.AddData(
+                key: "CorrelationId",
+                values: "Id is required");
+
             var expectedPatientOrchestrationValidationException =
                 new PatientOrchestrationValidationException(
                     message: "Patient orchestration validation error occurred, please try again.",
                     innerException: invalidArgumentPatientOrchestrationException);
 
             // when
-            ValueTask<Bundle> everythingTask =
-                this.patientOrchestrationService.GetStructuredRecordAsync(nhsNumber: invalidNhsNumber);
+            ValueTask<Bundle> everythingTask = this.patientOrchestrationService.GetStructuredRecordAsync(
+                correlationId: correlationId,
+                nhsNumber: invalidNhsNumber);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -69,7 +76,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             string randomId = GetRandomString();
             string inputNhsNumber = randomId;
             CancellationToken cancellationToken = CancellationToken.None;
-
+            Guid correlationId = Guid.Empty;
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
 
@@ -93,8 +100,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: invalidPrimaryProviderPatientOrchestrationException);
 
             // when
-            ValueTask<Bundle> everythingTask = this.patientOrchestrationService
-                .GetStructuredRecordAsync(nhsNumber: inputNhsNumber, cancellationToken: cancellationToken);
+            ValueTask<Bundle> everythingTask = this.patientOrchestrationService.GetStructuredRecordAsync(
+                correlationId: correlationId,
+                nhsNumber: inputNhsNumber,
+                cancellationToken: cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -126,7 +135,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             string randomId = GetRandomString();
             string inputId = randomId;
             CancellationToken cancellationToken = CancellationToken.None;
-
+            Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider anotherRandomPrimaryProvider = CreateRandomPrimaryProvider();
 
@@ -153,8 +162,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: invalidPrimaryProviderPatientOrchestrationException);
 
             // when
-            ValueTask<Bundle> everythingTask = this.patientOrchestrationService
-                .GetStructuredRecordAsync(nhsNumber: inputId, cancellationToken: cancellationToken);
+            ValueTask<Bundle> everythingTask = this.patientOrchestrationService.GetStructuredRecordAsync(
+                correlationId: correlationId,
+                nhsNumber: inputId,
+                cancellationToken: cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(

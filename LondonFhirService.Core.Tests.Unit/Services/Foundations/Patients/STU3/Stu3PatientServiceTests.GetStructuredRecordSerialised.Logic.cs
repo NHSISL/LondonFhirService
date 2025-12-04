@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -34,6 +35,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputLdsBundle = this.fhirJsonSerializer.SerializeToString(outputLdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputnhsNumber = randomNhsNumber;
+            Guid correlationId = Guid.NewGuid();
 
             List<string> expectedBundles = new List<string>
             {
@@ -53,6 +55,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputnhsNumber,
                     null,
                     null,
@@ -63,6 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputnhsNumber,
                     null,
                     null,
@@ -75,6 +79,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputnhsNumber,
                     cancellationToken: default);
 
@@ -85,6 +90,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputnhsNumber,
                     null,
                     null,
@@ -95,6 +101,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputnhsNumber,
                     null,
                     null,
@@ -102,6 +109,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
     }
