@@ -387,6 +387,40 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                 return await storageBroker.DeleteProviderAsync(provider);
             }
         }
+
+        private static Parameters CreateRandomGetStructuredRecordParameters(
+            string nhsNumber,
+            DateTimeOffset? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null)
+        {
+            var parameters = new Parameters();
+
+            parameters.Add(
+                "patientNHSNumber",
+                new Identifier
+                {
+                    System = "https://fhir.hl7.org.uk/Id/nhs-number",
+                    Value = nhsNumber
+                });
+
+            if (dateOfBirth.HasValue)
+            {
+                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth.Value));
+            }
+
+            if (demographicsOnly.HasValue)
+            {
+                parameters.Add("demographicsOnly", new FhirBoolean(demographicsOnly.Value));
+            }
+
+            if (includeInactivePatients.HasValue)
+            {
+                parameters.Add("includeInactivePatients", new FhirBoolean(includeInactivePatients.Value));
+            }
+
+            return parameters;
+        }
     }
 }
 
