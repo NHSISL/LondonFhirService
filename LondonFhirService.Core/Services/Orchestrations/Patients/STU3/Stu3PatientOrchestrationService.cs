@@ -60,8 +60,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     .Where(provider =>
                         provider.IsPrimary &&
                         provider.IsActive &&
-                        provider.ActiveFrom <= now &&
-                        provider.ActiveTo >= now &&
+                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                         provider.FhirVersion == "STU3")
                     .ToList();
 
@@ -71,8 +71,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 List<string> activeProviderNames = orderedProviders
                     .Where(provider =>
                         provider.IsActive &&
-                        provider.ActiveFrom <= now &&
-                        provider.ActiveTo >= now &&
+                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                         provider.FhirVersion == "STU3" &&
                         !provider.IsForComparisonOnly)
                     .Select(provider => provider.Name)
@@ -120,8 +120,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     .Where(provider =>
                         provider.IsPrimary &&
                         provider.IsActive &&
-                        provider.ActiveFrom <= now &&
-                        provider.ActiveTo >= now &&
+                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                         provider.FhirVersion == "STU3")
                     .ToList();
 
@@ -131,8 +131,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 List<string> activeProviderNames = orderedProviders
                     .Where(provider =>
                         provider.IsActive &&
-                        provider.ActiveFrom <= now &&
-                        provider.ActiveTo >= now &&
+                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                         provider.FhirVersion == "STU3" &&
                         !provider.IsForComparisonOnly)
                     .Select(provider => provider.Name)
@@ -189,8 +189,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             List<string> activeProviderNames = orderedProviders
                 .Where(provider =>
                     provider.IsActive &&
-                    provider.ActiveFrom <= now &&
-                    provider.ActiveTo >= now &&
+                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                    (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                     provider.FhirVersion == "STU3" &&
                     !provider.IsForComparisonOnly)
                 .Select(provider => provider.Name)
@@ -234,8 +234,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 .Where(provider =>
                     provider.IsPrimary &&
                     provider.IsActive &&
-                    provider.ActiveFrom <= now &&
-                    provider.ActiveTo >= now &&
+                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                    (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                     provider.FhirVersion == "STU3")
                 .ToList();
 
@@ -245,8 +245,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             List<string> activeProviderNames = orderedProviders
                 .Where(provider =>
                     provider.IsActive &&
-                    provider.ActiveFrom <= now &&
-                    provider.ActiveTo >= now &&
+                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                    (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                     provider.FhirVersion == "STU3" &&
                     !provider.IsForComparisonOnly)
                 .Select(provider => provider.Name)
