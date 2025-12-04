@@ -15,7 +15,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
     public partial class ApiBroker
     {
-        private const string R4PatientRelativeUrl = "api/R4/R4Patient";
+        private const string R4PatientRelativeUrl = "api/R4/Patient";
 
         public async ValueTask<Bundle> EverythingR4Async(string id, Parameters parameters)
         {
