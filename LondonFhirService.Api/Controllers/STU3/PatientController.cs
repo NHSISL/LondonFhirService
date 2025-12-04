@@ -72,15 +72,15 @@ namespace LondonFhirService.Api.Controllers.STU3
             }
         }
 
-        [HttpPost("{nhsNumber}/$getstructuredrecord")]
+        [HttpPost("$getstructuredrecord")]
         [Authorize(Roles = "Patients.GetStructuredRecord")]
         public async Task<ActionResult<Bundle>> GetStructuredRecord(
-            string nhsNumber,
             [FromBody] Parameters parameters,
             CancellationToken cancellationToken)
         {
             try
             {
+                string nhsNumber = ExtractStringParameter(parameters, "patientNHSNumber");
                 DateTimeOffset? dateOfBirth = ExtractDateTimeParameter(parameters, "dateOfBirth");
                 DateTime? dateOfBirthDateTime = dateOfBirth.HasValue ? dateOfBirth.Value.DateTime : null;
                 bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
@@ -118,7 +118,17 @@ namespace LondonFhirService.Api.Controllers.STU3
         {
             var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
 
-            return parameter?.Value is FhirString fhirString ? fhirString.Value : null;
+            if (parameter?.Value is FhirString fhirString)
+            {
+                return fhirString.Value;
+            }
+
+            if (parameter?.Value is Identifier identifier)
+            {
+                return identifier.Value;
+            }
+
+            return null;
         }
 
         private static DateTimeOffset? ExtractDateTimeParameter(Parameters parameters, string name)

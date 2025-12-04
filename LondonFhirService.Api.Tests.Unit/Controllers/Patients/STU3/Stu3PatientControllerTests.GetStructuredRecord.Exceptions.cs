@@ -31,6 +31,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             CancellationToken cancellationToken = CancellationToken.None;
 
             Parameters randomParameters = CreateRandomGetStructuredRecordParameters(
+                nhsNumber: inputNhsNumber,
                 dateOfBirth: inputDateOfBirth,
                 demographicsOnly: inputDemographicsOnly,
                 includeInactivePatients: inputIncludeInactivePatients);
@@ -53,7 +54,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             // when
             ActionResult<Bundle> actualActionResult =
-                await this.patientController.GetStructuredRecord(inputNhsNumber, inputParameters, cancellationToken);
+                await this.patientController.GetStructuredRecord(inputParameters, cancellationToken);
 
             // then
             actualActionResult.Should().BeEquivalentTo(expectedActionResult);
@@ -85,6 +86,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             CancellationToken cancellationToken = CancellationToken.None;
 
             Parameters randomParameters = CreateRandomGetStructuredRecordParameters(
+                nhsNumber: inputNhsNumber,
                 dateOfBirth: inputDateOfBirth,
                 demographicsOnly: inputDemographicsOnly,
                 includeInactivePatients: inputIncludeInactivePatients);
@@ -107,7 +109,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             // when
             ActionResult<Bundle> actualActionResult =
-                await this.patientController.GetStructuredRecord(inputNhsNumber, inputParameters, cancellationToken);
+                await this.patientController.GetStructuredRecord(inputParameters, cancellationToken);
 
             // then
             actualActionResult.Should().BeEquivalentTo(expectedActionResult);
