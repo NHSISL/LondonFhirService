@@ -34,9 +34,6 @@ namespace LondonFhirService.Api.Tests.Acceptance
             new Claim(ClaimTypes.Email, email),
             new Claim("jobTitle", jobTitle),
             new Claim(ClaimTypes.Name, "TestUser"),
-            new Claim(ClaimTypes.Role, "LondonDataServices.IDecide.Portal.Server.Administrators"),
-            new Claim(ClaimTypes.Role, "LondonDataServices.IDecide.Portal.Server.Users"),
-            new Claim(ClaimTypes.Role, "LondonFhirServiceApiConsumer"),
             new Claim(ClaimTypes.Role, "Patients.Everything"),
             new Claim(ClaimTypes.Role, "Patients.GetStructuredRecord")
         };

@@ -282,7 +282,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             var forbiddenAccessOrchestrationException =
                 new ForbiddenAccessOrchestrationException(
-                   "Current consumer is not active or does not have the required role.");
+                   "Current consumer is not active or does not have a valid access window.");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
@@ -305,10 +305,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
-
-            this.securityBrokerMock.Setup(broker =>
-                broker.IsInRoleAsync("LondonFhirServiceApiConsumer"))
-                    .ReturnsAsync(true);
 
             // when
             ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
@@ -337,16 +333,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.IsInRoleAsync("LondonFhirServiceApiConsumer"),
-                    Times.Once);
-
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     "Access",
                     "Access Forbidden",
+
                     $"Access was forbidden as consumer with id {inputConsumer.Id} " +
-                        $"is inactive or does not have the required role.",
+                        $"is not active / does not have valid access window " +
+                            $"(ActiveFrom: {inputConsumer.ActiveFrom}, ActiveTo: {inputConsumer.ActiveTo})",
                     null,
                     randomGuid.ToString()),
                         Times.Once);

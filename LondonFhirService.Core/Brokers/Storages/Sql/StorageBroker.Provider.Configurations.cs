@@ -49,11 +49,11 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 
             model
                 .Property(provider => provider.ActiveFrom)
-                .IsRequired();
+                .IsRequired(false);
 
             model
                 .Property(provider => provider.ActiveTo)
-                .IsRequired();
+                .IsRequired(false);
 
             model
                 .Property(provider => provider.IsForComparisonOnly)
