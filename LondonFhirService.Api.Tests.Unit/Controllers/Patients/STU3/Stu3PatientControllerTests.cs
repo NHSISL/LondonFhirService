@@ -86,11 +86,20 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
         }
 
         private static Parameters CreateRandomGetStructuredRecordParameters(
+            string nhsNumber,
             DateTimeOffset? dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null)
         {
             var parameters = new Parameters();
+
+            parameters.Add(
+                "patientNHSNumber",
+                new Identifier
+                {
+                    System = "https://fhir.hl7.org.uk/Id/nhs-number",
+                    Value = nhsNumber
+                });
 
             if (dateOfBirth.HasValue)
             {
