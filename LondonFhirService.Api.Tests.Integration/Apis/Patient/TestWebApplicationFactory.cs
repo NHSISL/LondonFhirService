@@ -28,9 +28,8 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
                 // This runs inside Program.cs right after CreateBuilder(...)
                 // This lets us override any configuration values for testing
                 builder.Configuration
-                    .AddJsonFile(
-                        Path.Combine(testProjectPath, "appsettings.json"),
-                        optional: true)
+                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.json"), optional: true)
+                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.Integration.json"), optional: true)
                     .AddInMemoryCollection(new Dictionary<string, string?>
                     {
                         // Put your strong overrides here
