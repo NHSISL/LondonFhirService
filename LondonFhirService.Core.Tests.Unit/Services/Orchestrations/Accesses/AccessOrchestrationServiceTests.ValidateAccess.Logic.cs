@@ -58,10 +58,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.IsInRoleAsync("LondonFhirServiceApiConsumer"))
-                    .ReturnsAsync(true);
-
             this.consumerAccessServiceMock.Setup(service =>
                 service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id))
                     .ReturnsAsync(userOrganisations);
@@ -88,10 +84,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
-
-            this.securityBrokerMock.Verify(broker =>
-                broker.IsInRoleAsync("LondonFhirServiceApiConsumer"),
                     Times.Once);
 
             this.consumerAccessServiceMock.Verify(service =>

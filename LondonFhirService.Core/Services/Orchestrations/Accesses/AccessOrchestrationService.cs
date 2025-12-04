@@ -66,21 +66,24 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 }
 
                 DateTimeOffset now = await dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-                bool isFhirServiceApiConsumer = await securityBroker.IsInRoleAsync("LondonFhirServiceApiConsumer");
 
-                if (!isFhirServiceApiConsumer || matchingConsumer.ActiveFrom > now || matchingConsumer.ActiveTo < now)
+                if (matchingConsumer.ActiveFrom > now
+                    || (matchingConsumer.ActiveTo.HasValue && matchingConsumer.ActiveTo < now))
                 {
                     await this.auditBroker.LogInformationAsync(
                             auditType: "Access",
                             title: "Access Forbidden",
+
                             message:
                                 $"Access was forbidden as consumer with id {matchingConsumer.Id} " +
-                                $"is inactive or does not have the required role.",
+                                $"is not active / does not have valid access window " +
+                                $"(ActiveFrom: {matchingConsumer.ActiveFrom}, ActiveTo: {matchingConsumer.ActiveTo})",
+
                             fileName: null,
                             correlationId: correlationId.ToString());
 
                     throw new ForbiddenAccessOrchestrationException(
-                        "Current consumer is not active or does not have the required role.");
+                        "Current consumer is not active or does not have a valid access window.");
                 }
 
                 List<string> consumerActiveOrgs =
