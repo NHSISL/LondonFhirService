@@ -13,7 +13,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
     public partial class Stu3PatientOrchestrationService
     {
-        private static void ValidateArgsOnEverything(string id, Guid? correlationId)
+        private static void ValidateArgsOnEverything(string id, Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentPatientOrchestrationException(
@@ -23,7 +23,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 (Rule: IsInvalid(correlationId), Parameter: "CorrelationId"));
         }
 
-        private static void ValidateArgsOnGetStructuredRecord(string nhsNumber, Guid? correlationId)
+        private static void ValidateArgsOnGetStructuredRecord(string nhsNumber, Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentPatientOrchestrationException(

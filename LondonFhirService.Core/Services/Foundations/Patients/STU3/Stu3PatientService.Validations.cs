@@ -11,7 +11,10 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
     public partial class Stu3PatientService
     {
-        public static void ValidateOnEverything(List<string> providerNames, string id)
+        public static void ValidateOnEverything(
+            List<string> providerNames,
+            string id,
+            Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
@@ -23,7 +26,10 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 (Rule: IsInvalid(id), Parameter: nameof(id)));
         }
 
-        public static void ValidateOnGetStructuredRecord(List<string> providerNames, string nhsNumber)
+        public static void ValidateOnGetStructuredRecord(
+            List<string> providerNames,
+            string nhsNumber,
+            Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
@@ -45,6 +51,12 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         {
             Condition = string.IsNullOrWhiteSpace(name),
             Message = "Text is invalid"
+        };
+
+        private static dynamic IsInvalid(Guid? id) => new
+        {
+            Condition = id == null || id == Guid.Empty,
+            Message = "Id is required"
         };
 
         private static void Validate<T>(

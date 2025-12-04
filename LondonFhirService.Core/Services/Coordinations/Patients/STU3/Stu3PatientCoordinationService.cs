@@ -47,7 +47,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         TryCatch(async () =>
         {
             ValidateArgsOnEverything(id);
-
             Guid correlationId = await this.identityBroker.GetIdentifierAsync();
             string auditType = "STU3-Patient-Everything";
 

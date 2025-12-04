@@ -23,6 +23,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         {
             // given
             List<string> providerNames = null;
+            Guid correlationId = Guid.NewGuid();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
 
@@ -42,6 +43,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> everythingTask = patientService.GetStructuredRecordSerialisedAsync(
                 providerNames: providerNames,
+                correlationId: correlationId,
                 nhsNumber: inputNhsNumber,
                 cancellationToken: default);
 
@@ -72,6 +74,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 "LDS"
             };
 
+            Guid correlationId = Guid.Empty;
             List<string> inputProviderNames = randomProviderNames.DeepClone();
 
             var invalidArgumentsPatientServiceException = new InvalidArgumentsPatientServiceException(
@@ -82,6 +85,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 key: "nhsNumber",
                 values: "Text is invalid");
 
+            invalidArgumentsPatientServiceException.AddData(
+                key: "correlationId",
+                values: "Id is invalid");
+
             var expectedPatientServiceValidationException =
                 new PatientServiceValidationException(
                     message: "Patient service validation error occurred, please fix the errors and try again.",
@@ -90,6 +97,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> everythingTask = patientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: invalidText,
                     cancellationToken: default);
 
@@ -118,6 +126,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -141,6 +150,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -153,6 +163,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -163,6 +174,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -178,6 +190,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.unsupportedFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -199,6 +212,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -222,6 +236,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -234,6 +249,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -244,6 +260,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -259,6 +276,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.unsupportedErrorFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -284,6 +302,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -316,6 +335,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -326,6 +346,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -338,6 +359,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -348,6 +370,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -358,6 +381,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -388,6 +412,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             List<Bundle> expectedBundles = new List<Bundle>();
@@ -414,6 +439,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -424,6 +450,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -436,6 +463,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -446,6 +474,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -456,6 +485,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -483,6 +513,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -515,6 +546,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -525,6 +557,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -537,6 +570,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -547,6 +581,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -557,6 +592,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -585,6 +621,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.NewGuid();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             List<Bundle> expectedBundles = new List<Bundle>();
@@ -611,6 +648,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -621,6 +659,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -633,6 +672,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
 
@@ -643,6 +683,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -653,6 +694,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
                     default,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,

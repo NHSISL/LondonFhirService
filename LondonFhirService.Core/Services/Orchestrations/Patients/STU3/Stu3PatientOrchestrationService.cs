@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
@@ -23,6 +24,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         private readonly IStu3PatientService patientService;
         private readonly IStu3FhirReconciliationService fhirReconciliationService;
         private readonly IAuditBroker auditBroker;
+        private readonly IIdentifierBroker identityBroker;
         private readonly ILoggingBroker loggingBroker;
 
         public Stu3PatientOrchestrationService(
@@ -30,12 +32,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             IStu3PatientService patientService,
             IStu3FhirReconciliationService fhirReconciliationService,
             IAuditBroker auditBroker,
+            IIdentifierBroker identityBroker,
             ILoggingBroker loggingBroker)
         {
             this.providerService = providerService;
             this.patientService = patientService;
             this.fhirReconciliationService = fhirReconciliationService;
             this.auditBroker = auditBroker;
+            this.identityBroker = identityBroker;
             this.loggingBroker = loggingBroker;
         }
 
@@ -51,6 +55,26 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             TryCatch(async () =>
             {
                 ValidateArgsOnEverything(id, correlationId);
+                string auditType = "STU3-Patient-Everything";
+
+                string message =
+                    $"Parameters:  {{ id = \"{id}\", start = \"{start}\", " +
+                    $"end = \"{end}\", typeFilter = \"{typeFilter}\", " +
+                    $"since = \"{since}\", count = \"{count}\" }}";
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Orchestration Service Request Submitted",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Retrieve active providers and execute request",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 IQueryable<Provider> allProviders =
                     await this.providerService.RetrieveAllProvidersAsync();
@@ -94,9 +118,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     count,
                     cancellationToken);
 
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Reconcile bundles",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
                     bundles: bundles,
                     primaryProviderName: primaryProviderName);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Orchestration Service Request Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 return reconciledBundle;
             });
@@ -113,6 +151,26 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             TryCatch(async () =>
             {
                 ValidateArgsOnEverything(id, correlationId);
+                string auditType = "STU3-Patient-EverythingSerialised";
+
+                string message =
+                    $"Parameters:  {{ id = \"{id}\", start = \"{start}\", " +
+                    $"end = \"{end}\", typeFilter = \"{typeFilter}\", " +
+                    $"since = \"{since}\", count = \"{count}\" }}";
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Orchestration Service Request Submitted",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Retrieve active providers and execute request",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 IQueryable<Provider> allProviders =
                     await this.providerService.RetrieveAllProvidersAsync();
@@ -156,9 +214,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     count,
                     cancellationToken);
 
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Reconcile bundles",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
                     bundles: bundles,
                     primaryProviderName: primaryProviderName);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Orchestration Service Request Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 return reconciledBundle;
             });
@@ -173,6 +245,26 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         TryCatch(async () =>
         {
             ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
+                $"demographicsOnly = \"{demographicsOnly}\", " +
+                $"includeInactivePatients = \"{includeInactivePatients}\" }}";
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Orchestration Service Request Submitted",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Retrieve active providers and execute request",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
 
             IQueryable<Provider> allProviders =
                 await this.providerService.RetrieveAllProvidersAsync();
@@ -214,9 +306,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 includeInactivePatients,
                 cancellationToken);
 
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Reconcile bundles",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
+
             Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
                 bundles: bundles,
                 primaryProviderName: primaryProviderName);
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Orchestration Service Request Completed",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
 
             return reconciledBundle;
         });
@@ -231,6 +337,26 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         TryCatch(async () =>
         {
             ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
+                $"demographicsOnly = \"{demographicsOnly}\", " +
+                $"includeInactivePatients = \"{includeInactivePatients}\" }}";
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Orchestration Service Request Submitted",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Retrieve active providers and execute request",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
 
             IQueryable<Provider> allProviders =
                 await this.providerService.RetrieveAllProvidersAsync();
@@ -272,9 +398,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 includeInactivePatients,
                 cancellationToken);
 
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Reconcile bundles",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
+
             string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
                 bundles: bundles,
                 primaryProviderName: primaryProviderName);
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Orchestration Service Request Completed",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
 
             return reconciledBundle;
         });

@@ -8,7 +8,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
@@ -19,15 +21,21 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
     public partial class Stu3PatientService : IStu3PatientService
     {
         private readonly IStu3FhirBroker fhirBroker;
+        private readonly IAuditBroker auditBroker;
+        private readonly IIdentifierBroker identityBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly PatientServiceConfig patientServiceConfig;
 
         public Stu3PatientService(
             IStu3FhirBroker fhirBroker,
+            IAuditBroker auditBroker,
+            IIdentifierBroker identityBroker,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
             this.fhirBroker = fhirBroker;
+            this.auditBroker = auditBroker;
+            this.identityBroker = identityBroker;
             this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }
@@ -44,7 +52,21 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
-                ValidateOnEverything(providerNames, id);
+                ValidateOnEverything(providerNames, id, correlationId);
+                string auditType = "STU3-Patient-Everything";
+
+                string message =
+                    $"Parameters:  {{ id = \"{id}\", start = \"{start}\", " +
+                    $"end = \"{end}\", typeFilter = \"{typeFilter}\", " +
+                    $"since = \"{since}\", count = \"{count}\" }}";
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Submitted",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
 
                 List<IFhirProvider> providers = fhirBroker.FhirProviders
@@ -75,6 +97,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     }
                 }
 
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Started",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var tasks = providers.Select(provider => ExecuteEverythingWithTimeoutAsync(
                     provider,
                     cancellationToken,
@@ -87,6 +116,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     count)).ToArray();
 
                 var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var bundles = new List<Bundle>(outcomes.Length);
                 var exceptions = new List<Exception>();
 
@@ -110,6 +147,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     await loggingBroker.LogErrorAsync(aggregate);
                 }
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 return bundles;
             });
@@ -126,7 +170,21 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
-                ValidateOnEverything(providerNames, id);
+                ValidateOnEverything(providerNames, id, correlationId);
+                string auditType = "STU3-Patient-EverythingSerialised";
+
+                string message =
+                    $"Parameters:  {{ id = \"{id}\", start = \"{start}\", " +
+                    $"end = \"{end}\", typeFilter = \"{typeFilter}\", " +
+                    $"since = \"{since}\", count = \"{count}\" }}";
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Submitted",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
 
                 List<IFhirProvider> providers = fhirBroker.FhirProviders
@@ -157,6 +215,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     }
                 }
 
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Started",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var tasks = providers.Select(provider => ExecuteEverythingSerialisedWithTimeoutAsync(
                     provider,
                     cancellationToken,
@@ -169,6 +234,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     count)).ToArray();
 
                 var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var jsonBundles = new List<string>(outcomes.Length);
                 var exceptions = new List<Exception>();
 
@@ -193,6 +266,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     await loggingBroker.LogErrorAsync(aggregate);
                 }
 
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 return jsonBundles;
             });
 
@@ -206,7 +286,21 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
-                ValidateOnGetStructuredRecord(providerNames, nhsNumber);
+                ValidateOnGetStructuredRecord(providerNames, nhsNumber, correlationId);
+                string auditType = "STU3-Patient-GetStructuredRecord";
+
+                string message =
+                    $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
+                    $"demographicsOnly = \"{demographicsOnly}\", " +
+                    $"includeInactivePatients = \"{includeInactivePatients}\" }}";
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Submitted",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
 
                 List<IFhirProvider> providers = fhirBroker.FhirProviders
@@ -237,6 +331,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     }
                 }
 
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Started",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var tasks = providers.Select(provider => ExecuteGetStructuredRecordWithTimeoutAsync(
                     provider,
                     cancellationToken,
@@ -247,6 +348,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     includeInactivePatients)).ToArray();
 
                 var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var bundles = new List<Bundle>(outcomes.Length);
                 var exceptions = new List<Exception>();
 
@@ -271,6 +380,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     await loggingBroker.LogErrorAsync(aggregate);
                 }
 
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 return bundles;
             });
 
@@ -284,7 +400,21 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
-                ValidateOnGetStructuredRecord(providerNames, nhsNumber);
+                ValidateOnGetStructuredRecord(providerNames, nhsNumber, correlationId);
+                string auditType = "STU3-Patient-GetStructuredRecord";
+
+                string message =
+                    $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
+                    $"demographicsOnly = \"{demographicsOnly}\", " +
+                    $"includeInactivePatients = \"{includeInactivePatients}\" }}";
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Submitted",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var nameSet = new HashSet<string>(providerNames, StringComparer.OrdinalIgnoreCase);
 
                 List<IFhirProvider> providers = fhirBroker.FhirProviders
@@ -315,6 +445,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     }
                 }
 
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Started",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var tasks = providers.Select(provider => ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     provider,
                     cancellationToken,
@@ -325,6 +462,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     includeInactivePatients)).ToArray();
 
                 var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 var jsonBundles = new List<string>(outcomes.Length);
                 var exceptions = new List<Exception>();
 
@@ -348,6 +493,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     await loggingBroker.LogErrorAsync(aggregate);
                 }
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 return jsonBundles;
             });
@@ -365,6 +517,20 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             {
                 return (null, new OperationCanceledException(globalToken));
             }
+
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
+                $"demographicsOnly = \"{demographicsOnly}\", " +
+                $"includeInactivePatients = \"{includeInactivePatients}\" }}";
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"{provider.DisplayName} Provider Execution Started",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
 
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
@@ -399,6 +565,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 });
 
                 bundle.Meta.Tag.Add(coding);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"{provider.DisplayName} Provider Execution Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 return (bundle, null);
             }
@@ -435,6 +608,20 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 return (null, new OperationCanceledException(globalToken));
             }
 
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
+                $"demographicsOnly = \"{demographicsOnly}\", " +
+                $"includeInactivePatients = \"{includeInactivePatients}\" }}";
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"{provider.DisplayName} Provider Execution Started",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
+
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
 
@@ -470,6 +657,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 //});
 
                 //bundle.Meta.Tag.Add(coding);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"{provider.DisplayName} Provider Execution Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 return (json, null);
             }
@@ -508,6 +702,20 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 return (null, new OperationCanceledException(globalToken));
             }
 
+            string auditType = "STU3-Patient-Everything";
+
+            string message =
+                $"Parameters:  {{ id = \"{id}\", start = \"{start}\", " +
+                $"end = \"{end}\", typeFilter = \"{typeFilter}\", " +
+                $"since = \"{since}\", count = \"{count}\" }}";
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"{provider.DisplayName} Provider Execution Started",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
+
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
 
@@ -542,6 +750,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 });
 
                 bundle.Meta.Tag.Add(coding);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"{provider.DisplayName} Provider Execution Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 return (bundle, null);
             }
@@ -580,6 +795,20 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 return (null, new OperationCanceledException(globalToken));
             }
 
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{id}\", start = \"{start}\", " +
+                $"end = \"{end}\", typeFilter = \"{typeFilter}\", " +
+                $"since = \"{since}\", count = \"{count}\" }}";
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"{provider.DisplayName} Provider Execution Started",
+                message,
+                fileName: string.Empty,
+                correlationId: correlationId.ToString());
+
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
 
@@ -615,6 +844,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 //});
 
                 //bundle.Meta.Tag.Add(coding);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"{provider.DisplayName} Provider Execution Completed",
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 return (json, null);
             }
