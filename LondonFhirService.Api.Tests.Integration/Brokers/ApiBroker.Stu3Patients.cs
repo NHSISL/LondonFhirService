@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Core;
+using Azure.Identity;
 using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
@@ -74,6 +76,15 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
             Bundle bundle = fhirJsonDeserializer.Deserialize<Bundle>(responseContent);
 
             return bundle;
+        }
+
+        private async ValueTask<string> GetAccessTokenAsync()
+        {
+            var credential = new DefaultAzureCredential();
+            var tokenRequestContext = new TokenRequestContext(new[] { "https://graph.microsoft.com/.default" });
+            AccessToken accessToken = await credential.GetTokenAsync(tokenRequestContext);
+
+            return accessToken.Token;
         }
     }
 }
