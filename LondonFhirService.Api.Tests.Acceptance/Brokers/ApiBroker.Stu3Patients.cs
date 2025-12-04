@@ -52,7 +52,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             var options = new JsonSerializerOptions()
                 .ForFhir(ModelInfo.ModelInspector);
 
-            string url = $"{Stu3PatientRelativeUrl}/{nhsNumber}/$getstructuredrecord";
+            string url = $"{Stu3PatientRelativeUrl}/$getstructuredrecord";
             string jsonContent = JsonSerializer.Serialize(parameters, options);
 
             using var content = new StringContent(
