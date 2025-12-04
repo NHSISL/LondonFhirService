@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Attrify.Attributes;
 using FluentAssertions;
-using LondonFhirService.Api.Controllers;
+using LondonFhirService.Api.Controllers.R4;
 using Microsoft.AspNetCore.Authorization;
 
 namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
@@ -18,7 +18,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
         public void GetShouldHaveRolesAttribute()
         {
             // given
-            var controllerType = typeof(R4PatientController);
+            var controllerType = typeof(PatientController);
             var methodInfo = controllerType.GetMethod("Everything");
             Type attributeType = typeof(AuthorizeAttribute);
             string attributeProperty = "Roles";
@@ -59,7 +59,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
         public void GetShouldNotHaveInvisibleApiAttribute()
         {
             // Given
-            var controllerType = typeof(R4PatientController);
+            var controllerType = typeof(PatientController);
             var methodInfo = controllerType.GetMethod("Everything");
             Type attributeType = typeof(InvisibleApiAttribute);
 
