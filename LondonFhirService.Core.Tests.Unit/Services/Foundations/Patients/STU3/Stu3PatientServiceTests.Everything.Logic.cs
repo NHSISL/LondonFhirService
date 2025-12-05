@@ -102,7 +102,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     typeFilter: inputTypeFilter,
                     since: inputSince,
                     count: inputCount,
-                    cancellationToken: default);
+                    cancellationToken: cancellationToken);
 
             // then
             actualBundles.Should().BeEquivalentTo(expectedBundles);

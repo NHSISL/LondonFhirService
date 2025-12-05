@@ -41,7 +41,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             int? inputCount = GetRandomNumber();
             Guid correlationId = Guid.NewGuid();
             CancellationToken cancellationToken = default;
-            string auditType = "STU3-Patient-Everything";
+            string auditType = "STU3-Patient-EverythingSerialised";
 
             string message =
                 $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
@@ -107,7 +107,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     providerNames: inputProviderNames,
                     correlationId: correlationId,
                     id: inputId,
-                    cancellationToken: default);
+                    start: inputStart,
+                    end: inputEnd,
+                    typeFilter: inputTypeFilter,
+                    since: inputSince,
+                    count: inputCount,
+                    cancellationToken: cancellationToken);
 
             // then
             actualJson.Should().BeEquivalentTo(expectedJson);
