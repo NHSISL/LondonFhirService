@@ -232,7 +232,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             ValidateArgsOnGetStructuredRecord(nhsNumber);
 
             Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +

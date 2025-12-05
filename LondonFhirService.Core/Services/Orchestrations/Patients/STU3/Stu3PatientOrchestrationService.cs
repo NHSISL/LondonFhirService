@@ -337,7 +337,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         TryCatch(async () =>
         {
             ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
