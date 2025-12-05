@@ -329,14 +329,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var timeoutMilliseconds = 1;
             this.patientServiceConfig.MaxProviderWaitTimeMilliseconds = timeoutMilliseconds;
             string randomId = GetRandomString();
-            string inputId = randomId;
+            string nhsNumber = randomId;
             Guid correlationId = Guid.NewGuid();
             string auditType = "STU3-Patient-GetStructuredRecord";
 
             string message =
-                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
-                $"end = \"{null}\", typeFilter = \"{null}\", " +
-                $"since = \"{null}\", count = \"{null}\" }}";
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{null}\", " +
+                $"demographicsOnly = \"{null}\", " +
+                $"includeInactivePatients = \"{null}\" }}";
 
             OperationCanceledException operationCanceledException =
                 new OperationCanceledException("A task was canceled.");
@@ -344,7 +344,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
@@ -366,7 +366,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     fhirProvider,
                     default,
                     correlationId,
-                    inputId,
+                    nhsNumber,
                     null,
                     null,
                     null);
@@ -381,7 +381,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             actualResult.Exception.InnerException.Should().BeOfType<TaskCanceledException>();
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,

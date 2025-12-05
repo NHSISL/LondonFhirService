@@ -121,6 +121,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomId = GetRandomString();
             string inputId = randomId;
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-Everything";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             var expectedPatientServiceDependencyException =
                 new PatientServiceDependencyException(
@@ -186,8 +192,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     expectedPatientServiceDependencyException))),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.ddsFhirProviderMock.Verify(provider =>
-                provider.DisplayName,
+                provider.ProviderName,
+                    Times.AtLeastOnce);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.Capabilities,
                     Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

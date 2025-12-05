@@ -401,6 +401,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Timed Out. Provider call exceeded 1 milliseconds.",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.ddsFhirProviderMock.Verify(provider =>
                 provider.DisplayName,
                     Times.AtLeastOnce);

@@ -302,7 +302,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomId = GetRandomString();
             string inputId = randomId;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-EverythingSerialised";
+            string auditType = "STU3-Patient-Everything";
 
             string message =
                 $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
@@ -365,6 +365,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
                 provider.DisplayName,
