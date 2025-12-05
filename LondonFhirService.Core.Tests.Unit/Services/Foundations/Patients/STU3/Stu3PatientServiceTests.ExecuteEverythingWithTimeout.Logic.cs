@@ -208,6 +208,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             OperationCanceledException operationCanceledException = new OperationCanceledException();
             var fhirProvider = this.ddsFhirProviderMock.Object;
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
+            string auditType = "STU3-Patient-Everything";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingAsync(
                 inputId,
@@ -244,6 +250,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
                 provider.DisplayName,
