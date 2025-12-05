@@ -29,8 +29,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     message: "Patient coordination dependency validation error occurred, please try again.",
                     innerException: dependencyValidationException.InnerException as Xeption);
 
-            this.accessOrchestrationServiceMock.Setup(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>(), It.IsAny<Guid>()))
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
                     .ThrowsAsync(dependencyValidationException);
 
             // when
@@ -47,8 +47,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             actualPatientCoordinationDependencyValidationException.Should()
                 .BeEquivalentTo(expectedPatientCoordinationDependencyValidationException);
 
-            this.accessOrchestrationServiceMock.Verify(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>(), It.IsAny<Guid>()),
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -121,8 +121,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             Guid correlationId = Guid.NewGuid();
             Exception serviceException = new Exception(randomExceptionMessage);
 
-            this.accessOrchestrationServiceMock.Setup(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>(), It.IsAny<Guid>()))
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
                     .ThrowsAsync(serviceException);
 
             var failedPatientCoordinationServiceException =
@@ -149,8 +149,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             actualPatientCoordinationServiceException.Should()
                 .BeEquivalentTo(expectedPatientCoordinationServiceException);
 
-            this.accessOrchestrationServiceMock.Verify(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>(), It.IsAny<Guid>()),
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>

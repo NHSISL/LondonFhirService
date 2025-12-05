@@ -33,6 +33,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-Everything";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
 
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
@@ -110,6 +116,49 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     randomBundles,
                     randomPrimaryProvider.Name),
                     Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Reconcile bundles",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.providerServiceMock.VerifyNoOtherCalls();
+            this.patientServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
