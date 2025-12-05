@@ -167,13 +167,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Guid correlationId = Guid.NewGuid();
             OperationCanceledException operationCanceledException = new OperationCanceledException();
             var fhirProvider = this.ddsFhirProviderMock.Object;
-            string auditType = "STU3-Patient-EverythingSerialised";
-
-            string message =
-                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
-                $"end = \"{null}\", typeFilter = \"{null}\", " +
-                $"since = \"{null}\", count = \"{null}\" }}";
-
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.EverythingAsync(

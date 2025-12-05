@@ -34,6 +34,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{null}\", " +
+                $"demographicsOnly = \"{null}\", " +
+                $"includeInactivePatients = \"{null}\" }}";
 
             var expectedPatientServiceDependencyValidationException =
                 new PatientServiceDependencyValidationException(
@@ -95,6 +101,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     expectedPatientServiceDependencyValidationException))),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -116,6 +140,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{null}\", " +
+                $"demographicsOnly = \"{null}\", " +
+                $"includeInactivePatients = \"{null}\" }}";
 
             var expectedPatientServiceDependencyException =
                 new PatientServiceDependencyException(
@@ -177,6 +207,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     expectedPatientServiceDependencyException))),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -197,6 +245,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
             var serviceException = new Exception();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{null}\", " +
+                $"demographicsOnly = \"{null}\", " +
+                $"includeInactivePatients = \"{null}\" }}";
 
             var failedPatientServiceException =
                 new FailedPatientServiceException(
@@ -262,6 +316,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedPatientServiceException))),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
