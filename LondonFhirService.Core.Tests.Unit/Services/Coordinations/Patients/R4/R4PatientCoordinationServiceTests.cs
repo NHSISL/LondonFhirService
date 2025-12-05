@@ -5,6 +5,8 @@
 using System;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
@@ -22,6 +24,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
         private readonly Mock<IAccessOrchestrationService> accessOrchestrationServiceMock;
         private readonly Mock<IR4PatientOrchestrationService> patientOrchestrationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly IR4PatientCoordinationService patientCoordinationService;
 
         public R4PatientCoordinationServiceTests()
@@ -29,11 +33,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
             this.accessOrchestrationServiceMock = new Mock<IAccessOrchestrationService>();
             this.patientOrchestrationServiceMock = new Mock<IR4PatientOrchestrationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
 
             this.patientCoordinationService = new R4PatientCoordinationService(
                 accessOrchestrationService: accessOrchestrationServiceMock.Object,
                 patientOrchestrationService: patientOrchestrationServiceMock.Object,
-                loggingBroker: loggingBrokerMock.Object);
+                loggingBroker: loggingBrokerMock.Object,
+                auditBroker: auditBrokerMock.Object,
+                identifierBroker: identifierBrokerMock.Object);
         }
 
         private static int GetRandomNumber() =>

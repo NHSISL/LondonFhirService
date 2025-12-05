@@ -29,6 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveFrom = validActiveFromDate;
             randomConsumer.ActiveTo = validActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -67,7 +68,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(true);
 
             // when
-            await accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            await accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             // then
             this.securityBrokerMock.Verify(broker =>

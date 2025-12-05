@@ -25,12 +25,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             CancellationToken cancellationToken = CancellationToken.None;
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             this.accessOrchestrationServiceMock.Setup(service =>
-                service.ValidateAccess(inputNhsNumber));
+                service.ValidateAccess(inputNhsNumber, correlationId));
 
             this.patientOrchestrationServiceMock.Setup(service =>
                 service.GetStructuredRecordAsync(
+                    correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -50,11 +52,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             actualBundle.Should().BeEquivalentTo(expectedBundle);
 
             this.accessOrchestrationServiceMock.Verify(service =>
-                service.ValidateAccess(inputNhsNumber),
+                service.ValidateAccess(inputNhsNumber, correlationId),
                     Times.Once);
 
             this.patientOrchestrationServiceMock.Verify(service =>
                 service.GetStructuredRecordAsync(
+                    correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -65,6 +68,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

@@ -20,20 +20,20 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         private readonly IStu3PatientOrchestrationService patientOrchestrationService;
         private readonly ILoggingBroker loggingBroker;
         private readonly IAuditBroker auditBroker;
-        private readonly IIdentifierBroker identityBroker;
+        private readonly IIdentifierBroker identifierBroker;
 
         public Stu3PatientCoordinationService(
             IAccessOrchestrationService accessOrchestrationService,
             IStu3PatientOrchestrationService patientOrchestrationService,
             ILoggingBroker loggingBroker,
             IAuditBroker auditBroker,
-            IIdentifierBroker identityBroker)
+            IIdentifierBroker identifierBroker)
         {
             this.accessOrchestrationService = accessOrchestrationService;
             this.patientOrchestrationService = patientOrchestrationService;
             this.loggingBroker = loggingBroker;
             this.auditBroker = auditBroker;
-            this.identityBroker = identityBroker;
+            this.identifierBroker = identifierBroker;
         }
 
         public ValueTask<Bundle> EverythingAsync(
@@ -47,7 +47,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         TryCatch(async () =>
         {
             ValidateArgsOnEverything(id);
-            Guid correlationId = await this.identityBroker.GetIdentifierAsync();
+            Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
             string auditType = "STU3-Patient-Everything";
 
             string message =
@@ -110,7 +110,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         {
             ValidateArgsOnEverything(id);
 
-            Guid correlationId = await this.identityBroker.GetIdentifierAsync();
+            Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
             string auditType = "STU3-Patient-EverythingSerialised";
 
             string message =
@@ -172,7 +172,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         {
             ValidateArgsOnGetStructuredRecord(nhsNumber);
 
-            Guid correlationId = await this.identityBroker.GetIdentifierAsync();
+            Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
             string auditType = "STU3-Patient-GetStructuredRecord";
 
             string message =
@@ -231,7 +231,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         {
             ValidateArgsOnGetStructuredRecord(nhsNumber);
 
-            Guid correlationId = await this.identityBroker.GetIdentifierAsync();
+            Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
             string auditType = "STU3-Patient-GetStructuredRecord";
 
             string message =

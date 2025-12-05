@@ -24,7 +24,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         private readonly IStu3PatientService patientService;
         private readonly IStu3FhirReconciliationService fhirReconciliationService;
         private readonly IAuditBroker auditBroker;
-        private readonly IIdentifierBroker identityBroker;
+        private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
 
         public Stu3PatientOrchestrationService(
@@ -32,14 +32,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             IStu3PatientService patientService,
             IStu3FhirReconciliationService fhirReconciliationService,
             IAuditBroker auditBroker,
-            IIdentifierBroker identityBroker,
+            IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker)
         {
             this.providerService = providerService;
             this.patientService = patientService;
             this.fhirReconciliationService = fhirReconciliationService;
             this.auditBroker = auditBroker;
-            this.identityBroker = identityBroker;
+            this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
         }
 

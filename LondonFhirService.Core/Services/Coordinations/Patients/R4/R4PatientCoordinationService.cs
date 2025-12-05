@@ -20,20 +20,20 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.R4
         private readonly IR4PatientOrchestrationService patientOrchestrationService;
         private readonly ILoggingBroker loggingBroker;
         private readonly IAuditBroker auditBroker;
-        private readonly IIdentifierBroker identityBroker;
+        private readonly IIdentifierBroker identifierBroker;
 
         public R4PatientCoordinationService(
             IAccessOrchestrationService accessOrchestrationService,
             IR4PatientOrchestrationService patientOrchestrationService,
             ILoggingBroker loggingBroker,
             IAuditBroker auditBroker,
-            IIdentifierBroker identityBroker)
+            IIdentifierBroker identifierBroker)
         {
             this.accessOrchestrationService = accessOrchestrationService;
             this.patientOrchestrationService = patientOrchestrationService;
             this.loggingBroker = loggingBroker;
             this.auditBroker = auditBroker;
-            this.identityBroker = identityBroker;
+            this.identifierBroker = identifierBroker;
         }
 
         public ValueTask<Bundle> EverythingAsync(
@@ -47,7 +47,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.R4
             TryCatch(async () =>
             {
                 ValidateArgsOnEverything(id);
-                Guid correlationId = await this.identityBroker.GetIdentifierAsync();
+                Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
                 string auditType = "R4-Patient-Everything";
 
                 string message =
@@ -109,7 +109,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.R4
             TryCatch(async () =>
             {
                 ValidateArgsOnEverything(id);
-                Guid correlationId = await this.identityBroker.GetIdentifierAsync();
+                Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
                 string auditType = "STU3-Patient-EverythingSerialised";
 
                 string message =
