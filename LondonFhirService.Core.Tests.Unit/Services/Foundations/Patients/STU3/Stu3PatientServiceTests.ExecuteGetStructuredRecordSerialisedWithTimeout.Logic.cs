@@ -178,6 +178,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             OperationCanceledException operationCanceledException = new OperationCanceledException();
             var fhirProvider = this.ddsFhirProviderMock.Object;
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             (string Json, Exception Exception) expectedResult = (null, operationCanceledException);
 
@@ -222,15 +228,21 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         {
             // given
             string randomId = GetRandomString();
-            string inputId = randomId;
+            string nhsNumber = randomId;
             Exception exception = new Exception(GetRandomString());
             var fhirProvider = this.ddsFhirProviderMock.Object;
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{null}\", " +
+                $"demographicsOnly = \"{null}\", " +
+                $"includeInactivePatients = \"{null}\" }}";
 
             (string Json, Exception Exception) expectedResult = (null, exception);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordSerialisedAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
@@ -243,7 +255,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     fhirProvider,
                     default,
                     correlationId,
-                    inputId,
+                    nhsNumber,
                     null,
                     null,
                     null);
@@ -252,12 +264,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             actualResult.Should().BeEquivalentTo(expectedResult);
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordSerialisedAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
@@ -275,6 +300,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomId = GetRandomString();
             string inputId = randomId;
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             OperationCanceledException operationCanceledException =
                 new OperationCanceledException("A task was canceled.");

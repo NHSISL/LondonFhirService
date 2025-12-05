@@ -167,6 +167,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Guid correlationId = Guid.NewGuid();
             OperationCanceledException operationCanceledException = new OperationCanceledException();
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
 
@@ -219,6 +225,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Exception exception = new Exception(GetRandomString());
             Guid correlationId = Guid.NewGuid();
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            string auditType = "STU3-Patient-Everything";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, exception);
 
@@ -258,6 +270,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
@@ -273,6 +298,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomId = GetRandomString();
             string inputId = randomId;
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             OperationCanceledException operationCanceledException =
                 new OperationCanceledException("A task was canceled.");
