@@ -26,6 +26,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
+                $"demographicsOnly = \"{inputDemographicsOnly}\", " +
+                $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(correlationId);
 
             this.accessOrchestrationServiceMock.Setup(service =>
                 service.ValidateAccess(inputNhsNumber, correlationId));
@@ -51,6 +61,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // then
             actualBundle.Should().BeEquivalentTo(expectedBundle);
 
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
             this.accessOrchestrationServiceMock.Verify(service =>
                 service.ValidateAccess(inputNhsNumber, correlationId),
                     Times.Once);
@@ -63,6 +77,42 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
                     cancellationToken),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Coordination Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Check Access Permissions",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Requesting Patient Info",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Coordination Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
                         Times.Once);
 
             this.accessOrchestrationServiceMock.VerifyNoOtherCalls();

@@ -71,14 +71,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // given
             string randomString = GetRandomString();
             string inputId = randomString;
+            Guid correlationId = Guid.NewGuid();
 
             var expectedPatientCoordinationDependencyException =
                 new PatientCoordinationDependencyException(
                     message: "Patient coordination dependency error occurred, fix the errors and try again.",
                     innerException: dependencyException.InnerException as Xeption);
 
-            this.accessOrchestrationServiceMock.Setup(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>(), It.IsAny<Guid>()))
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
                     .ThrowsAsync(dependencyException);
 
             // when
@@ -94,8 +95,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             actualPatientCoordinationDependencyException.Should()
                 .BeEquivalentTo(expectedPatientCoordinationDependencyException);
 
-            this.accessOrchestrationServiceMock.Verify(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>(), It.IsAny<Guid>()),
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
