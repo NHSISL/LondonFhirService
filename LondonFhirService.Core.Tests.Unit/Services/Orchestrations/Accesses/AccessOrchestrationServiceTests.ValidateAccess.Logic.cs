@@ -51,10 +51,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync())
                     .ReturnsAsync(storageConsumers);
 
-            this.identifierBrokerMock.Setup(broker =>
-                broker.GetIdentifierAsync())
-                    .ReturnsAsync(randomGuid);
-
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
@@ -77,10 +73,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             this.consumerServiceMock.Verify(service =>
                 service.RetrieveAllConsumersAsync(),
-                    Times.Once);
-
-            this.identifierBrokerMock.Verify(broker =>
-                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
