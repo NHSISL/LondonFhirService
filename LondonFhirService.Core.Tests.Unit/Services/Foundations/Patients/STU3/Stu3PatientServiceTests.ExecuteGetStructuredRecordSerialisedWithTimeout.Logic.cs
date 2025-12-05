@@ -74,30 +74,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            this.ddsFhirProviderMock.Verify(provider =>
-                provider.DisplayName,
-                    Times.AtLeastOnce);
-
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.System,
-            //        Times.Once);
-
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.Code,
-            //        Times.Once);
-
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.ProviderName,
-            //        Times.Once);
-
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.Source,
-            //        Times.Once);
-
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.FhirVersion,
-            //        Times.Once);
-
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
@@ -110,11 +86,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
+                    $"{fhirProvider.DisplayName} - DATA",
+                    rawOutputBundle,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
                     $"{providerDisplayName} Provider Execution Completed",
                     message,
                     string.Empty,
                     correlationId.ToString()),
                         Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
