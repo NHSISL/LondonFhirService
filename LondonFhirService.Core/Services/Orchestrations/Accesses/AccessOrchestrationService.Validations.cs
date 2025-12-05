@@ -25,7 +25,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
         private static dynamic IsInvalid(Guid? id) => new
         {
             Condition = id == null || id == Guid.Empty,
-            Message = "Id is required"
+            Message = "Id is invalid"
         };
 
         private static dynamic IsInvalid(string name) => new

@@ -37,7 +37,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             invalidArgumentAccessOrchestrationException.AddData(
                 key: "correlationId",
-                values: "Text is invalid");
+                values: "Id is invalid");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
