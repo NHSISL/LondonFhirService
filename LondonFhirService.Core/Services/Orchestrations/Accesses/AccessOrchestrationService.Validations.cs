@@ -10,7 +10,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
 {
     public partial class AccessOrchestrationService
     {
-        public static void ValidateNhsNumber(string nhsNumber)
+        public static void ValidateNhsNumber(string nhsNumber, Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentAccessOrchestrationException(
@@ -18,8 +18,15 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                         "Invalid argument access orchestration exception, " +
                         "please correct the errors and try again."),
 
-                (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)));
+                (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
+                (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));
         }
+
+        private static dynamic IsInvalid(Guid? id) => new
+        {
+            Condition = id == null || id == Guid.Empty,
+            Message = "Id is invalid"
+        };
 
         private static dynamic IsInvalid(string name) => new
         {
@@ -43,7 +50,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                         value: rule.Message);
                 }
             }
-            
+
             invalidDataException.ThrowIfContainsErrors();
         }
     }

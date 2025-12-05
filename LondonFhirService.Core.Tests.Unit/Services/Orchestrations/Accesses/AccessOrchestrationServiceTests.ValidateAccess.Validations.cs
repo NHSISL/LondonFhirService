@@ -24,6 +24,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         public async Task ShouldThrowValidationExceptionOnValidateAccess(string invalidText)
         {
             // given
+            Guid correlationId = Guid.Empty;
+
             var invalidArgumentAccessOrchestrationException =
                 new InvalidArgumentAccessOrchestrationException(
                     message: "Invalid argument access orchestration exception, " +
@@ -32,6 +34,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             invalidArgumentAccessOrchestrationException.AddData(
                 key: "nhsNumber",
                 values: "Text is invalid");
+
+            invalidArgumentAccessOrchestrationException.AddData(
+                key: "correlationId",
+                values: "Id is invalid");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
@@ -44,7 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ThrowsAsync(invalidArgumentAccessOrchestrationException);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(invalidText);
+            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(invalidText, correlationId);
 
             AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
@@ -83,6 +89,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveFrom = validActiveFromDate;
             randomConsumer.ActiveTo = validActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -109,7 +116,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(storageConsumers);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
@@ -156,6 +163,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveFrom = validActiveFromDate;
             randomConsumer.ActiveTo = invalidActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -182,16 +190,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync())
                     .ReturnsAsync(storageConsumers);
 
-            this.identifierBrokerMock.Setup(broker =>
-                broker.GetIdentifierAsync())
-                    .ReturnsAsync(randomGuid);
-
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
@@ -209,10 +213,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync(),
                     Times.Once);
 
-            this.identifierBrokerMock.Verify(broker =>
-                broker.GetIdentifierAsync(),
-                    Times.Once);
-
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
@@ -226,7 +226,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                         $"is not active / does not have valid access window " +
                             $"(ActiveFrom: {inputConsumer.ActiveFrom}, ActiveTo: {inputConsumer.ActiveTo})",
                     null,
-                    randomGuid.ToString()),
+                    correlationId.ToString()),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -266,6 +266,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveFrom = validActiveFromDate;
             randomConsumer.ActiveTo = validActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -297,10 +298,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync())
                     .ReturnsAsync(storageConsumers);
 
-            this.identifierBrokerMock.Setup(broker =>
-                broker.GetIdentifierAsync())
-                    .ReturnsAsync(randomGuid);
-
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
@@ -314,7 +311,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(false);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
@@ -330,10 +327,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             this.consumerServiceMock.Verify(service =>
                 service.RetrieveAllConsumersAsync(),
-                    Times.Once);
-
-            this.identifierBrokerMock.Verify(broker =>
-                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -356,7 +349,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                         $"{inputConsumer.Id} has access to are permitted to access patient with " +
                         $"NHS number {inputNhsNumber}.",
                     null,
-                    randomGuid.ToString()),
+                    correlationId.ToString()),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>

@@ -51,10 +51,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask ValidateAccess(string nhsNumber) =>
+        public ValueTask ValidateAccess(string nhsNumber, Guid correlationId) =>
             TryCatch(async () =>
             {
-                ValidateNhsNumber(nhsNumber);
+                ValidateNhsNumber(nhsNumber, correlationId);
                 User currentUser = await securityBroker.GetCurrentUserAsync();
                 string currentUserId = currentUser.UserId;
                 IQueryable<Consumer> consumers = await consumerService.RetrieveAllConsumersAsync();
@@ -65,7 +65,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                     throw new UnauthorizedAccessOrchestrationException("Current consumer is not a valid consumer.");
                 }
 
-                Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
                 DateTimeOffset now = await dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
                 if (matchingConsumer.ActiveFrom > now

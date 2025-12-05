@@ -14,6 +14,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
     {
         ValueTask<List<Bundle>> EverythingAsync(
             List<string> providerNames,
+            Guid correlationId,
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -24,6 +25,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         ValueTask<List<string>> EverythingSerialisedAsync(
             List<string> providerNames,
+            Guid correlationId,
             string id,
             DateTimeOffset? start = null,
             DateTimeOffset? end = null,
@@ -34,6 +36,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         ValueTask<List<Bundle>> GetStructuredRecordAsync(
             List<string> providerNames,
+            Guid correlationId,
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -42,6 +45,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         ValueTask<List<string>> GetStructuredRecordSerialisedAsync(
             List<string> providerNames,
+            Guid correlationId,
             string nhsNumber,
             DateTime? dateOfBirth = null,
             bool? demographicsOnly = null,

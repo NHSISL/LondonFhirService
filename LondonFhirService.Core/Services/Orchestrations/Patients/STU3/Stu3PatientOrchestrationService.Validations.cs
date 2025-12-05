@@ -13,22 +13,24 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
     public partial class Stu3PatientOrchestrationService
     {
-        private static void ValidateArgsOnEverything(string id)
+        private static void ValidateArgsOnEverything(string id, Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentPatientOrchestrationException(
                     message: "Invalid patient orchestration argument, please correct the errors and try again."),
 
-                (Rule: IsInvalid(id), Parameter: "Id"));
+                (Rule: IsInvalid(id), Parameter: "Id"),
+                (Rule: IsInvalid(correlationId), Parameter: "CorrelationId"));
         }
 
-        private static void ValidateArgsOnGetStructuredRecord(string nhsNumber)
+        private static void ValidateArgsOnGetStructuredRecord(string nhsNumber, Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentPatientOrchestrationException(
                     message: "Invalid patient orchestration argument, please correct the errors and try again."),
 
-                (Rule: IsInvalid(nhsNumber), Parameter: "NhsNumber"));
+                (Rule: IsInvalid(nhsNumber), Parameter: "NhsNumber"),
+                (Rule: IsInvalid(correlationId), Parameter: "CorrelationId"));
         }
 
         private static void ValidatePrimaryProviders(List<Provider> primaryProviders)
@@ -44,6 +46,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 throw new InvalidPrimaryProviderPatientOrchestrationException(message);
             }
         }
+
+        private static dynamic IsInvalid(Guid? id) => new
+        {
+            Condition = id == null || id == Guid.Empty,
+            Message = "Id is required"
+        };
 
         private static dynamic IsInvalid(string text) => new
         {

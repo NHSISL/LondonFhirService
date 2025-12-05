@@ -29,6 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveFrom = validActiveFromDate;
             randomConsumer.ActiveTo = validActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -50,10 +51,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync())
                     .ReturnsAsync(storageConsumers);
 
-            this.identifierBrokerMock.Setup(broker =>
-                broker.GetIdentifierAsync())
-                    .ReturnsAsync(randomGuid);
-
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
@@ -67,7 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(true);
 
             // when
-            await accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            await accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             // then
             this.securityBrokerMock.Verify(broker =>
@@ -76,10 +73,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             this.consumerServiceMock.Verify(service =>
                 service.RetrieveAllConsumersAsync(),
-                    Times.Once);
-
-            this.identifierBrokerMock.Verify(broker =>
-                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>

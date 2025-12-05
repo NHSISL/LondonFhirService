@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
@@ -27,12 +29,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
         private readonly Mock<IStu3PatientService> patientServiceMock;
         private readonly Mock<IStu3FhirReconciliationService> fhirReconciliationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly IStu3PatientOrchestrationService patientOrchestrationService;
 
         public Stu3PatientOrchestrationServiceTests()
         {
             this.providerServiceMock = new Mock<IProviderService>();
             this.patientServiceMock = new Mock<IStu3PatientService>();
+            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.fhirReconciliationServiceMock = new Mock<IStu3FhirReconciliationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
@@ -40,7 +46,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 providerService: providerServiceMock.Object,
                 patientService: patientServiceMock.Object,
                 fhirReconciliationService: fhirReconciliationServiceMock.Object,
-                loggingBroker: loggingBrokerMock.Object);
+                loggingBroker: loggingBrokerMock.Object,
+                auditBroker: auditBrokerMock.Object,
+                identifierBroker: identifierBrokerMock.Object);
         }
 
         private static int GetRandomNumber() =>
