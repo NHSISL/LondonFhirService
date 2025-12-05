@@ -25,9 +25,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Xeption dependencyValidationException)
         {
             // given
-            string randomString = GetRandomString();
-            string inputNhsNumber = randomString;
+            string randomId = GetRandomString();
+            string inputNhsNumber = randomId;
+            DateTime? inputDateOfBirth = DateTime.Now;
+            bool? inputDemographicsOnly = false;
+            bool? inputActivePatientsOnly = true;
+            CancellationToken cancellationToken = CancellationToken.None;
+            List<Bundle> randomBundles = CreateRandomBundles();
+            Bundle randomBundle = CreateRandomBundle();
+            Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
+            Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
+            Provider randomActiveProvider = CreateRandomActiveProvider();
+            Provider randomInactiveProvider = CreateRandomInactiveProvider();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
+                $"demographicsOnly = \"{inputDemographicsOnly}\", " +
+                $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
             var expectedPatientOrchestrationDependencyValidationException =
                 new PatientOrchestrationDependencyValidationException(
@@ -41,7 +57,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(correlationId: correlationId, nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(
+                        correlationId,
+                        inputNhsNumber,
+                        inputDateOfBirth,
+                        inputDemographicsOnly,
+                        inputActivePatientsOnly,
+                        cancellationToken);
 
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
@@ -59,6 +81,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(IsSameExceptionAs(
                     expectedPatientOrchestrationDependencyValidationException))),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
                         Times.Once);
 
             this.providerServiceMock.VerifyNoOtherCalls();
