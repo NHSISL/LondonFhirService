@@ -610,7 +610,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             int? inputCount = GetRandomNumber();
             Guid correlationId = Guid.NewGuid();
             CancellationToken cancellationToken = default;
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-Everything";
 
             string message =
                 $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
@@ -724,6 +724,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 broker.LogInformationAsync(
                     auditType,
                     "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Completed",
                     message,
                     string.Empty,
                     correlationId.ToString()),
