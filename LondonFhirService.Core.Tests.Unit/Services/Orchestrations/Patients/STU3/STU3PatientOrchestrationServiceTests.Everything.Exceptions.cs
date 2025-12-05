@@ -3,8 +3,11 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Force.DeepCloner;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using Moq;
@@ -21,9 +24,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Xeption dependencyValidationException)
         {
             // given
-            string randomString = GetRandomString();
-            string inputId = randomString;
+            string randomId = GetRandomString();
+            string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            CancellationToken cancellationToken = CancellationToken.None;
+            List<Bundle> randomBundles = CreateRandomBundles();
+            Bundle randomBundle = CreateRandomBundle();
+            Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-Everything";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
 
             var expectedPatientOrchestrationDependencyValidationException =
                 new PatientOrchestrationDependencyValidationException(
@@ -37,7 +55,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .EverythingAsync(correlationId: correlationId, id: inputId);
+                    .EverythingAsync(
+                        correlationId,
+                        inputId,
+                        inputStart,
+                        inputEnd,
+                        inputTypeFilter,
+                        inputSince,
+                        inputCount,
+                        cancellationToken);
 
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
@@ -57,6 +83,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationDependencyValidationException))),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
@@ -71,9 +115,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Xeption dependencyException)
         {
             // given
-            string randomString = GetRandomString();
-            string inputId = randomString;
+            string randomId = GetRandomString();
+            string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            CancellationToken cancellationToken = CancellationToken.None;
+            List<Bundle> randomBundles = CreateRandomBundles();
+            Bundle randomBundle = CreateRandomBundle();
+            Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-Everything";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
 
             var expectedPatientOrchestrationDependencyException =
                 new PatientOrchestrationDependencyException(
@@ -87,7 +146,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .EverythingAsync(correlationId: correlationId, id: inputId);
+                    .EverythingAsync(
+                        correlationId,
+                        inputId,
+                        inputStart,
+                        inputEnd,
+                        inputTypeFilter,
+                        inputSince,
+                        inputCount,
+                        cancellationToken);
 
             PatientOrchestrationDependencyException
                 actualPatientOrchestrationDependencyException =
@@ -107,6 +174,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationDependencyException))),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
@@ -119,10 +204,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
         public async Task ShouldThrowServiceExceptionOnEverythingIfErrorsAndLogItAsync()
         {
             // Given
-            string randomString = GetRandomString();
-            string inputId = randomString;
-            string randomExceptionMessage = GetRandomString();
+            string randomId = GetRandomString();
+            string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            CancellationToken cancellationToken = CancellationToken.None;
+            List<Bundle> randomBundles = CreateRandomBundles();
+            Bundle randomBundle = CreateRandomBundle();
+            Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-Everything";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
+
+            string randomExceptionMessage = GetRandomString();
             Exception serviceException = new Exception(randomExceptionMessage);
 
             this.providerServiceMock.Setup(service =>
@@ -143,7 +244,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // When
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .EverythingAsync(correlationId: correlationId, id: inputId);
+                    .EverythingAsync(
+                        correlationId,
+                        inputId,
+                        inputStart,
+                        inputEnd,
+                        inputTypeFilter,
+                        inputSince,
+                        inputCount,
+                        cancellationToken);
 
             PatientOrchestrationServiceException actualPatientOrchestrationServiceException =
                 await Assert.ThrowsAsync<PatientOrchestrationServiceException>(
@@ -160,6 +269,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(IsSameExceptionAs(
                     expectedPatientOrchestrationServiceException))),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
                         Times.Once);
 
             this.providerServiceMock.VerifyNoOtherCalls();
