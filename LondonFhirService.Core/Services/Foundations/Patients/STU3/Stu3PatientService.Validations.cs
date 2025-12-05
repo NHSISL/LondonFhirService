@@ -39,7 +39,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         "please correct the errors and try again."),
 
                 (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
-                (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)));
+                (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
+                (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));
         }
 
         private static dynamic IsInvalid(List<string> strings) => new
