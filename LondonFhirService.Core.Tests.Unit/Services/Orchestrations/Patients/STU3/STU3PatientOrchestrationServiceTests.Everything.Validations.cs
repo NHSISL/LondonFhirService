@@ -33,11 +33,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     message: "Invalid patient orchestration argument, please correct the errors and try again.");
 
             invalidArgumentPatientOrchestrationException.AddData(
-                key: "id",
+                key: "Id",
                 values: "Text is required");
 
             invalidArgumentPatientOrchestrationException.AddData(
-                key: "correlationId",
+                key: "CorrelationId",
                 values: "Id is required");
 
             var expectedPatientOrchestrationValidationException =
