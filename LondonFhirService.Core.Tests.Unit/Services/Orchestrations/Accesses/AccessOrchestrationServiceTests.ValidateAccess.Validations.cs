@@ -190,10 +190,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync())
                     .ReturnsAsync(storageConsumers);
 
-            this.identifierBrokerMock.Setup(broker =>
-                broker.GetIdentifierAsync())
-                    .ReturnsAsync(randomGuid);
-
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
@@ -217,10 +213,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync(),
                     Times.Once);
 
-            this.identifierBrokerMock.Verify(broker =>
-                broker.GetIdentifierAsync(),
-                    Times.Once);
-
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
@@ -234,7 +226,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                         $"is not active / does not have valid access window " +
                             $"(ActiveFrom: {inputConsumer.ActiveFrom}, ActiveTo: {inputConsumer.ActiveTo})",
                     null,
-                    randomGuid.ToString()),
+                    correlationId.ToString()),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -306,10 +298,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync())
                     .ReturnsAsync(storageConsumers);
 
-            this.identifierBrokerMock.Setup(broker =>
-                broker.GetIdentifierAsync())
-                    .ReturnsAsync(randomGuid);
-
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
@@ -341,10 +329,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync(),
                     Times.Once);
 
-            this.identifierBrokerMock.Verify(broker =>
-                broker.GetIdentifierAsync(),
-                    Times.Once);
-
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
@@ -365,7 +349,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                         $"{inputConsumer.Id} has access to are permitted to access patient with " +
                         $"NHS number {inputNhsNumber}.",
                     null,
-                    randomGuid.ToString()),
+                    correlationId.ToString()),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
