@@ -221,11 +221,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task ShouldReturnNullAndExceptionOnExecuteEverythingSerialisedWithTimeoutWhenException()
         {
             // given
-            string randomId = GetRandomString();
-            string inputId = randomId;
             Exception exception = new Exception(GetRandomString());
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            string randomId = GetRandomString();
+            string inputId = randomId;
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             (string Json, Exception Exception) expectedResult = (null, exception);
 
@@ -264,6 +270,28 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Failed",
+                    message + Environment.NewLine + Environment.NewLine + exception.Message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();

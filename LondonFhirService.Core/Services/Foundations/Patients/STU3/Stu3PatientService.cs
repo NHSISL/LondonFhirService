@@ -857,6 +857,17 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             catch (OperationCanceledException operationCancelledException)
                 when (timeoutCts.IsCancellationRequested && !globalToken.IsCancellationRequested)
             {
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+
+                    title:
+                        $"{provider.DisplayName} Provider Execution Timed Out. " +
+                        $"Provider call exceeded {maxWaitTimeout} milliseconds.",
+
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 TimeoutException timeoutException =
                     new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds.",
                         operationCancelledException);
@@ -865,10 +876,30 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             }
             catch (OperationCanceledException operationCancelledException)
             {
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+
+                    title:
+                        $"{provider.DisplayName} Provider Execution Cancelled",
+
+                    message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 return (null, operationCancelledException);
             }
             catch (Exception exception)
             {
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+
+                    title:
+                        $"{provider.DisplayName} Provider Execution Failed",
+
+                    message + Environment.NewLine + Environment.NewLine + exception.Message,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 return (null, exception);
             }
         }
