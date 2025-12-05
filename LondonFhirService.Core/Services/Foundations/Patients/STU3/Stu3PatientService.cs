@@ -608,7 +608,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 return (null, new OperationCanceledException(globalToken));
             }
 
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +

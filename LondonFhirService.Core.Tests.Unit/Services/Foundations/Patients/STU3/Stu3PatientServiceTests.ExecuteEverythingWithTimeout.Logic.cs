@@ -87,6 +87,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
+
+            this.ddsFhirProviderMock.Verify(provider =>
                 provider.System,
                     Times.Once);
 
