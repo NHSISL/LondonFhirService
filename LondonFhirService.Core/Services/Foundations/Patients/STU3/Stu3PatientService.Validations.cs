@@ -23,7 +23,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         "please correct the errors and try again."),
 
                 (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
-                (Rule: IsInvalid(id), Parameter: nameof(id)));
+                (Rule: IsInvalid(id), Parameter: nameof(id)),
+                (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));
         }
 
         public static void ValidateOnGetStructuredRecord(
@@ -56,7 +57,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         private static dynamic IsInvalid(Guid? id) => new
         {
             Condition = id == null || id == Guid.Empty,
-            Message = "Id is required"
+            Message = "Id is invalid"
         };
 
         private static void Validate<T>(
