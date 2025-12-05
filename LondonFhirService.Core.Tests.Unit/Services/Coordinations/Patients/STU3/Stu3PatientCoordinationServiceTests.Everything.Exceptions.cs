@@ -118,6 +118,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             string randomString = GetRandomString();
             string inputId = randomString;
             string randomExceptionMessage = GetRandomString();
+            Guid correlationId = Guid.NewGuid();
             Exception serviceException = new Exception(randomExceptionMessage);
 
             this.accessOrchestrationServiceMock.Setup(orchestration =>
