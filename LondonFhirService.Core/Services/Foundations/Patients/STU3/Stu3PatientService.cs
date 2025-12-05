@@ -2,12 +2,15 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+extern alias FhirStu3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FhirStu3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
@@ -660,6 +663,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                 await this.auditBroker.LogInformationAsync(
                     auditType,
+                    title: $"{provider.DisplayName} - DATA",
+                    json,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
                     title: $"{provider.DisplayName} Provider Execution Completed",
                     message,
                     fileName: string.Empty,
@@ -750,6 +760,15 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 });
 
                 bundle.Meta.Tag.Add(coding);
+
+                FhirJsonSerializer fhirJsonSerializer = new();
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"{provider.DisplayName} - DATA",
+                    fhirJsonSerializer.SerializeToString(bundle),
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 await this.auditBroker.LogInformationAsync(
                     auditType,
@@ -844,6 +863,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 //});
 
                 //bundle.Meta.Tag.Add(coding);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"{provider.DisplayName} - DATA",
+                    json,
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
 
                 await this.auditBroker.LogInformationAsync(
                     auditType,

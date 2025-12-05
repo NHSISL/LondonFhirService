@@ -29,6 +29,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var fhirProvider = this.ddsFhirProviderMock.Object;
             var fhirProviderCopy = this.ddsFhirProviderMock.Object.DeepClone();
             Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{null}\", " +
+                $"end = \"{null}\", typeFilter = \"{null}\", " +
+                $"since = \"{null}\", count = \"{null}\" }}";
 
             expectedBundle.Meta.Extension = new List<Extension>
             {
@@ -94,24 +100,41 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.DisplayName,
                     Times.AtLeastOnce);
 
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.System,
-            //        Times.Once);
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
 
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.Code,
-            //        Times.Once);
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} - DATA",
+                    rawOutputBundle,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
 
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.ProviderName,
-            //        Times.Once);
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
 
-            //this.ddsFhirProviderMock.Verify(provider =>
-            //    provider.Source,
-            //        Times.Once);
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -160,6 +183,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
