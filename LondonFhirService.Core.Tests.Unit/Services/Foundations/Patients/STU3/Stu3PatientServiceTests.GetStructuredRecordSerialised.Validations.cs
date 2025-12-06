@@ -141,7 +141,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -280,7 +280,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -423,7 +423,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -584,7 +584,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -740,7 +740,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -899,7 +899,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +

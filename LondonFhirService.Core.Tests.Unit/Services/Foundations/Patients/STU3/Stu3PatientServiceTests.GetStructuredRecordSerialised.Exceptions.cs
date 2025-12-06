@@ -34,7 +34,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{null}\", " +
@@ -140,7 +140,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{null}\", " +
@@ -245,7 +245,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
             var serviceException = new Exception();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{null}\", " +
