@@ -96,14 +96,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            this.ddsFhirProviderMock.Verify(provider =>
-                provider.DisplayName,
-                    Times.AtLeastOnce);
-
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    $"{fhirProvider.ProviderName} Provider Execution Started",
                     message,
                     string.Empty,
                     correlationId.ToString()),
@@ -112,7 +108,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} - DATA",
+                    $"{fhirProvider.ProviderName} - DATA",
                     rawOutputBundle,
                     string.Empty,
                     correlationId.ToString()),
@@ -121,14 +117,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} Provider Execution Completed",
+                    $"{fhirProvider.ProviderName} Provider Execution Completed",
                     message,
                     string.Empty,
                     correlationId.ToString()),
                         Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
-                provider.DisplayName,
+                provider.ProviderName,
                     Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -245,7 +241,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    $"{fhirProvider.ProviderName} Provider Execution Started",
                     message,
                     string.Empty,
                     correlationId.ToString()),
@@ -254,14 +250,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} Provider Execution Cancelled",
+                    $"{fhirProvider.ProviderName} Provider Execution Cancelled",
                     message,
                     string.Empty,
                     correlationId.ToString()),
                         Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
-                provider.DisplayName,
+                provider.ProviderName,
                     Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -327,7 +323,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    $"{fhirProvider.ProviderName} Provider Execution Started",
                     message,
                     string.Empty,
                     correlationId.ToString()),
@@ -336,14 +332,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} Provider Execution Failed",
+                    $"{fhirProvider.ProviderName} Provider Execution Failed",
                     message + Environment.NewLine + Environment.NewLine + exception.Message,
                     string.Empty,
                     correlationId.ToString()),
                         Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
-                provider.DisplayName,
+                provider.ProviderName,
                     Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -429,7 +425,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    $"{fhirProvider.ProviderName} Provider Execution Started",
                     message,
                     string.Empty,
                     correlationId.ToString()),
@@ -438,14 +434,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{fhirProvider.DisplayName} Provider Execution Timed Out. Provider call exceeded 1 milliseconds.",
+                    $"{fhirProvider.ProviderName} Provider Execution Timed Out. Provider call exceeded 1 milliseconds.",
                     message,
                     string.Empty,
                     correlationId.ToString()),
                         Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
-                provider.DisplayName,
+                provider.ProviderName,
                     Times.AtLeastOnce);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

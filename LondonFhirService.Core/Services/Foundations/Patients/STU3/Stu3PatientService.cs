@@ -721,7 +721,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
-                title: $"{provider.DisplayName} Provider Execution Started",
+                title: $"{provider.ProviderName} Provider Execution Started",
                 message,
                 fileName: string.Empty,
                 correlationId: correlationId.ToString());
@@ -765,14 +765,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                 await this.auditBroker.LogInformationAsync(
                     auditType,
-                    title: $"{provider.DisplayName} - DATA",
+                    title: $"{provider.ProviderName} - DATA",
                     fhirJsonSerializer.SerializeToString(bundle),
                     fileName: string.Empty,
                     correlationId: correlationId.ToString());
 
                 await this.auditBroker.LogInformationAsync(
                     auditType,
-                    title: $"{provider.DisplayName} Provider Execution Completed",
+                    title: $"{provider.ProviderName} Provider Execution Completed",
                     message,
                     fileName: string.Empty,
                     correlationId: correlationId.ToString());
@@ -823,7 +823,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
-                title: $"{provider.DisplayName} Provider Execution Started",
+                title: $"{provider.ProviderName} Provider Execution Started",
                 message,
                 fileName: string.Empty,
                 correlationId: correlationId.ToString());
@@ -866,14 +866,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                 await this.auditBroker.LogInformationAsync(
                     auditType,
-                    title: $"{provider.DisplayName} - DATA",
+                    title: $"{provider.ProviderName} - DATA",
                     json,
                     fileName: string.Empty,
                     correlationId: correlationId.ToString());
 
                 await this.auditBroker.LogInformationAsync(
                     auditType,
-                    title: $"{provider.DisplayName} Provider Execution Completed",
+                    title: $"{provider.ProviderName} Provider Execution Completed",
                     message,
                     fileName: string.Empty,
                     correlationId: correlationId.ToString());
@@ -887,7 +887,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     auditType,
 
                     title:
-                        $"{provider.DisplayName} Provider Execution Timed Out. " +
+                        $"{provider.ProviderName} Provider Execution Timed Out. " +
                         $"Provider call exceeded {maxWaitTimeout} milliseconds.",
 
                     message,
@@ -906,7 +906,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     auditType,
 
                     title:
-                        $"{provider.DisplayName} Provider Execution Cancelled",
+                        $"{provider.ProviderName} Provider Execution Cancelled",
 
                     message,
                     fileName: string.Empty,
@@ -920,7 +920,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     auditType,
 
                     title:
-                        $"{provider.DisplayName} Provider Execution Failed",
+                        $"{provider.ProviderName} Provider Execution Failed",
 
                     message + Environment.NewLine + Environment.NewLine + exception.Message,
                     fileName: string.Empty,

@@ -55,10 +55,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 MaxProviderWaitTimeMilliseconds = 3000
             };
 
-            this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "EverythingAsync", "GetStructuredRecordAsync" }));
-            this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "EverythingAsync", "GetStructuredRecordAsync" }));
-            this.unsupportedFhirProviderMock = MakeProvider("Unsupported", ("Patients", new[] { "Read" }));
-            this.unsupportedErrorFhirProviderMock = MakeProvider("UnsupportedError", ("Patients", null));
+            this.ddsFhirProviderMock = MakeProvider("DDS", "DDS Provider", ("Patients", new[] { "EverythingAsync", "GetStructuredRecordAsync" }));
+            this.ldsFhirProviderMock = MakeProvider("LDS", "LDS Provider", ("Patients", new[] { "EverythingAsync", "GetStructuredRecordAsync" }));
+            this.unsupportedFhirProviderMock = MakeProvider("Unsupported", "Unsupported Provider", ("Patients", new[] { "Read" }));
+            this.unsupportedErrorFhirProviderMock = MakeProvider("UnsupportedError", "Unsupported Error Provider", ("Patients", null));
 
             var fhirProviders = new List<IFhirProvider>
             {
@@ -141,12 +141,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         private Mock<IFhirProvider> MakeProvider(
-            string name,
+            string providerName,
+            string providerDisplayName,
             params (string Resource, string[] Operations)[] resources)
         {
             var providerCaps = new ProviderCapabilities
             {
-                ProviderName = name,
+                ProviderName = providerName,
                 SupportedResources = resources.Select(r => new ResourceCapabilities
                 {
                     ResourceName = r.Resource,
@@ -155,12 +156,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             var mock = new Mock<IFhirProvider>(MockBehavior.Strict);
-            mock.SetupGet(patient => patient.ProviderName).Returns(name);
+            mock.SetupGet(patient => patient.ProviderName).Returns(providerName);
             mock.SetupGet(patient => patient.Capabilities).Returns(providerCaps);
             mock.SetupGet(patient => patient.Code).Returns(GetRandomString());
             mock.SetupGet(patient => patient.Source).Returns(GetRandomString());
             mock.SetupGet(patient => patient.System).Returns(GetRandomString());
-            mock.SetupGet(patient => patient.DisplayName).Returns(GetRandomString());
+            mock.SetupGet(patient => patient.DisplayName).Returns(providerDisplayName);
             mock.SetupGet(patient => patient.FhirVersion).Returns(GetRandomString());
 
             mock.Setup(patient => patient.Patients.EverythingAsync(
