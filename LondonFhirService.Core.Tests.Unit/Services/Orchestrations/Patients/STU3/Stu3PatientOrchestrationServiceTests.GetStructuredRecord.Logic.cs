@@ -30,10 +30,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             List<Bundle> randomBundles = CreateRandomBundles();
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
-
+            Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
+                $"demographicsOnly = \"{inputDemographicsOnly}\", " +
+                $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
             IQueryable<Provider> allProviders = new List<Provider>
             {
@@ -55,6 +61,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.patientServiceMock.Setup(service =>
                 service.GetStructuredRecordAsync(
                     activeProviderNames,
+                    correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -70,6 +77,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             Bundle actualBundle = await this.patientOrchestrationService.GetStructuredRecordAsync(
+                correlationId,
                 inputNhsNumber,
                 inputDateOfBirth,
                 inputDemographicsOnly,
@@ -86,6 +94,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.patientServiceMock.Verify(service =>
                 service.GetStructuredRecordAsync(
                     activeProviderNames,
+                    correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -99,10 +108,48 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     randomPrimaryProvider.Name),
                     Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Reconcile bundles",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

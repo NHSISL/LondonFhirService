@@ -28,7 +28,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             string userId = TestAuthHandler.TestUserId;
             string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
             string fhirVersion = "STU3";
-            Parameters inputParameters = null;
+            Parameters inputParameters = CreateRandomGetStructuredRecordParameters(inputNhsNumber);
             Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
             Consumer consumer = await CreateRandomConsumer(now, userId);
             OdsData odsData = await CreateRandomOdsData(orgCode, now);

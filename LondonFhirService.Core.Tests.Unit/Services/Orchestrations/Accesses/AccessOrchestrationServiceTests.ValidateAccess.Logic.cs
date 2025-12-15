@@ -29,6 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveFrom = validActiveFromDate;
             randomConsumer.ActiveTo = validActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
+            Guid correlationId = Guid.NewGuid();
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -50,17 +51,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync())
                     .ReturnsAsync(storageConsumers);
 
-            this.identifierBrokerMock.Setup(broker =>
-                broker.GetIdentifierAsync())
-                    .ReturnsAsync(randomGuid);
-
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
-
-            this.securityBrokerMock.Setup(broker =>
-                broker.IsInRoleAsync("LondonFhirServiceApiConsumer"))
-                    .ReturnsAsync(true);
 
             this.consumerAccessServiceMock.Setup(service =>
                 service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id))
@@ -71,7 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(true);
 
             // when
-            await accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            await accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             // then
             this.securityBrokerMock.Verify(broker =>
@@ -82,16 +75,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync(),
                     Times.Once);
 
-            this.identifierBrokerMock.Verify(broker =>
-                broker.GetIdentifierAsync(),
-                    Times.Once);
-
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
-
-            this.securityBrokerMock.Verify(broker =>
-                broker.IsInRoleAsync("LondonFhirServiceApiConsumer"),
                     Times.Once);
 
             this.consumerAccessServiceMock.Verify(service =>

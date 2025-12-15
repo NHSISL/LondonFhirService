@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -23,6 +24,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         {
             // given
             List<string> providerNames = null;
+            Guid correlationId = Guid.NewGuid();
             string randomId = GetRandomString();
             string inputId = randomId;
 
@@ -42,6 +44,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> everythingSerialisedTask = patientService.EverythingSerialisedAsync(
                     providerNames: providerNames,
+                    correlationId: correlationId,
                     id: inputId,
                     cancellationToken: default);
 
@@ -57,6 +60,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -73,6 +78,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Guid correlationId = Guid.Empty;
 
             var invalidArgumentsPatientServiceException = new InvalidArgumentsPatientServiceException(
                 message: "Invalid argument patient service exception, " +
@@ -82,6 +88,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 key: "id",
                 values: "Text is invalid");
 
+            invalidArgumentsPatientServiceException.AddData(
+                key: "correlationId",
+                values: "Id is invalid");
+
             var expectedPatientServiceValidationException =
                 new PatientServiceValidationException(
                     message: "Patient service validation error occurred, please fix the errors and try again.",
@@ -90,6 +100,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> everythingSerialisedTask = patientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: invalidText,
                     cancellationToken: default);
 
@@ -105,6 +116,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     Times.Once());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -121,8 +134,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
+            Bundle randomLdsBundle = CreateRandomBundle();
+            Bundle outputLdsBundle = randomLdsBundle.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            Guid correlationId = Guid.NewGuid();
+            CancellationToken cancellationToken = default;
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
+
 
             List<string> expectedBundles = new List<string>
             {
@@ -131,6 +160,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
+                this.auditBrokerMock.Object,
+                this.identifierBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -140,13 +171,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((rawOutputDdsBundle, null));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -155,8 +187,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
-                    cancellationToken: default);
+                    start: inputStart,
+                    end: inputEnd,
+                    typeFilter: inputTypeFilter,
+                    since: inputSince,
+                    count: inputCount,
+                    cancellationToken: cancellationToken);
 
             // then
             actualJson.Should().BeEquivalentTo(expectedBundles);
@@ -164,13 +202,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -178,19 +217,59 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Patients/$Everything not supported."),
                         Times.Once());
 
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.unsupportedFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Never());
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -208,8 +287,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
+            Bundle randomLdsBundle = CreateRandomBundle();
+            Bundle outputLdsBundle = randomLdsBundle.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            Guid correlationId = Guid.NewGuid();
+            CancellationToken cancellationToken = default;
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
+
 
             List<string> expectedBundles = new List<string>
             {
@@ -218,6 +313,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
+                this.auditBrokerMock.Object,
+                this.identifierBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -227,13 +324,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((rawOutputDdsBundle, null));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -242,8 +340,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
-                    cancellationToken: default);
+                    start: inputStart,
+                    end: inputEnd,
+                    typeFilter: inputTypeFilter,
+                    since: inputSince,
+                    count: inputCount,
+                    cancellationToken: cancellationToken);
 
             // then
             actualJson.Should().BeEquivalentTo(expectedBundles);
@@ -251,13 +355,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -268,16 +373,55 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.unsupportedErrorFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Never());
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -299,8 +443,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
+            Bundle randomLdsBundle = CreateRandomBundle();
+            Bundle outputLdsBundle = randomLdsBundle.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            Guid correlationId = Guid.NewGuid();
+            CancellationToken cancellationToken = default;
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
+
 
             List<string> expectedBundles = new List<string>
             {
@@ -318,6 +478,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
+                this.auditBrokerMock.Object,
+                this.identifierBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -327,25 +489,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((null, timeoutException));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -354,8 +518,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
-                    cancellationToken: default);
+                    start: inputStart,
+                    end: inputEnd,
+                    typeFilter: inputTypeFilter,
+                    since: inputSince,
+                    count: inputCount,
+                    cancellationToken: cancellationToken);
 
             // then
             actualJson.Should().BeEquivalentTo(expectedBundles);
@@ -363,32 +533,73 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(aggregateException))),
                     Times.Once());
 
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -408,8 +619,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Bundle randomDdsBundle = CreateRandomBundle();
+            Bundle outputDdsBundle = randomDdsBundle.DeepClone();
+            Bundle randomLdsBundle = CreateRandomBundle();
+            Bundle outputLdsBundle = randomLdsBundle.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            Guid correlationId = Guid.NewGuid();
+            CancellationToken cancellationToken = default;
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
+
             List<Bundle> expectedBundles = new List<Bundle>();
 
             List<Exception> exceptions = new List<Exception>
@@ -424,6 +653,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
+                this.auditBrokerMock.Object,
+                this.identifierBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -433,25 +664,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((null, timeoutException));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((null, timeoutException2));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -460,8 +693,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
-                    cancellationToken: default);
+                    start: inputStart,
+                    end: inputEnd,
+                    typeFilter: inputTypeFilter,
+                    since: inputSince,
+                    count: inputCount,
+                    cancellationToken: cancellationToken);
 
             // then
             actualJson.Should().BeEquivalentTo(expectedBundles);
@@ -469,32 +708,72 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(aggregateException))),
                     Times.Once());
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -514,8 +793,23 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
+            Bundle randomLdsBundle = CreateRandomBundle();
+            Bundle outputLdsBundle = randomLdsBundle.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            Guid correlationId = Guid.NewGuid();
+            CancellationToken cancellationToken = default;
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
 
             List<string> expectedBundles = new List<string>
             {
@@ -533,6 +827,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
+                this.auditBrokerMock.Object,
+                this.identifierBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -542,25 +838,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((null, exception));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -569,8 +867,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualBundles =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
-                    cancellationToken: default);
+                    start: inputStart,
+                    end: inputEnd,
+                    typeFilter: inputTypeFilter,
+                    since: inputSince,
+                    count: inputCount,
+                    cancellationToken: cancellationToken);
 
             // then
             actualBundles.Should().BeEquivalentTo(expectedBundles);
@@ -578,32 +882,73 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(aggregateException))),
                     Times.Once());
 
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -621,9 +966,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             List<string> inputProviderNames = randomProviderNames.DeepClone();
+            Bundle randomDdsBundle = CreateRandomBundle();
+            Bundle outputDdsBundle = randomDdsBundle.DeepClone();
+            Bundle randomLdsBundle = CreateRandomBundle();
+            Bundle outputLdsBundle = randomLdsBundle.DeepClone();
             string randomId = GetRandomString();
             string inputId = randomId;
+            DateTimeOffset? inputStart = GetRandomDateTimeOffset();
+            DateTimeOffset? inputEnd = GetRandomDateTimeOffset();
+            string inputTypeFilter = GetRandomString();
+            DateTimeOffset? inputSince = GetRandomDateTimeOffset();
+            int? inputCount = GetRandomNumber();
+            Guid correlationId = Guid.NewGuid();
+            CancellationToken cancellationToken = default;
             List<Bundle> expectedBundles = new List<Bundle>();
+            string auditType = "STU3-Patient-EverythingSerialised";
+
+            string message =
+                $"Parameters:  {{ id = \"{inputId}\", start = \"{inputStart}\", " +
+                $"end = \"{inputEnd}\", typeFilter = \"{inputTypeFilter}\", " +
+                $"since = \"{inputSince}\", count = \"{inputCount}\" }}";
 
             List<Exception> exceptions = new List<Exception>
             {
@@ -637,6 +999,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
+                this.auditBrokerMock.Object,
+                this.identifierBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -646,25 +1010,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((null, exception));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     ldsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null))
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount))
                 .ReturnsAsync((null, exception2));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -673,8 +1039,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<string> actualJson =
                 await mockedPatientService.EverythingSerialisedAsync(
                     providerNames: inputProviderNames,
+                    correlationId: correlationId,
                     id: inputId,
-                    cancellationToken: default);
+                    start: inputStart,
+                    end: inputEnd,
+                    typeFilter: inputTypeFilter,
+                    since: inputSince,
+                    count: inputCount,
+                    cancellationToken: cancellationToken);
 
             // then
             actualJson.Should().BeEquivalentTo(expectedBundles);
@@ -682,32 +1054,72 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ddsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
                 service.ExecuteEverythingSerialisedWithTimeoutAsync(
                     this.ldsFhirProviderMock.Object,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputId,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null),
+                    inputStart,
+                    inputEnd,
+                    inputTypeFilter,
+                    inputSince,
+                    inputCount),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(aggregateException))),
                     Times.Once());
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Parallel Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Foundation Service Request Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
     }

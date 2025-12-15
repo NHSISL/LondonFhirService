@@ -27,6 +27,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputNhsNumber = randomNhsNumber;
             var fhirProvider = this.ddsFhirProviderMock.Object;
             var fhirProviderCopy = this.ddsFhirProviderMock.Object.DeepClone();
+            DateTime? inputDateOfBirth = DateTime.Now;
+            bool? inputDemographicsOnly = false;
+            bool? inputActivePatientsOnly = true;
+            CancellationToken cancellationToken = CancellationToken.None;
+            Guid correlationId = Guid.NewGuid();
+            string providerDisplayName = fhirProvider.DisplayName;
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
+                $"demographicsOnly = \"{inputDemographicsOnly}\", " +
+                $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
             expectedBundle.Meta.Extension = new List<Extension>
             {
@@ -52,9 +64,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
                 inputNhsNumber,
-                null,
-                null,
-                null,
+                inputDateOfBirth,
+                inputDemographicsOnly,
+                inputActivePatientsOnly,
                 It.IsAny<CancellationToken>()))
                     .ReturnsAsync(outputBundle);
 
@@ -62,20 +74,21 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
                     fhirProvider,
-                    default,
+                    cancellationToken,
+                    correlationId,
                     inputNhsNumber,
-                    null,
-                    null,
-                    null);
+                    inputDateOfBirth,
+                    inputDemographicsOnly,
+                    inputActivePatientsOnly);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
                 inputNhsNumber,
-                null,
-                null,
-                null,
+                inputDateOfBirth,
+                inputDemographicsOnly,
+                inputActivePatientsOnly,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
@@ -99,8 +112,32 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.FhirVersion,
                     Times.Once);
 
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{providerDisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{providerDisplayName} Provider Execution Completed",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -111,6 +148,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Bundle randomBundle = CreateRandomBundle();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
+            Guid correlationId = Guid.NewGuid();
             CancellationToken alreadyCanceledToken = new CancellationToken(true);
 
             OperationCanceledException operationCanceledException =
@@ -125,6 +163,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
                     fhirProvider,
                     alreadyCanceledToken,
+                    correlationId,
                     inputNhsNumber,
                     null,
                     null,
@@ -143,6 +182,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -151,14 +192,21 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         {
             // given
             string randomId = GetRandomString();
-            string inputId = randomId;
+            string nhsNumber = randomId;
             OperationCanceledException operationCanceledException = new OperationCanceledException();
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{null}\", " +
+                $"demographicsOnly = \"{null}\", " +
+                $"includeInactivePatients = \"{null}\" }}";
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
@@ -170,7 +218,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
                     fhirProvider,
                     default,
-                    inputId,
+                    correlationId,
+                    nhsNumber,
                     null,
                     null,
                     null);
@@ -179,15 +228,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             actualResult.Should().BeEquivalentTo(expectedResult);
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -195,14 +259,21 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         {
             // given
             string randomId = GetRandomString();
-            string inputId = randomId;
+            string nhsNumber = randomId;
             Exception exception = new Exception(GetRandomString());
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{null}\", " +
+                $"demographicsOnly = \"{null}\", " +
+                $"includeInactivePatients = \"{null}\" }}";
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, exception);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
@@ -214,7 +285,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
                     fhirProvider,
                     default,
-                    inputId,
+                    correlationId,
+                    nhsNumber,
                     null,
                     null,
                     null);
@@ -223,15 +295,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             actualResult.Should().BeEquivalentTo(expectedResult);
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -242,7 +329,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var timeoutMilliseconds = 1;
             this.patientServiceConfig.MaxProviderWaitTimeMilliseconds = timeoutMilliseconds;
             string randomId = GetRandomString();
-            string inputId = randomId;
+            string nhsNumber = randomId;
+            Guid correlationId = Guid.NewGuid();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{null}\", " +
+                $"demographicsOnly = \"{null}\", " +
+                $"includeInactivePatients = \"{null}\" }}";
 
             OperationCanceledException operationCanceledException =
                 new OperationCanceledException("A task was canceled.");
@@ -250,7 +344,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
@@ -271,7 +365,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
                     fhirProvider,
                     default,
-                    inputId,
+                    correlationId,
+                    nhsNumber,
                     null,
                     null,
                     null);
@@ -286,15 +381,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             actualResult.Exception.InnerException.Should().BeOfType<TaskCanceledException>();
 
             this.ddsFhirProviderMock.Verify(p => p.Patients.GetStructuredRecordAsync(
-                inputId,
+                nhsNumber,
                 null,
                 null,
                 null,
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"{fhirProvider.DisplayName} Provider Execution Started",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.ddsFhirProviderMock.Verify(provider =>
+                provider.DisplayName,
+                    Times.AtLeastOnce);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

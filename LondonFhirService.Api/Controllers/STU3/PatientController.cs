@@ -13,16 +13,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
 
-namespace LondonFhirService.Api.Controllers
+namespace LondonFhirService.Api.Controllers.STU3
 {
     [Authorize]
     [ApiController]
     [Route("api/STU3/[controller]")]
-    public class Stu3PatientController : RESTFulController
+    public class PatientController : RESTFulController
     {
         private readonly IStu3PatientCoordinationService patientCoordinationService;
 
-        public Stu3PatientController(IStu3PatientCoordinationService patientCoordinationService)
+        public PatientController(IStu3PatientCoordinationService patientCoordinationService)
         {
             this.patientCoordinationService = patientCoordinationService;
         }
@@ -72,15 +72,15 @@ namespace LondonFhirService.Api.Controllers
             }
         }
 
-        [HttpPost("{nhsNumber}/$getstructuredrecord")]
+        [HttpPost("$getstructuredrecord")]
         [Authorize(Roles = "Patients.GetStructuredRecord")]
         public async Task<ActionResult<Bundle>> GetStructuredRecord(
-            string nhsNumber,
             [FromBody] Parameters parameters,
             CancellationToken cancellationToken)
         {
             try
             {
+                string nhsNumber = ExtractStringParameter(parameters, "patientNHSNumber");
                 DateTimeOffset? dateOfBirth = ExtractDateTimeParameter(parameters, "dateOfBirth");
                 DateTime? dateOfBirthDateTime = dateOfBirth.HasValue ? dateOfBirth.Value.DateTime : null;
                 bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
@@ -118,7 +118,17 @@ namespace LondonFhirService.Api.Controllers
         {
             var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
 
-            return parameter?.Value is FhirString fhirString ? fhirString.Value : null;
+            if (parameter?.Value is FhirString fhirString)
+            {
+                return fhirString.Value;
+            }
+
+            if (parameter?.Value is Identifier identifier)
+            {
+                return identifier.Value;
+            }
+
+            return null;
         }
 
         private static DateTimeOffset? ExtractDateTimeParameter(Parameters parameters, string name)

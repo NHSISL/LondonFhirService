@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Attrify.Attributes;
 using FluentAssertions;
-using LondonFhirService.Api.Controllers;
+using LondonFhirService.Api.Controllers.STU3;
 using Microsoft.AspNetCore.Authorization;
 
 namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
@@ -18,7 +18,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
         public void GetStructuredRecordShouldHaveRolesAttribute()
         {
             // given
-            var controllerType = typeof(Stu3PatientController);
+            var controllerType = typeof(PatientController);
             var methodInfo = controllerType.GetMethod("GetStructuredRecord");
             Type attributeType = typeof(AuthorizeAttribute);
             string attributeProperty = "Roles";
@@ -59,7 +59,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
         public void GetStructuredRecordShouldNotHaveInvisibleApiAttribute()
         {
             // Given
-            var controllerType = typeof(Stu3PatientController);
+            var controllerType = typeof(PatientController);
             var methodInfo = controllerType.GetMethod("GetStructuredRecord");
             Type attributeType = typeof(InvisibleApiAttribute);
 

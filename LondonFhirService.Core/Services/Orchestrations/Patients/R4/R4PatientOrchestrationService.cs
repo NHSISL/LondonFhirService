@@ -60,8 +60,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                     .Where(provider =>
                         provider.IsPrimary &&
                         provider.IsActive &&
-                        provider.ActiveFrom <= now &&
-                        provider.ActiveTo >= now &&
+                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                         provider.FhirVersion == "R4")
                     .ToList();
 
@@ -71,8 +71,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.R4
                 List<string> activeProviderNames = orderedProviders
                     .Where(provider =>
                         provider.IsActive &&
-                        provider.ActiveFrom <= now &&
-                        provider.ActiveTo >= now &&
+                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                         provider.FhirVersion == "R4" &&
                         !provider.IsForComparisonOnly)
                     .Select(provider => provider.Name)

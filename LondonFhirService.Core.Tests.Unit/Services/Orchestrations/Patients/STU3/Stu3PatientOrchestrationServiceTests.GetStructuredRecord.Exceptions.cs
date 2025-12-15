@@ -3,9 +3,13 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Force.DeepCloner;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using Moq;
 using Xeptions;
@@ -21,8 +25,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Xeption dependencyValidationException)
         {
             // given
-            string randomString = GetRandomString();
-            string inputNhsNumber = randomString;
+            string randomId = GetRandomString();
+            string inputNhsNumber = randomId;
+            DateTime? inputDateOfBirth = DateTime.Now;
+            bool? inputDemographicsOnly = false;
+            bool? inputActivePatientsOnly = true;
+            CancellationToken cancellationToken = CancellationToken.None;
+            List<Bundle> randomBundles = CreateRandomBundles();
+            Bundle randomBundle = CreateRandomBundle();
+            Bundle expectedBundle = randomBundle.DeepClone();
+            Guid correlationId = Guid.NewGuid();
+            Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
+            Provider randomActiveProvider = CreateRandomActiveProvider();
+            Provider randomInactiveProvider = CreateRandomInactiveProvider();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
+                $"demographicsOnly = \"{inputDemographicsOnly}\", " +
+                $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
             var expectedPatientOrchestrationDependencyValidationException =
                 new PatientOrchestrationDependencyValidationException(
@@ -36,7 +57,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(
+                        correlationId,
+                        inputNhsNumber,
+                        inputDateOfBirth,
+                        inputDemographicsOnly,
+                        inputActivePatientsOnly,
+                        cancellationToken);
 
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
@@ -56,10 +83,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationDependencyValidationException))),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -68,8 +115,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Xeption dependencyException)
         {
             // given
-            string randomString = GetRandomString();
-            string inputNhsNumber = randomString;
+            string randomId = GetRandomString();
+            string inputNhsNumber = randomId;
+            DateTime? inputDateOfBirth = DateTime.Now;
+            bool? inputDemographicsOnly = false;
+            bool? inputActivePatientsOnly = true;
+            CancellationToken cancellationToken = CancellationToken.None;
+            List<Bundle> randomBundles = CreateRandomBundles();
+            Bundle randomBundle = CreateRandomBundle();
+            Bundle expectedBundle = randomBundle.DeepClone();
+            Guid correlationId = Guid.NewGuid();
+            Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
+            Provider randomActiveProvider = CreateRandomActiveProvider();
+            Provider randomInactiveProvider = CreateRandomInactiveProvider();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
+                $"demographicsOnly = \"{inputDemographicsOnly}\", " +
+                $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
             var expectedPatientOrchestrationDependencyException =
                 new PatientOrchestrationDependencyException(
@@ -83,7 +147,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(
+                        correlationId,
+                        inputNhsNumber,
+                        inputDateOfBirth,
+                        inputDemographicsOnly,
+                        inputActivePatientsOnly,
+                        cancellationToken);
 
             PatientOrchestrationDependencyException
                 actualPatientOrchestrationDependencyException =
@@ -103,18 +173,56 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationDependencyException))),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
         public async Task ShouldThrowServiceExceptionOnGetStructuredRecordIfErrorsAndLogItAsync()
         {
             // Given
-            string randomString = GetRandomString();
-            string inputNhsNumber = randomString;
+            string randomId = GetRandomString();
+            string inputNhsNumber = randomId;
+            DateTime? inputDateOfBirth = DateTime.Now;
+            bool? inputDemographicsOnly = false;
+            bool? inputActivePatientsOnly = true;
+            CancellationToken cancellationToken = CancellationToken.None;
+            List<Bundle> randomBundles = CreateRandomBundles();
+            Bundle randomBundle = CreateRandomBundle();
+            Bundle expectedBundle = randomBundle.DeepClone();
+            Guid correlationId = Guid.NewGuid();
+            Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
+            Provider randomActiveProvider = CreateRandomActiveProvider();
+            Provider randomInactiveProvider = CreateRandomInactiveProvider();
+            string auditType = "STU3-Patient-GetStructuredRecord";
+
+            string message =
+                $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
+                $"demographicsOnly = \"{inputDemographicsOnly}\", " +
+                $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
+
             string randomExceptionMessage = GetRandomString();
             Exception serviceException = new Exception(randomExceptionMessage);
 
@@ -136,7 +244,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // When
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordAsync(
+                        correlationId,
+                        inputNhsNumber,
+                        inputDateOfBirth,
+                        inputDemographicsOnly,
+                        inputActivePatientsOnly,
+                        cancellationToken);
 
             PatientOrchestrationServiceException actualPatientOrchestrationServiceException =
                 await Assert.ThrowsAsync<PatientOrchestrationServiceException>(
@@ -155,10 +269,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationServiceException))),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Orchestration Service Request Submitted",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Retrieve active providers and execute request",
+                    message,
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

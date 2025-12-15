@@ -51,10 +51,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask ValidateAccess(string nhsNumber) =>
+        public ValueTask ValidateAccess(string nhsNumber, Guid correlationId) =>
             TryCatch(async () =>
             {
-                ValidateNhsNumber(nhsNumber);
+                ValidateNhsNumber(nhsNumber, correlationId);
                 User currentUser = await securityBroker.GetCurrentUserAsync();
                 string currentUserId = currentUser.UserId;
                 IQueryable<Consumer> consumers = await consumerService.RetrieveAllConsumersAsync();
@@ -65,23 +65,25 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                     throw new UnauthorizedAccessOrchestrationException($"Current consumer with id `{currentUserId}` is not a valid consumer.");
                 }
 
-                Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
                 DateTimeOffset now = await dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-                bool isFhirServiceApiConsumer = await securityBroker.IsInRoleAsync("LondonFhirServiceApiConsumer");
 
-                if (!isFhirServiceApiConsumer || matchingConsumer.ActiveFrom > now || matchingConsumer.ActiveTo < now)
+                if (matchingConsumer.ActiveFrom > now
+                    || (matchingConsumer.ActiveTo.HasValue && matchingConsumer.ActiveTo < now))
                 {
                     await this.auditBroker.LogInformationAsync(
                             auditType: "Access",
                             title: "Access Forbidden",
+
                             message:
                                 $"Access was forbidden as consumer with id {matchingConsumer.Id} " +
-                                $"is inactive or does not have the required role.",
+                                $"is not active / does not have valid access window " +
+                                $"(ActiveFrom: {matchingConsumer.ActiveFrom}, ActiveTo: {matchingConsumer.ActiveTo})",
+
                             fileName: null,
                             correlationId: correlationId.ToString());
 
                     throw new ForbiddenAccessOrchestrationException(
-                        "Current consumer is not active or does not have the required role.");
+                        "Current consumer is not active or does not have a valid access window.");
                 }
 
                 List<string> consumerActiveOrgs =

@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Core;
+using Azure.Identity;
 using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
@@ -16,7 +18,7 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
 {
     public partial class ApiBroker
     {
-        private const string Stu3PatientRelativeUrl = "api/STU3/Stu3Patient";
+        private const string Stu3PatientRelativeUrl = "api/STU3/Patient";
 
         public async ValueTask<Bundle> EverythingStu3Async(string id, Parameters parameters)
         {
@@ -52,7 +54,7 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
             var options = new JsonSerializerOptions()
                 .ForFhir(ModelInfo.ModelInspector);
 
-            string url = $"{Stu3PatientRelativeUrl}/{nhsNumber}/$getstructuredrecord";
+            string url = $"{Stu3PatientRelativeUrl}/$getstructuredrecord";
             string jsonContent = JsonSerializer.Serialize(parameters, options);
 
             using var content = new StringContent(
@@ -74,6 +76,15 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
             Bundle bundle = fhirJsonDeserializer.Deserialize<Bundle>(responseContent);
 
             return bundle;
+        }
+
+        private async ValueTask<string> GetAccessTokenAsync()
+        {
+            var credential = new DefaultAzureCredential();
+            var tokenRequestContext = new TokenRequestContext(new[] { "https://graph.microsoft.com/.default" });
+            AccessToken accessToken = await credential.GetTokenAsync(tokenRequestContext);
+
+            return accessToken.Token;
         }
     }
 }

@@ -28,9 +28,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
             CancellationToken cancellationToken = CancellationToken.None;
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
+            Guid correlationId = Guid.NewGuid();
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(correlationId);
 
             this.accessOrchestrationServiceMock.Setup(service =>
-                service.ValidateAccess(inputId));
+                service.ValidateAccess(inputId, correlationId));
 
             this.patientOrchestrationServiceMock.Setup(service =>
                 service.EverythingAsync(
@@ -56,8 +61,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.R4
             // then
             actualBundle.Should().BeEquivalentTo(expectedBundle);
 
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
             this.accessOrchestrationServiceMock.Verify(service =>
-                service.ValidateAccess(inputId),
+                service.ValidateAccess(inputId, correlationId),
                     Times.Once);
 
             this.patientOrchestrationServiceMock.Verify(service =>

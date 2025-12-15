@@ -5,6 +5,8 @@
 using System;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
@@ -22,6 +24,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
         private readonly Mock<IAccessOrchestrationService> accessOrchestrationServiceMock;
         private readonly Mock<IStu3PatientOrchestrationService> patientOrchestrationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly IStu3PatientCoordinationService patientCoordinationService;
 
         public Stu3PatientCoordinationServiceTests()
@@ -29,11 +33,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.accessOrchestrationServiceMock = new Mock<IAccessOrchestrationService>();
             this.patientOrchestrationServiceMock = new Mock<IStu3PatientOrchestrationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
 
             this.patientCoordinationService = new Stu3PatientCoordinationService(
                 accessOrchestrationService: accessOrchestrationServiceMock.Object,
                 patientOrchestrationService: patientOrchestrationServiceMock.Object,
-                loggingBroker: loggingBrokerMock.Object);
+                loggingBroker: loggingBrokerMock.Object,
+                auditBroker: auditBrokerMock.Object,
+                identifierBroker: identifierBrokerMock.Object);
         }
 
         private static int GetRandomNumber() =>

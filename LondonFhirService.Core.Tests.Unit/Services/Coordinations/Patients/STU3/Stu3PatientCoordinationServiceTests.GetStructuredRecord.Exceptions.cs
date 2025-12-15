@@ -29,8 +29,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     message: "Patient coordination dependency validation error occurred, please try again.",
                     innerException: dependencyValidationException.InnerException as Xeption);
 
-            this.accessOrchestrationServiceMock.Setup(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>()))
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
                     .ThrowsAsync(dependencyValidationException);
 
             // when
@@ -47,8 +47,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             actualPatientCoordinationDependencyValidationException.Should()
                 .BeEquivalentTo(expectedPatientCoordinationDependencyValidationException);
 
-            this.accessOrchestrationServiceMock.Verify(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>()),
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -59,6 +59,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -75,8 +77,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     message: "Patient coordination dependency error occurred, fix the errors and try again.",
                     innerException: dependencyException.InnerException as Xeption);
 
-            this.accessOrchestrationServiceMock.Setup(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>()))
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
                     .ThrowsAsync(dependencyException);
 
             // when
@@ -92,8 +94,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             actualPatientCoordinationDependencyException.Should()
                 .BeEquivalentTo(expectedPatientCoordinationDependencyException);
 
-            this.accessOrchestrationServiceMock.Verify(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>()),
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -104,6 +106,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -115,8 +119,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             string randomExceptionMessage = GetRandomString();
             Exception serviceException = new Exception(randomExceptionMessage);
 
-            this.accessOrchestrationServiceMock.Setup(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>()))
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
                     .ThrowsAsync(serviceException);
 
             var failedPatientCoordinationServiceException =
@@ -143,8 +147,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             actualPatientCoordinationServiceException.Should()
                 .BeEquivalentTo(expectedPatientCoordinationServiceException);
 
-            this.accessOrchestrationServiceMock.Verify(orchestration =>
-                orchestration.ValidateAccess(It.IsAny<string>()),
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -155,6 +159,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

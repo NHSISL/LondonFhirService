@@ -13,16 +13,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
 
-namespace LondonFhirService.Api.Controllers
+namespace LondonFhirService.Api.Controllers.R4
 {
     [Authorize]
     [ApiController]
     [Route("api/R4/[controller]")]
-    public class R4PatientController : RESTFulController
+    public class PatientController : RESTFulController
     {
         private readonly IR4PatientCoordinationService patientCoordinationService;
 
-        public R4PatientController(IR4PatientCoordinationService patientCoordinationService)
+        public PatientController(IR4PatientCoordinationService patientCoordinationService)
         {
             this.patientCoordinationService = patientCoordinationService;
         }
