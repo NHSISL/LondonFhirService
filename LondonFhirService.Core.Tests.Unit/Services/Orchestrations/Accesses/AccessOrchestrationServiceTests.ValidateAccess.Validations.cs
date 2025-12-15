@@ -5,6 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -165,6 +167,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             Consumer inputConsumer = randomConsumer.DeepClone();
             Guid correlationId = Guid.NewGuid();
 
+            JsonSerializerOptions options = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            };
+
+            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
+
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
 
@@ -216,6 +227,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "Check Access Permissons",
+                    currentUserJson,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
