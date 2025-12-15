@@ -97,7 +97,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
             };
 
             string currentUserJson = JsonSerializer.Serialize(outputUser, options);
@@ -189,7 +190,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
             };
 
             string currentUserJson = JsonSerializer.Serialize(outputUser, options);
@@ -310,7 +312,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
             };
 
             string currentUserJson = JsonSerializer.Serialize(outputUser, options);

@@ -5,6 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Force.DeepCloner;
 using ISL.Security.Client.Models.Foundations.Users;
@@ -30,6 +32,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveTo = validActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
             Guid correlationId = Guid.NewGuid();
+
+            JsonSerializerOptions options = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            };
+
+            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -70,6 +82,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
                     Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "Check Access Permissons",
+                    currentUserJson,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
 
             this.consumerServiceMock.Verify(service =>
                 service.RetrieveAllConsumersAsync(),
