@@ -208,7 +208,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             string inputNhsNumber = randomNhsNumber;
 
             var unauthorizedAccessOrchestrationException =
-                new UnauthorizedAccessOrchestrationException("Current consumer is not a valid consumer.");
+                new UnauthorizedAccessOrchestrationException($"Current consumer with id `{outputUser.UserId}` is not a valid consumer.");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(

@@ -62,7 +62,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
 
                 if (matchingConsumer is null)
                 {
-                    throw new UnauthorizedAccessOrchestrationException("Current consumer is not a valid consumer.");
+                    throw new UnauthorizedAccessOrchestrationException($"Current consumer with id `{currentUserId}` is not a valid consumer.");
                 }
 
                 Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
