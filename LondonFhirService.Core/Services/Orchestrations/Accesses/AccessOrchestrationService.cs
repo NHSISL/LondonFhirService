@@ -5,6 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Brokers.Audits;
@@ -57,12 +59,35 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 ValidateNhsNumber(nhsNumber, correlationId);
                 User currentUser = await securityBroker.GetCurrentUserAsync();
                 string currentUserId = currentUser.UserId;
+
+                JsonSerializerOptions options = new()
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = false,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                };
+
+                string currentUserJson = JsonSerializer.Serialize(currentUser, options);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType: "Access",
+                    title: "Check Access Permissons",
+                    message: currentUserJson,
+                    fileName: null,
+                    correlationId: correlationId.ToString());
+
+                if (currentUser is null)
+                {
+                    throw new UnauthorizedAccessOrchestrationException($"Current consumer is not a valid consumer.");
+                }
+
                 IQueryable<Consumer> consumers = await consumerService.RetrieveAllConsumersAsync();
                 Consumer matchingConsumer = consumers.FirstOrDefault(consumer => consumer.UserId == currentUserId);
 
                 if (matchingConsumer is null)
                 {
-                    throw new UnauthorizedAccessOrchestrationException("Current consumer is not a valid consumer.");
+                    throw new UnauthorizedAccessOrchestrationException($"Current consumer with id `{currentUserId}` is not a valid consumer.");
                 }
 
                 DateTimeOffset now = await dateTimeBroker.GetCurrentDateTimeOffsetAsync();

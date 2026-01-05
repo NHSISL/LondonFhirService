@@ -5,6 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -91,6 +93,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             Consumer inputConsumer = randomConsumer.DeepClone();
             Guid correlationId = Guid.NewGuid();
 
+            JsonSerializerOptions options = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            };
+
+            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
+
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
 
@@ -99,7 +111,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             string inputNhsNumber = randomNhsNumber;
 
             var unauthorizedAccessOrchestrationException =
-                new UnauthorizedAccessOrchestrationException("Current consumer is not a valid consumer.");
+                new UnauthorizedAccessOrchestrationException($"Current consumer with id `{outputUser.UserId}` is not a valid consumer.");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
@@ -129,6 +141,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
                     Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "Check Access Permissons",
+                    currentUserJson,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
 
             this.consumerServiceMock.Verify(service =>
                 service.RetrieveAllConsumersAsync(),
@@ -164,6 +185,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveTo = invalidActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
             Guid correlationId = Guid.NewGuid();
+
+            JsonSerializerOptions options = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            };
+
+            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -220,6 +251,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     "Access",
+                    "Check Access Permissons",
+                    currentUserJson,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
                     "Access Forbidden",
 
                     $"Access was forbidden as consumer with id {inputConsumer.Id} " +
@@ -267,6 +307,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             randomConsumer.ActiveTo = validActiveToDate;
             Consumer inputConsumer = randomConsumer.DeepClone();
             Guid correlationId = Guid.NewGuid();
+
+            JsonSerializerOptions options = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            };
+
+            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
 
             IQueryable<Consumer> storageConsumers =
                 new List<Consumer> { inputConsumer }.AsQueryable();
@@ -340,6 +390,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.pdsDataServiceMock.Verify(service =>
                 service.OrganisationsHaveAccessToThisPatient(inputNhsNumber, userOrganisations),
                     Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "Check Access Permissons",
+                    currentUserJson,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
