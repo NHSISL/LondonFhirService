@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
@@ -14,6 +15,7 @@ using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
 using Xunit.Abstractions;
@@ -25,9 +27,27 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
     {
         private readonly ApiBroker apiBroker;
         private readonly ITestOutputHelper testOutputHelper;
+        private readonly IConfiguration configuration;
+        private readonly DdsConfigurations ddsConfigurations;
 
         public Stu3PatientTests(ApiBroker apiBroker, ITestOutputHelper testOutputHelper)
         {
+            var testProjectPath =
+                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+
+            configuration = new ConfigurationBuilder()
+                .SetBasePath(testProjectPath)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .AddJsonFile("appsettings.Integration.json", optional: true, reloadOnChange: false)
+                .Build();
+
+            ddsConfigurations =
+                configuration
+                    .GetSection("DdsConfigurations")
+                    .Get<DdsConfigurations>()
+                        ?? throw new InvalidOperationException(
+                            "DdsConfigurations configuration section is missing or invalid.");
+
             this.apiBroker = apiBroker;
             this.testOutputHelper = testOutputHelper;
         }

@@ -67,8 +67,11 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
 
                 DateTimeOffset now = await dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
-                if (matchingConsumer.ActiveFrom > now
-                    || (matchingConsumer.ActiveTo.HasValue && matchingConsumer.ActiveTo < now))
+                bool isActive =
+                    matchingConsumer.ActiveFrom <= now
+                        && (!matchingConsumer.ActiveTo.HasValue || matchingConsumer.ActiveTo >= now);
+
+                if (!isActive)
                 {
                     await this.auditBroker.LogInformationAsync(
                             auditType: "Access",
