@@ -25,6 +25,7 @@ using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Coordinations.Patients.R4;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
@@ -193,8 +194,13 @@ public partial class Program
             .GetSection("DdsConfigurations")
             .Get<DdsConfigurations>();
 
+        AccessConfigurations accessConfig = configuration
+            .GetSection("AccessConfigurations")
+            .Get<AccessConfigurations>();
+
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);
+        services.AddSingleton(accessConfig);
 
         var stu3Providers = new List<STU3FhirAbstractions.IFhirProvider>
         {

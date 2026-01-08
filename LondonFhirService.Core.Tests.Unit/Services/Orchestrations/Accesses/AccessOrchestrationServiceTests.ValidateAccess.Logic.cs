@@ -9,14 +9,18 @@ using System.Threading.Tasks;
 using Force.DeepCloner;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
+using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 {
     public partial class AccessOrchestrationServiceTests
     {
-        [Fact]
-        public async Task ShouldValidateAccess()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public async Task ShouldValidateAccess(bool useHashedNhsNumber)
         {
             // given
             string userId = GetRandomString();
@@ -37,15 +41,36 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             Guid randomGuid = Guid.NewGuid();
             string randomNhsNumber = GetRandomStringWithLength(5);
             string inputNhsNumber = randomNhsNumber;
-
             string userOrganisation = GetRandomStringWithLength(5);
 
             List<string> userOrganisations =
                 new List<string> { userOrganisation };
 
+            var accessConfigurations = new AccessConfigurations
+            {
+                UseHashedNhsNumber = useHashedNhsNumber,
+                HashPepper = GetRandomString(),
+            };
+
+            var accessOrchestrationService = new AccessOrchestrationService(
+                consumerService: this.consumerServiceMock.Object,
+                consumerAccessService: this.consumerAccessServiceMock.Object,
+                pdsDataService: this.pdsDataServiceMock.Object,
+                auditBroker: this.auditBrokerMock.Object,
+                securityBroker: this.securityBrokerMock.Object,
+                dateTimeBroker: this.dateTimeBrokerMock.Object,
+                identifierBroker: this.identifierBrokerMock.Object,
+                loggingBroker: this.loggingBrokerMock.Object,
+                hashBroker: this.hashBrokerMock.Object,
+                accessConfigurations: accessConfigurations);
+
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
                     .ReturnsAsync(outputUser);
+
+            this.hashBrokerMock.Setup(broker =>
+                broker.GenerateSha256HashAsync(inputNhsNumber, accessConfigurations.HashPepper))
+                    .ReturnsAsync(inputNhsNumber);
 
             this.consumerServiceMock.Setup(service =>
                 service.RetrieveAllConsumersAsync())
@@ -75,6 +100,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync(),
                     Times.Once);
 
+            if (useHashedNhsNumber)
+            {
+                this.hashBrokerMock.Verify(broker =>
+                    broker.GenerateSha256HashAsync(inputNhsNumber, accessConfigurations.HashPepper),
+                        Times.Once);
+            }
+
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
@@ -95,6 +127,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
