@@ -10,6 +10,7 @@ using System.Security.Claims;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
@@ -17,6 +18,7 @@ using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
 using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Consumers;
 using LondonFhirService.Core.Services.Foundations.PdsDatas;
@@ -37,6 +39,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly Mock<IHashBroker> hashBrokerMock;
+        private readonly AccessConfigurations accessConfigurations;
         private readonly AccessOrchestrationService accessOrchestrationService;
 
         public AccessOrchestrationServiceTests()
@@ -49,6 +53,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.hashBrokerMock = new Mock<IHashBroker>();
+
+            this.accessConfigurations = new AccessConfigurations
+            {
+                UseHashedNhsNumber = true,
+                HashPepper = GetRandomString(),
+            };
 
             this.accessOrchestrationService = new AccessOrchestrationService(
                 consumerService: this.consumerServiceMock.Object,
@@ -58,7 +69,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 securityBroker: this.securityBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
-                loggingBroker: this.loggingBrokerMock.Object);
+                loggingBroker: this.loggingBrokerMock.Object,
+                hashBroker: this.hashBrokerMock.Object,
+                accessConfigurations: this.accessConfigurations);
         }
 
         private static DateTimeOffset GetRandomDateTimeOffset() =>

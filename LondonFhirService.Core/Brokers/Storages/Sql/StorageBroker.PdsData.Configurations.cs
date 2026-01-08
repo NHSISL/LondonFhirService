@@ -17,7 +17,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .IsRequired();
 
             builder.Property(pdsData => pdsData.NhsNumber)
-                .HasMaxLength(15)
+                .HasMaxLength(256)
                 .IsRequired();
 
             builder.Property(pdsData => pdsData.OrgCode)

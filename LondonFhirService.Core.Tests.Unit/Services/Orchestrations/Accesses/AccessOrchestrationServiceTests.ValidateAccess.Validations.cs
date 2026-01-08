@@ -348,6 +348,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 service.RetrieveAllConsumersAsync())
                     .ReturnsAsync(storageConsumers);
 
+            this.hashBrokerMock.Setup(broker =>
+                broker.GenerateSha256HashAsync(inputNhsNumber, accessConfigurations.HashPepper))
+                    .ReturnsAsync(inputNhsNumber);
+
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);

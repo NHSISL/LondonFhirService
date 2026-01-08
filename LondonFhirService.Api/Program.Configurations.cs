@@ -19,12 +19,14 @@ using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.R4;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
+using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Coordinations.Patients.R4;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
@@ -193,8 +195,13 @@ public partial class Program
             .GetSection("DdsConfigurations")
             .Get<DdsConfigurations>();
 
+        AccessConfigurations accessConfig = configuration
+            .GetSection("AccessConfigurations")
+            .Get<AccessConfigurations>();
+
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);
+        services.AddSingleton(accessConfig);
 
         var stu3Providers = new List<STU3FhirAbstractions.IFhirProvider>
         {
@@ -240,6 +247,7 @@ public partial class Program
         services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
         services.AddTransient<ISecurityBroker, SecurityBroker>();
         services.AddTransient<IStorageBroker, StorageBroker>();
+        services.AddTransient<IHashBroker, HashBroker>();
     }
 
     private static void AddFoundationServices(IServiceCollection services)

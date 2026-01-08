@@ -11,10 +11,12 @@ using System.Threading.Tasks;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Consumers;
@@ -32,6 +34,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly IHashBroker hashBroker;
+        private readonly AccessConfigurations accessConfigurations;
 
         public AccessOrchestrationService(
             IConsumerService consumerService,
@@ -41,7 +45,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             ISecurityBroker securityBroker,
             IDateTimeBroker dateTimeBroker,
             IIdentifierBroker identifierBroker,
-            ILoggingBroker loggingBroker)
+            ILoggingBroker loggingBroker,
+            IHashBroker hashBroker,
+            AccessConfigurations accessConfigurations)
         {
             this.consumerService = consumerService;
             this.consumerAccessService = consumerAccessService;
@@ -51,6 +57,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             this.dateTimeBroker = dateTimeBroker;
             this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
+            this.hashBroker = hashBroker;
+            this.accessConfigurations = accessConfigurations;
         }
 
         public ValueTask ValidateAccess(string nhsNumber, Guid correlationId) =>
@@ -117,8 +125,16 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 List<string> consumerActiveOrgs =
                     await consumerAccessService.RetrieveAllActiveOrganisationsUserHasAccessToAsync(matchingConsumer.Id);
 
+                string patientIdentifier = nhsNumber;
+
+                if (accessConfigurations.UseHashedNhsNumber == true)
+                {
+                    patientIdentifier =
+                        await hashBroker.GenerateSha256HashAsync(nhsNumber, accessConfigurations.HashPepper);
+                }
+
                 bool organisationsHaveAccessToPatient = await pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: nhsNumber,
+                    nhsNumber: patientIdentifier,
                     organisationCodes: consumerActiveOrgs);
 
                 if (!organisationsHaveAccessToPatient)
