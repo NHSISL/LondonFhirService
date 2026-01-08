@@ -15,6 +15,7 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
         {
             // given
             string pepper = "pepper123!@";
+            string orgCode = "TESTICB1";
 
             Dictionary<string, string> nhsNumbers =
                 new()
@@ -81,6 +82,13 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
             foreach ((string nhsNumber, string hash) in nhsNumbers)
             {
                 output.WriteLine($"{nhsNumber}, {hash}");
+            }
+
+            output.WriteLine("");
+
+            foreach ((string nhsNumber, string hash) in nhsNumbers)
+            {
+                output.WriteLine($"INSERT INTO [dbo].[PdsDatas] ([Id], [NhsNumber], [OrgCode]) VALUES (NEWID(), '{hash}', '{orgCode}');");
             }
         }
     }
