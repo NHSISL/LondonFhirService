@@ -14,7 +14,9 @@ using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
 
@@ -24,9 +26,16 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
     public partial class Stu3PatientTests
     {
         private readonly ApiBroker apiBroker;
+        private readonly AccessConfigurations accessConfigurations;
 
-        public Stu3PatientTests(ApiBroker apiBroker) =>
+        public Stu3PatientTests(ApiBroker apiBroker)
+        {
             this.apiBroker = apiBroker;
+
+            this.accessConfigurations = apiBroker.configuration
+                .GetSection("AccessConfigurations")
+                .Get<AccessConfigurations>();
+        }
 
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();
@@ -257,9 +266,17 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
         private async Task<PdsData> CreateRandomPdsData(
             string nhsNumber,
             string organisationCode,
-            DateTimeOffset dateTimeOffset)
+            DateTimeOffset dateTimeOffset,
+            bool useHashedNhsNumber = true)
         {
             PdsData randomPdsData = CreatePdsDataFiller(nhsNumber, organisationCode, dateTimeOffset).Create();
+
+            if (useHashedNhsNumber)
+            {
+                randomPdsData.NhsNumber = await this.apiBroker.hashBroker
+                    .GenerateSha256HashAsync(nhsNumber, accessConfigurations.HashPepper);
+            }
+
             PdsData createdPdsData = await SeedPdsDataAsync(randomPdsData);
 
             return createdPdsData;

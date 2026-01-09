@@ -4,6 +4,7 @@
 
 using System.Net.Http;
 using Attrify.InvisibleApi.Models;
+using LondonFhirService.Core.Brokers.Hashing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RESTFulSense.Clients;
@@ -17,6 +18,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
         private readonly IRESTFulApiFactoryClient apiFactoryClient;
         internal readonly InvisibleApiKey invisibleApiKey;
         internal readonly IConfiguration configuration;
+        internal readonly IHashBroker hashBroker;
 
         internal TestWebApplicationFactory WebApplicationFactory => webApplicationFactory;
 
@@ -28,6 +30,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             httpClient.DefaultRequestHeaders.Add(invisibleApiKey.Key, invisibleApiKey.Value);
             apiFactoryClient = new RESTFulApiFactoryClient(httpClient);
             configuration = webApplicationFactory.Services.GetService<IConfiguration>();
+            hashBroker = webApplicationFactory.Services.GetService<IHashBroker>();
         }
     }
 }

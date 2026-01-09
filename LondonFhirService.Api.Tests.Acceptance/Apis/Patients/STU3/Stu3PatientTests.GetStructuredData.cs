@@ -47,6 +47,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 int inputCount = randomInputCount;
                 string providerName = "LDS";
                 string fhirVersion = "STU3";
+                bool useHashedNhsNumber = accessConfigurations.UseHashedNhsNumber;
 
                 Parameters inputParameters = CreateRandomParametersGetStructuredData(
                     nhsNumber,
@@ -63,7 +64,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                     now,
                     userId);
 
-                pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now);
+                pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now, useHashedNhsNumber);
                 provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
 
                 // when
