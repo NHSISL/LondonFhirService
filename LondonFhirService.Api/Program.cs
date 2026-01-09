@@ -4,7 +4,6 @@
 
 extern alias FhirR4;
 extern alias FhirSTU3;
-
 using System.IO;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Storages.Sql;
@@ -23,6 +22,11 @@ if (File.Exists(launchSettingsPath))
 {
     builder.Configuration.AddJsonFile(launchSettingsPath, optional: true);
 }
+
+builder.Configuration
+    .AddJsonFile(Path.Combine(projectDir, "appsettings.json"), optional: true)
+    .AddJsonFile(Path.Combine(projectDir, "appsettings.Development.json"), optional: true)
+    .AddEnvironmentVariables();
 
 Program.ConfigurationOverridesForTesting(builder);
 
