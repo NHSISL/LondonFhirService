@@ -351,7 +351,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     "Access Forbidden",
                     $"Access was denied as none of the organisations the consumer with id " +
                         $"{inputConsumer.Id} has access to are permitted to access patient with " +
-                        $"NHS number {inputNhsNumber}.",
+                            $"NHS number {inputNhsNumber} and patient identifier " +
+                                $"'{inputNhsNumber.Substring(0, 5)}..." +
+                                    $"{inputNhsNumber.Substring(inputNhsNumber.Length - 5)}'",
                     null,
                     correlationId.ToString()),
                         Times.Once);

@@ -120,7 +120,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                             message:
                                 $"Access was denied as none of the organisations the consumer with id " +
                                 $"{matchingConsumer.Id} has access to are permitted to access patient with " +
-                                $"NHS number {nhsNumber}.",
+                                $"NHS number {nhsNumber} and patient identifier " +
+                                $"'{patientIdentifier.Substring(0, 5)}..." +
+                                $"{patientIdentifier.Substring(patientIdentifier.Length - 5)}'",
                             fileName: null,
                             correlationId: correlationId.ToString());
 
