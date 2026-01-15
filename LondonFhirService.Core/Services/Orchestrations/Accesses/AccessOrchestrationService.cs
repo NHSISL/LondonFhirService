@@ -115,19 +115,24 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 if (!organisationsHaveAccessToPatient)
                 {
                     await this.auditBroker.LogInformationAsync(
-                            auditType: "Access",
-                            title: "Access Forbidden",
-                            message:
-                                $"Access was denied as none of the organisations the consumer with id " +
-                                $"{matchingConsumer.Id} has access to are permitted to access patient with " +
-                                $"NHS number {nhsNumber} and patient identifier " +
-                                $"'{patientIdentifier.Substring(0, 5)}..." +
-                                $"{patientIdentifier.Substring(patientIdentifier.Length - 5)}'",
-                            fileName: null,
-                            correlationId: correlationId.ToString());
+                        auditType: "Access",
+                        title: "Access Forbidden",
+
+                        message:
+                            $"Access was denied as none of the organisations the consumer with id " +
+                            $"{matchingConsumer.Id} has access to are permitted to access patient with " +
+                            $"NHS number {nhsNumber} and patient identifier " +
+                            $"'{patientIdentifier.Substring(0, 5)}..." +
+                            $"{patientIdentifier.Substring(patientIdentifier.Length - 5)}' and " +
+                            $"pepper '{accessConfigurations.HashPepper.Substring(0, 5)}..." +
+                            $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 5)}'",
+
+                        fileName: null,
+                        correlationId: correlationId.ToString());
 
                     throw new ForbiddenAccessOrchestrationException(
-                        "None of the organisations the consumer has access to are permitted to access this patient.");
+                        "None of the organisations the consumer has access to are permitted to access this patient.  " +
+                        $"CorrelationId: {correlationId.ToString()}");
                 }
             });
     }

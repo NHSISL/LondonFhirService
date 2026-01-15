@@ -282,7 +282,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             var forbiddenAccessOrchestrationException =
                 new ForbiddenAccessOrchestrationException(
-                   "None of the organisations the consumer has access to are permitted to access this patient.");
+                   "None of the organisations the consumer has access to are permitted to access this patient.  " +
+                   $"CorrelationId: {correlationId.ToString()}");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
@@ -349,11 +350,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 broker.LogInformationAsync(
                     "Access",
                     "Access Forbidden",
+
                     $"Access was denied as none of the organisations the consumer with id " +
                         $"{inputConsumer.Id} has access to are permitted to access patient with " +
-                            $"NHS number {inputNhsNumber} and patient identifier " +
-                                $"'{inputNhsNumber.Substring(0, 5)}..." +
-                                    $"{inputNhsNumber.Substring(inputNhsNumber.Length - 5)}'",
+                        $"NHS number {inputNhsNumber} and patient identifier " +
+                        $"'{inputNhsNumber.Substring(0, 5)}..." +
+                        $"{inputNhsNumber.Substring(inputNhsNumber.Length - 5)}' and " +
+                        $"pepper '{accessConfigurations.HashPepper.Substring(0, 5)}..." +
+                        $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 5)}'",
                     null,
                     correlationId.ToString()),
                         Times.Once);
