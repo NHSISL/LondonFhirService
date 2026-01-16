@@ -22,17 +22,10 @@ const MenuComponent: React.FC = () => {
             </ListGroup.Item>
 
             <ListGroup.Item
-                className={`bg-dark text-white ${location.pathname === '/nhsNumberSearch' ? 'active' : ''}`}
-                onClick={() => handleItemClick('/nhsNumberSearch')}>
+                className={`bg-dark text-white ${location.pathname === '/testPage' ? 'active' : ''}`}
+                onClick={() => handleItemClick('/testPage')}>
                 <FontAwesomeIcon icon={faUser} className="me-2 fa-icon" />
-                Search NHS Number
-            </ListGroup.Item>
-
-            <ListGroup.Item
-                className={`bg-dark text-white ${location.pathname === '/patientSearch' ? 'active' : ''}`}
-                onClick={() => handleItemClick('/patientSearch')}>
-                <FontAwesomeIcon icon={faUser} className="me-2 fa-icon" />
-                Search Patient Details
+               Test Nav Page
             </ListGroup.Item>
         </ListGroup>
     );

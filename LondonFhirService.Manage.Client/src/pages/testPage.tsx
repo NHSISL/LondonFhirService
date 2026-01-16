@@ -1,11 +1,12 @@
 import { Container, Row, Col } from "react-bootstrap";
+import TestComponent from "../components/testComponent/testComponent";
 
-export const Home = () => {
+export const TestPage = () => {
     return (
         <Container fluid className="mt-4">
             <Row className="mb-4 p-2">
                 <Col>
-                    <h3>The London Fhir Service Management Portal</h3>
+                    <TestComponent />
                 </Col>
             </Row>
         </Container>

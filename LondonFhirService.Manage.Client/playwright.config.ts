@@ -78,7 +78,7 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: "dotnet run --project ../LondonDataServices.IDecide.Manage/",
+        command: "dotnet run --project ../LondonFhirService.Manage/",
         url: 'https://localhost:6073/',
         reuseExistingServer: true,
         ignoreHTTPSErrors: true,
