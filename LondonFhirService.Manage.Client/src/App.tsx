@@ -10,13 +10,7 @@ import { Home } from './pages/home';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import "react-toastify/dist/ReactToastify.css";
 import ToastBroker from './brokers/toastBroker';
-import { PatientSearchPage } from './pages/patientSearchPage';
-import SearchByNhsNumberPage from './pages/searchByNhsNumberPage';
-import ConfirmDetailsPage from './pages/confirmDetailsPage';
-import { SendCodePage } from './pages/sendCodePage';
-import ConfirmCodePage from './pages/confirmCodePage';
-import { OptInOutPage } from './pages/optInOutPage';
-import { ThankyouPage } from './pages/thankyouPage';
+import { TestPage } from './pages/testPage';
 
 function App({ instance }: any) {
 
@@ -31,32 +25,8 @@ function App({ instance }: any) {
                     element: <Home />
                 },
                 {
-                    path: "nhsNumberSearch",
-                    element: <SearchByNhsNumberPage />
-                },
-                {
-                    path: "patientSearch",
-                    element: <PatientSearchPage />
-                },
-                {
-                    path: "confirmDetails",
-                    element: <ConfirmDetailsPage />
-                },
-                {
-                    path: "confirmCode",
-                    element: <ConfirmCodePage />
-                },
-                {
-                    path: "sendCode",
-                    element: <SendCodePage />
-                },
-                {
-                    path: "optInOut",
-                    element: <OptInOutPage />
-                },
-                {
-                    path: "thankyou",
-                    element: <ThankyouPage />
+                    path: "testPage",
+                    element: <TestPage />
                 },
                 {
                     index: true,
