@@ -1,5 +1,5 @@
 {
-  "name": "LondonDataServices.IDecide.Manage.client",
+  "name": "LondonFhirService.Manage.client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -21,8 +21,8 @@
     "bootstrap": "^5.3.3",
     "guid-typescript": "file:dependencies/guid-typescript",
     "lodash": "^4.17.21",
-    "LondonDataServices.IDecide.frontend.client": "file:",
-    "LondonDataServices.IDecide.Manage.client": "file:",
+    "LondonFhirService.Manage": "file:",
+    "LondonFhirService.Manage.client": "file:",
     "moment": "2.30.1",
     "nhsuk-frontend": "^9.6.3",
     "nhsuk-react-components": "^5.0.0",
