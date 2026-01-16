@@ -21,7 +21,7 @@ const NavbarComponent: React.FC<NavbarComponentProps> = ({ toggleSidebar, showMe
                 )}
                 <Navbar.Brand href="/" className="me-auto ms-3 d-flex align-items-center">
                     <span className="d-none d-md-inline" style={{ marginLeft: "10px" }}>
-                       London Fhir Service Management Portal
+                       London FHIR Service Management Portal
                     </span>
                 </Navbar.Brand>
                 <Navbar.Text>
