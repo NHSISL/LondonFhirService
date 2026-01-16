@@ -8,9 +8,11 @@ using System.IO;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,9 +32,17 @@ builder.Configuration
 
 Program.ConfigurationOverridesForTesting(builder);
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+});
+
 // Shared InvisibleApiKey instance, also available via DI
 var invisibleApiKey = new InvisibleApiKey();
 builder.Services.AddSingleton(invisibleApiKey);
+builder.Services.AddApplicationInsightsTelemetry();
+builder.Logging.AddApplicationInsights();
 
 // Register health checks
 builder.Services.AddHealthChecks();
