@@ -58,7 +58,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             this.accessConfigurations = new AccessConfigurations
             {
                 UseHashedNhsNumber = true,
-                HashPepper = GetRandomString(),
+                HashPepper = GetRandomStringWithLength(100),
             };
 
             this.accessOrchestrationService = new AccessOrchestrationService(
