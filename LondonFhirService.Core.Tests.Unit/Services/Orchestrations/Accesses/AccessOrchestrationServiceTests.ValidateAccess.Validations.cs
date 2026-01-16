@@ -324,7 +324,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 new List<Consumer> { inputConsumer }.AsQueryable();
 
             Guid randomGuid = Guid.NewGuid();
-            string randomNhsNumber = GetRandomStringWithLength(5);
+            string randomNhsNumber = GetRandomStringWithLength(10);
             string inputNhsNumber = randomNhsNumber;
 
             string userOrganisation = GetRandomStringWithLength(5);
