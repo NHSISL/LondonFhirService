@@ -15,7 +15,7 @@ namespace LondonFhirService.Infrastructure
             scriptGenerationService.GenerateBuildScript(
                 branchName: "main",
                 projectName: "LondonFhirService.Core",
-                dotNetVersion: "9.0.100");
+                dotNetVersion: "10.0.100");
 
             scriptGenerationService.GeneratePrLintScript(branchName: "main");
         }

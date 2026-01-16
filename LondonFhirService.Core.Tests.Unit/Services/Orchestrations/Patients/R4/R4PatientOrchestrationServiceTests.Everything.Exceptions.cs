@@ -36,7 +36,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .Everything(id: inputId);
+                    .EverythingAsync(id: inputId);
 
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
@@ -83,7 +83,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             // when
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .Everything(id: inputId);
+                    .EverythingAsync(id: inputId);
 
             PatientOrchestrationDependencyException
                 actualPatientOrchestrationDependencyException =
@@ -136,7 +136,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.R4
             // When
             ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
                 this.patientOrchestrationService
-                    .Everything(id: inputId);
+                    .EverythingAsync(id: inputId);
 
             PatientOrchestrationServiceException actualPatientOrchestrationServiceException =
                 await Assert.ThrowsAsync<PatientOrchestrationServiceException>(

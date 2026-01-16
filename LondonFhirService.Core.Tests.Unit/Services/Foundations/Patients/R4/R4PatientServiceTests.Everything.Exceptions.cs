@@ -62,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
 
             // when
             ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.Everything(
+                mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
@@ -140,7 +140,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
 
             // when
             ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.Everything(
+                mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);
@@ -224,7 +224,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
 
             // when
             ValueTask<List<Bundle>> everythingTask =
-                mockedPatientService.Everything(
+                mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);

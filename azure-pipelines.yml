@@ -1,0 +1,81 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+  tags:
+    include:
+    - 'v*'
+  branches:
+    include:
+    - main
+
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  CI: true
+
+steps:
+  - bash: |
+      echo "Build $(Build.SourceBranch)"
+      RELEASE_REGEX="v[0-9](.[0-9]+){3}"
+      tagName=${BUILD_SOURCEBRANCH#refs/tags/}
+      if [[ "$(Build.SourceBranch)" =~ $RELEASE_REGEX ]] 
+      then
+       echo "##vso[build.updatebuildnumber]$tagName"
+       echo "##vso[build.addbuildtag]$tagName"
+       echo "##vso[build.addbuildtag]Release"
+      fi
+    displayName: Tag Releases
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+    displayName: 'Replace tokens in **/appsettings.json'
+    inputs:
+      sources: '**/appsettings.json'
+  - task: UseDotNet@2
+    displayName: "Install .NET Core SDK"
+    inputs:
+      version: 10.x
+      performMultiLevelLookup: true
+      includePreviewVersions: true # Required for preview versions
+  - task: DotNetCoreCLI@2
+    displayName: "Dotnet Restore"
+    inputs:
+      command: "restore"
+      feedsToUse: "select"
+      projects: "**/*.csproj"
+      includeNuGetOrg: true
+
+  - task: DotNetCoreCLI@2
+    displayName: "Dotnet Publish Public LFS FHIR API"
+    inputs:
+      command: "publish"
+      publishWebProjects: false
+      projects: "**/LondonFhirService.Api.csproj"
+      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_lfs_fhir_api"
+      zipAfterPublish: true
+      modifyOutputPath: false
+
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_public_lfs_fhir_api
+    displayName: 'Publish Artifact - Public LFS FHIR API'
+    artifact: drop-public-lfs-fhir-api
+
+  - task: DotNetCoreCLI@2
+    displayName: "Dotnet Publish Private LFS Back Office Management Portal"
+    inputs:
+      command: "publish"
+      publishWebProjects: false
+      projects: "**/LondonFhirService.Manage.csproj"
+      arguments: "-o $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal"
+      zipAfterPublish: true
+      modifyOutputPath: false
+
+  - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId)_publish_output_website_backoffice_management_portal
+    displayName: 'Publish Artifact - Private LFS Back Office Management Portal'
+    artifact: drop-private-lfs-backoffice-management-portal

@@ -13,26 +13,26 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
 
-namespace LondonFhirService.Api.Controllers
+namespace LondonFhirService.Api.Controllers.STU3
 {
     [Authorize]
     [ApiController]
     [Route("api/STU3/[controller]")]
-    public class Stu3PatientController : RESTFulController
+    public class PatientController : RESTFulController
     {
         private readonly IStu3PatientCoordinationService patientCoordinationService;
 
-        public Stu3PatientController(IStu3PatientCoordinationService patientCoordinationService)
+        public PatientController(IStu3PatientCoordinationService patientCoordinationService)
         {
             this.patientCoordinationService = patientCoordinationService;
         }
 
         [HttpPost("{id}/$everything")]
         [Authorize(Roles = "Patients.Everything")]
-        public async Task<ActionResult<Bundle>> Everything(
+        public async Task<ActionResult<string>> Everything(
             string id,
             [FromBody] Parameters parameters,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace LondonFhirService.Api.Controllers
                 DateTimeOffset? since = ExtractDateTimeParameter(parameters, "_since");
                 int? count = ExtractIntParameter(parameters, "_count");
 
-                Bundle bundle = await this.patientCoordinationService.Everything(
+                string bundle = await this.patientCoordinationService.EverythingSerialisedAsync(
                     id,
                     start,
                     end,
@@ -72,11 +72,63 @@ namespace LondonFhirService.Api.Controllers
             }
         }
 
+        [HttpPost("$getstructuredrecord")]
+        [Authorize(Roles = "Patients.GetStructuredRecord")]
+        public async Task<ActionResult<Bundle>> GetStructuredRecord(
+            [FromBody] Parameters parameters,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                string nhsNumber = ExtractStringParameter(parameters, "patientNHSNumber");
+                DateTimeOffset? dateOfBirth = ExtractDateTimeParameter(parameters, "dateOfBirth");
+                DateTime? dateOfBirthDateTime = dateOfBirth.HasValue ? dateOfBirth.Value.DateTime : null;
+                bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
+                bool? includeInactivePatients = ExtractBoolParameter(parameters, "includeInactivePatients");
+
+                string bundle = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                    nhsNumber,
+                    dateOfBirthDateTime,
+                    demographicsOnly,
+                    includeInactivePatients,
+                    cancellationToken);
+
+                return Ok(bundle);
+            }
+            catch (PatientCoordinationValidationException patientCoordinationValidationException)
+            {
+                return BadRequest(patientCoordinationValidationException.InnerException);
+            }
+            catch (PatientCoordinationDependencyValidationException
+                   patientCoordinationDependencyValidationException)
+            {
+                return BadRequest(patientCoordinationDependencyValidationException.InnerException);
+            }
+            catch (PatientCoordinationDependencyException patientCoordinationDependencyException)
+            {
+                return InternalServerError(patientCoordinationDependencyException);
+            }
+            catch (PatientCoordinationServiceException patientCoordinationServiceException)
+            {
+                return InternalServerError(patientCoordinationServiceException);
+            }
+        }
+
         private static string ExtractStringParameter(Parameters parameters, string name)
         {
             var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
 
-            return parameter?.Value is FhirString fhirString ? fhirString.Value : null;
+            if (parameter?.Value is FhirString fhirString)
+            {
+                return fhirString.Value;
+            }
+
+            if (parameter?.Value is Identifier identifier)
+            {
+                return identifier.Value;
+            }
+
+            return null;
         }
 
         private static DateTimeOffset? ExtractDateTimeParameter(Parameters parameters, string name)
@@ -101,6 +153,13 @@ namespace LondonFhirService.Api.Controllers
             var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
 
             return parameter?.Value is Integer integer ? integer.Value : null;
+        }
+
+        private static bool? ExtractBoolParameter(Parameters parameters, string name)
+        {
+            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
+
+            return parameter?.Value is FhirBoolean fhirBoolean ? fhirBoolean.Value : null;
         }
     }
 }

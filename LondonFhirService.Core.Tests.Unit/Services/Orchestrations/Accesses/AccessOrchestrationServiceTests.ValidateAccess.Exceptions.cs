@@ -21,6 +21,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             // given
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
+            Guid correlationId = Guid.NewGuid();
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
@@ -33,7 +34,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     innerException: dependencyException.InnerException as Xeption);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             AccessOrchestrationDependencyValidationException actualAccessOrchestrationDependencyValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationDependencyValidationException>(
@@ -70,6 +71,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             // given
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
+            Guid correlationId = Guid.NewGuid();
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
@@ -82,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     innerException: dependencyException.InnerException as Xeption);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             AccessOrchestrationDependencyException actualAccessOrchestrationDependencyException =
                 await Assert.ThrowsAsync<AccessOrchestrationDependencyException>(
@@ -118,6 +120,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             var serviceException = new Exception();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
+            Guid correlationId = Guid.NewGuid();
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
@@ -135,7 +138,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     innerException: failedServiceAccessOrchestrationException);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber);
+            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             AccessOrchestrationServiceException actualAccessOrchestrationServiceException =
                 await Assert.ThrowsAsync<AccessOrchestrationServiceException>(

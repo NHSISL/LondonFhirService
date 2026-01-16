@@ -146,8 +146,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
             mock.SetupGet(p => p.Code).Returns(GetRandomString());
             mock.SetupGet(p => p.Source).Returns(GetRandomString());
             mock.SetupGet(p => p.System).Returns(GetRandomString());
+            mock.SetupGet(p => p.DisplayName).Returns(GetRandomString());
+            mock.SetupGet(p => p.FhirVersion).Returns(GetRandomString());
 
-            mock.Setup(p => p.Patients.Everything(
+            mock.Setup(p => p.Patients.EverythingAsync(
                 It.IsAny<string>(),
                 It.IsAny<DateTimeOffset>(),
                 It.IsAny<DateTimeOffset>(),

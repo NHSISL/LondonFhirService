@@ -7,6 +7,7 @@ using System.Threading;
 using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Task = System.Threading.Tasks.Task;
@@ -42,11 +43,12 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
-            var expectedObjectResult = new OkObjectResult(expectedBundle);
-            var expectedActionResult = new ActionResult<Bundle>(expectedObjectResult);
+            string rawExpectedBundle = fhirJsonSerializer.SerializeToString(expectedBundle);
+            var expectedObjectResult = new OkObjectResult(rawExpectedBundle);
+            var expectedActionResult = new ActionResult<string>(expectedObjectResult);
 
             this.patientCoordinationServiceMock.Setup(coordination =>
-                coordination.Everything(
+                coordination.EverythingSerialisedAsync(
                     inputId,
                     inputStart,
                     inputEnd,
@@ -54,20 +56,20 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                     inputSince,
                     inputCount,
                     cancellationToken))
-                    .ReturnsAsync(expectedBundle);
+                    .ReturnsAsync(rawExpectedBundle);
 
             // when
-            ActionResult<Bundle> actualActionResult =
+            ActionResult<string> actualActionResult =
                 await this.patientController.Everything(inputId, inputParameters, cancellationToken);
 
             // then
             actualActionResult.Result.Should().BeOfType<OkObjectResult>();
             actualActionResult.Should().BeEquivalentTo(expectedActionResult);
             var okResult = actualActionResult.Result as OkObjectResult;
-            okResult.Value.Should().BeEquivalentTo(expectedBundle);
+            okResult.Value.Should().BeEquivalentTo(rawExpectedBundle);
 
             this.patientCoordinationServiceMock.Verify(coordination =>
-                coordination.Everything(
+                coordination.EverythingSerialisedAsync(
                     inputId,
                     inputStart,
                     inputEnd,

@@ -11,7 +11,10 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
     public partial class Stu3PatientService
     {
-        public static void ValidateOnEverything(List<string> providerNames, string id)
+        public static void ValidateOnEverything(
+            List<string> providerNames,
+            string id,
+            Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
@@ -20,10 +23,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         "please correct the errors and try again."),
 
                 (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
-                (Rule: IsInvalid(id), Parameter: nameof(id)));
+                (Rule: IsInvalid(id), Parameter: nameof(id)),
+                (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));
         }
 
-        public static void ValidateOnGetStructuredRecord(List<string> providerNames, string nhsNumber)
+        public static void ValidateOnGetStructuredRecord(
+            List<string> providerNames,
+            string nhsNumber,
+            Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
@@ -32,7 +39,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         "please correct the errors and try again."),
 
                 (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
-                (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)));
+                (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
+                (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));
         }
 
         private static dynamic IsInvalid(List<string> strings) => new
@@ -45,6 +53,12 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         {
             Condition = string.IsNullOrWhiteSpace(name),
             Message = "Text is invalid"
+        };
+
+        private static dynamic IsInvalid(Guid? id) => new
+        {
+            Condition = id == null || id == Guid.Empty,
+            Message = "Id is invalid"
         };
 
         private static void Validate<T>(

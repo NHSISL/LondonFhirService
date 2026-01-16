@@ -74,7 +74,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
 
             // when
             List<Bundle> actualBundles =
-                await mockedPatientService.Everything(
+                await mockedPatientService.EverythingAsync(
                     providerNames: inputProviderNames,
                     id: inputId,
                     cancellationToken: default);

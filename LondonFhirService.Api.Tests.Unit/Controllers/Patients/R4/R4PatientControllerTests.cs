@@ -4,7 +4,7 @@
 
 using System;
 using Hl7.Fhir.Model;
-using LondonFhirService.Api.Controllers;
+using LondonFhirService.Api.Controllers.R4;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.R4;
 using Moq;
@@ -17,13 +17,13 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.R4
     public partial class R4PatientControllerTests : RESTFulController
     {
         private readonly Mock<IR4PatientCoordinationService> patientCoordinationServiceMock;
-        private readonly R4PatientController patientController;
+        private readonly PatientController patientController;
 
         public R4PatientControllerTests()
         {
             this.patientCoordinationServiceMock = new Mock<IR4PatientCoordinationService>();
 
-            this.patientController = new R4PatientController(
+            this.patientController = new PatientController(
                 this.patientCoordinationServiceMock.Object);
         }
 

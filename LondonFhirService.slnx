@@ -6,6 +6,7 @@
     <File Path=".github/workflows/build.yml" />
     <File Path=".github/workflows/prLinter.yml" />
     <File Path=".gitignore" />
+    <File Path="azure-pipelines.yml" />
     <File Path="README.md" />
     <Project Path="LondonFhirService.Infrastructure/LondonFhirService.Infrastructure.csproj" />
   </Folder>

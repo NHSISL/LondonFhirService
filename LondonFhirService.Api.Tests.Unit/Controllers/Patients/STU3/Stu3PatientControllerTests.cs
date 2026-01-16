@@ -2,9 +2,11 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+extern alias FhirSTU3;
 using System;
+using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
-using LondonFhirService.Api.Controllers;
+using LondonFhirService.Api.Controllers.STU3;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using Moq;
@@ -17,13 +19,15 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
     public partial class Stu3PatientControllerTests : RESTFulController
     {
         private readonly Mock<IStu3PatientCoordinationService> patientCoordinationServiceMock;
-        private readonly Stu3PatientController patientController;
+        private readonly PatientController patientController;
+        private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
+        private readonly FhirJsonSerializer fhirJsonSerializer = new();
 
         public Stu3PatientControllerTests()
         {
             this.patientCoordinationServiceMock = new Mock<IStu3PatientCoordinationService>();
 
-            this.patientController = new Stu3PatientController(
+            this.patientController = new PatientController(
                 this.patientCoordinationServiceMock.Object);
         }
 
@@ -76,6 +80,40 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             if (count.HasValue)
             {
                 parameters.Add("_count", new Integer(count.Value));
+            }
+
+            return parameters;
+        }
+
+        private static Parameters CreateRandomGetStructuredRecordParameters(
+            string nhsNumber,
+            DateTimeOffset? dateOfBirth = null,
+            bool? demographicsOnly = null,
+            bool? includeInactivePatients = null)
+        {
+            var parameters = new Parameters();
+
+            parameters.Add(
+                "patientNHSNumber",
+                new Identifier
+                {
+                    System = "https://fhir.hl7.org.uk/Id/nhs-number",
+                    Value = nhsNumber
+                });
+
+            if (dateOfBirth.HasValue)
+            {
+                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth.Value));
+            }
+
+            if (demographicsOnly.HasValue)
+            {
+                parameters.Add("demographicsOnly", new FhirBoolean(demographicsOnly.Value));
+            }
+
+            if (includeInactivePatients.HasValue)
+            {
+                parameters.Add("includeInactivePatients", new FhirBoolean(includeInactivePatients.Value));
             }
 
             return parameters;

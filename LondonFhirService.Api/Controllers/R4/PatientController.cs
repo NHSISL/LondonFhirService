@@ -13,16 +13,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
 
-namespace LondonFhirService.Api.Controllers
+namespace LondonFhirService.Api.Controllers.R4
 {
     [Authorize]
     [ApiController]
     [Route("api/R4/[controller]")]
-    public class R4PatientController : RESTFulController
+    public class PatientController : RESTFulController
     {
         private readonly IR4PatientCoordinationService patientCoordinationService;
 
-        public R4PatientController(IR4PatientCoordinationService patientCoordinationService)
+        public PatientController(IR4PatientCoordinationService patientCoordinationService)
         {
             this.patientCoordinationService = patientCoordinationService;
         }
@@ -32,7 +32,7 @@ namespace LondonFhirService.Api.Controllers
         public async Task<ActionResult<Bundle>> Everything(
             string id,
             [FromBody] Parameters parameters,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace LondonFhirService.Api.Controllers
                 DateTimeOffset? since = ExtractDateTimeParameter(parameters, "_since");
                 int? count = ExtractIntParameter(parameters, "_count");
 
-                Bundle bundle = await this.patientCoordinationService.Everything(
+                Bundle bundle = await this.patientCoordinationService.EverythingAsync(
                     id,
                     start,
                     end,

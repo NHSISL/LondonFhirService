@@ -18,7 +18,7 @@ namespace LondonFhirService.Core.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -216,8 +216,8 @@ namespace LondonFhirService.Core.Migrations
 
                     b.Property<string>("NhsNumber")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("OrgCode")
                         .IsRequired()
@@ -244,10 +244,10 @@ namespace LondonFhirService.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset>("ActiveFrom")
+                    b.Property<DateTimeOffset?>("ActiveFrom")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTimeOffset>("ActiveTo")
+                    b.Property<DateTimeOffset?>("ActiveTo")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Code")
@@ -262,6 +262,11 @@ namespace LondonFhirService.Core.Migrations
 
                     b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("FhirVersion")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -291,6 +296,11 @@ namespace LondonFhirService.Core.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FhirVersion")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Provider_FhirVersion_PrimaryOnly")
+                        .HasFilter("[IsPrimary] = 1");
 
                     b.HasIndex("Name")
                         .IsUnique();

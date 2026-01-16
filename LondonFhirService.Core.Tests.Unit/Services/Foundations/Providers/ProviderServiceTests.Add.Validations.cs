@@ -94,6 +94,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 values: "Text is required");
 
             invalidProviderServiceException.AddData(
+                key: nameof(Provider.FhirVersion),
+                values: "Text is required");
+
+            invalidProviderServiceException.AddData(
                 key: nameof(Provider.CreatedDate),
                 values: "Date is required");
 
@@ -172,6 +176,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             string randomUserId = GetRandomString();
             var invalidProvider = CreateRandomProvider(GetRandomDateTimeOffset(), userId: randomUserId);
             invalidProvider.Name = GetRandomStringWithLengthOf(501);
+            invalidProvider.FhirVersion = GetRandomStringWithLengthOf(11);
+            invalidProvider.Code = GetRandomStringWithLengthOf(65);
+            invalidProvider.System = GetRandomStringWithLengthOf(1001);
 
             var invalidProviderServiceException =
                 new InvalidProviderServiceException(
@@ -180,6 +187,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             invalidProviderServiceException.AddData(
                 key: nameof(Provider.Name),
                 values: $"Text exceeds max length of {invalidProvider.Name.Length - 1} characters");
+
+            invalidProviderServiceException.AddData(
+                key: nameof(Provider.FhirVersion),
+                values: $"Text exceeds max length of {invalidProvider.FhirVersion.Length - 1} characters");
+
+            invalidProviderServiceException.AddData(
+                key: nameof(Provider.Code),
+                values: $"Text exceeds max length of {invalidProvider.Code.Length - 1} characters");
+
+            invalidProviderServiceException.AddData(
+                key: nameof(Provider.System),
+                values: $"Text exceeds max length of {invalidProvider.System.Length - 1} characters");
 
             var expectedProviderServiceValidationException =
                 new ProviderServiceValidationException(
