@@ -113,13 +113,15 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                             message:
                                 $"Access was forbidden as consumer with id {matchingConsumer.Id} " +
                                 $"is not active / does not have valid access window " +
-                                $"(ActiveFrom: {matchingConsumer.ActiveFrom}, ActiveTo: {matchingConsumer.ActiveTo})",
+                                $"(ActiveFrom: {matchingConsumer.ActiveFrom}, ActiveTo: {matchingConsumer.ActiveTo})  " +
+                                $"CorrelationId: {correlationId.ToString()}",
 
                             fileName: null,
                             correlationId: correlationId.ToString());
 
                     throw new ForbiddenAccessOrchestrationException(
-                        "Current consumer is not active or does not have a valid access window.");
+                        "Current consumer is not active or does not have a valid access window.  " +
+                        $"CorrelationId: {correlationId.ToString()}");
                 }
 
                 List<string> consumerActiveOrgs =
@@ -150,7 +152,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                             $"'{patientIdentifier.Substring(0, 5)}..." +
                             $"{patientIdentifier.Substring(patientIdentifier.Length - 5)}' and " +
                             $"pepper '{accessConfigurations.HashPepper.Substring(0, 5)}..." +
-                            $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 5)}'",
+                            $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 5)}'  " +
+                            $"CorrelationId: {correlationId.ToString()}",
 
                         fileName: null,
                         correlationId: correlationId.ToString());
