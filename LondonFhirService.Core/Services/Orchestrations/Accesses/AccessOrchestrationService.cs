@@ -151,8 +151,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                             $"NHS number {nhsNumber} and patient identifier " +
                             $"'{patientIdentifier.Substring(0, 5)}..." +
                             $"{patientIdentifier.Substring(patientIdentifier.Length - 5)}' and " +
-                            $"pepper '{accessConfigurations.HashPepper.Substring(0, 5)}..." +
-                            $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 5)}'  " +
+                            $"pepper '{accessConfigurations.HashPepper.Substring(0, 15)}..." +
+                            $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 15)}'  " +
                             $"CorrelationId: {correlationId.ToString()}",
 
                         fileName: null,

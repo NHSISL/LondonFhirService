@@ -417,8 +417,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                         $"NHS number {inputNhsNumber} and patient identifier " +
                         $"'{inputNhsNumber.Substring(0, 5)}..." +
                         $"{inputNhsNumber.Substring(inputNhsNumber.Length - 5)}' and " +
-                        $"pepper '{accessConfigurations.HashPepper.Substring(0, 5)}..." +
-                        $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 5)}'  " +
+                        $"pepper '{accessConfigurations.HashPepper.Substring(0, 15)}..." +
+                        $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 15)}'  " +
                         $"CorrelationId: {correlationId.ToString()}",
                     null,
                     correlationId.ToString()),

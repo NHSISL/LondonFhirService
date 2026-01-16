@@ -42,15 +42,16 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 // Shared InvisibleApiKey instance, also available via DI
 var invisibleApiKey = new InvisibleApiKey();
 builder.Services.AddSingleton(invisibleApiKey);
-builder.Services.AddApplicationInsightsTelemetry();
-builder.Logging.AddApplicationInsights();
-builder.Logging.AddFilter<ApplicationInsightsLoggerProvider>(string.Empty, LogLevel.Information);
 
 // Register health checks
 builder.Services.AddHealthChecks();
 
 // Register services using the host configuration (which tests can override)
 Program.ConfigureServices(builder);
+
+builder.Services.AddApplicationInsightsTelemetry();
+builder.Logging.AddApplicationInsights();
+builder.Logging.AddFilter<ApplicationInsightsLoggerProvider>(string.Empty, LogLevel.Information);
 
 var app = builder.Build();
 
