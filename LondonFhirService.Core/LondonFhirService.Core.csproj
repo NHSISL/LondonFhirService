@@ -6,9 +6,9 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<OutputType>Library</OutputType>
 		<NoWarn>CS1998</NoWarn>
-		<Version>0.1.0.0</Version>
-		<AssemblyVersion>0.1.0.0</AssemblyVersion>
-		<FileVersion>0.1.0.0</FileVersion>
+		<Version>0.1.0.1</Version>
+		<AssemblyVersion>0.1.0.1</AssemblyVersion>
+		<FileVersion>0.1.0.1</FileVersion>
 		<PackageReleaseNotes>
 			Initial release of the London FHIR Service Core Library.
 		</PackageReleaseNotes>
