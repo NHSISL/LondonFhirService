@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
-using LondonFhirService.Core.Brokers.Fhirs.R4;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
@@ -17,7 +16,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using FhirR4Abstractions = LondonFhirService.Providers.FHIR.R4.Abstractions;
 using FhirStu3Abstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
@@ -105,13 +103,13 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void OverrideFhirProvidersForTesting(IServiceCollection services)
         {
-            var fhirR4AbstractionProviderDescriptor = services
-                .FirstOrDefault(d => d.ServiceType == typeof(FhirR4Abstractions.IFhirAbstractionProvider));
+            //var fhirR4AbstractionProviderDescriptor = services
+            //    .FirstOrDefault(d => d.ServiceType == typeof(FhirR4Abstractions.IFhirAbstractionProvider));
 
-            if (fhirR4AbstractionProviderDescriptor != null)
-            {
-                services.Remove(fhirR4AbstractionProviderDescriptor);
-            }
+            //if (fhirR4AbstractionProviderDescriptor != null)
+            //{
+            //    services.Remove(fhirR4AbstractionProviderDescriptor);
+            //}
 
             var fhirStu3AbstractionProviderDescriptor = services
                 .FirstOrDefault(d => d.ServiceType == typeof(FhirStu3Abstractions.IFhirAbstractionProvider));
@@ -121,13 +119,13 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 services.Remove(fhirStu3AbstractionProviderDescriptor);
             }
 
-            var fhirR4BrokerDescriptor = services
-                .FirstOrDefault(d => d.ServiceType == typeof(IR4FhirBroker));
+            //var fhirR4BrokerDescriptor = services
+            //    .FirstOrDefault(d => d.ServiceType == typeof(IR4FhirBroker));
 
-            if (fhirR4BrokerDescriptor != null)
-            {
-                services.Remove(fhirR4BrokerDescriptor);
-            }
+            //if (fhirR4BrokerDescriptor != null)
+            //{
+            //    services.Remove(fhirR4BrokerDescriptor);
+            //}
 
             var fhirStu3BrokerDescriptor = services
                 .FirstOrDefault(d => d.ServiceType == typeof(IStu3FhirBroker));
@@ -145,16 +143,16 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 services.Remove(patientServiceConfigDescriptor);
             }
 
-            var testR4Providers = new List<FhirR4Abstractions.IFhirProvider>
-            {
-                TestR4FhirProviderFactory.CreateTestProvider("DDS"),
-                TestR4FhirProviderFactory.CreateTestProvider("LDS")
-            };
+            //var testR4Providers = new List<FhirR4Abstractions.IFhirProvider>
+            //{
+            //    TestR4FhirProviderFactory.CreateTestProvider("DDS"),
+            //    TestR4FhirProviderFactory.CreateTestProvider("LDS")
+            //};
 
-            services.AddSingleton<FhirR4Abstractions.IFhirAbstractionProvider>(
-                new FhirR4Abstractions.FhirAbstractionProvider(testR4Providers));
+            //services.AddSingleton<FhirR4Abstractions.IFhirAbstractionProvider>(
+            //    new FhirR4Abstractions.FhirAbstractionProvider(testR4Providers));
 
-            services.AddTransient<IR4FhirBroker, R4FhirBroker>();
+            //services.AddTransient<IR4FhirBroker, R4FhirBroker>();
 
             var testStu3Providers = new List<FhirStu3Abstractions.IFhirProvider>
             {

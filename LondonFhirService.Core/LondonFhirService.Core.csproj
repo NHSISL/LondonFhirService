@@ -16,13 +16,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="EFxceptions" Version="1.0.3" />
-		<PackageReference Include="Hl7.Fhir.R4" Version="6.0.1" Aliases="FhirR4" />
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.1" Aliases="FhirStu3" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.1" />
 		<PackageReference Include="ISL.Security.Client" Version="4.0.0" />
 		<PackageReference Include="ISL.Providers.Captcha.Abstractions" Version="1.0.0.3" />
 		<PackageReference Include="ISL.Providers.Captcha.FakeCaptcha" Version="1.0.0.3" />
 		<PackageReference Include="ISL.Providers.Captcha.GoogleReCaptcha" Version="1.0.0.3" />
-		<PackageReference Include="LondonFhirService.Providers.FHIR.R4.Abstractions" Version="0.6.0" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.Abstractions" Version="0.5.0" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService" Version="0.3.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />

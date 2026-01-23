@@ -2,8 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirR4;
-extern alias FhirSTU3;
 using System.IO;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Storages.Sql;

@@ -2,7 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirSTU3;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -12,8 +11,8 @@ using LondonFhirService.Providers.FHIR.STU3.Abstractions;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Capabilities;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Resources;
 using Moq;
-using FhirJsonSerializer = FhirSTU3::Hl7.Fhir.Serialization.FhirJsonSerializer;
-using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
+using FhirJsonSerializer = Hl7.Fhir.Serialization.FhirJsonSerializer;
+using Patient = Hl7.Fhir.Model.Patient;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {

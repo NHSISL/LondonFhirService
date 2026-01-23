@@ -2,14 +2,13 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirStu3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-using FhirStu3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
@@ -22,8 +21,8 @@ using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Exceptions;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
-using AdministrativeGender = FhirStu3::Hl7.Fhir.Model.AdministrativeGender;
-using Patient = FhirStu3::Hl7.Fhir.Model.Patient;
+using AdministrativeGender = Hl7.Fhir.Model.AdministrativeGender;
+using Patient = Hl7.Fhir.Model.Patient;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 {

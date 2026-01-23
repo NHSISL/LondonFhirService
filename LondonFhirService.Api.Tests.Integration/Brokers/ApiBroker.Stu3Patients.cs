@@ -2,17 +2,15 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirSTU3;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Identity;
-using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using ModelInfo = FhirSTU3::Hl7.Fhir.Model.ModelInfo;
+using ModelInfo = Hl7.Fhir.Model.ModelInfo;
 
 namespace LondonFhirService.Api.Tests.Integration.Brokers
 {
@@ -49,7 +47,7 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
             return bundle;
         }
 
-        public async ValueTask<Bundle> GetStructuredRecordStu3Async(string nhsNumber, Parameters parameters)
+        public async ValueTask<(string, Bundle)> GetStructuredRecordStu3Async(string nhsNumber, Parameters parameters)
         {
             var options = new JsonSerializerOptions()
                 .ForFhir(ModelInfo.ModelInspector);
@@ -74,8 +72,10 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
 
             FhirJsonDeserializer fhirJsonDeserializer = new();
             Bundle bundle = fhirJsonDeserializer.Deserialize<Bundle>(responseContent);
+            string text = responseContent;
 
-            return bundle;
+
+            return (text, bundle);
         }
 
         private async ValueTask<string> GetAccessTokenAsync()

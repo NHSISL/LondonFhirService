@@ -2,15 +2,13 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirSTU3;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using ModelInfo = FhirSTU3::Hl7.Fhir.Model.ModelInfo;
+using ModelInfo = Hl7.Fhir.Model.ModelInfo;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
