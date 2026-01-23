@@ -33,7 +33,7 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
             var options = new JsonSerializerOptions()
                 .ForFhir(ModelInfo.ModelInspector);
 
-            string url = $"https://devfhirapi.discoverydataservice.net:8443/fhirTestAPI/patient/$getstructuredrecord";
+            string url = ddsPatientRelativeUrl;
             string jsonContent = JsonSerializer.Serialize(parameters, options);
 
             using var content = new StringContent(
