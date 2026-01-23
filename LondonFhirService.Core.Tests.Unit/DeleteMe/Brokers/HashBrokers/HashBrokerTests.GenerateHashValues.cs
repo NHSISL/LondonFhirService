@@ -92,10 +92,10 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
             // then
             output.WriteLine("NHS Number, SHA256 Hash");
 
-            foreach ((string nhsNumber, string hash) in nhsNumbers)
-            {
-                output.WriteLine($"{nhsNumber}, {hash}");
-            }
+            //foreach ((string nhsNumber, string hash) in nhsNumbers)
+            //{
+            //    output.WriteLine($"{nhsNumber}, {hash}");
+            //}
 
             output.WriteLine("");
 

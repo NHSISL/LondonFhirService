@@ -64,7 +64,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             await CleanupOdsDataAsync(odsData);
             await CleanupConsumerAccessAsync(consumerAccess);
             await CleanupConsumerAsync(consumer);
-            await CleanupProviderAsync(provider);
         }
     }
 }
