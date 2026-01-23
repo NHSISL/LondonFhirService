@@ -26,11 +26,11 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
     public partial class Stu3PatientTests
     {
         private readonly ApiBroker apiBroker;
-        private readonly ITestOutputHelper testOutputHelper;
+        private readonly ITestOutputHelper output;
         private readonly IConfiguration configuration;
         private readonly DdsConfigurations ddsConfigurations;
 
-        public Stu3PatientTests(ApiBroker apiBroker, ITestOutputHelper testOutputHelper)
+        public Stu3PatientTests(ApiBroker apiBroker, ITestOutputHelper output)
         {
             var testProjectPath =
                 Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
@@ -49,7 +49,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                             "DdsConfigurations configuration section is missing or invalid.");
 
             this.apiBroker = apiBroker;
-            this.testOutputHelper = testOutputHelper;
+            this.output = output;
         }
 
         private static int GetRandomNumber() =>

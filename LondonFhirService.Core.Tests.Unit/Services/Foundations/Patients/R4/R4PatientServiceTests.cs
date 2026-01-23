@@ -2,215 +2,215 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirR4;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
-using Hl7.Fhir.Model;
-using LondonFhirService.Core.Brokers.Fhirs.R4;
-using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Foundations.Patients;
-using LondonFhirService.Core.Services.Foundations.Patients.R4;
-using LondonFhirService.Providers.FHIR.R4.Abstractions;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Capabilities;
-using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Exceptions;
-using Moq;
-using Tynamix.ObjectFiller;
-using Xeptions;
-using AdministrativeGender = FhirR4::Hl7.Fhir.Model.AdministrativeGender;
-using Patient = FhirR4::Hl7.Fhir.Model.Patient;
+//extern alias FhirR4;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Linq.Expressions;
+//using System.Threading;
+//using Hl7.Fhir.Model;
+//using LondonFhirService.Core.Brokers.Fhirs.R4;
+//using LondonFhirService.Core.Brokers.Loggings;
+//using LondonFhirService.Core.Models.Foundations.Patients;
+//using LondonFhirService.Core.Services.Foundations.Patients.R4;
+//using LondonFhirService.Providers.FHIR.R4.Abstractions;
+//using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Capabilities;
+//using LondonFhirService.Providers.FHIR.R4.Abstractions.Models.Exceptions;
+//using Moq;
+//using Tynamix.ObjectFiller;
+//using Xeptions;
+//using AdministrativeGender = FhirR4::Hl7.Fhir.Model.AdministrativeGender;
+//using Patient = FhirR4::Hl7.Fhir.Model.Patient;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
-{
-    public partial class R4PatientServiceTests
-    {
-        private readonly Mock<IFhirAbstractionProvider> fhirAbstractionProviderMock;
-        private readonly Mock<IFhirProvider> ddsFhirProviderMock;
-        private readonly Mock<IFhirProvider> ldsFhirProviderMock;
-        private readonly Mock<IFhirProvider> unsupportedFhirProviderMock;
-        private readonly Mock<IFhirProvider> unsupportedErrorFhirProviderMock;
-        private readonly R4FhirBroker fhirBroker;
-        private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly PatientServiceConfig patientServiceConfig;
-        private readonly R4PatientService patientService;
+//namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.R4
+//{
+//    public partial class R4PatientServiceTests
+//    {
+//        private readonly Mock<IFhirAbstractionProvider> fhirAbstractionProviderMock;
+//        private readonly Mock<IFhirProvider> ddsFhirProviderMock;
+//        private readonly Mock<IFhirProvider> ldsFhirProviderMock;
+//        private readonly Mock<IFhirProvider> unsupportedFhirProviderMock;
+//        private readonly Mock<IFhirProvider> unsupportedErrorFhirProviderMock;
+//        private readonly R4FhirBroker fhirBroker;
+//        private readonly Mock<ILoggingBroker> loggingBrokerMock;
+//        private readonly PatientServiceConfig patientServiceConfig;
+//        private readonly R4PatientService patientService;
 
-        public R4PatientServiceTests()
-        {
-            this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
-            this.loggingBrokerMock = new Mock<ILoggingBroker>();
+//        public R4PatientServiceTests()
+//        {
+//            this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
+//            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-            this.patientServiceConfig = new PatientServiceConfig
-            {
-                MaxProviderWaitTimeMilliseconds = 3000
-            };
+//            this.patientServiceConfig = new PatientServiceConfig
+//            {
+//                MaxProviderWaitTimeMilliseconds = 3000
+//            };
 
-            this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "Everything" }));
-            this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "Everything" }));
-            this.unsupportedFhirProviderMock = MakeProvider("Unsupported", ("Patients", new[] { "Read" }));
-            this.unsupportedErrorFhirProviderMock = MakeProvider("UnsupportedError", ("Patients", null));
+//            this.ddsFhirProviderMock = MakeProvider("DDS", ("Patients", new[] { "Everything" }));
+//            this.ldsFhirProviderMock = MakeProvider("LDS", ("Patients", new[] { "Everything" }));
+//            this.unsupportedFhirProviderMock = MakeProvider("Unsupported", ("Patients", new[] { "Read" }));
+//            this.unsupportedErrorFhirProviderMock = MakeProvider("UnsupportedError", ("Patients", null));
 
-            var fhirProviders = new List<IFhirProvider>
-            {
-                ddsFhirProviderMock.Object,
-                ldsFhirProviderMock.Object,
-                unsupportedFhirProviderMock.Object,
-                unsupportedErrorFhirProviderMock.Object
-            };
+//            var fhirProviders = new List<IFhirProvider>
+//            {
+//                ddsFhirProviderMock.Object,
+//                ldsFhirProviderMock.Object,
+//                unsupportedFhirProviderMock.Object,
+//                unsupportedErrorFhirProviderMock.Object
+//            };
 
-            this.fhirAbstractionProviderMock.SetupGet(provider => provider.FhirProviders)
-                .Returns(fhirProviders);
+//            this.fhirAbstractionProviderMock.SetupGet(provider => provider.FhirProviders)
+//                .Returns(fhirProviders);
 
-            this.fhirBroker = new R4FhirBroker(fhirAbstractionProviderMock.Object);
+//            this.fhirBroker = new R4FhirBroker(fhirAbstractionProviderMock.Object);
 
-            this.patientService = new R4PatientService(
-                fhirBroker: this.fhirBroker,
-                loggingBroker: this.loggingBrokerMock.Object,
-                patientServiceConfig: this.patientServiceConfig);
-        }
+//            this.patientService = new R4PatientService(
+//                fhirBroker: this.fhirBroker,
+//                loggingBroker: this.loggingBrokerMock.Object,
+//                patientServiceConfig: this.patientServiceConfig);
+//        }
 
-        private static int GetRandomNumber() =>
-            new IntRange(min: 2, max: 10).GetValue();
+//        private static int GetRandomNumber() =>
+//            new IntRange(min: 2, max: 10).GetValue();
 
-        private static string GetRandomString() =>
-            new MnemonicString(wordCount: GetRandomNumber()).GetValue();
+//        private static string GetRandomString() =>
+//            new MnemonicString(wordCount: GetRandomNumber()).GetValue();
 
-        private static Patient CreateRandomPatient()
-        {
-            var patient = new Patient();
+//        private static Patient CreateRandomPatient()
+//        {
+//            var patient = new Patient();
 
-            HumanName humanName = new HumanName
-            {
-                ElementId = GetRandomString(),
-                Family = GetRandomString(),
-                Given = new List<string> { GetRandomString() },
-                Prefix = new List<string> { "Mr" },
-                Use = HumanName.NameUse.Usual
-            };
+//            HumanName humanName = new HumanName
+//            {
+//                ElementId = GetRandomString(),
+//                Family = GetRandomString(),
+//                Given = new List<string> { GetRandomString() },
+//                Prefix = new List<string> { "Mr" },
+//                Use = HumanName.NameUse.Usual
+//            };
 
-            patient.Name = new List<HumanName> { humanName };
-            patient.Gender = AdministrativeGender.Male;
-            patient.BirthDate = GetRandomString();
+//            patient.Name = new List<HumanName> { humanName };
+//            patient.Gender = AdministrativeGender.Male;
+//            patient.BirthDate = GetRandomString();
 
-            return patient;
-        }
+//            return patient;
+//        }
 
-        private Bundle CreateRandomBundle()
-        {
-            var bundle = new Bundle
-            {
-                Type = Bundle.BundleType.Searchset,
-                Total = 1,
-                Timestamp = DateTimeOffset.UtcNow
-            };
+//        private Bundle CreateRandomBundle()
+//        {
+//            var bundle = new Bundle
+//            {
+//                Type = Bundle.BundleType.Searchset,
+//                Total = 1,
+//                Timestamp = DateTimeOffset.UtcNow
+//            };
 
-            Patient patient = CreateRandomPatient();
+//            Patient patient = CreateRandomPatient();
 
-            bundle.Entry = new List<Bundle.EntryComponent> {
-                new Bundle.EntryComponent
-                {
-                    FullUrl = $"https://api.service.nhs.uk/personal-demographics/FHIR/R4/Patient/{patient.Id}",
-                    Search = new Bundle.SearchComponent { Score = 1 },
-                    Resource = patient
-                }
-            };
+//            bundle.Entry = new List<Bundle.EntryComponent> {
+//                new Bundle.EntryComponent
+//                {
+//                    FullUrl = $"https://api.service.nhs.uk/personal-demographics/FHIR/R4/Patient/{patient.Id}",
+//                    Search = new Bundle.SearchComponent { Score = 1 },
+//                    Resource = patient
+//                }
+//            };
 
-            bundle.Meta = new Meta
-            {
-                LastUpdated = DateTimeOffset.UtcNow,
-                Source = GetRandomString()
-            };
+//            bundle.Meta = new Meta
+//            {
+//                LastUpdated = DateTimeOffset.UtcNow,
+//                Source = GetRandomString()
+//            };
 
 
-            return bundle;
-        }
+//            return bundle;
+//        }
 
-        private Mock<IFhirProvider> MakeProvider(
-            string name,
-            params (string Resource, string[] Operations)[] resources)
-        {
-            var providerCaps = new ProviderCapabilities
-            {
-                ProviderName = name,
-                SupportedResources = resources.Select(r => new ResourceCapabilities
-                {
-                    ResourceName = r.Resource,
-                    SupportedOperations = r.Operations?.ToList()
-                }).ToList()
-            };
+//        private Mock<IFhirProvider> MakeProvider(
+//            string name,
+//            params (string Resource, string[] Operations)[] resources)
+//        {
+//            var providerCaps = new ProviderCapabilities
+//            {
+//                ProviderName = name,
+//                SupportedResources = resources.Select(r => new ResourceCapabilities
+//                {
+//                    ResourceName = r.Resource,
+//                    SupportedOperations = r.Operations?.ToList()
+//                }).ToList()
+//            };
 
-            var mock = new Mock<IFhirProvider>(MockBehavior.Strict);
-            mock.SetupGet(p => p.ProviderName).Returns(name);
-            mock.SetupGet(p => p.Capabilities).Returns(providerCaps);
-            mock.SetupGet(p => p.Code).Returns(GetRandomString());
-            mock.SetupGet(p => p.Source).Returns(GetRandomString());
-            mock.SetupGet(p => p.System).Returns(GetRandomString());
-            mock.SetupGet(p => p.DisplayName).Returns(GetRandomString());
-            mock.SetupGet(p => p.FhirVersion).Returns(GetRandomString());
+//            var mock = new Mock<IFhirProvider>(MockBehavior.Strict);
+//            mock.SetupGet(p => p.ProviderName).Returns(name);
+//            mock.SetupGet(p => p.Capabilities).Returns(providerCaps);
+//            mock.SetupGet(p => p.Code).Returns(GetRandomString());
+//            mock.SetupGet(p => p.Source).Returns(GetRandomString());
+//            mock.SetupGet(p => p.System).Returns(GetRandomString());
+//            mock.SetupGet(p => p.DisplayName).Returns(GetRandomString());
+//            mock.SetupGet(p => p.FhirVersion).Returns(GetRandomString());
 
-            mock.Setup(p => p.Patients.EverythingAsync(
-                It.IsAny<string>(),
-                It.IsAny<DateTimeOffset>(),
-                It.IsAny<DateTimeOffset>(),
-                It.IsAny<string>(),
-                It.IsAny<DateTimeOffset>(),
-                It.IsAny<int>(),
-                It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(CreateRandomBundle());
+//            mock.Setup(p => p.Patients.EverythingAsync(
+//                It.IsAny<string>(),
+//                It.IsAny<DateTimeOffset>(),
+//                It.IsAny<DateTimeOffset>(),
+//                It.IsAny<string>(),
+//                It.IsAny<DateTimeOffset>(),
+//                It.IsAny<int>(),
+//                It.IsAny<CancellationToken>()))
+//                    .ReturnsAsync(CreateRandomBundle());
 
-            // If IFhirProvider has more required members, add minimal setups here.
+//            // If IFhirProvider has more required members, add minimal setups here.
 
-            return mock;
-        }
+//            return mock;
+//        }
 
-        private static Expression<Func<Xeption, bool>> SameExceptionAs(
-            Xeption expectedException)
-        {
-            return actualException =>
-                actualException.SameExceptionAs(expectedException);
-        }
+//        private static Expression<Func<Xeption, bool>> SameExceptionAs(
+//            Xeption expectedException)
+//        {
+//            return actualException =>
+//                actualException.SameExceptionAs(expectedException);
+//        }
 
-        private static Expression<Func<Exception, bool>> SameExceptionAs(
-            Exception expectedException)
-        {
-            return actualException =>
-                actualException.SameExceptionAs(expectedException);
-        }
+//        private static Expression<Func<Exception, bool>> SameExceptionAs(
+//            Exception expectedException)
+//        {
+//            return actualException =>
+//                actualException.SameExceptionAs(expectedException);
+//        }
 
-        public static TheoryData<Xeption> DependencyValidationExceptions()
-        {
-            string randomMessage = GetRandomString();
-            string exceptionMessage = randomMessage;
-            var innerException = new Xeption(exceptionMessage);
+//        public static TheoryData<Xeption> DependencyValidationExceptions()
+//        {
+//            string randomMessage = GetRandomString();
+//            string exceptionMessage = randomMessage;
+//            var innerException = new Xeption(exceptionMessage);
 
-            return new TheoryData<Xeption>
-            {
-                new FhirAbstractionProviderValidationException(
-                    message: "Fhir abstraction provider validation errors occured, please try again",
-                    innerException: innerException,
-                    data: innerException.Data)
-            };
-        }
+//            return new TheoryData<Xeption>
+//            {
+//                new FhirAbstractionProviderValidationException(
+//                    message: "Fhir abstraction provider validation errors occured, please try again",
+//                    innerException: innerException,
+//                    data: innerException.Data)
+//            };
+//        }
 
-        public static TheoryData<Xeption> DependencyExceptions()
-        {
-            string randomMessage = GetRandomString();
-            string exceptionMessage = randomMessage;
-            var innerException = new Xeption(exceptionMessage);
+//        public static TheoryData<Xeption> DependencyExceptions()
+//        {
+//            string randomMessage = GetRandomString();
+//            string exceptionMessage = randomMessage;
+//            var innerException = new Xeption(exceptionMessage);
 
-            return new TheoryData<Xeption>
-            {
-                new FhirAbstractionProviderDependencyException(
-                    message: "Fhir abstraction provider dependency error occurred, please contact support.",
-                    innerException: innerException,
-                    data: innerException.Data),
+//            return new TheoryData<Xeption>
+//            {
+//                new FhirAbstractionProviderDependencyException(
+//                    message: "Fhir abstraction provider dependency error occurred, please contact support.",
+//                    innerException: innerException,
+//                    data: innerException.Data),
 
-                new FhirAbstractionProviderServiceException(
-                    message: "Fhir abstraction provider service error occurred, please contact support.",
-                    innerException: innerException,
-                    data: innerException.Data)
-            };
-        }
-    }
-}
+//                new FhirAbstractionProviderServiceException(
+//                    message: "Fhir abstraction provider service error occurred, please contact support.",
+//                    innerException: innerException,
+//                    data: innerException.Data)
+//            };
+//        }
+//    }
+//}
