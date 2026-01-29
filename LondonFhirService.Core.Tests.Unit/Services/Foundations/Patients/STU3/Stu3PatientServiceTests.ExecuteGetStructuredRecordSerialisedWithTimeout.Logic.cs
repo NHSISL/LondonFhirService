@@ -85,7 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
-                    auditType,
+                    $"{auditType}-DATA",
                     $"{fhirProvider.DisplayName} - DATA",
                     rawOutputBundle,
                     string.Empty,

@@ -661,7 +661,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 //bundle.Meta.Tag.Add(coding);
 
                 await this.auditBroker.LogInformationAsync(
-                    auditType,
+                    $"{auditType}-DATA",
                     title: $"{provider.DisplayName} - DATA",
                     json,
                     fileName: string.Empty,
