@@ -21,6 +21,7 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
@@ -171,6 +172,7 @@ public partial class Program
     private static IEdmModel GetEdmModel()
     {
         ODataConventionModelBuilder builder = new();
+        builder.EntitySet<Audit>("Audits");
         builder.EnableLowerCamelCase();
         return builder.GetEdmModel();
     }

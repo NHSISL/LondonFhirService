@@ -81,7 +81,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             var alreadyExistsAuditException =
                 new AlreadyExistsAuditServiceException(
                     message: "Audit with the same Id already exists.",
-                    innerException: duplicateKeyException);
+                    innerException: duplicateKeyException,
+                    data: duplicateKeyException.Data);
 
             var expectedAuditDependencyValidationException =
                 new AuditServiceDependencyValidationException(
