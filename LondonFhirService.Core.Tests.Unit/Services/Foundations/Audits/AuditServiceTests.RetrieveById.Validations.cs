@@ -67,7 +67,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             Audit noAudit = null;
 
             var notFoundAuditException =
-                new NotFoundAuditServiceException(someAuditId);
+                new NotFoundAuditServiceException($"Couldn't find audit with auditId: {someAuditId}.");
 
             var expectedAuditValidationException =
                 new AuditServiceValidationException(

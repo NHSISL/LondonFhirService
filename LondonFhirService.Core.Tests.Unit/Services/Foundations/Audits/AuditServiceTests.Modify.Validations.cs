@@ -344,7 +344,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             Audit invalidAudit = CreateRandomModifyAudit(randomDateTimeOffset, randomUserId);
 
             Audit nonExistAudit = invalidAudit;
-            var notFoundAuditException = new NotFoundAuditServiceException(nonExistAudit.Id);
+
+            var notFoundAuditException =
+                new NotFoundAuditServiceException($"Couldn't find audit with auditId: {nonExistAudit.Id}.");
 
             var expectedAuditValidationException =
                 new AuditServiceValidationException(

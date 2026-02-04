@@ -35,7 +35,9 @@ namespace LondonFhirService.Api.Tests.Acceptance
             new Claim("jobTitle", jobTitle),
             new Claim(ClaimTypes.Name, "TestUser"),
             new Claim(ClaimTypes.Role, "Patients.Everything"),
-            new Claim(ClaimTypes.Role, "Patients.GetStructuredRecord")
+            new Claim(ClaimTypes.Role, "Patients.GetStructuredRecord"),
+            new Claim(ClaimTypes.Role, "Administrators"),
+            new Claim(ClaimTypes.Role, "Users")
         };
 
         public TestAuthHandler(
