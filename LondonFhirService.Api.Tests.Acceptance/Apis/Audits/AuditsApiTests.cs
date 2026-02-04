@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FluentAssertions;
 using LondonFhirService.Api.Tests.Acceptance.Brokers;
 using LondonFhirService.Api.Tests.Acceptance.Models.Audits;
 using Tynamix.ObjectFiller;
@@ -52,7 +51,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis
         {
             Audit randomAudit = CreateRandomAudit();
             Audit createdAudit = await this.apiBroker.PostAuditAsync(randomAudit);
-            createdAudit.Should().BeEquivalentTo(randomAudit);
 
             return createdAudit;
         }

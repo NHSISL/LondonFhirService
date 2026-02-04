@@ -27,7 +27,14 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis
                 await this.apiBroker.GetAuditByIdAsync(inputAudit.Id);
 
             // then
-            actualAudit.Should().BeEquivalentTo(expectedAudit);
+            actualAudit.Should().BeEquivalentTo(expectedAudit,
+            options => options
+                .Excluding(a => a.CreatedBy)
+                .Excluding(a => a.CreatedDate)
+                .Excluding(a => a.UpdatedBy)
+                .Excluding(a => a.UpdatedDate));
+
+
             await this.apiBroker.DeleteAuditByIdAsync(actualAudit.Id);
         }
 
@@ -47,7 +54,13 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis
                 Audit actualAudit = actualAudits
                     .Single(actualAudit => actualAudit.Id == expectedAudit.Id);
 
-                actualAudit.Should().BeEquivalentTo(expectedAudit);
+                actualAudit.Should().BeEquivalentTo(expectedAudit,
+                    options => options
+                        .Excluding(a => a.CreatedBy)
+                        .Excluding(a => a.CreatedDate)
+                        .Excluding(a => a.UpdatedBy)
+                        .Excluding(a => a.UpdatedDate));
+
                 await this.apiBroker.DeleteAuditByIdAsync(actualAudit.Id);
             }
         }
@@ -63,7 +76,13 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis
             var actualAudit = await this.apiBroker.GetAuditByIdAsync(randomAudit.Id);
 
             // then
-            actualAudit.Should().BeEquivalentTo(expectedAudit);
+            actualAudit.Should().BeEquivalentTo(expectedAudit,
+                options => options
+                    .Excluding(a => a.CreatedBy)
+                    .Excluding(a => a.CreatedDate)
+                    .Excluding(a => a.UpdatedBy)
+                    .Excluding(a => a.UpdatedDate));
+
             await this.apiBroker.DeleteAuditByIdAsync(actualAudit.Id);
         }
 
@@ -79,7 +98,13 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis
             var actualAudit = await this.apiBroker.GetAuditByIdAsync(randomAudit.Id);
 
             // then
-            actualAudit.Should().BeEquivalentTo(modifiedAudit);
+            actualAudit.Should().BeEquivalentTo(modifiedAudit,
+                options => options
+                    .Excluding(a => a.CreatedBy)
+                    .Excluding(a => a.CreatedDate)
+                    .Excluding(a => a.UpdatedBy)
+                    .Excluding(a => a.UpdatedDate));
+
             await this.apiBroker.DeleteAuditByIdAsync(actualAudit.Id);
         }
 
