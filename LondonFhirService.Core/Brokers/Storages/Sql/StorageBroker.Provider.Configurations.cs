@@ -25,7 +25,11 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .IsRequired();
 
             model
-                .HasIndex(provider => provider.Name)
+                .HasIndex(provider => new
+                {
+                    provider.Name,
+                    provider.IsPrimary
+                })
                 .IsUnique();
 
             model
