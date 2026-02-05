@@ -95,7 +95,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     .ToList();
 
                 ValidatePrimaryProviders(primaryProviders);
-                string primaryProviderName = primaryProviders.First().Name;
+                string primaryProviderName = primaryProviders.First().FullyQualifiedName;
 
                 List<string> activeProviderNames = orderedProviders
                     .Where(provider =>
@@ -104,7 +104,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                         provider.FhirVersion == "STU3" &&
                         !provider.IsForComparisonOnly)
-                    .Select(provider => provider.Name)
+                    .Select(provider => provider.FullyQualifiedName)
                     .ToList();
 
                 List<Bundle> bundles = await this.patientService.EverythingAsync(
@@ -191,7 +191,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     .ToList();
 
                 ValidatePrimaryProviders(primaryProviders);
-                string primaryProviderName = primaryProviders.First().Name;
+                string primaryProviderName = primaryProviders.First().FullyQualifiedName;
 
                 List<string> activeProviderNames = orderedProviders
                     .Where(provider =>
@@ -200,7 +200,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                         provider.FhirVersion == "STU3" &&
                         !provider.IsForComparisonOnly)
-                    .Select(provider => provider.Name)
+                    .Select(provider => provider.FullyQualifiedName)
                     .ToList();
 
                 List<string> bundles = await this.patientService.EverythingSerialisedAsync(
@@ -285,7 +285,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 .ToList();
 
             ValidatePrimaryProviders(primaryProviders);
-            string primaryProviderName = primaryProviders.First().Name;
+            string primaryProviderName = primaryProviders.First().FullyQualifiedName;
 
             List<string> activeProviderNames = orderedProviders
                 .Where(provider =>
@@ -294,7 +294,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                     provider.FhirVersion == "STU3" &&
                     !provider.IsForComparisonOnly)
-                .Select(provider => provider.Name)
+                .Select(provider => provider.FullyQualifiedName)
                 .ToList();
 
             List<Bundle> bundles = await this.patientService.GetStructuredRecordAsync(
@@ -377,7 +377,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 .ToList();
 
             ValidatePrimaryProviders(primaryProviders);
-            string primaryProviderName = primaryProviders.First().Name;
+            string primaryProviderName = primaryProviders.First().FullyQualifiedName;
 
             List<string> activeProviderNames = orderedProviders
                 .Where(provider =>
@@ -386,7 +386,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     (provider.ActiveTo == null || provider.ActiveTo >= now) &&
                     provider.FhirVersion == "STU3" &&
                     !provider.IsForComparisonOnly)
-                .Select(provider => provider.Name)
+                .Select(provider => provider.FullyQualifiedName)
                 .ToList();
 
             List<string> bundles = await this.patientService.GetStructuredRecordSerialisedAsync(

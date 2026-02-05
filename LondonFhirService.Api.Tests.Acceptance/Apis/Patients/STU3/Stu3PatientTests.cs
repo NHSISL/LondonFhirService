@@ -325,7 +325,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                .OnProperty(provider => provider.Name).Use(providerName)
+                .OnProperty(provider => provider.FriendlyName).Use(providerName)
+                .OnProperty(provider => provider.FullyQualifiedName).Use(providerName)
                 .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
                 .OnProperty(provider => provider.IsActive).Use(true)
                 .OnProperty(provider => provider.IsPrimary).Use(true)
@@ -407,7 +408,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 // For non-primary, keep your original "idempotent by Name + FhirVersion"
                 var providerExists = providerQuery
                     .FirstOrDefault(p =>
-                        p.Name == provider.Name &&
+                        p.FullyQualifiedName == provider.FullyQualifiedName &&
                         p.FhirVersion == provider.FhirVersion &&
                         p.IsPrimary == provider.IsPrimary);
 

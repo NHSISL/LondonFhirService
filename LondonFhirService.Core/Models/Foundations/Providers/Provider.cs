@@ -10,9 +10,8 @@ namespace LondonFhirService.Core.Models.Foundations.Providers
     public class Provider : IKey, IAudit
     {
         public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string System { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
+        public string FriendlyName { get; set; } = string.Empty;
+        public string FullyQualifiedName { get; set; } = string.Empty;
         public string FhirVersion { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public DateTimeOffset? ActiveFrom { get; set; }

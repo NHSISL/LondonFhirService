@@ -40,7 +40,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 string message = primaryProviders.Count == 0
                     ? "No active primary provider found. One active primary provider required."
                     : $"Multiple active providers found: " +
-                      $"{string.Join(", ", primaryProviders.Select(provider => provider.Name))}. " +
+                      $"{string.Join(", ", primaryProviders.Select(provider => provider.FullyQualifiedName))}. " +
                       $"Only one active primary provider required.";
 
                 throw new InvalidPrimaryProviderPatientOrchestrationException(message);

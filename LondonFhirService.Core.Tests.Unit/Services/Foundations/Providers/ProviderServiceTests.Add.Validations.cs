@@ -70,7 +70,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
 
             var invalidProvider = new Provider
             {
-                Name = invalidText
+                FriendlyName = invalidText,
+                FullyQualifiedName = invalidText
             };
 
             var invalidProviderServiceException =
@@ -82,15 +83,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 values: "Id is required");
 
             invalidProviderServiceException.AddData(
-                key: nameof(Provider.Name),
+                key: nameof(Provider.FriendlyName),
                 values: "Text is required");
 
             invalidProviderServiceException.AddData(
-                key: nameof(Provider.System),
-                values: "Text is required");
-
-            invalidProviderServiceException.AddData(
-                key: nameof(Provider.Code),
+                key: nameof(Provider.FullyQualifiedName),
                 values: "Text is required");
 
             invalidProviderServiceException.AddData(
@@ -175,30 +172,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             // given
             string randomUserId = GetRandomString();
             var invalidProvider = CreateRandomProvider(GetRandomDateTimeOffset(), userId: randomUserId);
-            invalidProvider.Name = GetRandomStringWithLengthOf(501);
+            invalidProvider.FullyQualifiedName = GetRandomStringWithLengthOf(501);
             invalidProvider.FhirVersion = GetRandomStringWithLengthOf(11);
-            invalidProvider.Code = GetRandomStringWithLengthOf(65);
-            invalidProvider.System = GetRandomStringWithLengthOf(1001);
 
             var invalidProviderServiceException =
                 new InvalidProviderServiceException(
                     message: "Invalid provider. Please correct the errors and try again.");
 
             invalidProviderServiceException.AddData(
-                key: nameof(Provider.Name),
-                values: $"Text exceeds max length of {invalidProvider.Name.Length - 1} characters");
+                key: nameof(Provider.FullyQualifiedName),
+                values: $"Text exceeds max length of {invalidProvider.FullyQualifiedName.Length - 1} characters");
 
             invalidProviderServiceException.AddData(
                 key: nameof(Provider.FhirVersion),
                 values: $"Text exceeds max length of {invalidProvider.FhirVersion.Length - 1} characters");
-
-            invalidProviderServiceException.AddData(
-                key: nameof(Provider.Code),
-                values: $"Text exceeds max length of {invalidProvider.Code.Length - 1} characters");
-
-            invalidProviderServiceException.AddData(
-                key: nameof(Provider.System),
-                values: $"Text exceeds max length of {invalidProvider.System.Length - 1} characters");
 
             var expectedProviderServiceValidationException =
                 new ProviderServiceValidationException(

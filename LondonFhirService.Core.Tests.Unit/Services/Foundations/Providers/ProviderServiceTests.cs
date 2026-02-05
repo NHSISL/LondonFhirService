@@ -108,7 +108,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                .OnProperty(provider => provider.Name).Use(GetRandomStringWithLengthOf(500))
+                .OnProperty(provider => provider.FullyQualifiedName).Use(GetRandomStringWithLengthOf(500))
                 .OnProperty(provider => provider.FhirVersion).Use(GetRandomStringWithLengthOf(10))
                 .OnProperty(provider => provider.CreatedBy).Use(userId)
                 .OnProperty(provider => provider.UpdatedBy).Use(userId);
