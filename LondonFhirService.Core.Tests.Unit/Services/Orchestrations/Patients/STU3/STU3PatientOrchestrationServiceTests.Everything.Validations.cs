@@ -211,7 +211,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 new InvalidPrimaryProviderPatientOrchestrationException(
                     message:
                         $"Multiple active providers found: " +
-                        $"{string.Join(", ", allProviders.Select(provider => provider.Name))}. " +
+                        $"{string.Join(", ", allProviders.Select(provider => provider.FullyQualifiedName))}. " +
                         $"Only one active primary provider required.");
 
             var expectedPatientOrchestrationValidationException =

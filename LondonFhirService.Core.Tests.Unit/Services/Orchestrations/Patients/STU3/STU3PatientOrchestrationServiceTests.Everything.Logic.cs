@@ -57,8 +57,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             List<string> activeProviderNames = new List<string>
             {
-                randomPrimaryProvider.Name,
-                randomActiveProvider.Name
+                randomPrimaryProvider.FullyQualifiedName,
+                randomActiveProvider.FullyQualifiedName
             };
 
             this.patientServiceMock.Setup(service =>
@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.fhirReconciliationServiceMock.Setup(service =>
                 service.ReconcileAsync(
                     randomBundles,
-                    randomPrimaryProvider.Name))
+                    randomPrimaryProvider.FullyQualifiedName))
                     .ReturnsAsync(expectedBundle);
 
             // when
@@ -114,7 +114,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.fhirReconciliationServiceMock.Verify(service =>
                 service.ReconcileAsync(
                     randomBundles,
-                    randomPrimaryProvider.Name),
+                    randomPrimaryProvider.FullyQualifiedName),
                     Times.Once);
 
             this.auditBrokerMock.Verify(broker =>

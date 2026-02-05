@@ -234,7 +234,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.R4
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                .OnProperty(provider => provider.Name).Use(providerName)
+                .OnProperty(provider => provider.FullyQualifiedName).Use(providerName)
                 .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
                 .OnProperty(provider => provider.IsActive).Use(true)
                 .OnProperty(provider => provider.IsPrimary).Use(true)
