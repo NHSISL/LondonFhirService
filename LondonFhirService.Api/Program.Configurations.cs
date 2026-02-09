@@ -28,7 +28,6 @@ using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations.R4;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.OdsDatas;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
@@ -243,7 +242,6 @@ public partial class Program
         services.AddTransient<IAuditService, AuditService>();
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
         services.AddTransient<IConsumerService, ConsumerService>();
-        services.AddTransient<IR4FhirReconciliationService, R4FhirReconciliationService>();
         services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
         services.AddTransient<IOdsDataService, OdsDataService>();
         services.AddTransient<IStu3PatientService, Stu3PatientService>();

@@ -52,15 +52,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 service.RetrieveAllProvidersAsync())
                     .ReturnsAsync(allProviders);
 
-            List<string> activeProviderNames = new List<string>
+            List<Provider> activeProviders = new List<Provider>
             {
-                randomPrimaryProvider.FullyQualifiedName,
-                randomActiveProvider.FullyQualifiedName
+                randomPrimaryProvider,
+                randomActiveProvider
             };
 
             this.patientServiceMock.Setup(service =>
                 service.GetStructuredRecordAsync(
-                    activeProviderNames,
+                    activeProviders,
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.fhirReconciliationServiceMock.Setup(service =>
                 service.ReconcileAsync(
                     randomBundles,
-                    randomPrimaryProvider.FullyQualifiedName))
+                    randomPrimaryProvider))
                     .ReturnsAsync(expectedBundle);
 
             // when
@@ -93,7 +93,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             this.patientServiceMock.Verify(service =>
                 service.GetStructuredRecordAsync(
-                    activeProviderNames,
+                    activeProviders,
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
@@ -105,7 +105,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.fhirReconciliationServiceMock.Verify(service =>
                 service.ReconcileAsync(
                     randomBundles,
-                    randomPrimaryProvider.FullyQualifiedName),
+                    randomPrimaryProvider),
                     Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
