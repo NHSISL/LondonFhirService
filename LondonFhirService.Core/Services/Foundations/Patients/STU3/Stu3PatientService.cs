@@ -248,7 +248,9 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 {
                     await loggingBroker.LogInformationAsync($"Removing '{provider.ProviderName}': " +
                         "Patients/$GetStructuredRecord not supported.");
-
+                }
+                else
+                {
                     fhirProviders.Add((activeProviders[i].FriendlyName, activeProviders[i].IsPrimary, provider));
                 }
             }
