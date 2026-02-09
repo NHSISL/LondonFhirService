@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
+using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
 using Moq;
@@ -25,12 +26,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Xeption dependencyValidationException)
         {
             // given
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS"
+                ddsProvider
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
@@ -58,6 +61,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
@@ -72,7 +77,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordSerialisedAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -87,6 +92,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
@@ -131,12 +138,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Xeption dependencyException)
         {
             // given
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS"
+                ddsProvider
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
@@ -164,6 +173,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
@@ -178,7 +189,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordSerialisedAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -193,6 +204,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
@@ -235,12 +248,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task ShouldThrowServiceExceptionOnGetStructuredRecordSerialisedIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS"
+                ddsProvider
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             Guid correlationId = Guid.NewGuid();
@@ -275,6 +290,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
@@ -289,7 +306,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             ValueTask<List<string>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordSerialisedAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -304,6 +321,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),

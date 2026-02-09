@@ -9,6 +9,7 @@ using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using Moq;
 using Task = System.Threading.Tasks.Task;
@@ -21,13 +22,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task GetStructuredRecordSerialisedShouldReturnBundles()
         {
             // given
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
+            Provider ldsProvider = new Provider { FriendlyName = "LDS", IsPrimary = false };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS",
-                "LDS"
+                ddsProvider,
+                ldsProvider,
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
@@ -66,6 +70,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -77,6 +83,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -91,7 +99,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             List<string> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     dateOfBirth: inputDateOfBirth,
@@ -104,6 +112,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     this.ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -115,6 +125,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     this.ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
