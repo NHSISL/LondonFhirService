@@ -125,8 +125,21 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task GetStructuredRecordSerialisedShouldReturnSingleBundleWhenUnsupportedProvider()
         {
             // given
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
-            Provider unsupportedProvider = new Provider { FriendlyName = "Unsupported", IsPrimary = false };
+            Provider ddsProvider =
+                new Provider
+                {
+                    FriendlyName = "DDS Provider",
+                    FullyQualifiedName = "DDS",
+                    IsPrimary = true
+                };
+
+            Provider unsupportedProvider =
+                new Provider
+                {
+                    FriendlyName = "Unsupported Provider",
+                    FullyQualifiedName = "Unsupported",
+                    IsPrimary = false
+                };
 
             List<Provider> randomProviders = new List<Provider>
             {
@@ -273,8 +286,21 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task GetStructuredRecordSerialisedShouldReturnSingleBundleWhenUnsupportedProviderDueToError()
         {
             // given
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
-            Provider unsupportedProvider = new Provider { FriendlyName = "Unsupported", IsPrimary = false };
+            Provider ddsProvider =
+                new Provider
+                {
+                    FriendlyName = "DDS Provider",
+                    FullyQualifiedName = "DDS",
+                    IsPrimary = true
+                };
+
+            Provider unsupportedProvider =
+                new Provider
+                {
+                    FriendlyName = "Unsupported Error Provider",
+                    FullyQualifiedName = "UnsupportedError",
+                    IsPrimary = false
+                };
 
             List<Provider> randomProviders = new List<Provider>
             {
@@ -425,8 +451,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.patientServiceConfig.MaxProviderWaitTimeMilliseconds = timeoutMilliseconds;
             var timeoutException = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
 
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
-            Provider ldsProvider = new Provider { FriendlyName = "LDS", IsPrimary = false };
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
 
             List<Provider> randomProviders = new List<Provider>
             {
@@ -599,8 +628,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var timeoutException = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
             var timeoutException2 = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
 
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
-            Provider ldsProvider = new Provider { FriendlyName = "LDS", IsPrimary = false };
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
 
             List<Provider> randomProviders = new List<Provider>
             {
@@ -764,8 +796,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // given
             Exception exception = new Exception(GetRandomString());
 
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
-            Provider ldsProvider = new Provider { FriendlyName = "LDS", IsPrimary = false };
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
 
             List<Provider> randomProviders = new List<Provider>
             {
@@ -936,8 +971,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Exception exception = new Exception(GetRandomString());
             Exception exception2 = new Exception(GetRandomString());
 
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
-            Provider ldsProvider = new Provider { FriendlyName = "LDS", IsPrimary = false };
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
 
             List<Provider> randomProviders = new List<Provider>
             {
