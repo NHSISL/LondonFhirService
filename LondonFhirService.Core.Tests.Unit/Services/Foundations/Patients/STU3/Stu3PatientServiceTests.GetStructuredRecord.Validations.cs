@@ -966,8 +966,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task GetStructuredRecordShouldReturnEmptyBundleListWhenAllProvidersError()
         {
             // given
-            Exception exception = new Exception(GetRandomString());
-            Exception exception2 = new Exception(GetRandomString());
+            Exception exception = new Exception("Exception1");
+            Exception exception2 = new Exception("Exception2");
 
             Provider ddsProvider =
                 new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
@@ -1085,8 +1085,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputActivePatientsOnly),
                         Times.Once());
 
+            //this.loggingBrokerMock.Verify(broker =>
+            //    broker.LogErrorAsync(It.Is(SameExceptionAs(aggregateException))),
+            //        Times.Once());
+
             this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(aggregateException))),
+                broker.LogErrorAsync(It.Is(SameExceptionAsUnorderedAggregate(aggregateException))),
                     Times.Once());
 
             this.auditBrokerMock.Verify(broker =>
