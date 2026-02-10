@@ -298,8 +298,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Provider unsupportedProvider =
                 new Provider
                 {
-                    FriendlyName = "Unsupported Provider",
-                    FullyQualifiedName = "Unsupported",
+                    FriendlyName = "Unsupported Error Provider",
+                    FullyQualifiedName = "UnsupportedError",
                     IsPrimary = false
                 };
 
