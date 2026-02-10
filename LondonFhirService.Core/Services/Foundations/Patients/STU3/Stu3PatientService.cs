@@ -237,21 +237,30 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 try
                 {
                     isSupported = provider.SupportsResource("Patients", "GetStructuredRecordAsync");
+
+                    if (!isSupported)
+                    {
+                        if (provider != null)
+                        {
+                            await loggingBroker.LogInformationAsync($"Removing '{provider.ProviderName}': " +
+                                "Patients/$GetStructuredRecord not supported.");
+                        }
+                        else
+                        {
+                            await loggingBroker.LogInformationAsync(
+                                $"Removing '{activeProviders[i].FriendlyName}' as " +
+                                    $"'{activeProviders[i].FullyQualifiedName}' not found.");
+                        }
+                    }
+                    else
+                    {
+                        fhirProviders.Add((activeProviders[i].FriendlyName, activeProviders[i].IsPrimary, provider));
+                    }
                 }
                 catch (Exception exception)
                 {
                     await loggingBroker.LogErrorAsync(exception);
                     isSupported = false;
-                }
-
-                if (!isSupported)
-                {
-                    await loggingBroker.LogInformationAsync($"Removing '{provider.ProviderName}': " +
-                        "Patients/$GetStructuredRecord not supported.");
-                }
-                else
-                {
-                    fhirProviders.Add((activeProviders[i].FriendlyName, activeProviders[i].IsPrimary, provider));
                 }
             }
 
