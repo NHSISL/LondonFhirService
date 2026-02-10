@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
     public partial class Stu3PatientServiceTests
     {
         [Fact]
-        public async Task GetStructuredRecordSerialisedShouldThrowWhenNullProviderNames()
+        public async Task GetStructuredRecordSerialisedShouldThrowWhenNullActiveProviders()
         {
             // given
             List<Provider> providers = null;
