@@ -34,7 +34,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "please correct the errors and try again.");
 
             invalidArgumentsPatientServiceException.AddData(
-                key: "providerNames",
+                key: "activeProviders",
                 values: "List cannot be null");
 
             var expectedPatientServiceValidationException =
