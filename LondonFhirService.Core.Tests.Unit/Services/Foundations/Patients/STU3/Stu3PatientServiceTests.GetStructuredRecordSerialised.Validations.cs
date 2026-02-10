@@ -1088,7 +1088,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(aggregateException))),
+                broker.LogErrorAsync(It.Is(SameExceptionAsUnorderedAggregate(aggregateException))),
                     Times.Once());
 
             this.auditBrokerMock.Verify(broker =>

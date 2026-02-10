@@ -26,7 +26,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Xeption dependencyValidationException)
         {
             // given
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
 
             List<Provider> randomProviders = new List<Provider>
             {
@@ -138,7 +139,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Xeption dependencyException)
         {
             // given
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
 
             List<Provider> randomProviders = new List<Provider>
             {
@@ -248,7 +250,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task ShouldThrowServiceExceptionOnGetStructuredRecordSerialisedIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
 
             List<Provider> randomProviders = new List<Provider>
             {
