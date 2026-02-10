@@ -21,8 +21,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task GetStructuredRecordShouldReturnBundles()
         {
             // given
-            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
-            Provider ldsProvider = new Provider { FriendlyName = "LDS", IsPrimary = false };
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
 
             List<Provider> randomProviders = new List<Provider>
             {
