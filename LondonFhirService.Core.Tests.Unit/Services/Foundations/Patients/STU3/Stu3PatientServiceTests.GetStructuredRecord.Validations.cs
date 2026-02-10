@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
     public partial class Stu3PatientServiceTests
     {
         [Fact]
-        public async Task GetStructuredRecordShouldThrowWhenNullProviderNames()
+        public async Task GetStructuredRecordShouldThrowWhenNullActiveProviders()
         {
             // given
             List<Provider> providers = null;
@@ -33,7 +33,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "please correct the errors and try again.");
 
             invalidArgumentsPatientServiceException.AddData(
-                key: "providerNames",
+                key: "activeProviders",
                 values: "List cannot be null");
 
             var expectedPatientServiceValidationException =
