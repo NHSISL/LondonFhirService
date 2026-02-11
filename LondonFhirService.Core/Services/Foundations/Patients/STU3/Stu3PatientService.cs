@@ -359,16 +359,17 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             }
         }
 
-        virtual internal async Task<(string Json, Exception Exception)> ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
-            string providerFriendlyName,
-            bool isPrimaryProvider,
-            IFhirProvider provider,
-            CancellationToken globalToken,
-            Guid correlationId,
-            string nhsNumber,
-            DateTime? dateOfBirth = null,
-            bool? demographicsOnly = null,
-            bool? includeInactivePatients = null)
+        virtual internal async Task<(string Json, Exception Exception)>
+            ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                string providerFriendlyName,
+                bool isPrimaryProvider,
+                IFhirProvider provider,
+                CancellationToken globalToken,
+                Guid correlationId,
+                string nhsNumber,
+                DateTime? dateOfBirth = null,
+                bool? demographicsOnly = null,
+                bool? includeInactivePatients = null)
         {
             if (globalToken.IsCancellationRequested)
             {
@@ -406,24 +407,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     includeInactivePatients,
                     timeoutCts.Token)
                         .ConfigureAwait(false);
-
-                // TODO: Deserialise to Bundle to add meta then serialise back to JSON
-
-                //Coding coding = new Coding
-                //{
-                //    System = provider.System,
-                //    Code = provider.Code,
-                //    Display = provider.ProviderName,
-                //    Version = provider.FhirVersion,
-                //};
-
-                //bundle.Meta.Extension.Add(new Extension
-                //{
-                //    Url = "http://example.org/fhir/StructureDefinition/meta-source",
-                //    Value = new FhirUri(provider.Source)
-                //});
-
-                //bundle.Meta.Tag.Add(coding);
 
                 await this.auditBroker.LogInformationAsync(
                     $"{auditType}-DATA",

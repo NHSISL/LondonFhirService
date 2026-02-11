@@ -22,6 +22,8 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
         {
             // given
             string inputNhsNumber = "9435797881";
+            bool isHashed = this.accessConfigurations.UseHashedNhsNumber;
+            string pepper = this.accessConfigurations.HashPepper;
             string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
             string userId = TestAuthHandler.TestUserId;
@@ -38,7 +40,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                 now,
                 userId);
 
-            PdsData pdsData = await CreateRandomPdsData(inputNhsNumber, orgCode, now);
+            PdsData pdsData = await CreateRandomPdsData(inputNhsNumber, orgCode, now, isHashed, pepper);
 
             // when
             var (actualText, actualBundle) =

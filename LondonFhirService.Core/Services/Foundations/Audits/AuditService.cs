@@ -12,25 +12,26 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
+using Microsoft.EntityFrameworkCore;
 
 namespace LondonFhirService.Core.Services.Foundations.Audits
 {
     public partial class AuditService : IAuditService
     {
-        private readonly IStorageBroker storageBroker;
+        private readonly IDbContextFactory<StorageBroker> storageBrokerFactory;
         private readonly IIdentifierBroker identifierBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ISecurityAuditBroker securityAuditBroker;
         private readonly ILoggingBroker loggingBroker;
 
         public AuditService(
-            IStorageBroker storageBroker,
+            IDbContextFactory<StorageBroker> storageBrokerFactory,
             IIdentifierBroker identifierBroker,
             IDateTimeBroker dateTimeBroker,
             ISecurityAuditBroker securityAuditBroker,
             ILoggingBroker loggingBroker)
         {
-            this.storageBroker = storageBroker;
+            this.storageBrokerFactory = storageBrokerFactory;
             this.identifierBroker = identifierBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.securityAuditBroker = securityAuditBroker;
@@ -66,7 +67,10 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
 
             await ValidateAuditOnAddAsync(audit);
 
-            return await this.storageBroker.InsertAuditAsync(audit);
+            await using StorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateDbContextAsync();
+
+            return await storageBroker.InsertAuditAsync(audit);
         });
 
         public ValueTask<Audit> AddAuditAsync(Audit audit) =>
@@ -75,7 +79,10 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                 Audit auditWithAddAuditApplied = await this.securityAuditBroker.ApplyAddAuditValuesAsync(audit);
                 await ValidateAuditOnAddAsync(auditWithAddAuditApplied);
 
-                return await this.storageBroker.InsertAuditAsync(auditWithAddAuditApplied);
+                await using StorageBroker storageBroker =
+                    await this.storageBrokerFactory.CreateDbContextAsync();
+
+                return await storageBroker.InsertAuditAsync(auditWithAddAuditApplied);
             });
 
         public ValueTask BulkAddAuditsAsync(List<Audit> audits, int batchSize = 10000) =>
@@ -86,14 +93,23 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         });
 
         public ValueTask<IQueryable<Audit>> RetrieveAllAuditsAsync() =>
-            TryCatch(async () => await this.storageBroker.SelectAllAuditsAsync());
+        TryCatch(async () =>
+        {
+            await using StorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateDbContextAsync();
+
+            return await storageBroker.SelectAllAuditsAsync();
+        });
 
         public ValueTask<Audit> RetrieveAuditByIdAsync(Guid auditId) =>
         TryCatch(async () =>
         {
             ValidateAuditId(auditId);
 
-            Audit maybeAudit = await this.storageBroker
+            await using StorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateDbContextAsync();
+
+            Audit maybeAudit = await storageBroker
                 .SelectAuditByIdAsync(auditId);
 
             ValidateStorageAudit(maybeAudit, auditId);
@@ -115,7 +131,11 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                     if (batch.Count != 0)
                     {
                         List<Audit> validatedAudits = await ValidateAuditsAndAssignIdAndAuditAsync(batch);
-                        await this.storageBroker.BulkInsertAuditsAsync(validatedAudits);
+
+                        await using StorageBroker storageBroker =
+                            await this.storageBrokerFactory.CreateDbContextAsync();
+
+                        await storageBroker.BulkInsertAuditsAsync(validatedAudits);
                     }
                 }
                 catch (Exception ex)
@@ -130,11 +150,15 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             {
                 Audit auditWithModifyAuditApplied = await this.securityAuditBroker.ApplyModifyAuditValuesAsync(audit);
                 await ValidateAuditOnModifyAsync(auditWithModifyAuditApplied);
-                Audit maybeAudit = await this.storageBroker.SelectAuditByIdAsync(audit.Id);
+
+                await using StorageBroker storageBroker =
+                    await this.storageBrokerFactory.CreateDbContextAsync();
+
+                Audit maybeAudit = await storageBroker.SelectAuditByIdAsync(audit.Id);
                 ValidateStorageAudit(maybeAudit, audit.Id);
                 ValidateAgainstStorageAuditOnModify(inputAudit: audit, storageAudit: maybeAudit);
 
-                return await this.storageBroker.UpdateAuditAsync(auditWithModifyAuditApplied);
+                return await storageBroker.UpdateAuditAsync(auditWithModifyAuditApplied);
             });
 
         public ValueTask<Audit> RemoveAuditByIdAsync(Guid auditId) =>
@@ -142,7 +166,10 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         {
             ValidateAuditId(auditId);
 
-            Audit maybeAudit = await this.storageBroker
+            await using StorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateDbContextAsync();
+
+            Audit maybeAudit = await storageBroker
                 .SelectAuditByIdAsync(auditId);
 
             ValidateStorageAudit(maybeAudit, auditId);
@@ -151,13 +178,13 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                 await securityAuditBroker.ApplyRemoveAuditValuesAsync(maybeAudit);
 
             Audit updatedAudit =
-                await this.storageBroker.UpdateAuditAsync(auditWithDeleteAuditApplied);
+                await storageBroker.UpdateAuditAsync(auditWithDeleteAuditApplied);
 
             await ValidateAgainstStorageAuditOnDeleteAsync(
                 audit: updatedAudit,
                 maybeAudit: auditWithDeleteAuditApplied);
 
-            return await this.storageBroker.DeleteAuditAsync(updatedAudit);
+            return await storageBroker.DeleteAuditAsync(updatedAudit);
         });
 
         virtual internal async ValueTask<List<Audit>> ValidateAuditsAndAssignIdAndAuditAsync(List<Audit> audits)
