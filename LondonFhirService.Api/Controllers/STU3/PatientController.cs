@@ -27,51 +27,6 @@ namespace LondonFhirService.Api.Controllers.STU3
             this.patientCoordinationService = patientCoordinationService;
         }
 
-        [HttpPost("{id}/$everything")]
-        [Authorize(Roles = "Patients.Everything")]
-        public async Task<ActionResult<string>> Everything(
-            string id,
-            [FromBody] Parameters parameters,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                DateTimeOffset? start = ExtractDateTimeParameter(parameters, "start");
-                DateTimeOffset? end = ExtractDateTimeParameter(parameters, "end");
-                string typeFilter = ExtractStringParameter(parameters, "_type");
-                DateTimeOffset? since = ExtractDateTimeParameter(parameters, "_since");
-                int? count = ExtractIntParameter(parameters, "_count");
-
-                string bundle = await this.patientCoordinationService.EverythingSerialisedAsync(
-                    id,
-                    start,
-                    end,
-                    typeFilter,
-                    since,
-                    count,
-                    cancellationToken);
-
-                return Ok(bundle);
-            }
-            catch (PatientCoordinationValidationException patientCoordinationValidationException)
-            {
-                return BadRequest(patientCoordinationValidationException.InnerException);
-            }
-            catch (PatientCoordinationDependencyValidationException
-                   patientCoordinationDependencyValidationException)
-            {
-                return BadRequest(patientCoordinationDependencyValidationException.InnerException);
-            }
-            catch (PatientCoordinationDependencyException patientCoordinationDependencyException)
-            {
-                return InternalServerError(patientCoordinationDependencyException);
-            }
-            catch (PatientCoordinationServiceException patientCoordinationServiceException)
-            {
-                return InternalServerError(patientCoordinationServiceException);
-            }
-        }
-
         [HttpPost("$getstructuredrecord")]
         [Authorize(Roles = "Patients.GetStructuredRecord")]
         public async Task<ActionResult<Bundle>> GetStructuredRecord(

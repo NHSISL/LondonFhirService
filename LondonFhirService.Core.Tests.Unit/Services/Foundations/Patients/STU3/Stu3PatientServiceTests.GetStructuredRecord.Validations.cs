@@ -10,6 +10,7 @@ using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
+using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using Moq;
 using Task = System.Threading.Tasks.Task;
@@ -19,10 +20,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
     public partial class Stu3PatientServiceTests
     {
         [Fact]
-        public async Task GetStructuredRecordShouldThrowWhenNullProviderNames()
+        public async Task GetStructuredRecordShouldThrowWhenNullActiveProviders()
         {
             // given
-            List<string> providerNames = null;
+            List<Provider> providers = null;
             Guid correlationId = Guid.NewGuid();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
@@ -32,7 +33,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "please correct the errors and try again.");
 
             invalidArgumentsPatientServiceException.AddData(
-                key: "providerNames",
+                key: "activeProviders",
                 values: "List cannot be null");
 
             var expectedPatientServiceValidationException =
@@ -42,7 +43,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             ValueTask<List<Bundle>> everythingTask = patientService.GetStructuredRecordAsync(
-                    providerNames: providerNames,
+                    activeProviders: providers,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     cancellationToken: default);
@@ -70,13 +71,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task GetStructuredRecordShouldThrowWhenInvalidId(string invalidText)
         {
             // given
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider = new Provider { FriendlyName = "DDS", IsPrimary = true };
+            Provider ldsProvider = new Provider { FriendlyName = "LDS", IsPrimary = false };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS",
-                "LDS"
+                ddsProvider,
+                ldsProvider,
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             Guid correlationId = Guid.Empty;
 
             var invalidArgumentsPatientServiceException = new InvalidArgumentsPatientServiceException(
@@ -98,7 +102,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             // when
             ValueTask<List<Bundle>> everythingTask = patientService.GetStructuredRecordAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: invalidText,
                     cancellationToken: default);
@@ -123,13 +127,29 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task GetStructuredRecordShouldReturnSingleBundleWhenUnsupportedProvider()
         {
             // given
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider =
+                new Provider
+                {
+                    FriendlyName = "DDS Provider",
+                    FullyQualifiedName = "DDS",
+                    IsPrimary = true
+                };
+
+            Provider unsupportedProvider =
+                new Provider
+                {
+                    FriendlyName = "Unsupported Provider",
+                    FullyQualifiedName = "Unsupported",
+                    IsPrimary = false
+                };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS",
-                "Unsupported"
+                ddsProvider,
+                unsupportedProvider,
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string randomNhsNumber = GetRandomString();
@@ -163,6 +183,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -177,7 +199,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             List<Bundle> actualBundles =
                 await mockedPatientService.GetStructuredRecordAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     dateOfBirth: inputDateOfBirth,
@@ -190,6 +212,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     this.ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -206,6 +230,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    unsupportedProvider.FriendlyName,
+                    unsupportedProvider.IsPrimary,
                     this.unsupportedFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -261,13 +287,29 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         public async Task GetStructuredRecordShouldReturnSingleBundleWhenUnsupportedProviderDueToError()
         {
             // given
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider =
+                new Provider
+                {
+                    FriendlyName = "DDS Provider",
+                    FullyQualifiedName = "DDS",
+                    IsPrimary = true
+                };
+
+            Provider unsupportedProvider =
+                new Provider
+                {
+                    FriendlyName = "Unsupported Error Provider",
+                    FullyQualifiedName = "UnsupportedError",
+                    IsPrimary = false
+                };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS",
-                "UnsupportedError"
+                ddsProvider,
+                unsupportedProvider,
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string randomNhsNumber = GetRandomString();
@@ -301,6 +343,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -315,7 +359,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             List<Bundle> actualBundles =
                 await mockedPatientService.GetStructuredRecordAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     dateOfBirth: inputDateOfBirth,
@@ -328,6 +372,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     this.ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -344,6 +390,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    unsupportedProvider.FriendlyName,
+                    unsupportedProvider.IsPrimary,
                     this.unsupportedErrorFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -403,13 +451,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.patientServiceConfig.MaxProviderWaitTimeMilliseconds = timeoutMilliseconds;
             var timeoutException = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
 
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS",
-                "LDS"
+                ddsProvider,
+                ldsProvider,
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string randomNhsNumber = GetRandomString();
@@ -452,6 +506,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -463,6 +519,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -477,7 +535,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             List<Bundle> actualBundles =
                 await mockedPatientService.GetStructuredRecordAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     dateOfBirth: inputDateOfBirth,
@@ -490,6 +548,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     this.ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -501,6 +561,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     this.ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -565,13 +627,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var timeoutException = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
             var timeoutException2 = new TimeoutException($"Provider call exceeded {timeoutMilliseconds} milliseconds.");
 
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS",
-                "LDS"
+                ddsProvider,
+                ldsProvider,
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             List<Bundle> expectedBundles = new List<Bundle>();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
@@ -609,6 +677,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -620,6 +690,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -634,7 +706,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             List<Bundle> actualBundles =
                 await mockedPatientService.GetStructuredRecordAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     dateOfBirth: inputDateOfBirth,
@@ -647,6 +719,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     this.ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -658,6 +732,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     this.ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -719,13 +795,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // given
             Exception exception = new Exception(GetRandomString());
 
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS",
-                "LDS"
+                ddsProvider,
+                ldsProvider,
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             Bundle randomDdsBundle = CreateRandomBundle();
             Bundle outputDdsBundle = randomDdsBundle.DeepClone();
             string randomNhsNumber = GetRandomString();
@@ -768,6 +850,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -779,6 +863,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -793,7 +879,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             List<Bundle> actualBundles =
                 await mockedPatientService.GetStructuredRecordAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     dateOfBirth: inputDateOfBirth,
@@ -806,6 +892,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     this.ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -817,6 +905,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     this.ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -879,13 +969,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Exception exception = new Exception(GetRandomString());
             Exception exception2 = new Exception(GetRandomString());
 
-            List<string> randomProviderNames = new List<string>
+            Provider ddsProvider =
+                new Provider { FriendlyName = "DDS Provider", FullyQualifiedName = "DDS", IsPrimary = true };
+
+            Provider ldsProvider =
+                new Provider { FriendlyName = "LDS Provider", FullyQualifiedName = "LDS", IsPrimary = false };
+
+            List<Provider> randomProviders = new List<Provider>
             {
-                "DDS",
-                "LDS"
+                ddsProvider,
+                ldsProvider,
             };
 
-            List<string> inputProviderNames = randomProviderNames.DeepClone();
+            List<Provider> inputProviders = randomProviders.DeepClone();
             List<Bundle> expectedBundles = new List<Bundle>();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
@@ -923,6 +1019,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -934,6 +1032,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -948,7 +1048,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             List<Bundle> actualBundles =
                 await mockedPatientService.GetStructuredRecordAsync(
-                    providerNames: inputProviderNames,
+                    activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
                     dateOfBirth: inputDateOfBirth,
@@ -961,6 +1061,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ddsProvider.FriendlyName,
+                    ddsProvider.IsPrimary,
                     this.ddsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -972,6 +1074,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    ldsProvider.FriendlyName,
+                    ldsProvider.IsPrimary,
                     this.ldsFhirProviderMock.Object,
                     cancellationToken,
                     correlationId,
@@ -982,7 +1086,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(aggregateException))),
+                broker.LogErrorAsync(It.Is(SameExceptionAsUnorderedAggregate(aggregateException))),
                     Times.Once());
 
             this.auditBrokerMock.Verify(broker =>

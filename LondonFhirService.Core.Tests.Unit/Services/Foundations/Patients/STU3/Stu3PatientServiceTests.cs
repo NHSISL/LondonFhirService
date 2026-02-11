@@ -226,5 +226,41 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     data: innerException.Data)
             };
         }
+
+
+        private static Expression<Func<Exception, bool>> SameExceptionAsUnorderedAggregate(Exception expected) =>
+            actual => MatchesExceptionUnorderedAggregate(actual, expected);
+
+        private static bool MatchesExceptionUnorderedAggregate(Exception actual, Exception expected)
+        {
+            if (actual is AggregateException actualAgg &&
+                expected is AggregateException expectedAgg)
+            {
+                if (actualAgg.GetType() != expectedAgg.GetType())
+                    return false;
+
+                if (actualAgg.InnerExceptions.Count != expectedAgg.InnerExceptions.Count)
+                    return false;
+
+                // Compare inner exceptions as a multiset (order independent)
+                var unmatched = new List<Exception>(expectedAgg.InnerExceptions);
+
+                foreach (Exception actualInner in actualAgg.InnerExceptions)
+                {
+                    int matchIndex = unmatched.FindIndex(expectedInner =>
+                        actualInner.SameExceptionAs(expectedInner)); // your external helper
+
+                    if (matchIndex < 0)
+                        return false;
+
+                    unmatched.RemoveAt(matchIndex);
+                }
+
+                return true;
+            }
+
+            // Non-aggregate: defer to external library logic
+            return actual.SameExceptionAs(expected);
+        }
     }
 }

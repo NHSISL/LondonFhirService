@@ -43,198 +43,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<Bundle> EverythingAsync(
-            Guid correlationId,
-            string id,
-            DateTimeOffset? start = null,
-            DateTimeOffset? end = null,
-            string typeFilter = null,
-            DateTimeOffset? since = null,
-            int? count = null,
-            CancellationToken cancellationToken = default) =>
-            TryCatch(async () =>
-            {
-                ValidateArgsOnEverything(id, correlationId);
-                string auditType = "STU3-Patient-Everything";
-
-                string message =
-                    $"Parameters:  {{ id = \"{id}\", start = \"{start}\", " +
-                    $"end = \"{end}\", typeFilter = \"{typeFilter}\", " +
-                    $"since = \"{since}\", count = \"{count}\" }}";
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Orchestration Service Request Submitted",
-                    message,
-                    fileName: string.Empty,
-                    correlationId: correlationId.ToString());
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Retrieve active providers and execute request",
-                    message,
-                    fileName: string.Empty,
-                    correlationId: correlationId.ToString());
-
-                IQueryable<Provider> allProviders =
-                    await this.providerService.RetrieveAllProvidersAsync();
-
-                List<Provider> orderedProviders = allProviders
-                    .OrderByDescending(provider => provider.IsPrimary)
-                    .ToList();
-
-                DateTimeOffset now = DateTimeOffset.UtcNow;
-
-                List<Provider> primaryProviders = orderedProviders
-                    .Where(provider =>
-                        provider.IsPrimary &&
-                        provider.IsActive &&
-                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
-                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
-                        provider.FhirVersion == "STU3")
-                    .ToList();
-
-                ValidatePrimaryProviders(primaryProviders);
-                string primaryProviderName = primaryProviders.First().FullyQualifiedName;
-
-                List<string> activeProviderNames = orderedProviders
-                    .Where(provider =>
-                        provider.IsActive &&
-                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
-                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
-                        provider.FhirVersion == "STU3" &&
-                        !provider.IsForComparisonOnly)
-                    .Select(provider => provider.FullyQualifiedName)
-                    .ToList();
-
-                List<Bundle> bundles = await this.patientService.EverythingAsync(
-                    providerNames: activeProviderNames,
-                    correlationId,
-                    id,
-                    start,
-                    end,
-                    typeFilter,
-                    since,
-                    count,
-                    cancellationToken);
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Reconcile bundles",
-                    message,
-                    fileName: string.Empty,
-                    correlationId: correlationId.ToString());
-
-                Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
-                    bundles: bundles,
-                    primaryProviderName: primaryProviderName);
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Orchestration Service Request Completed",
-                    message,
-                    fileName: string.Empty,
-                    correlationId: correlationId.ToString());
-
-                return reconciledBundle;
-            });
-
-        public ValueTask<string> EverythingSerialisedAsync(
-            Guid correlationId,
-            string id,
-            DateTimeOffset? start = null,
-            DateTimeOffset? end = null,
-            string typeFilter = null,
-            DateTimeOffset? since = null,
-            int? count = null,
-            CancellationToken cancellationToken = default) =>
-            TryCatch(async () =>
-            {
-                ValidateArgsOnEverything(id, correlationId);
-                string auditType = "STU3-Patient-EverythingSerialised";
-
-                string message =
-                    $"Parameters:  {{ id = \"{id}\", start = \"{start}\", " +
-                    $"end = \"{end}\", typeFilter = \"{typeFilter}\", " +
-                    $"since = \"{since}\", count = \"{count}\" }}";
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Orchestration Service Request Submitted",
-                    message,
-                    fileName: string.Empty,
-                    correlationId: correlationId.ToString());
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Retrieve active providers and execute request",
-                    message,
-                    fileName: string.Empty,
-                    correlationId: correlationId.ToString());
-
-                IQueryable<Provider> allProviders =
-                    await this.providerService.RetrieveAllProvidersAsync();
-
-                List<Provider> orderedProviders = allProviders
-                    .OrderByDescending(provider => provider.IsPrimary)
-                    .ToList();
-
-                DateTimeOffset now = DateTimeOffset.UtcNow;
-
-                List<Provider> primaryProviders = orderedProviders
-                    .Where(provider =>
-                        provider.IsPrimary &&
-                        provider.IsActive &&
-                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
-                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
-                        provider.FhirVersion == "STU3")
-                    .ToList();
-
-                ValidatePrimaryProviders(primaryProviders);
-                string primaryProviderName = primaryProviders.First().FullyQualifiedName;
-
-                List<string> activeProviderNames = orderedProviders
-                    .Where(provider =>
-                        provider.IsActive &&
-                        (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
-                        (provider.ActiveTo == null || provider.ActiveTo >= now) &&
-                        provider.FhirVersion == "STU3" &&
-                        !provider.IsForComparisonOnly)
-                    .Select(provider => provider.FullyQualifiedName)
-                    .ToList();
-
-                List<string> bundles = await this.patientService.EverythingSerialisedAsync(
-                    providerNames: activeProviderNames,
-                    correlationId,
-                    id,
-                    start,
-                    end,
-                    typeFilter,
-                    since,
-                    count,
-                    cancellationToken);
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Reconcile bundles",
-                    message,
-                    fileName: string.Empty,
-                    correlationId: correlationId.ToString());
-
-                string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
-                    bundles: bundles,
-                    primaryProviderName: primaryProviderName);
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Orchestration Service Request Completed",
-                    message,
-                    fileName: string.Empty,
-                    correlationId: correlationId.ToString());
-
-                return reconciledBundle;
-            });
-
         public ValueTask<Bundle> GetStructuredRecordAsync(
             Guid correlationId,
             string nhsNumber,
@@ -266,39 +74,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: string.Empty,
                 correlationId: correlationId.ToString());
 
-            IQueryable<Provider> allProviders =
-                await this.providerService.RetrieveAllProvidersAsync();
-
-            List<Provider> orderedProviders = allProviders
-                .OrderByDescending(provider => provider.IsPrimary)
-                .ToList();
-
-            DateTimeOffset now = DateTimeOffset.UtcNow;
-
-            List<Provider> primaryProviders = orderedProviders
-                .Where(provider =>
-                    provider.IsPrimary &&
-                    provider.IsActive &&
-                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
-                    (provider.ActiveTo == null || provider.ActiveTo >= now) &&
-                    provider.FhirVersion == "STU3")
-                .ToList();
-
-            ValidatePrimaryProviders(primaryProviders);
-            string primaryProviderName = primaryProviders.First().FullyQualifiedName;
-
-            List<string> activeProviderNames = orderedProviders
-                .Where(provider =>
-                    provider.IsActive &&
-                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
-                    (provider.ActiveTo == null || provider.ActiveTo >= now) &&
-                    provider.FhirVersion == "STU3" &&
-                    !provider.IsForComparisonOnly)
-                .Select(provider => provider.FullyQualifiedName)
-                .ToList();
+            Provider primaryProvider;
+            List<Provider> activeProviders;
+            (primaryProvider, activeProviders) = await GetProviderInfo();
 
             List<Bundle> bundles = await this.patientService.GetStructuredRecordAsync(
-                providerNames: activeProviderNames,
+                activeProviders,
                 correlationId,
                 nhsNumber,
                 dateOfBirth,
@@ -315,7 +96,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 
             Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
                 bundles: bundles,
-                primaryProviderName: primaryProviderName);
+                primaryProvider: primaryProvider);
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
@@ -358,39 +139,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: string.Empty,
                 correlationId: correlationId.ToString());
 
-            IQueryable<Provider> allProviders =
-                await this.providerService.RetrieveAllProvidersAsync();
-
-            List<Provider> orderedProviders = allProviders
-                .OrderByDescending(provider => provider.IsPrimary)
-                .ToList();
-
-            DateTimeOffset now = DateTimeOffset.UtcNow;
-
-            List<Provider> primaryProviders = orderedProviders
-                .Where(provider =>
-                    provider.IsPrimary &&
-                    provider.IsActive &&
-                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
-                    (provider.ActiveTo == null || provider.ActiveTo >= now) &&
-                    provider.FhirVersion == "STU3")
-                .ToList();
-
-            ValidatePrimaryProviders(primaryProviders);
-            string primaryProviderName = primaryProviders.First().FullyQualifiedName;
-
-            List<string> activeProviderNames = orderedProviders
-                .Where(provider =>
-                    provider.IsActive &&
-                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
-                    (provider.ActiveTo == null || provider.ActiveTo >= now) &&
-                    provider.FhirVersion == "STU3" &&
-                    !provider.IsForComparisonOnly)
-                .Select(provider => provider.FullyQualifiedName)
-                .ToList();
+            Provider primaryProvider;
+            List<Provider> activeProviders;
+            (primaryProvider, activeProviders) = await GetProviderInfo();
 
             List<string> bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
-                providerNames: activeProviderNames,
+                activeProviders,
                 correlationId,
                 nhsNumber,
                 dateOfBirth,
@@ -407,7 +161,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 
             string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
                 bundles: bundles,
-                primaryProviderName: primaryProviderName);
+                primaryProvider: primaryProvider);
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
@@ -418,5 +172,38 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 
             return reconciledBundle;
         });
+
+        private async ValueTask<(Provider primaryProvider, List<Provider> activeProvider)> GetProviderInfo()
+        {
+            IQueryable<Provider> allProviders =
+                await this.providerService.RetrieveAllProvidersAsync();
+
+            List<Provider> orderedProviders = allProviders
+                .Where(provider => provider.FhirVersion == "STU3")
+                .OrderByDescending(provider => provider.IsPrimary)
+                .ToList();
+
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+
+            List<Provider> primaryProviders = orderedProviders
+                .Where(provider =>
+                    provider.IsPrimary &&
+                    provider.IsActive &&
+                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                    (provider.ActiveTo == null || provider.ActiveTo >= now))
+                .ToList();
+
+            ValidatePrimaryProviders(primaryProviders);
+            Provider primaryProvider = primaryProviders.First();
+
+            List<Provider> activeProviders = orderedProviders
+                .Where(provider =>
+                    provider.IsActive &&
+                    (provider.ActiveFrom == null || provider.ActiveFrom <= now) &&
+                    (provider.ActiveTo == null || provider.ActiveTo >= now))
+                .ToList();
+
+            return (primaryProvider, activeProviders);
+        }
     }
 }
