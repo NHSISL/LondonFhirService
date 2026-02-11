@@ -22,7 +22,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             int inputBatchSize = randomBatchSize;
 
             var auditServiceMock = new Mock<AuditService>(
-                this.storageBrokerMock.Object,
+                this.storageBrokerFactoryMock.Object,
                 this.identifierBrokerMock.Object,
                 this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
@@ -43,7 +43,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             auditServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
         }

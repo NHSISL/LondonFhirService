@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -39,6 +40,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.GetUserIdAsync())
                     .ReturnsAsync(randomUserId);
 
+            this.storageBrokerFactoryMock
+                .Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(this.storageBrokerMock.Object);
+
             this.storageBrokerMock.Setup(broker =>
                 broker.InsertAuditAsync(inputAudit))
                     .ReturnsAsync(storageAudit);
@@ -62,13 +67,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.GetUserIdAsync(),
                     Times.Once);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Once);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(inputAudit),
                     Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }

@@ -410,7 +410,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                 await this.auditBroker.LogInformationAsync(
                     $"{auditType}-DATA",
-                    title: $"{provider.DisplayName} - DATA",
+                    title: $"{provider.DisplayName} - DATA ({providerFriendlyName})",
                     json,
                     fileName: string.Empty,
                     correlationId: correlationId.ToString());
