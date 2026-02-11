@@ -95,7 +95,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         public ValueTask<IQueryable<Audit>> RetrieveAllAuditsAsync() =>
         TryCatch(async () =>
         {
-            await using StorageBroker storageBroker =
+            StorageBroker storageBroker =
                 await this.storageBrokerFactory.CreateDbContextAsync();
 
             return await storageBroker.SelectAllAuditsAsync();
@@ -122,6 +122,9 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             int totalRecords = audits.Count;
             var exceptions = new List<Exception>();
 
+            await using StorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateDbContextAsync();
+
             for (int i = 0; i < totalRecords; i += batchSize)
             {
                 try
@@ -131,9 +134,6 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                     if (batch.Count != 0)
                     {
                         List<Audit> validatedAudits = await ValidateAuditsAndAssignIdAndAuditAsync(batch);
-
-                        await using StorageBroker storageBroker =
-                            await this.storageBrokerFactory.CreateDbContextAsync();
 
                         await storageBroker.BulkInsertAuditsAsync(validatedAudits);
                     }

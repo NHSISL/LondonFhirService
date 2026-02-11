@@ -32,7 +32,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
         private readonly IConfiguration configuration;
         private readonly DdsConfigurations ddsConfigurations;
         private readonly AccessConfigurations accessConfigurations;
-        private readonly IHashBroker hashBroker;
+        private static IHashBroker hashBroker = new HashBroker();
 
         public Stu3PatientTests(ApiBroker apiBroker, ITestOutputHelper output)
         {
@@ -59,7 +59,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                         ?? throw new InvalidOperationException(
                             "AccessConfigurations configuration section is missing or invalid.");
 
-            this.hashBroker = new HashBroker();
             this.apiBroker = apiBroker;
             this.output = output;
         }
@@ -281,7 +280,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
         {
             if (isHashed)
             {
-                var hashBroker = new HashBroker();
                 nhsNumber = await hashBroker.GenerateSha256HashAsync(nhsNumber, pepper);
             }
 

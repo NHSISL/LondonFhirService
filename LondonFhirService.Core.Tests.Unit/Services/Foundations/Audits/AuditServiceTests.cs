@@ -54,12 +54,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.compareLogic = new CompareLogic();
 
-            //this.storageBrokerMock.Verify(broker => broker.DisposeAsync(), Times.AtLeast(0));
-            //this.storageBrokerMock.Protected().Verify("CreateErrorBroker", Times.AtLeastOnce());
-
-            //this.storageBrokerMock.Protected()
-            //    .Verify("CreateEFxceptionService", Times.AtLeastOnce(), ItExpr.IsAny<object>());
-
             this.auditService = new AuditService(
                 storageBrokerFactory: this.storageBrokerFactoryMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
