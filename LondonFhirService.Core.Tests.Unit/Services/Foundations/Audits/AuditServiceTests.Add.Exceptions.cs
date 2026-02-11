@@ -53,6 +53,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.ApplyAddAuditValuesAsync(It.IsAny<Audit>()),
                     Times.Once);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Never);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(It.IsAny<Audit>()),
                     Times.Never);
@@ -63,7 +67,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -109,6 +115,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.ApplyAddAuditValuesAsync(It.IsAny<Audit>()),
                     Times.Once);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Never);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(It.IsAny<Audit>()),
                     Times.Never);
@@ -119,6 +129,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -170,6 +181,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     expectedAuditValidationException))),
                         Times.Once);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Never);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(someAudit),
                     Times.Never());
@@ -177,6 +192,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -219,6 +235,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.ApplyAddAuditValuesAsync(It.IsAny<Audit>()),
                     Times.Once);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Never);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(It.IsAny<Audit>()),
                     Times.Never);
@@ -229,6 +249,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -271,6 +292,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.ApplyAddAuditValuesAsync(It.IsAny<Audit>()),
                     Times.Once);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Never);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(It.IsAny<Audit>()),
                     Times.Never);
@@ -281,6 +306,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();

@@ -89,9 +89,8 @@ public partial class Program
         // ----------------- Core ASP.NET services -----------------
         builder.Services.AddSwaggerGen();
         builder.Services.AddAuthorization();
-        builder.Services.AddDbContext<StorageBroker>();
+        builder.Services.AddDbContextFactory<StorageBroker>();
         builder.Services.AddHttpContextAccessor();
-
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 

@@ -90,7 +90,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     $"{auditType}-DATA",
-                    $"{fhirProvider.DisplayName} - DATA",
+                    $"{fhirProvider.DisplayName} - DATA ({inputFhirProviderName})",
                     rawOutputBundle,
                     string.Empty,
                     correlationId.ToString()),

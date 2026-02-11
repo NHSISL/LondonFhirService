@@ -15,22 +15,22 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
     {
         public DbSet<Audit> Audits { get; set; }
 
-        public async ValueTask BulkInsertAuditsAsync(List<Audit> audits) =>
+        public virtual async ValueTask BulkInsertAuditsAsync(List<Audit> audits) =>
             await BulkInsertAsync(audits);
 
-        public async ValueTask<Audit> InsertAuditAsync(Audit audit) =>
+        public virtual async ValueTask<Audit> InsertAuditAsync(Audit audit) =>
             await InsertAsync(audit);
 
-        public async ValueTask<IQueryable<Audit>> SelectAllAuditsAsync() =>
+        public virtual async ValueTask<IQueryable<Audit>> SelectAllAuditsAsync() =>
             await SelectAllAsync<Audit>();
 
-        public async ValueTask<Audit> SelectAuditByIdAsync(Guid auditId) =>
+        public virtual async ValueTask<Audit> SelectAuditByIdAsync(Guid auditId) =>
             await SelectAsync<Audit>(auditId);
 
-        public async ValueTask<Audit> UpdateAuditAsync(Audit audit) =>
+        public virtual async ValueTask<Audit> UpdateAuditAsync(Audit audit) =>
             await UpdateAsync(audit);
 
-        public async ValueTask<Audit> DeleteAuditAsync(Audit audit) =>
+        public virtual async ValueTask<Audit> DeleteAuditAsync(Audit audit) =>
             await DeleteAsync(audit);
     }
 }

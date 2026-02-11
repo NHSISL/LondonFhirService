@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using Moq;
@@ -49,11 +50,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     expectedAuditValidationException))),
                         Times.Once);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Never);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectAuditByIdAsync(It.IsAny<Guid>()),
                     Times.Never);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -74,6 +80,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     message: "Audit validation errors occurred, please try again.",
                     innerException: notFoundAuditException);
 
+            this.storageBrokerFactoryMock.Setup(broker =>
+                broker.CreateDbContextAsync())
+                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
+
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(It.IsAny<Guid>()))
                     .ReturnsAsync(noAudit);
@@ -89,6 +99,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             //then
             actualAuditValidationException.Should().BeEquivalentTo(expectedAuditValidationException);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Once);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectAuditByIdAsync(It.IsAny<Guid>()),
                     Times.Once());
@@ -98,7 +112,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     expectedAuditValidationException))),
                         Times.Once);
 
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();

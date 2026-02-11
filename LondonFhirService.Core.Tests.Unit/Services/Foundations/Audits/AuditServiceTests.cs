@@ -17,6 +17,8 @@ using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
@@ -25,7 +27,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 {
     public partial class AuditServiceTests
     {
-        private readonly Mock<IStorageBroker> storageBrokerMock;
+        private readonly Mock<IDbContextFactory<StorageBroker>> storageBrokerFactoryMock;
+        private readonly Mock<StorageBroker> storageBrokerMock;
+        private readonly Mock<IConfiguration> configurationMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
@@ -35,7 +39,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
         public AuditServiceTests()
         {
-            this.storageBrokerMock = new Mock<IStorageBroker>();
+            this.configurationMock = new Mock<IConfiguration>();
+
+            this.storageBrokerMock = new Mock<StorageBroker>(this.configurationMock.Object)
+            {
+                CallBase = true,
+                DefaultValue = DefaultValue.Empty
+            };
+
+            this.storageBrokerFactoryMock = new Mock<IDbContextFactory<StorageBroker>>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
@@ -43,7 +55,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.compareLogic = new CompareLogic();
 
             this.auditService = new AuditService(
-                storageBroker: this.storageBrokerMock.Object,
+                storageBrokerFactory: this.storageBrokerFactoryMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 securityAuditBroker: this.securityAuditBrokerMock.Object,

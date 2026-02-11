@@ -6,6 +6,7 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
+using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using Moq;
 
@@ -39,6 +40,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.GetUserIdAsync())
                     .ReturnsAsync(randomUserId);
 
+            this.storageBrokerFactoryMock.Setup(broker =>
+                broker.CreateDbContextAsync())
+                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
+
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(auditId))
                     .ReturnsAsync(storageAudit);
@@ -66,6 +71,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.GetUserIdAsync(),
                     Times.Once);
 
+            this.storageBrokerFactoryMock.Verify(broker =>
+                broker.CreateDbContextAsync(),
+                    Times.Once);
+
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectAuditByIdAsync(inputAudit.Id),
                     Times.Once);
@@ -76,7 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }
