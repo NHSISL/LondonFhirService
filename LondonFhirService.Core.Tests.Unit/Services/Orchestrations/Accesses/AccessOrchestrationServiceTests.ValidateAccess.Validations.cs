@@ -205,7 +205,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             var forbiddenAccessOrchestrationException =
                 new ForbiddenAccessOrchestrationException(
-                   "Current consumer is not active or does not have a valid access window.");
+                   "Current consumer is not active or does not have a valid access window.  " +
+                        $"CorrelationId: {correlationId.ToString()}");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
@@ -264,7 +265,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
                     $"Access was forbidden as consumer with id {inputConsumer.Id} " +
                         $"is not active / does not have valid access window " +
-                            $"(ActiveFrom: {inputConsumer.ActiveFrom}, ActiveTo: {inputConsumer.ActiveTo})",
+                            $"(ActiveFrom: {inputConsumer.ActiveFrom}, ActiveTo: {inputConsumer.ActiveTo})  " +
+                                $"CorrelationId: {correlationId.ToString()}",
                     null,
                     correlationId.ToString()),
                         Times.Once);
@@ -322,7 +324,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 new List<Consumer> { inputConsumer }.AsQueryable();
 
             Guid randomGuid = Guid.NewGuid();
-            string randomNhsNumber = GetRandomStringWithLength(5);
+            string randomNhsNumber = GetRandomStringWithLength(10);
             string inputNhsNumber = randomNhsNumber;
 
             string userOrganisation = GetRandomStringWithLength(5);
@@ -415,8 +417,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                         $"NHS number {inputNhsNumber} and patient identifier " +
                         $"'{inputNhsNumber.Substring(0, 5)}..." +
                         $"{inputNhsNumber.Substring(inputNhsNumber.Length - 5)}' and " +
-                        $"pepper '{accessConfigurations.HashPepper.Substring(0, 5)}..." +
-                        $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 5)}'",
+                        $"pepper '{accessConfigurations.HashPepper.Substring(0, 15)}..." +
+                        $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 15)}'  " +
+                        $"CorrelationId: {correlationId.ToString()}",
                     null,
                     correlationId.ToString()),
                         Times.Once);

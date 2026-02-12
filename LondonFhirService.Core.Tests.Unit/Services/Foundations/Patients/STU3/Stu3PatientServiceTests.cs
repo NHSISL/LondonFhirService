@@ -2,14 +2,13 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirStu3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-using FhirStu3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
@@ -22,8 +21,8 @@ using LondonFhirService.Providers.FHIR.STU3.Abstractions.Models.Exceptions;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
-using AdministrativeGender = FhirStu3::Hl7.Fhir.Model.AdministrativeGender;
-using Patient = FhirStu3::Hl7.Fhir.Model.Patient;
+using AdministrativeGender = Hl7.Fhir.Model.AdministrativeGender;
+using Patient = Hl7.Fhir.Model.Patient;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 {
@@ -226,6 +225,42 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     innerException: innerException,
                     data: innerException.Data)
             };
+        }
+
+
+        private static Expression<Func<Exception, bool>> SameExceptionAsUnorderedAggregate(Exception expected) =>
+            actual => MatchesExceptionUnorderedAggregate(actual, expected);
+
+        private static bool MatchesExceptionUnorderedAggregate(Exception actual, Exception expected)
+        {
+            if (actual is AggregateException actualAgg &&
+                expected is AggregateException expectedAgg)
+            {
+                if (actualAgg.GetType() != expectedAgg.GetType())
+                    return false;
+
+                if (actualAgg.InnerExceptions.Count != expectedAgg.InnerExceptions.Count)
+                    return false;
+
+                // Compare inner exceptions as a multiset (order independent)
+                var unmatched = new List<Exception>(expectedAgg.InnerExceptions);
+
+                foreach (Exception actualInner in actualAgg.InnerExceptions)
+                {
+                    int matchIndex = unmatched.FindIndex(expectedInner =>
+                        actualInner.SameExceptionAs(expectedInner)); // your external helper
+
+                    if (matchIndex < 0)
+                        return false;
+
+                    unmatched.RemoveAt(matchIndex);
+                }
+
+                return true;
+            }
+
+            // Non-aggregate: defer to external library logic
+            return actual.SameExceptionAs(expected);
         }
     }
 }

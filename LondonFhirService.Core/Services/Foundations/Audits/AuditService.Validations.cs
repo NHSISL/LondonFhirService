@@ -137,7 +137,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         {
             if (maybeAudit is null)
             {
-                throw new NotFoundAuditServiceException(auditId);
+                throw new NotFoundAuditServiceException($"Couldn't find audit with auditId: {auditId}.");
             }
         }
 

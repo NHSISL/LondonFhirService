@@ -2,8 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirR4;
-extern alias FhirSTU3;
 using System.IO;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Storages.Sql;
@@ -13,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.ApplicationInsights;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,14 +40,16 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 // Shared InvisibleApiKey instance, also available via DI
 var invisibleApiKey = new InvisibleApiKey();
 builder.Services.AddSingleton(invisibleApiKey);
-builder.Services.AddApplicationInsightsTelemetry();
-builder.Logging.AddApplicationInsights();
 
 // Register health checks
 builder.Services.AddHealthChecks();
 
 // Register services using the host configuration (which tests can override)
 Program.ConfigureServices(builder);
+
+builder.Services.AddApplicationInsightsTelemetry();
+builder.Logging.AddApplicationInsights();
+builder.Logging.AddFilter<ApplicationInsightsLoggerProvider>(string.Empty, LogLevel.Information);
 
 var app = builder.Build();
 

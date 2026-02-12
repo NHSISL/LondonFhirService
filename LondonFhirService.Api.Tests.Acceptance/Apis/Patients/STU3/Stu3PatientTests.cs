@@ -304,19 +304,26 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
             return filler;
         }
 
-        private async Task<Provider> CreateRandomActiveProvider(
-            string providerName,
+        private async Task<Provider> CreateRandomActiveProviderIfNoneExist(
+            string providerFriendlyName,
+            string providerFullyQualifiedName,
             string fhirVersion,
             DateTimeOffset dateTimeOffset)
         {
-            Provider randomProvider = CreateActiveProviderFiller(providerName, fhirVersion, dateTimeOffset).Create();
+            Provider randomProvider = CreateActiveProviderFiller(
+                providerFriendlyName,
+                providerFullyQualifiedName,
+                fhirVersion,
+                dateTimeOffset).Create();
+
             Provider createdProvider = await SeedProviderAsync(randomProvider);
 
             return createdProvider;
         }
 
         private static Filler<Provider> CreateActiveProviderFiller(
-            string providerName,
+            string providerFriendlyName,
+            string providerFullyQualifiedName,
             string fhirVersion,
             DateTimeOffset dateTimeOffset)
         {
@@ -325,7 +332,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                .OnProperty(provider => provider.Name).Use(providerName)
+                .OnProperty(provider => provider.FriendlyName).Use(providerFriendlyName)
+                .OnProperty(provider => provider.FullyQualifiedName).Use(providerFullyQualifiedName)
                 .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
                 .OnProperty(provider => provider.IsActive).Use(true)
                 .OnProperty(provider => provider.IsPrimary).Use(true)
@@ -407,7 +415,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 // For non-primary, keep your original "idempotent by Name + FhirVersion"
                 var providerExists = providerQuery
                     .FirstOrDefault(p =>
-                        p.Name == provider.Name &&
+                        p.FullyQualifiedName == provider.FullyQualifiedName &&
                         p.FhirVersion == provider.FhirVersion &&
                         p.IsPrimary == provider.IsPrimary);
 

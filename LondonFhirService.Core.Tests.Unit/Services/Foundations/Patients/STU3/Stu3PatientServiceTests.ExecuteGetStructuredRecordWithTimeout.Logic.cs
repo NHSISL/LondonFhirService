@@ -34,6 +34,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Guid correlationId = Guid.NewGuid();
             string providerDisplayName = fhirProvider.DisplayName;
             string auditType = "STU3-Patient-GetStructuredRecord";
+            string fhirProviderFriendlyName = GetRandomString();
+            bool fhirIsPrimaryProvider = true;
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -73,6 +75,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    fhirProviderFriendlyName,
+                    fhirIsPrimaryProvider,
                     fhirProvider,
                     cancellationToken,
                     correlationId,
@@ -155,12 +159,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 new OperationCanceledException(alreadyCanceledToken);
 
             var fhirProvider = this.ddsFhirProviderMock.Object;
+            string fhirProviderFriendlyName = GetRandomString();
+            bool fhirIsPrimaryProvider = true;
 
             (Bundle Bundle, Exception Exception) expectedResult = (null, operationCanceledException);
 
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    fhirProviderFriendlyName,
+                    fhirIsPrimaryProvider,
                     fhirProvider,
                     alreadyCanceledToken,
                     correlationId,
@@ -197,6 +205,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var fhirProvider = this.ddsFhirProviderMock.Object;
             Guid correlationId = Guid.NewGuid();
             string auditType = "STU3-Patient-GetStructuredRecord";
+            string fhirProviderFriendlyName = GetRandomString();
+            bool fhirIsPrimaryProvider = true;
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{null}\", " +
@@ -216,6 +226,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    fhirProviderFriendlyName,
+                    fhirIsPrimaryProvider,
                     fhirProvider,
                     default,
                     correlationId,
@@ -264,6 +276,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var fhirProvider = this.ddsFhirProviderMock.Object;
             Guid correlationId = Guid.NewGuid();
             string auditType = "STU3-Patient-GetStructuredRecord";
+            string fhirProviderFriendlyName = GetRandomString();
+            bool fhirIsPrimaryProvider = true;
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{null}\", " +
@@ -283,6 +297,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    fhirProviderFriendlyName,
+                    fhirIsPrimaryProvider,
                     fhirProvider,
                     default,
                     correlationId,
@@ -332,6 +348,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string nhsNumber = randomId;
             Guid correlationId = Guid.NewGuid();
             string auditType = "STU3-Patient-GetStructuredRecord";
+            string fhirProviderFriendlyName = GetRandomString();
+            bool fhirIsPrimaryProvider = true;
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{null}\", " +
@@ -363,6 +381,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // when
             (Bundle Bundle, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordWithTimeoutAsync(
+                    fhirProviderFriendlyName,
+                    fhirIsPrimaryProvider,
                     fhirProvider,
                     default,
                     correlationId,

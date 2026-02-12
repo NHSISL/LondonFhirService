@@ -14,7 +14,7 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
         public async Task ShouldGenerateHashValues()
         {
             // given
-            string pepper = "pepper123!@";
+            string pepper = "P3pp3r!";
             string orgCode = "TESTICB1";
 
             Dictionary<string, string> nhsNumbers =
@@ -64,7 +64,20 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
                     ["9435777066"] = "",
                     ["9435797237"] = "",
                     ["9435769047"] = "",
-                    ["9435753973"] = ""
+                    ["9435753973"] = "",
+                    ["9999999999"] = "",
+                    ["9999999998"] = "",
+                    ["9999999997"] = "",
+                    ["9999999996"] = "",
+                    ["9999999995"] = "",
+                    ["9999999994"] = "",
+                    ["9999999993"] = "",
+                    ["9999999992"] = "",
+                    ["9999999991"] = "",
+                    ["9999999990"] = "",
+                    ["9999999982"] = "",
+                    ["9999999981"] = "",
+                    ["9999999980"] = ""
                 };
 
             // when
@@ -79,16 +92,18 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
             // then
             output.WriteLine("NHS Number, SHA256 Hash");
 
-            foreach ((string nhsNumber, string hash) in nhsNumbers)
-            {
-                output.WriteLine($"{nhsNumber}, {hash}");
-            }
+            //foreach ((string nhsNumber, string hash) in nhsNumbers)
+            //{
+            //    output.WriteLine($"{nhsNumber}, {hash}");
+            //}
 
             output.WriteLine("");
 
             foreach ((string nhsNumber, string hash) in nhsNumbers)
             {
-                output.WriteLine($"INSERT INTO [dbo].[PdsDatas] ([Id], [NhsNumber], [OrgCode]) VALUES (NEWID(), '{hash}', '{orgCode}');");
+                output.WriteLine(
+                    $"INSERT INTO [dbo].[PdsDatas] ([Id], [NhsNumber], [OrgCode]) " +
+                    $"VALUES (NEWID(), '{hash}', '{orgCode}');");
             }
         }
     }

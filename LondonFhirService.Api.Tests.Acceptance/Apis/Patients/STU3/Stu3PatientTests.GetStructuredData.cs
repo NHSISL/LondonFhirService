@@ -2,7 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirSTU3;
 using System;
 using FluentAssertions;
 using Hl7.Fhir.Model;
@@ -11,7 +10,7 @@ using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
-using Patient = FhirSTU3::Hl7.Fhir.Model.Patient;
+using Patient = Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
@@ -45,8 +44,12 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 DateTimeOffset inputSince = randomInputSince;
                 int randomInputCount = GetRandomNumber();
                 int inputCount = randomInputCount;
-                string providerName = "LDS";
                 string fhirVersion = "STU3";
+                string providerFriendlyName = "DDS";
+
+                string providerFullyQualifiedName =
+                    "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
+
                 bool useHashedNhsNumber = accessConfigurations.UseHashedNhsNumber;
 
                 Parameters inputParameters = CreateRandomParametersGetStructuredData(
@@ -65,7 +68,12 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                     userId);
 
                 pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now, useHashedNhsNumber);
-                provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
+
+                provider = await CreateRandomActiveProviderIfNoneExist(
+                    providerFriendlyName,
+                    providerFullyQualifiedName,
+                    fhirVersion,
+                    now);
 
                 // when
                 Bundle actualBundle =
@@ -88,7 +96,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 await CleanupOdsDataAsync(odsData);
                 await CleanupConsumerAccessAsync(consumerAccess);
                 await CleanupConsumerAsync(consumer);
-                await CleanupProviderAsync(provider);
             }
         }
     }

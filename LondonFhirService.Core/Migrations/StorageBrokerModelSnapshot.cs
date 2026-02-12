@@ -250,11 +250,6 @@ namespace LondonFhirService.Core.Migrations
                     b.Property<DateTimeOffset?>("ActiveTo")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -268,6 +263,16 @@ namespace LondonFhirService.Core.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<string>("FriendlyName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FullyQualifiedName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -276,16 +281,6 @@ namespace LondonFhirService.Core.Migrations
 
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("System")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
@@ -302,7 +297,7 @@ namespace LondonFhirService.Core.Migrations
                         .HasDatabaseName("UX_Provider_FhirVersion_PrimaryOnly")
                         .HasFilter("[IsPrimary] = 1");
 
-                    b.HasIndex("Name")
+                    b.HasIndex("FriendlyName")
                         .IsUnique();
 
                     b.ToTable("Providers", (string)null);

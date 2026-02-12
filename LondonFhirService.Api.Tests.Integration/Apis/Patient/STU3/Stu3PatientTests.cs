@@ -8,12 +8,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Tests.Integration.Brokers;
+using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,11 +28,13 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
     public partial class Stu3PatientTests
     {
         private readonly ApiBroker apiBroker;
-        private readonly ITestOutputHelper testOutputHelper;
+        private readonly ITestOutputHelper output;
         private readonly IConfiguration configuration;
         private readonly DdsConfigurations ddsConfigurations;
+        private readonly AccessConfigurations accessConfigurations;
+        private static IHashBroker hashBroker = new HashBroker();
 
-        public Stu3PatientTests(ApiBroker apiBroker, ITestOutputHelper testOutputHelper)
+        public Stu3PatientTests(ApiBroker apiBroker, ITestOutputHelper output)
         {
             var testProjectPath =
                 Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
@@ -48,8 +52,15 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                         ?? throw new InvalidOperationException(
                             "DdsConfigurations configuration section is missing or invalid.");
 
+            accessConfigurations =
+                configuration
+                    .GetSection("AccessConfigurations")
+                    .Get<AccessConfigurations>()
+                        ?? throw new InvalidOperationException(
+                            "AccessConfigurations configuration section is missing or invalid.");
+
             this.apiBroker = apiBroker;
-            this.testOutputHelper = testOutputHelper;
+            this.output = output;
         }
 
         private static int GetRandomNumber() =>
@@ -135,7 +146,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                .OnProperty(provider => provider.Name).Use(providerName)
+                .OnProperty(provider => provider.FullyQualifiedName).Use(providerName)
                 .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
                 .OnProperty(provider => provider.IsActive).Use(true)
                 .OnProperty(provider => provider.IsPrimary).Use(true)
@@ -248,19 +259,30 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
         private async Task<PdsData> CreateRandomPdsData(
             string nhsNumber,
             string organisationCode,
-            DateTimeOffset dateTimeOffset)
+            DateTimeOffset dateTimeOffset,
+            bool isHashed = true,
+            string pepper = "")
         {
-            PdsData randomPdsData = CreatePdsDataFiller(nhsNumber, organisationCode, dateTimeOffset).Create();
-            PdsData createdPdsData = await SeedPdsDataAsync(randomPdsData);
+            Filler<PdsData> randomFillerPdsData =
+                await CreatePdsDataFiller(nhsNumber, organisationCode, dateTimeOffset, isHashed, pepper);
+
+            PdsData createdPdsData = await SeedPdsDataAsync(randomFillerPdsData.Create());
 
             return createdPdsData;
         }
 
-        private static Filler<PdsData> CreatePdsDataFiller(
+        private static async ValueTask<Filler<PdsData>> CreatePdsDataFiller(
             string nhsNumber,
             string organisationCode,
-            DateTimeOffset dateTimeOffset)
+            DateTimeOffset dateTimeOffset,
+            bool isHashed = true,
+            string pepper = "")
         {
+            if (isHashed)
+            {
+                nhsNumber = await hashBroker.GenerateSha256HashAsync(nhsNumber, pepper);
+            }
+
             var filler = new Filler<PdsData>();
 
             filler.Setup()
@@ -345,7 +367,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                 // For non-primary, keep your original "idempotent by Name + FhirVersion"
                 var providerExists = providerQuery
                     .FirstOrDefault(p =>
-                        p.Name == provider.Name &&
+                        p.FullyQualifiedName == provider.FullyQualifiedName &&
                         p.FhirVersion == provider.FhirVersion &&
                         p.IsPrimary == provider.IsPrimary);
 

@@ -2,10 +2,9 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-extern alias FhirSTU3;
 using System;
-using FhirSTU3::Hl7.Fhir.Serialization;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using LondonFhirService.Api.Controllers.STU3;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;

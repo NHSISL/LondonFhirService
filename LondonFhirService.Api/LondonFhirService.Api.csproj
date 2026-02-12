@@ -15,8 +15,7 @@
 	<ItemGroup>
 		<PackageReference Include="Attrify" Version="0.0.0.2" />
 		<PackageReference Include="FluentAssertions" Version="7.2.0" />
-		<PackageReference Include="Hl7.Fhir.R4" Version="6.0.1" Aliases="FhirR4" />
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.1" Aliases="FhirSTU3" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.1" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />

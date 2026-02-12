@@ -11,24 +11,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
     public interface IStu3PatientCoordinationService
     {
-        ValueTask<Bundle> EverythingAsync(
-            string id,
-            DateTimeOffset? start = null,
-            DateTimeOffset? end = null,
-            string typeFilter = null,
-            DateTimeOffset? since = null,
-            int? count = null,
-            CancellationToken cancellationToken = default);
-
-        ValueTask<string> EverythingSerialisedAsync(
-            string id,
-            DateTimeOffset? start = null,
-            DateTimeOffset? end = null,
-            string typeFilter = null,
-            DateTimeOffset? since = null,
-            int? count = null,
-            CancellationToken cancellationToken = default);
-
         ValueTask<Bundle> GetStructuredRecordAsync(
             string nhsNumber,
             DateTime? dateOfBirth = null,
