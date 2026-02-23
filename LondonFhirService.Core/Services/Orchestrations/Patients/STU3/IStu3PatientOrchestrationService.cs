@@ -14,7 +14,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         ValueTask<Bundle> GetStructuredRecordAsync(
             Guid correlationId,
             string nhsNumber,
-            DateTime? dateOfBirth = null,
+            string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
             CancellationToken cancellationToken = default);
@@ -22,7 +22,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         ValueTask<string> GetStructuredRecordSerialisedAsync(
             Guid correlationId,
             string nhsNumber,
-            DateTime? dateOfBirth = null,
+            string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
             CancellationToken cancellationToken = default);

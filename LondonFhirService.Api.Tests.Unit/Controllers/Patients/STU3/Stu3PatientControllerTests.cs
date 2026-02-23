@@ -86,7 +86,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
         private static Parameters CreateRandomGetStructuredRecordParameters(
             string nhsNumber,
-            DateTimeOffset? dateOfBirth = null,
+            string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null)
         {
@@ -100,9 +100,9 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                     Value = nhsNumber
                 });
 
-            if (dateOfBirth.HasValue)
+            if (!string.IsNullOrWhiteSpace(dateOfBirth))
             {
-                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth.Value));
+                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth));
             }
 
             if (demographicsOnly.HasValue)

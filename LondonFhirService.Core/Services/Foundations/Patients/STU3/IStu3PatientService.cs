@@ -17,7 +17,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             List<Provider> activeProviders,
             Guid correlationId,
             string nhsNumber,
-            DateTime? dateOfBirth = null,
+            string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
             CancellationToken cancellationToken = default);
@@ -26,7 +26,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             List<Provider> activeProviders,
             Guid correlationId,
             string nhsNumber,
-            DateTime? dateOfBirth = null,
+            string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
             CancellationToken cancellationToken = default);

@@ -153,7 +153,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -314,7 +314,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -469,7 +469,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -644,7 +644,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<Bundle> expectedBundles = new List<Bundle>();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -814,7 +814,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -987,7 +987,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<Bundle> expectedBundles = new List<Bundle>();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
