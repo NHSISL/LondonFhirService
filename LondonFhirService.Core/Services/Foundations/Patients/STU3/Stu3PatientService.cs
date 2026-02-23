@@ -307,7 +307,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
             try
             {
-                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? string.Empty : dateOfBirth.Trim();
+                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? null : dateOfBirth.Trim();
 
                 var bundle = await provider.Patients.GetStructuredRecordAsync(
                     nhsNumber,
@@ -402,7 +402,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
             try
             {
-                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? string.Empty : dateOfBirth.Trim();
+                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? null : dateOfBirth.Trim();
 
                 var json = await provider.Patients.GetStructuredRecordSerialisedAsync(
                     nhsNumber,
