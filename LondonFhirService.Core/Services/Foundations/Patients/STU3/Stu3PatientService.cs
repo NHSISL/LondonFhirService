@@ -52,6 +52,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? null : dateOfBirth.Trim();
                 ValidateOnGetStructuredRecord(activeProviders, nhsNumber, dateOfBirth, correlationId);
                 string auditType = "STU3-Patient-GetStructuredRecord";
 
@@ -141,6 +142,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? null : dateOfBirth.Trim();
                 ValidateOnGetStructuredRecord(activeProviders, nhsNumber, dateOfBirth, correlationId);
                 string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
@@ -307,8 +309,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
             try
             {
-                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? null : dateOfBirth.Trim();
-
                 var bundle = await provider.Patients.GetStructuredRecordAsync(
                     nhsNumber,
                     dateOfBirth,
@@ -402,8 +402,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
             try
             {
-                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? null : dateOfBirth.Trim();
-
                 var json = await provider.Patients.GetStructuredRecordSerialisedAsync(
                     nhsNumber,
                     dateOfBirth,
