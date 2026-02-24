@@ -45,6 +45,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                         //["AzureAd:Scopes"]   = "api://test/.default"
                     });
             };
+
+            Program.ExcludeAppInsightsForTesting = true;
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -103,14 +105,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void OverrideFhirProvidersForTesting(IServiceCollection services)
         {
-            //var fhirR4AbstractionProviderDescriptor = services
-            //    .FirstOrDefault(d => d.ServiceType == typeof(FhirR4Abstractions.IFhirAbstractionProvider));
-
-            //if (fhirR4AbstractionProviderDescriptor != null)
-            //{
-            //    services.Remove(fhirR4AbstractionProviderDescriptor);
-            //}
-
             var fhirStu3AbstractionProviderDescriptor = services
                 .FirstOrDefault(d => d.ServiceType == typeof(FhirStu3Abstractions.IFhirAbstractionProvider));
 
@@ -118,14 +112,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             {
                 services.Remove(fhirStu3AbstractionProviderDescriptor);
             }
-
-            //var fhirR4BrokerDescriptor = services
-            //    .FirstOrDefault(d => d.ServiceType == typeof(IR4FhirBroker));
-
-            //if (fhirR4BrokerDescriptor != null)
-            //{
-            //    services.Remove(fhirR4BrokerDescriptor);
-            //}
 
             var fhirStu3BrokerDescriptor = services
                 .FirstOrDefault(d => d.ServiceType == typeof(IStu3FhirBroker));
@@ -143,20 +129,11 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 services.Remove(patientServiceConfigDescriptor);
             }
 
-            //var testR4Providers = new List<FhirR4Abstractions.IFhirProvider>
-            //{
-            //    TestR4FhirProviderFactory.CreateTestProvider("DDS"),
-            //    TestR4FhirProviderFactory.CreateTestProvider("LDS")
-            //};
-
-            //services.AddSingleton<FhirR4Abstractions.IFhirAbstractionProvider>(
-            //    new FhirR4Abstractions.FhirAbstractionProvider(testR4Providers));
-
-            //services.AddTransient<IR4FhirBroker, R4FhirBroker>();
-
             var testStu3Providers = new List<FhirStu3Abstractions.IFhirProvider>
             {
-                TestStu3FhirProviderFactory.CreateTestProvider("DDS"),
+                TestStu3FhirProviderFactory.CreateTestProvider(
+                    "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider"),
+
                 TestStu3FhirProviderFactory.CreateTestProvider("LDS")
             };
 

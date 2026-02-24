@@ -27,7 +27,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputNhsNumber = randomNhsNumber;
             var fhirProvider = this.ddsFhirProviderMock.Object;
             var fhirProviderCopy = this.ddsFhirProviderMock.Object.DeepClone();
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;

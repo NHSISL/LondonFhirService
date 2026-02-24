@@ -36,6 +36,8 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
                         //["AzureAd:Scopes"]   = "api://test/.default"
                     });
             };
+
+            Program.ExcludeAppInsightsForTesting = true;
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)

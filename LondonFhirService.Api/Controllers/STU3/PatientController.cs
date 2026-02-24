@@ -37,7 +37,7 @@ namespace LondonFhirService.Api.Controllers.STU3
             {
                 string nhsNumber = ExtractStringParameter(parameters, "patientNHSNumber");
                 DateTimeOffset? dateOfBirth = ExtractDateTimeParameter(parameters, "dateOfBirth");
-                DateTime? dateOfBirthDateTime = dateOfBirth.HasValue ? dateOfBirth.Value.DateTime : null;
+                string dateOfBirthDateTime = dateOfBirth.HasValue ? dateOfBirth.Value.ToString("yyyy-MM-dd") : null;
                 bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
                 bool? includeInactivePatients = ExtractBoolParameter(parameters, "includeInactivePatients");
 

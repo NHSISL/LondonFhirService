@@ -41,7 +41,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -52,11 +51,20 @@ using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 public partial class Program
 {
-    internal static Action<WebApplicationBuilder>? TestConfigurationOverrides { get; set; }
+    internal static Action<WebApplicationBuilder>? TestConfigurationOverrides { get; set; } = null;
+    internal static bool ExcludeAppInsightsForTesting { get; set; } = false;
 
     internal static void ConfigurationOverridesForTesting(WebApplicationBuilder builder)
     {
         TestConfigurationOverrides?.Invoke(builder);
+    }
+
+    internal static void ConfigureApplicationInsightsTelemetry(WebApplicationBuilder builder)
+    {
+        if (ExcludeAppInsightsForTesting == false)
+        {
+            builder.Services.AddApplicationInsightsTelemetry();
+        }
     }
 
     internal static void ConfigureServices(WebApplicationBuilder builder)

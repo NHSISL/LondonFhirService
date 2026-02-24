@@ -10,14 +10,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="CompareNETObjects" Version="4.84.0" />
-		<PackageReference Include="coverlet.collector" Version="6.0.4">
+		<PackageReference Include="coverlet.collector" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="DeepCloner" Version="0.10.4" />
 		<PackageReference Include="FluentAssertions" Version="7.2.0" />
-		<PackageReference Include="Hl7.Fhir.R4" Version="6.0.1" Aliases="FhirR4" />
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.1" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
 		<PackageReference Include="Moq" Version="4.20.72" />
