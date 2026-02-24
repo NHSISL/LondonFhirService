@@ -36,13 +36,14 @@ namespace LondonFhirService.Api.Controllers.STU3
             try
             {
                 string nhsNumber = ExtractStringParameter(parameters, "patientNHSNumber");
-                string dateOfBirth = ExtractStringParameter(parameters, "dateOfBirth");
+                DateTimeOffset? dateOfBirth = ExtractDateTimeParameter(parameters, "dateOfBirth");
+                string dateOfBirthDateTime = dateOfBirth.HasValue ? dateOfBirth.Value.ToString("yyyy-MM-dd") : null;
                 bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
                 bool? includeInactivePatients = ExtractBoolParameter(parameters, "includeInactivePatients");
 
                 string bundle = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
                     nhsNumber,
-                    dateOfBirth,
+                    dateOfBirthDateTime,
                     demographicsOnly,
                     includeInactivePatients,
                     cancellationToken);

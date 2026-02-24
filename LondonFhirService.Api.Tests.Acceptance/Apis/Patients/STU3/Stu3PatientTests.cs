@@ -133,7 +133,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 });
             }
 
-            if (demographicsOnly.HasValue)
+            if (demographicsOnly.HasValue && demographicsOnly.Value == true)
             {
                 parameters.Parameter.Add(new Parameters.ParameterComponent
                 {
@@ -149,7 +149,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 });
             }
 
-            if (includeInactivePatients.HasValue)
+            if (includeInactivePatients.HasValue && includeInactivePatients.Value == true)
             {
                 parameters.Parameter.Add(new Parameters.ParameterComponent
                 {

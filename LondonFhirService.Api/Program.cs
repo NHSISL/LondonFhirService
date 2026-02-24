@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.ApplicationInsights;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,10 +44,7 @@ builder.Services.AddHealthChecks();
 
 // Register services using the host configuration (which tests can override)
 Program.ConfigureServices(builder);
-
-builder.Services.AddApplicationInsightsTelemetry();
-builder.Logging.AddApplicationInsights();
-builder.Logging.AddFilter<ApplicationInsightsLoggerProvider>(string.Empty, LogLevel.Information);
+Program.ConfigureApplicationInsightsTelemetry(builder);
 
 var app = builder.Build();
 
