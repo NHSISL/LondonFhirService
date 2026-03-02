@@ -441,6 +441,18 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             }
             catch (Exception exception)
             {
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution - {provider.DisplayName} failed",
+
+                    message:
+                        $"{exception.Message} " +
+                        $"{exception?.InnerException?.Message} " +
+                        $"{exception?.InnerException?.InnerException.Message}",
+
+                    fileName: string.Empty,
+                    correlationId: correlationId.ToString());
+
                 return (null, exception);
             }
         }
