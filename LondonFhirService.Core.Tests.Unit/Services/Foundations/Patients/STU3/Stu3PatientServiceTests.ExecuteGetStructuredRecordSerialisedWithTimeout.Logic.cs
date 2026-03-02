@@ -298,6 +298,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"Parallel Provider Execution - {fhirProvider.DisplayName} failed",
+                    It.IsAny<string>(),
+                    string.Empty,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.ddsFhirProviderMock.Verify(provider =>
                 provider.DisplayName,
                     Times.AtLeastOnce);
