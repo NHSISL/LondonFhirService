@@ -35,7 +35,7 @@ namespace LondonFhirService.Api.Controllers.STU3
             try
             {
                 string nhsNumber = ExtractStringParameter(parameters, "patientNHSNumber");
-                string dateOfBirth = ExtractDateTimeParameter(parameters, "patientDOB");
+                string dateOfBirth = ExtractStringParameter(parameters, "patientDOB");
 
                 bool? demographicsOnly =
                     ExtractBoolParameter(parameters, "demographicsOnly", partName: "includeDemographicsOnly");
@@ -86,25 +86,6 @@ namespace LondonFhirService.Api.Controllers.STU3
             }
 
             return null;
-        }
-
-        private static string ExtractDateTimeParameter(Parameters parameters, string name)
-        {
-            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
-
-            if (parameter?.Value is not null)
-            {
-                return ((Identifier)parameter.Value).Value.ToString();
-            }
-
-            return null;
-        }
-
-        private static int? ExtractIntParameter(Parameters parameters, string name)
-        {
-            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
-
-            return parameter?.Value is Integer integer ? integer.Value : null;
         }
 
         private static bool? ExtractBoolParameter(Parameters parameters, string name, string partName = null)
