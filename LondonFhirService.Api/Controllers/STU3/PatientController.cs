@@ -2,7 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,14 +35,17 @@ namespace LondonFhirService.Api.Controllers.STU3
             try
             {
                 string nhsNumber = ExtractStringParameter(parameters, "patientNHSNumber");
-                DateTimeOffset? dateOfBirth = ExtractDateTimeParameter(parameters, "dateOfBirth");
-                string dateOfBirthDateTime = dateOfBirth.HasValue ? dateOfBirth.Value.ToString("yyyy-MM-dd") : null;
-                bool? demographicsOnly = ExtractBoolParameter(parameters, "demographicsOnly");
-                bool? includeInactivePatients = ExtractBoolParameter(parameters, "includeInactivePatients");
+                string dateOfBirth = ExtractStringParameter(parameters, "patientDOB");
+
+                bool? demographicsOnly =
+                    ExtractBoolParameter(parameters, "demographicsOnly", partName: "includeDemographicsOnly");
+
+                bool? includeInactivePatients =
+                    ExtractBoolParameter(parameters, "includeInactivePatients", partName: "includeInactivePatients");
 
                 string bundle = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
                     nhsNumber,
-                    dateOfBirthDateTime,
+                    dateOfBirth,
                     demographicsOnly,
                     includeInactivePatients,
                     cancellationToken);
@@ -86,35 +88,18 @@ namespace LondonFhirService.Api.Controllers.STU3
             return null;
         }
 
-        private static DateTimeOffset? ExtractDateTimeParameter(Parameters parameters, string name)
+        private static bool? ExtractBoolParameter(Parameters parameters, string name, string partName = null)
         {
             var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
 
-            if (parameter?.Value is FhirDateTime fhirDateTime && fhirDateTime.Value != null)
+            if (partName == null)
             {
-                return DateTimeOffset.Parse(fhirDateTime.Value);
+                return parameter?.Part?.FirstOrDefault()?.Value is FhirBoolean fhirBoolean ? fhirBoolean.Value : null;
             }
 
-            if (parameter?.Value is Date date && date.Value != null)
-            {
-                return DateTimeOffset.Parse(date.Value);
-            }
-
-            return null;
-        }
-
-        private static int? ExtractIntParameter(Parameters parameters, string name)
-        {
-            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
-
-            return parameter?.Value is Integer integer ? integer.Value : null;
-        }
-
-        private static bool? ExtractBoolParameter(Parameters parameters, string name)
-        {
-            var parameter = parameters?.Parameter?.FirstOrDefault(p => p.Name == name);
-
-            return parameter?.Value is FhirBoolean fhirBoolean ? fhirBoolean.Value : null;
+            return parameter?.Part?.FirstOrDefault(p => p.Name == partName)?.Value is FhirBoolean fhirBooleanPart
+                ? fhirBooleanPart.Value
+                : null;
         }
     }
 }
