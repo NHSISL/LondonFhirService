@@ -14,7 +14,7 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
         public async Task ShouldGenerateHashValues()
         {
             // given
-            string pepper = "P3pp3r!";
+            string pepper = "D5xDEV2k3wdKu6M1Jb2zaKVB3yWVYPnLiR4pzxft0IPtbMN9KscFBCcp9o5qNUNUWTuubZ6KYsNIiVcPKZMxc2506azCDBTT";
             string orgCode = "TESTICB1";
 
             Dictionary<string, string> nhsNumbers =
