@@ -6,9 +6,9 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<OutputType>Library</OutputType>
 		<NoWarn>CS1998</NoWarn>
-		<Version>0.1.0.8</Version>
-		<AssemblyVersion>0.1.0.8</AssemblyVersion>
-		<FileVersion>0.1.0.8</FileVersion>
+		<Version>0.1.0.9</Version>
+		<AssemblyVersion>0.1.0.9</AssemblyVersion>
+		<FileVersion>0.1.0.9</FileVersion>
 		<PackageReleaseNotes>
 			Initial release of the London FHIR Service Core Library.
 		</PackageReleaseNotes>
@@ -16,13 +16,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="EFxceptions" Version="1.0.3" />
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.2" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.1.0" />
 		<PackageReference Include="ISL.Security.Client" Version="4.0.0" />
 		<PackageReference Include="ISL.Providers.Captcha.Abstractions" Version="1.0.0.3" />
 		<PackageReference Include="ISL.Providers.Captcha.FakeCaptcha" Version="1.0.0.3" />
 		<PackageReference Include="ISL.Providers.Captcha.GoogleReCaptcha" Version="1.0.0.3" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.Abstractions" Version="0.6.0" />
-		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService" Version="0.5.0" />
+		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService" Version="0.6.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.HierarchyId" Version="10.0.3" />
@@ -46,7 +46,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Migrations\" />
+		<Folder Include="Migrations\" />
 	</ItemGroup>
 
 </Project>

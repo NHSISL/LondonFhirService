@@ -19,8 +19,8 @@
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.3" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.3" />
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.0.2" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.1.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
 		<PackageReference Include="Moq" Version="4.20.72" />
 		<PackageReference Include="RESTFulSense" Version="3.2.0" />
 		<PackageReference Include="SystemTextJson.JsonDiffPatch" Version="2.0.0" />
@@ -43,10 +43,10 @@
 
 	<ItemGroup>
 		<None Update="appsettings.Integration.json">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="appsettings.json">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 </Project>

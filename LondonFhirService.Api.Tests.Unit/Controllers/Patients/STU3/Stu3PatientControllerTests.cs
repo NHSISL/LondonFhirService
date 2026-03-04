@@ -102,17 +102,45 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             if (!string.IsNullOrWhiteSpace(dateOfBirth))
             {
-                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth));
+                parameters.Add(
+                    "patientDOB",
+                    new Identifier
+                    {
+                        System = "https://fhir.hl7.org.uk/Id/dob",
+                        Value = dateOfBirth
+                    });
             }
 
             if (demographicsOnly.HasValue)
             {
-                parameters.Add("demographicsOnly", new FhirBoolean(demographicsOnly.Value));
+                parameters.Parameter.Add(new Parameters.ParameterComponent
+                {
+                    Name = "demographicsOnly",
+                    Part =
+                    {
+                        new Parameters.ParameterComponent
+                        {
+                            Name = "includeDemographicsOnly",
+                            Value = new FhirBoolean(demographicsOnly.Value)
+                        }
+                    }
+                });
             }
 
             if (includeInactivePatients.HasValue)
             {
-                parameters.Add("includeInactivePatients", new FhirBoolean(includeInactivePatients.Value));
+                parameters.Parameter.Add(new Parameters.ParameterComponent
+                {
+                    Name = "includeInactivePatients",
+                    Part =
+                    {
+                        new Parameters.ParameterComponent
+                        {
+                            Name = "includeInactivePatients",
+                            Value = new FhirBoolean(includeInactivePatients.Value)
+                        }
+                    }
+                });
             }
 
             return parameters;
