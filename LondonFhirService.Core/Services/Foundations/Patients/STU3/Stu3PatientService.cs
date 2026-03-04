@@ -447,8 +447,9 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     message:
                         $"{exception.Message} " +
-                        $"{exception?.InnerException?.Message} " +
-                        $"{exception?.InnerException?.InnerException.Message}",
+                        $"{exception.InnerException?.Message} " +
+                        $"{exception.InnerException?.InnerException.Message}" +
+                        $"{exception.StackTrace}",
 
                     fileName: string.Empty,
                     correlationId: correlationId.ToString());
