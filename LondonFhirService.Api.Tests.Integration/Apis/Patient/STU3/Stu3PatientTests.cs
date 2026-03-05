@@ -432,7 +432,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
 
         private static Parameters CreateRandomGetStructuredRecordParameters(
             string nhsNumber,
-            DateTimeOffset? dateOfBirth = null,
+            string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null)
         {
@@ -446,19 +446,47 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                     Value = nhsNumber
                 });
 
-            if (dateOfBirth.HasValue)
+            if (!string.IsNullOrWhiteSpace(dateOfBirth))
             {
-                parameters.Add("dateOfBirth", new FhirDateTime(dateOfBirth.Value));
+                parameters.Add(
+                    "patientDOB",
+                    new Identifier
+                    {
+                        System = "https://fhir.hl7.org.uk/Id/dob",
+                        Value = dateOfBirth
+                    });
             }
 
             if (demographicsOnly.HasValue)
             {
-                parameters.Add("demographicsOnly", new FhirBoolean(demographicsOnly.Value));
+                parameters.Parameter.Add(new Parameters.ParameterComponent
+                {
+                    Name = "demographicsOnly",
+                    Part =
+                    {
+                        new Parameters.ParameterComponent
+                        {
+                            Name = "includeDemographicsOnly",
+                            Value = new FhirBoolean(demographicsOnly.Value)
+                        }
+                    }
+                });
             }
 
             if (includeInactivePatients.HasValue)
             {
-                parameters.Add("includeInactivePatients", new FhirBoolean(includeInactivePatients.Value));
+                parameters.Parameter.Add(new Parameters.ParameterComponent
+                {
+                    Name = "includeInactivePatients",
+                    Part =
+                    {
+                        new Parameters.ParameterComponent
+                        {
+                            Name = "includeInactivePatients",
+                            Value = new FhirBoolean(includeInactivePatients.Value)
+                        }
+                    }
+                });
             }
 
             return parameters;
