@@ -28,7 +28,7 @@ namespace LondonFhirService.Api.Controllers.STU3
 
         [HttpPost("$getstructuredrecord")]
         [Authorize(Roles = "Patients.GetStructuredRecord")]
-        public async Task<ActionResult> GetStructuredRecord(
+        public async Task<ActionResult<Bundle>> GetStructuredRecord(
             [FromBody] Parameters parameters,
             CancellationToken cancellationToken)
         {
