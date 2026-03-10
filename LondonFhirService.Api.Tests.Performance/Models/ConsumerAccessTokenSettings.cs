@@ -2,7 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-namespace LondonFhirService.Api.Tests.Integration.Models
+namespace LondonFhirService.Api.Tests.Performance.Models
 {
     public class ConsumerAccessTokenSettings
     {
