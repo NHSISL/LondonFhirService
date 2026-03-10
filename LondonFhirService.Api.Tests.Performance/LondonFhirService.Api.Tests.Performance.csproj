@@ -42,7 +42,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="appsettings.Integration.json">
+		<None Update="appsettings.Integration.json" Condition="Exists('appsettings.Integration.json')">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="appsettings.json">
