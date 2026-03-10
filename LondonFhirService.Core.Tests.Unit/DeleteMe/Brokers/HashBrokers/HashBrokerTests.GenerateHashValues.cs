@@ -17,6 +17,8 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
             string pepper = this.accessConfigurations.HashPepper ?? "P3pp3r!";
             string orgCode = "TESTICB1";
 
+            output.WriteLine($"Pepper: {pepper.Substring(0, 10)}...");
+
             Dictionary<string, string> nhsNumbers =
                 new()
                 {
@@ -92,7 +94,10 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
                     ["6266981890"] = "",
                     ["6268295536"] = "",
                     ["6290173944"] = "",
-                    ["8751482452"] = ""
+                    ["8751482452"] = "",
+                    ["9355272538"] = "",
+                    ["9999888224"] = "",
+                    ["9355272536"] = ""
                 };
 
             // when
@@ -105,7 +110,8 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
             }
 
             // then
-            output.WriteLine("NHS Number, SHA256 Hash");
+
+            //output.WriteLine("NHS Number, SHA256 Hash");
 
             //foreach ((string nhsNumber, string hash) in nhsNumbers)
             //{
