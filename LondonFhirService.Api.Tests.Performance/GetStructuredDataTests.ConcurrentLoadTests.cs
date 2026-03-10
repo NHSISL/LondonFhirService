@@ -112,7 +112,7 @@ namespace LondonFhirService.Api.Tests.Performance
                     Encoding.UTF8,
                     "application/fhir+json");
 
-                static readonly HttpClient httpClient = new HttpClient();
+                HttpClient httpClient = new HttpClient();
 
                 using var request = new HttpRequestMessage(
                     HttpMethod.Post,

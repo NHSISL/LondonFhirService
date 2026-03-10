@@ -9,7 +9,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
-using LondonFhirService.Api.Tests.Integration.Models;
+using LondonFhirService.Api.Tests.Performance.Models;
 using Microsoft.Extensions.Configuration;
 using Xunit.Abstractions;
 
