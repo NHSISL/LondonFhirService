@@ -112,22 +112,25 @@ namespace LondonFhirService.Api.Tests.Performance
                     Encoding.UTF8,
                     "application/fhir+json");
 
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Clear();
+                static readonly HttpClient httpClient = new HttpClient();
 
-                httpClient.DefaultRequestHeaders.Accept.Add(
+                using var request = new HttpRequestMessage(
+                    HttpMethod.Post,
+                    consumerAccessTokenSettings.LfsGetStructuredRecordUrl)
+                {
+                    Content = content
+                };
+
+                request.Headers.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/fhir+json"));
 
-                httpClient.DefaultRequestHeaders.Accept.Add(
+                request.Headers.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/json"));
 
-                httpClient.DefaultRequestHeaders.Authorization =
+                request.Headers.Authorization =
                     new AuthenticationHeaderValue("Bearer", accessToken);
 
-                HttpResponseMessage response =
-                    await httpClient.PostAsync(
-                        consumerAccessTokenSettings.LfsGetStructuredRecordUrl,
-                        content);
+                HttpResponseMessage response = await httpClient.SendAsync(request);
 
                 string responseContent = await response.Content.ReadAsStringAsync();
 
