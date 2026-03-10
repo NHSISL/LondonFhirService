@@ -90,8 +90,8 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                 var query = await this.storageBroker.SelectAllPdsDatasAsync();
                 DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
-                // TODO:  Check if the patient exist in the config table, if not throw configuration for patient not found exception.
-                // Otherswise, move on to check the access permission.
+                // TODO:  Check if the patient exists in the config table; if not, throw a configuration for patient not found exception.
+                // Otherwise, move on to check the access permission.
 
                 bool hasAccess = query.Any(
                     pdsData => pdsData.NhsNumber == nhsNumber
