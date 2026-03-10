@@ -50,7 +50,7 @@ namespace LondonFhirService.Api.Controllers.STU3
                     includeInactivePatients,
                     cancellationToken);
 
-                return Ok(bundle);
+                return Content(bundle, "application/fhir+json");
             }
             catch (PatientCoordinationValidationException patientCoordinationValidationException)
             {
