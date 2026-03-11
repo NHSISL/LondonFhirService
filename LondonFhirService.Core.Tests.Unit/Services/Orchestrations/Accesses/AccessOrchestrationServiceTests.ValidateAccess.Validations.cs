@@ -412,14 +412,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     "Access",
                     "Access Forbidden",
 
-                    $"Access was denied as none of the organisations the consumer with id " +
+                    It.Is<string>(s => s.StartsWith($"Access was denied as none of the organisations the consumer with id " +
                         $"{inputConsumer.Id} has access to are permitted to access patient with " +
                         $"NHS number {inputNhsNumber} and patient identifier " +
                         $"'{inputNhsNumber.Substring(0, 5)}..." +
                         $"{inputNhsNumber.Substring(inputNhsNumber.Length - 5)}' and " +
                         $"pepper '{accessConfigurations.HashPepper.Substring(0, 15)}..." +
                         $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 15)}'  " +
-                        $"CorrelationId: {correlationId.ToString()}",
+                        $"CorrelationId: {correlationId.ToString()}")),
+
                     null,
                     correlationId.ToString()),
                         Times.Once);

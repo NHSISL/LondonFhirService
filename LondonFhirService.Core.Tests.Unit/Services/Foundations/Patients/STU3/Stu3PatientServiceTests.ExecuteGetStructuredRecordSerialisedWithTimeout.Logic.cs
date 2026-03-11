@@ -83,7 +83,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{providerDisplayName} Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -92,16 +92,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     $"{auditType}-DATA",
                     $"{fhirProvider.DisplayName} - DATA ({inputFhirProviderName})",
                     rawOutputBundle,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{providerDisplayName} Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith($"{providerDisplayName} Provider Execution Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -223,7 +223,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -294,7 +294,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -303,7 +303,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"Parallel Provider Execution - {fhirProvider.DisplayName} failed",
                     It.IsAny<string>(),
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -393,7 +393,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 

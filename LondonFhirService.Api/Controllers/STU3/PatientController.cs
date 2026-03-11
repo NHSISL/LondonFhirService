@@ -57,7 +57,7 @@ namespace LondonFhirService.Api.Controllers.STU3
                 return BadRequest(patientCoordinationValidationException.InnerException);
             }
             catch (PatientCoordinationDependencyValidationException
-                   patientCoordinationDependencyValidationException)
+                patientCoordinationDependencyValidationException)
             {
                 return BadRequest(patientCoordinationDependencyValidationException.InnerException);
             }
