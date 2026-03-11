@@ -122,7 +122,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     "Access",
                     "Access Allowed",
 
-                    It.Is<string>(s => s.StartsWith($"{inputConsumer.Id} has access to access patient with " +
+                    It.Is<string>(s => s.StartsWith($"{inputConsumer.Id} is allowed to access patient with " +
                     $"NHS number {inputNhsNumber} via org codes: {string.Join(", ", userOrganisations)}  " +
                     $"CorrelationId: {correlationId.ToString()}")),
 

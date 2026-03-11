@@ -174,7 +174,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                         title: "Access Allowed",
 
                         message:
-                            $"{matchingConsumer.Id} has access to access patient with " +
+                            $"{matchingConsumer.Id} is allowed to access patient with " +
                             $"NHS number {nhsNumber} via org codes: {string.Join(", ", consumerActiveOrgs)}  " +
                             $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
 
