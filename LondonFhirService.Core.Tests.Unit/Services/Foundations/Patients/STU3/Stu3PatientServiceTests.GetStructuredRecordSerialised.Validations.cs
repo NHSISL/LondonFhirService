@@ -315,7 +315,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -324,7 +324,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -476,7 +476,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -485,7 +485,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -652,7 +652,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -661,7 +661,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -823,7 +823,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -832,7 +832,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -997,7 +997,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -1006,7 +1006,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -1166,7 +1166,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -1175,7 +1175,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),

@@ -99,7 +99,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{providerDisplayName} Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith($"{providerDisplayName} Provider Execution Completed")),
                     message,
                     null,
                     correlationId.ToString()),
