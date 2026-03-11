@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -52,6 +53,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            var stopwatch = Stopwatch.StartNew();
             ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecord";
 
@@ -64,14 +66,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 auditType,
                 title: $"Orchestration Service Request Submitted",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
                 title: $"Retrieve active providers and execute request",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             Provider primaryProvider;
@@ -87,22 +89,30 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 includeInactivePatients,
                 cancellationToken);
 
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Reconcile bundles",
-                message,
-                fileName: string.Empty,
-                correlationId: correlationId.ToString());
+            var stopwatchReconcile = Stopwatch.StartNew();
 
             Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
                 bundles: bundles,
                 primaryProvider: primaryProvider);
 
+            stopwatchReconcile.Stop();
+            long elapsedTimeReconcile = stopwatchReconcile.ElapsedMilliseconds;
+
             await this.auditBroker.LogInformationAsync(
                 auditType,
-                title: $"Orchestration Service Request Completed",
+                title: $"Reconcile Bundles Completed in {elapsedTimeReconcile}ms",
                 message,
-                fileName: string.Empty,
+                fileName: null,
+                correlationId: correlationId.ToString());
+
+            stopwatch.Stop();
+            long elapsedTime = stopwatch.ElapsedMilliseconds;
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Orchestration Service Request Completed in {elapsedTime}ms",
+                message,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             return reconciledBundle;
@@ -117,6 +127,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            var stopwatch = Stopwatch.StartNew();
             ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
@@ -129,14 +140,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 auditType,
                 title: $"Orchestration Service Request Submitted",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
                 title: $"Retrieve active providers and execute request",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             Provider primaryProvider;
@@ -156,18 +167,21 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 auditType,
                 title: $"Reconcile bundles",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
                 bundles: bundles,
                 primaryProvider: primaryProvider);
 
+            stopwatch.Stop();
+            long elapsedTime = stopwatch.ElapsedMilliseconds;
+
             await this.auditBroker.LogInformationAsync(
                 auditType,
-                title: $"Orchestration Service Request Completed",
+                title: $"Orchestration Service Request Completed in {elapsedTime}ms",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             return reconciledBundle;

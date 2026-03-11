@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
@@ -44,8 +45,8 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            var stopwatch = Stopwatch.StartNew();
             ValidateArgsOnGetStructuredRecord(nhsNumber);
-
             Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
             string auditType = "STU3-Patient-GetStructuredRecord";
 
@@ -58,14 +59,14 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 auditType,
                 title: $"Coordination Service Request Submitted",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
                 title: $"Check Access Permissions",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             await this.accessOrchestrationService.ValidateAccess(nhsNumber, correlationId);
@@ -74,7 +75,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 auditType,
                 title: $"Requesting Patient Info",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             Bundle bundle = await this.patientOrchestrationService.GetStructuredRecordAsync(
@@ -85,11 +86,14 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 includeInactivePatients,
                 cancellationToken);
 
+            stopwatch.Stop();
+            long elapsedTime = stopwatch.ElapsedMilliseconds;
+
             await this.auditBroker.LogInformationAsync(
                 auditType,
-                title: $"Coordination Service Request Completed",
+                title: $"Coordination Service Request Completed in {elapsedTime}ms",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             return bundle;
@@ -103,8 +107,8 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            var stopwatch = Stopwatch.StartNew();
             ValidateArgsOnGetStructuredRecord(nhsNumber);
-
             Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
@@ -117,14 +121,14 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 auditType,
                 title: $"Coordination Service Request Submitted",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
                 title: $"Check Access Permissions",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             await this.accessOrchestrationService.ValidateAccess(nhsNumber, correlationId);
@@ -133,7 +137,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 auditType,
                 title: $"Requesting Patient Info",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             string bundle = await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
@@ -144,11 +148,14 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 includeInactivePatients,
                 cancellationToken);
 
+            stopwatch.Stop();
+            long elapsedTime = stopwatch.ElapsedMilliseconds;
+
             await this.auditBroker.LogInformationAsync(
                 auditType,
-                title: $"Coordination Service Request Completed",
+                title: $"Coordination Service Request Completed in {elapsedTime}ms",
                 message,
-                fileName: string.Empty,
+                fileName: null,
                 correlationId: correlationId.ToString());
 
             return bundle;

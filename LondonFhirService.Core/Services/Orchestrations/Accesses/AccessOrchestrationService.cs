@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -64,6 +65,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
         public ValueTask ValidateAccess(string nhsNumber, Guid correlationId) =>
             TryCatch(async () =>
             {
+                var stopwatch = Stopwatch.StartNew();
                 ValidateNhsNumber(nhsNumber, correlationId);
                 User currentUser = await securityBroker.GetCurrentUserAsync();
                 string currentUserId = currentUser.UserId;
@@ -139,6 +141,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                     nhsNumber: patientIdentifier,
                     organisationCodes: consumerActiveOrgs);
 
+                stopwatch.Stop();
+                long elapsedTime = stopwatch.ElapsedMilliseconds;
+
                 if (!organisationsHaveAccessToPatient)
                 {
                     await this.auditBroker.LogInformationAsync(
@@ -153,7 +158,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                             $"{patientIdentifier.Substring(patientIdentifier.Length - 5)}' and " +
                             $"pepper '{accessConfigurations.HashPepper.Substring(0, 15)}..." +
                             $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 15)}'  " +
-                            $"CorrelationId: {correlationId.ToString()}",
+                            $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
 
                         fileName: null,
                         correlationId: correlationId.ToString());
@@ -161,6 +166,20 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                     throw new ForbiddenAccessOrchestrationException(
                         "None of the organisations the consumer has access to are permitted to access this patient.  " +
                         $"CorrelationId: {correlationId.ToString()}");
+                }
+                else
+                {
+                    await this.auditBroker.LogInformationAsync(
+                        auditType: "Access",
+                        title: "Access Allowed",
+
+                        message:
+                            $"{matchingConsumer.Id} has access to access patient with " +
+                            $"NHS number {nhsNumber} via org codes: {string.Join(", ", consumerActiveOrgs)}  " +
+                            $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
+
+                        fileName: null,
+                        correlationId: correlationId.ToString());
                 }
             });
     }
