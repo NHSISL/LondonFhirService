@@ -129,7 +129,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Reconcile bundles",
+                    It.Is<string>(s => s.StartsWith("Reconcile Bundles")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -138,7 +138,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Orchestration Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Orchestration Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),
