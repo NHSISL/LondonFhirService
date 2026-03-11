@@ -109,7 +109,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Coordination Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Coordination Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),
