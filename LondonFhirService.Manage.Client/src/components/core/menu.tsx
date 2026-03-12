@@ -25,7 +25,7 @@ const MenuComponent: React.FC = () => {
                 className={`bg-dark text-white ${location.pathname === '/testPage' ? 'active' : ''}`}
                 onClick={() => handleItemClick('/testPage')}>
                 <FontAwesomeIcon icon={faUser} className="me-2 fa-icon" />
-               Test Nav Page
+                Test Nav Page
             </ListGroup.Item>
         </ListGroup>
     );
