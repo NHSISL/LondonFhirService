@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // given
             string randomId = GetRandomString();
             string inputNhsNumber = randomId;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -146,7 +146,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Orchestration Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -155,7 +155,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Retrieve active providers and execute request",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -173,7 +173,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             // given
             string randomId = GetRandomString();
             string inputNhsNumber = randomId;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -245,7 +245,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Orchestration Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -254,7 +254,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Retrieve active providers and execute request",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 

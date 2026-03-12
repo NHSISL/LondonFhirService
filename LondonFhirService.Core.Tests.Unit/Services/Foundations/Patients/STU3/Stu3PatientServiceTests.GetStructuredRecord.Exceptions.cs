@@ -69,7 +69,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>()))
                 .ThrowsAsync(dependencyValidationException);
@@ -100,7 +100,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>()),
                         Times.Once());
@@ -115,7 +115,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -124,7 +124,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -182,7 +182,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>()))
                 .ThrowsAsync(dependencyException);
@@ -213,7 +213,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>()),
                         Times.Once());
@@ -228,7 +228,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -237,7 +237,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -300,7 +300,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>()))
                 .ThrowsAsync(serviceException);
@@ -331,7 +331,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>()),
                         Times.Once());
@@ -346,7 +346,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -355,7 +355,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 

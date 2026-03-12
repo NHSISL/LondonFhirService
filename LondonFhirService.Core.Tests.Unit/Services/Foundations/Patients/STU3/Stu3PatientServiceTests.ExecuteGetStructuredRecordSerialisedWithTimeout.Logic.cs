@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bool inputFhirProviderIsPrimary = true;
             var fhirProvider = this.ddsFhirProviderMock.Object;
             var fhirProviderCopy = this.ddsFhirProviderMock.Object.DeepClone();
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -83,7 +83,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{providerDisplayName} Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -92,16 +92,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     $"{auditType}-DATA",
                     $"{fhirProvider.DisplayName} - DATA ({inputFhirProviderName})",
                     rawOutputBundle,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    $"{providerDisplayName} Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith($"{providerDisplayName} Provider Execution Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -223,7 +223,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -294,7 +294,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    $"Parallel Provider Execution - {fhirProvider.DisplayName} failed",
+                    It.IsAny<string>(),
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -384,7 +393,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 

@@ -117,7 +117,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
             patientResourceMock.Setup(p => p.GetStructuredRecordAsync(
                 It.IsAny<string>(),
-                It.IsAny<DateTime?>(),
+                It.IsAny<string>(),
                 It.IsAny<bool?>(),
                 It.IsAny<bool?>(),
                 It.IsAny<CancellationToken>()))
@@ -152,7 +152,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
             patientResourceMock.Setup(p => p.GetStructuredRecordSerialisedAsync(
                 It.IsAny<string>(),
-                It.IsAny<DateTime?>(),
+                It.IsAny<string>(),
                 It.IsAny<bool?>(),
                 It.IsAny<bool?>(),
                 It.IsAny<CancellationToken>()))

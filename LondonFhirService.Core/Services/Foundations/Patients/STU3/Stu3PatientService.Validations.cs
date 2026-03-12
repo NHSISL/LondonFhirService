@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Xeptions;
@@ -31,6 +32,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         public static void ValidateOnGetStructuredRecord(
             List<Provider> activeProviders,
             string nhsNumber,
+            string dateOfBirth,
             Guid correlationId)
         {
             Validate(
@@ -41,6 +43,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                 (Rule: IsInvalid(activeProviders), Parameter: nameof(activeProviders)),
                 (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
+                (Rule: IsInvalidDateOnly(dateOfBirth), Parameter: "dateOfBirth"),
                 (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));
         }
 
@@ -60,6 +63,20 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         {
             Condition = string.IsNullOrWhiteSpace(name),
             Message = "Text is invalid"
+        };
+
+        private static dynamic IsInvalidDateOnly(string text) => new
+        {
+            Condition =
+                !string.IsNullOrWhiteSpace(text) &&
+                !DateOnly.TryParseExact(
+                    text,
+                    "yyyy-MM-dd",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out _),
+
+            Message = "Text must be a valid date string in format 'yyyy-MM-dd' e.g. '2002-10-01'"
         };
 
         private static dynamic IsInvalid(Guid? id) => new

@@ -19,7 +19,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
         {
             // given
             string inputNhsNumber = GetRandomString();
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -84,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     auditType,
                     "Coordination Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -93,7 +93,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     auditType,
                     "Check Access Permissions",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -102,16 +102,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     auditType,
                     "Requesting Patient Info",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Coordination Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Coordination Service Request Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 

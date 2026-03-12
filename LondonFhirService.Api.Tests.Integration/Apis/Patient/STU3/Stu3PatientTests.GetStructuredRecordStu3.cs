@@ -29,7 +29,15 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             string userId = TestAuthHandler.TestUserId;
             string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
             string fhirVersion = "STU3";
-            Parameters inputParameters = CreateRandomGetStructuredRecordParameters(inputNhsNumber);
+
+            Parameters inputParametersWithDemographicsOnly = CreateRandomGetStructuredRecordParameters(
+                nhsNumber: inputNhsNumber,
+                demographicsOnly: true);
+
+            Parameters inputParameters = CreateRandomGetStructuredRecordParameters(
+                nhsNumber: inputNhsNumber,
+                demographicsOnly: false);
+
             Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
             Consumer consumer = await CreateRandomConsumer(now, userId);
             OdsData odsData = await CreateRandomOdsData(orgCode, now);
@@ -46,7 +54,15 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             var (actualText, actualBundle) =
                 await this.apiBroker.GetStructuredRecordStu3Async(inputNhsNumber, inputParameters);
 
+            var (actualTextWithDemographics, actualBundleWithDemographics) =
+                await this.apiBroker.GetStructuredRecordStu3Async(inputNhsNumber, inputParametersWithDemographicsOnly);
+
             // then
+            int actualTextLength = actualText.Length;
+            int actualTextWithDemographicsOnlyLength = actualTextWithDemographics.Length;
+            actualTextLength.Should().BeGreaterThan(actualTextWithDemographicsOnlyLength);
+            output.WriteLine($"Actual Text: {actualTextLength}");
+            output.WriteLine($"Actual Text With Demographics Only: {actualTextWithDemographicsOnlyLength}");
             actualBundle.Should().NotBeNull();
             actualBundle.Type.Should().Be(Bundle.BundleType.Collection);
             actualBundle.Entry.Should().NotBeNullOrEmpty();

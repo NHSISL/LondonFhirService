@@ -121,6 +121,60 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.identifierBrokerMock.VerifyNoOtherCalls();
         }
 
+        [Theory]
+        [InlineData("2002-24-01")]
+        [InlineData("24-01-2002")]
+        public async Task GetStructuredRecordSerialisedShouldThrowWhenInvalidDateAsync(string dateString)
+        {
+            // given
+            string nhsNumber = "1234567890";
+
+            List<Provider> randomProviderNames = new List<Provider>
+            {
+                new Provider{ FriendlyName= "DDS" },
+                new Provider{ FriendlyName= "LDS" }
+            };
+
+            Guid correlationId = Guid.NewGuid();
+            List<Provider> inputProviders = randomProviderNames.DeepClone();
+
+            var invalidArgumentsPatientServiceException = new InvalidArgumentsPatientServiceException(
+                message: "Invalid argument patient service exception, " +
+                    "please correct the errors and try again.");
+
+            invalidArgumentsPatientServiceException.AddData(
+                key: "dateOfBirth",
+                values: "Text must be a valid date string in format 'yyyy-MM-dd' e.g. '2002-10-01'");
+
+            var expectedPatientServiceValidationException =
+                new PatientServiceValidationException(
+                    message: "Patient service validation error occurred, please fix the errors and try again.",
+                    innerException: invalidArgumentsPatientServiceException);
+
+            // when
+            ValueTask<List<string>> everythingTask = patientService.GetStructuredRecordSerialisedAsync(
+                    activeProviders: inputProviders,
+                    correlationId: correlationId,
+                    nhsNumber: nhsNumber,
+                    dateOfBirth: dateString,
+                    cancellationToken: default);
+
+            PatientServiceValidationException actualPatientServiceValidationException =
+                await Assert.ThrowsAsync<PatientServiceValidationException>(
+                    testCode: everythingTask.AsTask);
+
+            // then
+            actualPatientServiceValidationException.Should().BeEquivalentTo(expectedPatientServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPatientServiceValidationException))),
+                    Times.Once());
+
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+        }
+
         [Fact]
         public async Task GetStructuredRecordSerialisedShouldReturnSingleBundleWhenUnsupportedProvider()
         {
@@ -153,7 +207,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -245,7 +299,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -254,25 +308,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -314,7 +368,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -406,7 +460,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -415,25 +469,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -469,7 +523,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -582,7 +636,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -591,25 +645,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -644,7 +698,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<Bundle> expectedBundles = new List<Bundle>();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -753,7 +807,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -762,25 +816,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -814,7 +868,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string rawOutputDdsBundle = this.fhirJsonSerializer.SerializeToString(outputDdsBundle);
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -927,7 +981,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -936,25 +990,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -987,7 +1041,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             List<Bundle> expectedBundles = new List<Bundle>();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
-            DateTime? inputDateOfBirth = DateTime.Now;
+            string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -1096,7 +1150,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
@@ -1105,25 +1159,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Parallel Provider Execution Completed",
+                    It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    "Foundation Service Request Completed",
+                    It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    string.Empty,
+                    null,
                     correlationId.ToString()),
                         Times.Once);
 

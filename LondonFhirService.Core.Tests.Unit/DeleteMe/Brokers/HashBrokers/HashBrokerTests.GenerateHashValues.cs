@@ -14,8 +14,10 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
         public async Task ShouldGenerateHashValues()
         {
             // given
-            string pepper = "P3pp3r!";
+            string pepper = this.accessConfigurations.HashPepper ?? "P3pp3r!";
             string orgCode = "TESTICB1";
+
+            output.WriteLine($"Pepper: {pepper.Substring(0, 10)}...");
 
             Dictionary<string, string> nhsNumbers =
                 new()
@@ -77,7 +79,25 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
                     ["9999999990"] = "",
                     ["9999999982"] = "",
                     ["9999999981"] = "",
-                    ["9999999980"] = ""
+                    ["9999999980"] = "",
+
+                    ["6210370845"] = "",
+                    ["4648898451"] = "",
+                    ["6285074259"] = "",
+                    ["6260621663"] = "",
+                    ["4647792331"] = "",
+                    ["7162623476"] = "",
+                    ["4645955748"] = "",
+                    ["4661324358"] = "",
+                    ["6320713879"] = "",
+                    ["4325268197"] = "",
+                    ["6266981890"] = "",
+                    ["6268295536"] = "",
+                    ["6290173944"] = "",
+                    ["8751482452"] = "",
+                    ["9355272538"] = "",
+                    ["9999888224"] = "",
+                    ["9355272536"] = ""
                 };
 
             // when
@@ -90,7 +110,8 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
             }
 
             // then
-            output.WriteLine("NHS Number, SHA256 Hash");
+
+            //output.WriteLine("NHS Number, SHA256 Hash");
 
             //foreach ((string nhsNumber, string hash) in nhsNumbers)
             //{

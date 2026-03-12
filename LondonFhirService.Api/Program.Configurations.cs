@@ -41,10 +41,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
@@ -52,11 +52,20 @@ using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 public partial class Program
 {
-    internal static Action<WebApplicationBuilder>? TestConfigurationOverrides { get; set; }
+    internal static Action<WebApplicationBuilder>? TestConfigurationOverrides { get; set; } = null;
+    internal static bool ExcludeAppInsightsForTesting { get; set; } = false;
 
     internal static void ConfigurationOverridesForTesting(WebApplicationBuilder builder)
     {
         TestConfigurationOverrides?.Invoke(builder);
+    }
+
+    internal static void ConfigureApplicationInsightsTelemetry(WebApplicationBuilder builder)
+    {
+        if (ExcludeAppInsightsForTesting == false)
+        {
+            builder.Services.AddApplicationInsightsTelemetry();
+        }
     }
 
     internal static void ConfigureServices(WebApplicationBuilder builder)
@@ -193,13 +202,18 @@ public partial class Program
         services.AddSingleton(ddsConfig);
         services.AddSingleton(accessConfig);
 
-        var stu3Providers = new List<STU3FhirAbstractions.IFhirProvider>
+        services.AddSingleton<STU3FhirAbstractions.IFhirAbstractionProvider>(sp =>
         {
-            new DdsStu3Provider(ddsConfig)
-        };
+            var config = sp.GetRequiredService<DdsConfigurations>();
+            ILogger<DdsStu3Provider> logger = sp.GetRequiredService<ILogger<DdsStu3Provider>>();
 
-        services.AddSingleton<STU3FhirAbstractions.IFhirAbstractionProvider>(
-            new STU3FhirAbstractions.FhirAbstractionProvider(stu3Providers));
+            var stu3Providers = new List<STU3FhirAbstractions.IFhirProvider>
+            {
+                new DdsStu3Provider(config, logger)
+            };
+
+            return new STU3FhirAbstractions.FhirAbstractionProvider(stu3Providers);
+        });
 
         bool fakeCaptchaProviderMode = configuration
             .GetSection("FakeCaptchaProviderMode").Get<bool>();

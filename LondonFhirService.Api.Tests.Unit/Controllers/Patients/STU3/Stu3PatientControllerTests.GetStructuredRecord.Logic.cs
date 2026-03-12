@@ -23,7 +23,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
             DateTimeOffset randomDateOfBirth = GetRandomDateTimeOffset();
-            DateTimeOffset inputDateOfBirth = randomDateOfBirth;
+            string inputDateOfBirth = randomDateOfBirth.ToString("yyyy-MM-dd");
             bool inputDemographicsOnly = false;
             bool inputIncludeInactivePatients = false;
             CancellationToken cancellationToken = CancellationToken.None;
@@ -43,7 +43,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             this.patientCoordinationServiceMock.Setup(coordination =>
                 coordination.GetStructuredRecordSerialisedAsync(
                     inputNhsNumber,
-                    inputDateOfBirth.DateTime,
+                    inputDateOfBirth,
                     inputDemographicsOnly,
                     inputIncludeInactivePatients,
                     cancellationToken))
@@ -62,7 +62,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             this.patientCoordinationServiceMock.Verify(coordination =>
                 coordination.GetStructuredRecordSerialisedAsync(
                     inputNhsNumber,
-                    inputDateOfBirth.DateTime,
+                    inputDateOfBirth,
                     inputDemographicsOnly,
                     inputIncludeInactivePatients,
                     cancellationToken),

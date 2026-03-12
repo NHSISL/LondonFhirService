@@ -117,6 +117,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     correlationId.ToString()),
                         Times.Once);
 
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "Access Allowed",
+
+                    It.Is<string>(s => s.StartsWith($"{inputConsumer.Id} is allowed to access patient with " +
+                    $"NHS number {inputNhsNumber} via org codes: {string.Join(", ", userOrganisations)}  " +
+                    $"CorrelationId: {correlationId.ToString()}")),
+
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.consumerServiceMock.Verify(service =>
                 service.RetrieveAllConsumersAsync(),
                     Times.Once);

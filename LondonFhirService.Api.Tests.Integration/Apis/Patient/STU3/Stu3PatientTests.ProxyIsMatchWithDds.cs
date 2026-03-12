@@ -24,6 +24,8 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             string inputNhsNumber = "9435797881";
             string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
+            bool isHashed = accessConfigurations.UseHashedNhsNumber;
+            string pepper = accessConfigurations.HashPepper;
             string userId = TestAuthHandler.TestUserId;
             string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
             string fhirVersion = "STU3";
@@ -38,7 +40,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                 now,
                 userId);
 
-            PdsData pdsData = await CreateRandomPdsData(inputNhsNumber, orgCode, now);
+            PdsData pdsData = await CreateRandomPdsData(inputNhsNumber, orgCode, now, isHashed, pepper);
 
             // when
             var (proxyText, proxyBundle) =
@@ -87,6 +89,8 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
             Consumer consumer = await CreateRandomConsumer(now, userId);
             OdsData odsData = await CreateRandomOdsData(orgCode, now);
+            bool isHashed = accessConfigurations.UseHashedNhsNumber;
+            string pepper = accessConfigurations.HashPepper;
 
             ConsumerAccess consumerAccess = await CreateRandomConsumerAccess(
                 consumer.Id,
@@ -94,7 +98,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                 now,
                 userId);
 
-            PdsData pdsData = await CreateRandomPdsData(proxyInputNhsNumber, orgCode, now);
+            PdsData pdsData = await CreateRandomPdsData(proxyInputNhsNumber, orgCode, now, isHashed, pepper);
 
             // when
             var (proxyText, proxyBundle) =
