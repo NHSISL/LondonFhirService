@@ -9,6 +9,8 @@ using EFxceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.OdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
@@ -53,6 +55,8 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             AddPdsDataConfigurations(modelBuilder.Entity<PdsData>());
             AddOdsDataConfigurations(modelBuilder.Entity<OdsData>());
             AddProviderConfigurations(modelBuilder.Entity<Provider>());
+            AddFhirRecordConfigurations(modelBuilder.Entity<FhirRecord>());
+            AddFhirRecordDifferenceConfigurations(modelBuilder.Entity<FhirRecordDifference>());
         }
 
         private async ValueTask<T> InsertAsync<T>(T @object) where T : class =>

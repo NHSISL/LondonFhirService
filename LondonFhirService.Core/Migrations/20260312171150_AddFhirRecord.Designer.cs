@@ -4,6 +4,7 @@ using LondonFhirService.Core.Brokers.Storages.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.SqlServer.Types;
 
@@ -12,9 +13,11 @@ using Microsoft.SqlServer.Types;
 namespace LondonFhirService.Core.Migrations
 {
     [DbContext(typeof(StorageBroker))]
-    partial class StorageBrokerModelSnapshot : ModelSnapshot
+    [Migration("20260312171150_AddFhirRecord")]
+    partial class AddFhirRecord
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,19 +185,17 @@ namespace LondonFhirService.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("AcceptableDiffCount")
+                    b.Property<int>("AcceptablceDiffCount")
                         .HasColumnType("int");
 
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("ComparedAt")
-                        .HasColumnType("datetimeoffset");
+                    b.Property<DateTime>("ComparedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("CorrelationId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<Guid>("CorrelationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -215,11 +216,9 @@ namespace LondonFhirService.Core.Migrations
                         .HasColumnType("bit");
 
                     b.Property<Guid>("PrimaryId")
-                        .HasMaxLength(255)
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("SecondaryId")
-                        .HasMaxLength(255)
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UpdatedBy")
@@ -232,14 +231,6 @@ namespace LondonFhirService.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CorrelationId");
-
-                    b.HasIndex("IsResolved");
-
-                    b.HasIndex("PrimaryId");
-
-                    b.HasIndex("SecondaryId");
-
                     b.ToTable("FhirRecordDifferences", (string)null);
                 });
 
@@ -251,8 +242,7 @@ namespace LondonFhirService.Core.Migrations
 
                     b.Property<string>("CorrelationId")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -271,7 +261,7 @@ namespace LondonFhirService.Core.Migrations
 
                     b.Property<string>("SourceName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
@@ -282,12 +272,6 @@ namespace LondonFhirService.Core.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CorrelationId");
-
-                    b.HasIndex("IsPrimarySource");
-
-                    b.HasIndex("SourceName");
 
                     b.ToTable("FhirRecords", (string)null);
                 });
