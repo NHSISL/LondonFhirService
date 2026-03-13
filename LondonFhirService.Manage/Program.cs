@@ -17,6 +17,15 @@ using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medications;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationStatements;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
+using LondonFhirService.Core.Services.Processings.ResourceMatchings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -204,10 +213,20 @@ namespace LondonFhirService.Manage
         }
 
         private static void AddFoundationServices(IServiceCollection services)
-        { }
+        {
+            services.AddTransient<IResourceMatcherService, PatientMatcherService>();
+            services.AddTransient<IResourceMatcherService, ConditionMatcherService>();
+            services.AddTransient<IResourceMatcherService, AllergyIntoleranceMatcherService>();
+            services.AddTransient<IResourceMatcherService, MedicationMatcherService>();
+            services.AddTransient<IResourceMatcherService, MedicationStatementMatcherService>();
+            services.AddTransient<IResourceMatcherService, ListMatcherService>();
+            services.AddTransient<IResourceMatcherService, EpisodeOfCareMatcherService>();
+        }
 
         private static void AddProcessingServices(IServiceCollection services)
-        { }
+        {
+            services.AddSingleton<IResourceMatcherProcessingService, ResourceMatcherProcessingService>();
+        }
 
         private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
         { }
