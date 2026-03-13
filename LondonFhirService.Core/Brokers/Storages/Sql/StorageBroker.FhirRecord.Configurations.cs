@@ -21,7 +21,11 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 
             model
                 .Property(fhirRecord => fhirRecord.CorrelationId)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(255);
+
+            model
+                .HasIndex(fhirRecord => fhirRecord.CorrelationId);
 
             model
                 .Property(fhirRecord => fhirRecord.JsonPayload)
@@ -32,8 +36,14 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .IsRequired();
 
             model
+                .HasIndex(fhirRecord => fhirRecord.SourceName);
+
+            model
                 .Property(fhirRecord => fhirRecord.IsPrimarySource)
                 .IsRequired();
+
+            model
+                .HasIndex(fhirRecord => fhirRecord.IsPrimarySource);
 
             model
                 .Property(fhirRecord => fhirRecord.CreatedBy)

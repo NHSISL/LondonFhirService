@@ -21,15 +21,27 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 
             model
                 .Property(fhirRecordDifference => fhirRecordDifference.PrimaryId)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(255);
+
+            model
+                .HasIndex(fhirRecord => fhirRecord.PrimaryId);
 
             model
                 .Property(fhirRecordDifference => fhirRecordDifference.SecondaryId)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(255);
+
+            model
+                .HasIndex(fhirRecord => fhirRecord.SecondaryId);
 
             model
                 .Property(fhirRecordDifference => fhirRecordDifference.CorrelationId)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(255);
+
+            model
+                .HasIndex(fhirRecord => fhirRecord.CorrelationId);
 
             model
                 .Property(fhirRecordDifference => fhirRecordDifference.DiffJson)
@@ -52,6 +64,9 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             model
                 .Property(fhirRecordDifference => fhirRecordDifference.UpdatedDate)
                 .IsRequired();
+
+            model
+                .HasIndex(fhirRecord => fhirRecord.IsResolved);
         }
     }
 }
