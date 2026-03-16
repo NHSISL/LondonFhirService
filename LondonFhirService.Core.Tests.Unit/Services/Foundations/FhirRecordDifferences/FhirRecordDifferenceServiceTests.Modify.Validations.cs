@@ -373,7 +373,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                 values:
                     $"Date is not recent. Expected a value between {startDate} and {endDate} but found {invalidDate}");
 
-            var expectedFhirRecordDifferenceValidatonException =
+            var expectedFhirRecordDifferenceValidationException =
                 new FhirRecordDifferenceValidationException(
                     message: "FhirRecordDifference validation errors occurred, please try again.",
                     innerException: invalidFhirRecordDifferenceException);
@@ -400,7 +400,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             // then
             actualFhirRecordDifferenceValidationException.Should()
-                .BeEquivalentTo(expectedFhirRecordDifferenceValidatonException);
+                .BeEquivalentTo(expectedFhirRecordDifferenceValidationException);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyModifyAuditValuesAsync(randomFhirRecordDifference),
@@ -412,7 +412,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedFhirRecordDifferenceValidatonException))),
+                    expectedFhirRecordDifferenceValidationException))),
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
@@ -604,7 +604,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
         }
 
         [Fact]
-        public async Task ShouldThrowValidationExceptionOnModifyIfCreatedUserDontMacthStorageAndLogItAsync()
+        public async Task ShouldThrowValidationExceptionOnModifyIfCreatedUserDoesNotMatchStorageAndLogItAsync()
         {
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();

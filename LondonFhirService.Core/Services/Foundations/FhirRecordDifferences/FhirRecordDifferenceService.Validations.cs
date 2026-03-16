@@ -91,7 +91,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
                 (Rule: await IsNotRecentAsync(fhirRecordDifference.UpdatedDate), Parameter: nameof(FhirRecordDifference.UpdatedDate)));
         }
 
-        public void ValidateFhirRecordDifferenceId(Guid fhirRecordDifferenceId) =>
+        private void ValidateFhirRecordDifferenceId(Guid fhirRecordDifferenceId) =>
             Validate(
                 createException: () => new InvalidFhirRecordDifferenceException(
                     "Invalid fhirRecordDifference. Please correct the errors and try again."),

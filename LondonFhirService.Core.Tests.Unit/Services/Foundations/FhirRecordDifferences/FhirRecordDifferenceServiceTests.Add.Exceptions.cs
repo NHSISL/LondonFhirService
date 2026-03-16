@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
         }
 
         [Fact]
-        public async Task ShouldThrowDependencyValidationExceptionOnAddIfFhirRecordDifferenceAlreadyExsitsAndLogItAsync()
+        public async Task ShouldThrowDependencyValidationExceptionOnAddIfFhirRecordDifferenceAlreadyExistsAndLogItAsync()
         {
             // given
             FhirRecordDifference randomFhirRecordDifference = CreateRandomFhirRecordDifference();
