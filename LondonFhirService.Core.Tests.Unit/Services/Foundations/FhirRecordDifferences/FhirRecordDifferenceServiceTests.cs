@@ -12,25 +12,25 @@ using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Core.Models.Foundations.FhirRecords;
-using LondonFhirService.Core.Services.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using Microsoft.Data.SqlClient;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDifferences
 {
-    public partial class FhirRecordServiceTests
+    public partial class FhirRecordDifferenceServiceTests
     {
         private readonly Mock<IStorageBroker> storageBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<ISecurityBroker> securityBrokerMock;
         private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly IFhirRecordService fhirRecordService;
+        private readonly IFhirRecordDifferenceService fhirRecordDifferenceService;
 
-        public FhirRecordServiceTests()
+        public FhirRecordDifferenceServiceTests()
         {
             this.storageBrokerMock = new Mock<IStorageBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
@@ -38,7 +38,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
             this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-            this.fhirRecordService = new FhirRecordService(
+            this.fhirRecordDifferenceService = new FhirRecordDifferenceService(
                 storageBroker: this.storageBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 securityBroker: this.securityBrokerMock.Object,
@@ -102,39 +102,39 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: new DateTime()).GetValue();
 
-        private static FhirRecord CreateRandomModifyFhirRecord(DateTimeOffset dateTimeOffset, string userId = "")
+        private static FhirRecordDifference CreateRandomModifyFhirRecordDifference(DateTimeOffset dateTimeOffset, string userId = "")
         {
             int randomDaysInPast = GetRandomNegativeNumber();
-            FhirRecord randomFhirRecord = CreateRandomFhirRecord(dateTimeOffset, userId);
+            FhirRecordDifference randomFhirRecordDifference = CreateRandomFhirRecordDifference(dateTimeOffset, userId);
 
-            randomFhirRecord.CreatedDate =
-                randomFhirRecord.CreatedDate.AddDays(randomDaysInPast);
+            randomFhirRecordDifference.CreatedDate =
+                randomFhirRecordDifference.CreatedDate.AddDays(randomDaysInPast);
 
-            return randomFhirRecord;
+            return randomFhirRecordDifference;
         }
 
-        private static IQueryable<FhirRecord> CreateRandomFhirRecords()
+        private static IQueryable<FhirRecordDifference> CreateRandomFhirRecordDifferences()
         {
-            return CreateFhirRecordFiller(dateTimeOffset: GetRandomDateTimeOffset())
+            return CreateFhirRecordDifferenceFiller(dateTimeOffset: GetRandomDateTimeOffset())
                 .Create(count: GetRandomNumber())
                     .AsQueryable();
         }
 
-        private static FhirRecord CreateRandomFhirRecord() =>
-            CreateFhirRecordFiller(dateTimeOffset: GetRandomDateTimeOffset()).Create();
+        private static FhirRecordDifference CreateRandomFhirRecordDifference() =>
+            CreateFhirRecordDifferenceFiller(dateTimeOffset: GetRandomDateTimeOffset()).Create();
 
-        private static FhirRecord CreateRandomFhirRecord(DateTimeOffset dateTimeOffset, string userId = "") =>
-            CreateFhirRecordFiller(dateTimeOffset, userId).Create();
+        private static FhirRecordDifference CreateRandomFhirRecordDifference(DateTimeOffset dateTimeOffset, string userId = "") =>
+            CreateFhirRecordDifferenceFiller(dateTimeOffset, userId).Create();
 
-        private static Filler<FhirRecord> CreateFhirRecordFiller(DateTimeOffset dateTimeOffset, string userId = "")
+        private static Filler<FhirRecordDifference> CreateFhirRecordDifferenceFiller(DateTimeOffset dateTimeOffset, string userId = "")
         {
             userId = string.IsNullOrEmpty(userId) ? Guid.NewGuid().ToString() : userId;
-            var filler = new Filler<FhirRecord>();
+            var filler = new Filler<FhirRecordDifference>();
 
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
-                .OnProperty(fhirRecord => fhirRecord.CreatedBy).Use(userId)
-                .OnProperty(fhirRecord => fhirRecord.UpdatedBy).Use(userId);
+                .OnProperty(fhirRecordDifference => fhirRecordDifference.CreatedBy).Use(userId)
+                .OnProperty(fhirRecordDifference => fhirRecordDifference.UpdatedBy).Use(userId);
 
             return filler;
         }
