@@ -79,7 +79,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
         }
 
         [Fact]
-        public async Task ShouldThrowDependencyValidationExceptionOnAddAuditIfAuditAlreadyExsitsAndLogItAsync()
+        public async Task ShouldThrowDependencyValidationExceptionOnAddAuditIfAuditAlreadyExistsAndLogItAsync()
         {
             // given
             Audit randomAudit = CreateRandomAudit();
