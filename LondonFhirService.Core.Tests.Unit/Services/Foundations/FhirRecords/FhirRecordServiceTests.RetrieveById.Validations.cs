@@ -68,7 +68,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
             FhirRecord noFhirRecord = null;
 
             var notFoundFhirRecordException = new NotFoundFhirRecordException(
-                $"Couldn't find decision type with fhirRecordId: {someFhirRecordId}.");
+                $"Couldn't find fhirRecord with fhirRecordId: {someFhirRecordId}.");
 
             var expectedFhirRecordValidationException =
                 new FhirRecordValidationException(

@@ -103,7 +103,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             if (maybeFhirRecord is null)
             {
                 throw new NotFoundFhirRecordException(
-                    message: $"Couldn't find decision type with fhirRecordId: {fhirRecordId}.");
+                    message: $"Couldn't find fhirRecord with fhirRecordId: {fhirRecordId}.");
             }
         }
 
