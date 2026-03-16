@@ -176,86 +176,86 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
             this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
-        //[Fact]
-        //public async Task ShouldThrowValidationExceptionOnAddIfFhirRecordDifferenceHasInvalidLengthProperty()
-        //{
-        //    // given
-        //    string randomUserId = GetRandomStringWithLengthOf(256);
-        //    User randomUser = CreateRandomUser(userId: randomUserId);
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnAddIfFhirRecordDifferenceHasInvalidLengthProperty()
+        {
+            // given
+            string randomUserId = GetRandomStringWithLengthOf(256);
+            User randomUser = CreateRandomUser(userId: randomUserId);
 
-        //    var invalidFhirRecordDifference = CreateRandomFhirRecordDifference(GetRandomDateTimeOffset(), userId: randomUserId);
-        //    invalidFhirRecordDifference.Name = GetRandomStringWithLengthOf(255);
-        //    invalidFhirRecordDifference.CreatedBy = randomUserId;
-        //    invalidFhirRecordDifference.UpdatedBy = randomUserId;
+            var invalidFhirRecordDifference = CreateRandomFhirRecordDifference(GetRandomDateTimeOffset(), userId: randomUserId);
+            invalidFhirRecordDifference.CorrelationId = GetRandomStringWithLengthOf(256);
+            invalidFhirRecordDifference.CreatedBy = randomUserId;
+            invalidFhirRecordDifference.UpdatedBy = randomUserId;
 
-        //    var invalidFhirRecordDifferenceException =
-        //        new InvalidFhirRecordDifferenceException(
-        //            message: "Invalid fhirRecordDifference. Please correct the errors and try again.");
+            var invalidFhirRecordDifferenceException =
+                new InvalidFhirRecordDifferenceException(
+                    message: "Invalid fhirRecordDifference. Please correct the errors and try again.");
 
-        //    invalidFhirRecordDifferenceException.AddData(
-        //        key: nameof(FhirRecordDifference.Name),
-        //        values: $"Text exceed max length of {invalidFhirRecordDifference.Name.Length - 1} characters");
+            invalidFhirRecordDifferenceException.AddData(
+                key: nameof(FhirRecordDifference.CorrelationId),
+                values: $"Text exceed max length of {invalidFhirRecordDifference.CorrelationId.Length - 1} characters");
 
-        //    invalidFhirRecordDifferenceException.AddData(
-        //        key: nameof(FhirRecordDifference.CreatedBy),
-        //        values: $"Text exceed max length of {invalidFhirRecordDifference.CreatedBy.Length - 1} characters");
+            invalidFhirRecordDifferenceException.AddData(
+                key: nameof(FhirRecordDifference.CreatedBy),
+                values: $"Text exceed max length of {invalidFhirRecordDifference.CreatedBy.Length - 1} characters");
 
-        //    invalidFhirRecordDifferenceException.AddData(
-        //        key: nameof(FhirRecordDifference.UpdatedBy),
-        //        values: $"Text exceed max length of {invalidFhirRecordDifference.UpdatedBy.Length - 1} characters");
+            invalidFhirRecordDifferenceException.AddData(
+                key: nameof(FhirRecordDifference.UpdatedBy),
+                values: $"Text exceed max length of {invalidFhirRecordDifference.UpdatedBy.Length - 1} characters");
 
-        //    var expectedFhirRecordDifferenceValidationException =
-        //        new FhirRecordDifferenceValidationException(
-        //            message: "FhirRecordDifference validation errors occurred, please try again.",
-        //            innerException: invalidFhirRecordDifferenceException);
+            var expectedFhirRecordDifferenceValidationException =
+                new FhirRecordDifferenceValidationException(
+                    message: "FhirRecordDifference validation errors occurred, please try again.",
+                    innerException: invalidFhirRecordDifferenceException);
 
-        //    this.securityAuditBrokerMock.Setup(broker =>
-        //        broker.ApplyAddAuditValuesAsync(invalidFhirRecordDifference))
-        //            .ReturnsAsync(invalidFhirRecordDifference);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(invalidFhirRecordDifference))
+                    .ReturnsAsync(invalidFhirRecordDifference);
 
-        //    this.securityBrokerMock.Setup(broker =>
-        //        broker.GetCurrentUserAsync())
-        //            .ReturnsAsync(randomUser);
+            this.securityBrokerMock.Setup(broker =>
+                broker.GetCurrentUserAsync())
+                    .ReturnsAsync(randomUser);
 
-        //    // when
-        //    ValueTask<FhirRecordDifference> addFhirRecordDifferenceTask =
-        //        this.fhirRecordDifferenceService.AddFhirRecordDifferenceAsync(invalidFhirRecordDifference);
+            // when
+            ValueTask<FhirRecordDifference> addFhirRecordDifferenceTask =
+                this.fhirRecordDifferenceService.AddFhirRecordDifferenceAsync(invalidFhirRecordDifference);
 
-        //    FhirRecordDifferenceValidationException actualFhirRecordDifferenceValidationException =
-        //        await Assert.ThrowsAsync<FhirRecordDifferenceValidationException>(
-        //            addFhirRecordDifferenceTask.AsTask);
+            FhirRecordDifferenceValidationException actualFhirRecordDifferenceValidationException =
+                await Assert.ThrowsAsync<FhirRecordDifferenceValidationException>(
+                    addFhirRecordDifferenceTask.AsTask);
 
-        //    // then
-        //    actualFhirRecordDifferenceValidationException.Should()
-        //        .BeEquivalentTo(expectedFhirRecordDifferenceValidationException);
+            // then
+            actualFhirRecordDifferenceValidationException.Should()
+                .BeEquivalentTo(expectedFhirRecordDifferenceValidationException);
 
-        //    this.securityAuditBrokerMock.Verify(broker =>
-        //        broker.ApplyAddAuditValuesAsync(invalidFhirRecordDifference),
-        //            Times.Once);
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(invalidFhirRecordDifference),
+                    Times.Once);
 
-        //    this.dateTimeBrokerMock.Verify(broker =>
-        //        broker.GetCurrentDateTimeOffsetAsync(),
-        //            Times.Once());
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once());
 
-        //    this.securityBrokerMock.Verify(broker =>
-        //        broker.GetCurrentUserAsync(),
-        //            Times.Once);
+            this.securityBrokerMock.Verify(broker =>
+                broker.GetCurrentUserAsync(),
+                    Times.Once);
 
-        //    this.loggingBrokerMock.Verify(broker =>
-        //        broker.LogErrorAsync(It.Is(SameExceptionAs(
-        //            expectedFhirRecordDifferenceValidationException))),
-        //                Times.Once);
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedFhirRecordDifferenceValidationException))),
+                        Times.Once);
 
-        //    this.storageBrokerMock.Verify(broker =>
-        //        broker.InsertFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>()),
-        //            Times.Never);
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>()),
+                    Times.Never);
 
-        //    this.securityAuditBrokerMock.VerifyNoOtherCalls();
-        //    this.securityBrokerMock.VerifyNoOtherCalls();
-        //    this.dateTimeBrokerMock.VerifyNoOtherCalls();
-        //    this.loggingBrokerMock.VerifyNoOtherCalls();
-        //    this.storageBrokerMock.VerifyNoOtherCalls();
-        //}
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
+        }
 
         [Fact]
         public async Task ShouldThrowValidationExceptionOnAddIfCreateAndUpdateDatesIsNotSameAndLogItAsync()
