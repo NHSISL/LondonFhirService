@@ -184,18 +184,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
         public async Task ShouldThrowValidationExceptionOnModifyIfFhirRecordHasInvalidLengthProperty()
         {
             // given
-            string randomUserId = GetRandomString();
+            string randomUserId = GetRandomStringWithLengthOf(256);
             User randomUser = CreateRandomUser(userId: randomUserId);
 
             var invalidFhirRecord = CreateRandomModifyFhirRecord(GetRandomDateTimeOffset(), userId: randomUserId);
             invalidFhirRecord.CorrelationId = GetRandomStringWithLengthOf(256);
             invalidFhirRecord.SourceName = GetRandomStringWithLengthOf(451);
-            invalidFhirRecord.CreatedBy = GetRandomStringWithLengthOf(256);
-            invalidFhirRecord.UpdatedBy = GetRandomStringWithLengthOf(256);
+            invalidFhirRecord.CreatedBy = randomUserId;
+            invalidFhirRecord.UpdatedBy = randomUserId;
 
             var invalidFhirRecordException =
                 new InvalidFhirRecordException(
-                    message: "Invalid patient. Please correct the errors and try again.");
+                    message: "Invalid fhirRecord. Please correct the errors and try again.");
 
             invalidFhirRecordException.AddData(
                 key: nameof(FhirRecord.CorrelationId),

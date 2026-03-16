@@ -6,8 +6,8 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
+using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
-using LondonFhirService.Core.Models.Securities;
 using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
