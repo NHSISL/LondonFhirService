@@ -30,6 +30,7 @@
 		<PackageReference Include="DeepCloner" Version="0.10.4" />
 		<PackageReference Include="FluentAssertions" Version="7.2.0" />
 		<PackageReference Include="Hl7.Fhir.STU3" Version="6.1.0" />
+		<PackageReference Include="ISL.Security.Client" Version="4.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
 		<PackageReference Include="Moq" Version="4.20.72" />
