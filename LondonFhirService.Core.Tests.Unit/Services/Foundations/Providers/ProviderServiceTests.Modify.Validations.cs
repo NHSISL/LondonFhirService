@@ -349,7 +349,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 values:
                     $"Date is not recent. Expected a value between {startDate} and {endDate} but found {invalidDate}");
 
-            var expectedProviderValidatonException =
+            var expectedProviderValidationException =
                 new ProviderServiceValidationException(
                     message: "Provider validation errors occurred, please try again.",
                     innerException: invalidProviderServiceException);
@@ -376,7 +376,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
 
             // then
             actualProviderServiceValidationException.Should()
-                .BeEquivalentTo(expectedProviderValidatonException);
+                .BeEquivalentTo(expectedProviderValidationException);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyModifyAuditValuesAsync(randomProvider),
@@ -388,7 +388,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedProviderValidatonException))),
+                    expectedProviderValidationException))),
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>

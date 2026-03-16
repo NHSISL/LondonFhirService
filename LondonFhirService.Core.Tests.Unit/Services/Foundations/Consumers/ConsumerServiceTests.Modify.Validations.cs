@@ -344,7 +344,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
                 values:
                     $"Date is not recent. Expected a value between {startDate} and {endDate} but found {invalidDate}");
 
-            var expectedConsumerValidatonException =
+            var expectedConsumerValidationException =
                 new ConsumerServiceValidationException(
                     message: "Consumer validation errors occurred, please try again.",
                     innerException: invalidConsumerServiceException);
@@ -371,7 +371,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
 
             // then
             actualConsumerServiceValidationException.Should()
-                .BeEquivalentTo(expectedConsumerValidatonException);
+                .BeEquivalentTo(expectedConsumerValidationException);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyModifyAuditValuesAsync(randomConsumer),
@@ -383,7 +383,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Consumers
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConsumerValidatonException))),
+                    expectedConsumerValidationException))),
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>

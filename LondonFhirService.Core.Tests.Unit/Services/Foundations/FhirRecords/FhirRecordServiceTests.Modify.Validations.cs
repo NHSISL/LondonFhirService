@@ -370,7 +370,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 values:
                     $"Date is not recent. Expected a value between {startDate} and {endDate} but found {invalidDate}");
 
-            var expectedFhirRecordValidatonException =
+            var expectedFhirRecordValidationException =
                 new FhirRecordValidationException(
                     message: "FhirRecord validation errors occurred, please try again.",
                     innerException: invalidFhirRecordException);
@@ -397,7 +397,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
 
             // then
             actualFhirRecordValidationException.Should()
-                .BeEquivalentTo(expectedFhirRecordValidatonException);
+                .BeEquivalentTo(expectedFhirRecordValidationException);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyModifyAuditValuesAsync(randomFhirRecord),
@@ -409,7 +409,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedFhirRecordValidatonException))),
+                    expectedFhirRecordValidationException))),
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>

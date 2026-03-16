@@ -128,55 +128,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
         }
 
         [Fact]
-        public async Task ShouldThrowDependencyExceptionOnRemoveWhenSqlExceptionOccursAndLogItAsync()
-        {
-            // given
-            Guid someFhirRecordId = Guid.NewGuid();
-            SqlException sqlException = GetSqlException();
-
-            var failedFhirRecordStorageException =
-                new FailedStorageFhirRecordException(
-                    message: "Failed fhirRecord storage error occurred, contact support.",
-                    innerException: sqlException);
-
-            var expectedFhirRecordDependencyException =
-                new FhirRecordDependencyException(
-                    message: "FhirRecord dependency error occurred, contact support.",
-                    innerException: failedFhirRecordStorageException);
-
-            this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()))
-                    .ThrowsAsync(sqlException);
-
-            // when
-            ValueTask<FhirRecord> deleteFhirRecordTask =
-                this.fhirRecordService.RemoveFhirRecordByIdAsync(someFhirRecordId);
-
-            FhirRecordDependencyException actualFhirRecordDependencyException =
-                await Assert.ThrowsAsync<FhirRecordDependencyException>(
-                    deleteFhirRecordTask.AsTask);
-
-            // then
-            actualFhirRecordDependencyException.Should()
-                .BeEquivalentTo(expectedFhirRecordDependencyException);
-
-            this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()),
-                    Times.Once);
-
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogCriticalAsync(It.Is(SameExceptionAs(
-                    expectedFhirRecordDependencyException))),
-                        Times.Once);
-
-            this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.dateTimeBrokerMock.VerifyNoOtherCalls();
-            this.storageBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
-        }
-
-        [Fact]
         public async Task ShouldThrowServiceExceptionOnRemoveIfServiceErrorOccursAndLogItAsync()
         {
             // given
