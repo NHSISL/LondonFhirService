@@ -256,7 +256,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.InsertFhirRecordAsync(It.IsAny<FhirRecord>()),
+                broker.UpdateFhirRecordAsync(It.IsAny<FhirRecord>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
