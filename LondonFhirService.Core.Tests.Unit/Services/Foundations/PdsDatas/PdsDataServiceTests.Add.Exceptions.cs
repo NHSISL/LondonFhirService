@@ -64,7 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         }
 
         [Fact]
-        public async Task ShouldThrowDependencyValidationExceptionOnAddIfPdsDataAlreadyExsitsAndLogItAsync()
+        public async Task ShouldThrowDependencyValidationExceptionOnAddIfPdsDataAlreadyExistsAndLogItAsync()
         {
             // given
             PdsData randomPdsData = CreateRandomPdsData();

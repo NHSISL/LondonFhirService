@@ -91,7 +91,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 (Rule: await IsNotRecentAsync(fhirRecord.UpdatedDate), Parameter: nameof(FhirRecord.UpdatedDate)));
         }
 
-        public void ValidateFhirRecordId(Guid fhirRecordId) =>
+        private void ValidateFhirRecordId(Guid fhirRecordId) =>
             Validate(
                 createException: () => new InvalidFhirRecordException(
                     "Invalid fhirRecord. Please correct the errors and try again."),

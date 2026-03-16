@@ -37,12 +37,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     .Throws(sqlException);
 
             // when
-            ValueTask<FhirRecord> addFhirRecordTask =
+            ValueTask<FhirRecord> removeFhirRecordTask =
                 this.fhirRecordService.RemoveFhirRecordByIdAsync(randomFhirRecord.Id);
 
             FhirRecordDependencyException actualFhirRecordDependencyException =
                 await Assert.ThrowsAsync<FhirRecordDependencyException>(
-                    addFhirRecordTask.AsTask);
+                    removeFhirRecordTask.AsTask);
 
             // then
             actualFhirRecordDependencyException.Should()
