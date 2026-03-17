@@ -13,6 +13,9 @@ using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Securities;
+using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
@@ -27,18 +30,23 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         private readonly IAuditBroker auditBroker;
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly ISecurityAuditBroker securityAuditBroker;
+        private readonly IStorageBroker storageBroker;
         private readonly PatientServiceConfig patientServiceConfig;
 
         public Stu3PatientService(
             IStu3FhirBroker fhirBroker,
             IAuditBroker auditBroker,
             IIdentifierBroker identifierBroker,
+            ISecurityAuditBroker securityAuditBroker,
+            IStorageBroker storageBroker,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
             this.fhirBroker = fhirBroker;
             this.auditBroker = auditBroker;
             this.identifierBroker = identifierBroker;
+            this.securityAuditBroker = securityAuditBroker;
             this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }
@@ -140,7 +148,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 return bundles;
             });
 
-        public ValueTask<List<string>> GetStructuredRecordSerialisedAsync(
+        public ValueTask<List<(string Provider, string Json)>> GetStructuredRecordSerialisedAsync(
             List<Provider> activeProviders,
             Guid correlationId,
             string nhsNumber,
@@ -200,14 +208,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                var jsonBundles = new List<string>(outcomes.Length);
+                var jsonBundles = new List<(string, string)>(outcomes.Length);
                 var exceptions = new List<Exception>();
 
                 foreach (var outcome in outcomes)
                 {
                     if (outcome.Json is not null)
                     {
-                        jsonBundles.Add(outcome.Json);
+                        jsonBundles.Add((outcome.Provider, outcome.Json));
                     }
                     else if (outcome.Exception is not null)
                     {
@@ -376,7 +384,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             }
         }
 
-        virtual internal async Task<(string Json, Exception Exception)>
+        virtual internal async Task<(string Provider, string Json, Exception Exception)>
             ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                 string providerFriendlyName,
                 bool isPrimaryProvider,
@@ -390,7 +398,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         {
             if (globalToken.IsCancellationRequested)
             {
-                return (null, new OperationCanceledException(globalToken));
+                return (providerFriendlyName, null, new OperationCanceledException(globalToken));
             }
 
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
@@ -437,6 +445,18 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
+                FhirRecord fhirRecord = new FhirRecord
+                {
+                    Id = await identifierBroker.GetIdentifierAsync(),
+                    CorrelationId = correlationId.ToString(),
+                    JsonPayload = json,
+                    SourceName = $"{provider.DisplayName} - ({providerFriendlyName})",
+                    IsPrimarySource = isPrimaryProvider,
+                };
+
+                fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
+                await this.storageBroker.InsertFhirRecordAsync(fhirRecord);
+
                 await this.auditBroker.LogInformationAsync(
                     auditType,
                     title: $"{provider.DisplayName} Provider Execution Completed in {elapsedTime}ms",
@@ -444,7 +464,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                return (json, null);
+                return (providerFriendlyName, json, null);
             }
             catch (OperationCanceledException operationCancelledException)
                 when (timeoutCts.IsCancellationRequested && !globalToken.IsCancellationRequested)
@@ -453,11 +473,11 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds.",
                         operationCancelledException);
 
-                return (null, timeoutException);
+                return (providerFriendlyName, null, timeoutException);
             }
             catch (OperationCanceledException operationCancelledException)
             {
-                return (null, operationCancelledException);
+                return (providerFriendlyName, null, operationCancelledException);
             }
             catch (Exception exception)
             {
@@ -473,7 +493,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                return (null, exception);
+                return (providerFriendlyName, null, exception);
             }
         }
     }

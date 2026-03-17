@@ -17,9 +17,11 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
             return bundles.FirstOrDefault();
         }
 
-        public async ValueTask<string> ReconcileSerialisedAsync(List<string> bundles, Provider primaryProvider)
+        public async ValueTask<string> ReconcileSerialisedAsync(
+            List<(string Provider, string Json)> bundles,
+            Provider primaryProvider)
         {
-            return bundles.FirstOrDefault();
+            return bundles.FirstOrDefault().Json;
         }
     }
 }

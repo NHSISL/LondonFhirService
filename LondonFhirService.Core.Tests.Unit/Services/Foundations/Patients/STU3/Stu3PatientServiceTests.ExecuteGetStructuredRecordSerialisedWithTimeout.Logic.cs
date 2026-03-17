@@ -55,7 +55,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     .ReturnsAsync(rawOutputBundle);
 
             // when
-            (string Bundle, Exception Exception) actualResult =
+            (string Provider, string Json, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
@@ -113,6 +113,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -136,7 +138,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             (string Json, Exception Exception) expectedResult = (null, operationCanceledException);
 
             // when
-            (string Json, Exception Exception) actualResult =
+            (string Provider, string Json, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
@@ -163,6 +165,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -195,7 +199,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     .ThrowsAsync(operationCanceledException);
 
             // when
-            (string Json, Exception Exception) actualResult =
+            (string Provider, string Json, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
@@ -235,6 +239,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -266,7 +272,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     .ThrowsAsync(exception);
 
             // when
-            (string Json, Exception Exception) actualResult =
+            (string Provider, string Json, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
@@ -315,6 +321,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -359,7 +367,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                          });
 
             // when
-            (string Json, Exception Exception) actualResult =
+            (string Provider, string Json, Exception Exception) actualResult =
                 await this.patientService.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
@@ -405,6 +413,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

@@ -22,7 +22,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             bool? includeInactivePatients = null,
             CancellationToken cancellationToken = default);
 
-        ValueTask<List<string>> GetStructuredRecordSerialisedAsync(
+        ValueTask<List<(string Provider, string Json)>> GetStructuredRecordSerialisedAsync(
             List<Provider> activeProviders,
             Guid correlationId,
             string nhsNumber,

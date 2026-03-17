@@ -43,15 +43,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<string>> everythingTask = patientService.GetStructuredRecordSerialisedAsync(
-                activeProviders: providers,
-                correlationId: correlationId,
-                nhsNumber: inputNhsNumber,
-                cancellationToken: default);
+            ValueTask<List<(string Provider, string Json)>> getStructuredRecordSerialisedTask =
+                patientService.GetStructuredRecordSerialisedAsync(
+                    activeProviders: providers,
+                    correlationId: correlationId,
+                    nhsNumber: inputNhsNumber,
+                    cancellationToken: default);
 
             PatientServiceValidationException actualPatientServiceValidationException =
                 await Assert.ThrowsAsync<PatientServiceValidationException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: getStructuredRecordSerialisedTask.AsTask);
 
             // then
             actualPatientServiceValidationException.Should().BeEquivalentTo(expectedPatientServiceValidationException);
@@ -63,6 +64,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -99,7 +102,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<string>> everythingTask = patientService.GetStructuredRecordSerialisedAsync(
+            ValueTask<List<(string Provider, string Json)>> getStructuredRecordSerialisedTask = patientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: invalidText,
@@ -107,7 +110,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             PatientServiceValidationException actualPatientServiceValidationException =
                 await Assert.ThrowsAsync<PatientServiceValidationException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: getStructuredRecordSerialisedTask.AsTask);
 
             // then
             actualPatientServiceValidationException.Should().BeEquivalentTo(expectedPatientServiceValidationException);
@@ -119,6 +122,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -152,7 +157,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     innerException: invalidArgumentsPatientServiceException);
 
             // when
-            ValueTask<List<string>> everythingTask = patientService.GetStructuredRecordSerialisedAsync(
+            ValueTask<List<(string Provider, string Json)>> getStructuredRecordSerialisedTask = patientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: nhsNumber,
@@ -161,7 +166,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             PatientServiceValidationException actualPatientServiceValidationException =
                 await Assert.ThrowsAsync<PatientServiceValidationException>(
-                    testCode: everythingTask.AsTask);
+                    testCode: getStructuredRecordSerialisedTask.AsTask);
 
             // then
             actualPatientServiceValidationException.Should().BeEquivalentTo(expectedPatientServiceValidationException);
@@ -173,6 +178,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -228,6 +235,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -245,12 +254,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((rawOutputDdsBundle, null));
+                .ReturnsAsync((ddsProvider.FriendlyName, rawOutputDdsBundle, null));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<string> actualBundles =
+            List<(string Provider, string Json)> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -333,6 +342,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -389,6 +400,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -406,12 +419,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((rawOutputDdsBundle, null));
+                .ReturnsAsync((ddsProvider.FriendlyName, rawOutputDdsBundle, null));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<string> actualBundles =
+            List<(string Provider, string Json)> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -494,6 +507,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -553,6 +568,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -570,7 +587,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((rawOutputDdsBundle, null));
+                .ReturnsAsync((ddsProvider.FriendlyName, rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
@@ -583,12 +600,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((null, timeoutException));
+                .ReturnsAsync((ldsProvider.FriendlyName, null, timeoutException));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<string> actualBundles =
+            List<(string Provider, string Json)> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -670,6 +687,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -724,6 +743,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -741,7 +762,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((null, timeoutException));
+                .ReturnsAsync((ddsProvider.FriendlyName, null, timeoutException));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
@@ -754,12 +775,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((null, timeoutException2));
+                .ReturnsAsync((ldsProvider.FriendlyName, null, timeoutException2));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<string> actualBundles =
+            List<(string Provider, string Json)> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -841,6 +862,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -898,6 +921,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -915,7 +940,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((rawOutputDdsBundle, null));
+                .ReturnsAsync((ddsProvider.FriendlyName, rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
@@ -928,12 +953,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((null, exception));
+                .ReturnsAsync((ldsProvider.FriendlyName, null, exception));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<string> actualBundles =
+            List<(string Provider, string Json)> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -1015,6 +1040,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -1067,6 +1094,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -1084,7 +1113,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((null, exception));
+                .ReturnsAsync((ddsProvider.FriendlyName, null, exception));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
@@ -1097,12 +1126,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((null, exception2));
+                .ReturnsAsync((ldsProvider.FriendlyName, null, exception2));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<string> actualBundles =
+            List<(string Provider, string Json)> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -1184,6 +1213,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
     }

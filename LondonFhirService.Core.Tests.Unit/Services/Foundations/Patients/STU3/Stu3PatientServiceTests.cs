@@ -13,6 +13,8 @@ using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Securities;
+using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
@@ -37,6 +39,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly Mock<IAuditBroker> auditBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
+        private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
+        private readonly Mock<IStorageBroker> storageBrokerMock;
         private readonly PatientServiceConfig patientServiceConfig;
         private readonly Stu3PatientService patientService;
         private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
@@ -48,6 +52,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.auditBrokerMock = new Mock<IAuditBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
+            this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
+            this.storageBrokerMock = new Mock<IStorageBroker>();
 
             this.patientServiceConfig = new PatientServiceConfig
             {
@@ -76,6 +82,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 fhirBroker: this.fhirBroker,
                 auditBroker: this.auditBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
+                securityAuditBroker: this.securityAuditBrokerMock.Object,
+                storageBroker: this.storageBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 patientServiceConfig: this.patientServiceConfig);
         }

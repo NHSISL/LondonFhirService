@@ -154,7 +154,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             List<Provider> activeProviders;
             (primaryProvider, activeProviders) = await GetProviderInfo();
 
-            List<string> bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
+            List<(string Provider, string Json)> bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
                 activeProviders,
                 correlationId,
                 nhsNumber,
@@ -170,9 +170,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
-                bundles: bundles,
-                primaryProvider: primaryProvider);
+            string reconciledBundle =
+                await this.fhirReconciliationService.ReconcileSerialisedAsync(
+                    bundles: bundles,
+                    primaryProvider: primaryProvider);
 
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;

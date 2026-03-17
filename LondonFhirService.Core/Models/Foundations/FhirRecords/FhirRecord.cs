@@ -14,6 +14,7 @@ namespace LondonFhirService.Core.Models.Foundations.FhirRecords
         public string JsonPayload { get; set; }
         public string SourceName { get; set; }
         public bool IsPrimarySource { get; set; }
+        public bool IsProcessed { get; set; }
         public string CreatedBy { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
         public string UpdatedBy { get; set; }
