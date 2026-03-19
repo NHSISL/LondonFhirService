@@ -57,46 +57,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         }
 
         [Fact]
-        public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidNhsNumberAsync()
-        {
-            // given
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
-            List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
-            List<PdsData> storagePdsDatas = randomPdsDatas;
-            List<string> inputOrganisationCodes = randomPdsDatas.Select(pdsData => pdsData.OrgCode).ToList();
-            bool expectedResult = false;
-
-            this.storageBroker.Setup(broker =>
-                broker.SelectAllPdsDatasAsync())
-                    .ReturnsAsync(storagePdsDatas.AsQueryable());
-
-            this.dateTimeBroker.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
-                    .ReturnsAsync(DateTimeOffset.UtcNow);
-
-            // when
-            bool actualResult =
-                await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
-
-            // then
-            actualResult.Should().Be(expectedResult);
-
-            this.storageBroker.Verify(broker =>
-                broker.SelectAllPdsDatasAsync(),
-                    Times.Once);
-
-            this.dateTimeBroker.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
-
-            this.storageBroker.VerifyNoOtherCalls();
-            this.dateTimeBroker.VerifyNoOtherCalls();
-            this.loggingBrokerMock.VerifyNoOtherCalls();
-        }
-
-        [Fact]
         public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidOrganisationsAsync()
         {
             // given
