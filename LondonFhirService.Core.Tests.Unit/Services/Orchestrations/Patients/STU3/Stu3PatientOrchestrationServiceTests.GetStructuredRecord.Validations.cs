@@ -31,7 +31,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             var invalidArgumentPatientOrchestrationException =
                 new InvalidArgumentPatientOrchestrationException(
-                    message: "Invalid patient orchestration argument, please correct the errors and try again.");
+                    message: "Invalid argument(s), please correct the errors and try again.");
 
             invalidArgumentPatientOrchestrationException.AddData(
                 key: "NhsNumber",

@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
+using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -53,13 +54,18 @@ namespace LondonFhirService.Api.Controllers.STU3
                 return Content(json, "application/fhir+json");
             }
             catch (PatientCoordinationValidationException patientCoordinationValidationException)
+                when (patientCoordinationValidationException.InnerException is ResourceNotFoundException)
+            {
+                return InternalServerError(patientCoordinationValidationException.InnerException);
+            }
+            catch (PatientCoordinationValidationException patientCoordinationValidationException)
             {
                 return NotFound(patientCoordinationValidationException.InnerException);
             }
             catch (PatientCoordinationDependencyValidationException
                 patientCoordinationDependencyValidationException)
             {
-                return BadRequest(patientCoordinationDependencyValidationException.InnerException);
+                return NotFound(patientCoordinationDependencyValidationException.InnerException);
             }
             catch (PatientCoordinationDependencyException patientCoordinationDependencyException)
             {
