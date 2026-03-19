@@ -196,9 +196,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidInputsAsync()
         {
             // given
-            string randomPseudoNhsNumber = GetRandomString();
-            string inputPseudoNhsNumber = randomPseudoNhsNumber;
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
+            string inputPseudoNhsNumber = randomPdsDatas.First().NhsNumber;
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = GetRandomStringsWithLengthOf(10);
             bool expectedResult = false;
