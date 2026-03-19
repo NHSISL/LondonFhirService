@@ -6,7 +6,6 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -36,68 +35,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             this.auditBroker = auditBroker;
             this.identifierBroker = identifierBroker;
         }
-
-        public ValueTask<Bundle> GetStructuredRecordAsync(
-            string nhsNumber,
-            string dateOfBirth = null,
-            bool? demographicsOnly = null,
-            bool? includeInactivePatients = null,
-            CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
-        {
-            var stopwatch = Stopwatch.StartNew();
-            ValidateArgsOnGetStructuredRecord(nhsNumber);
-            Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
-            string auditType = "STU3-Patient-GetStructuredRecord";
-
-            string message =
-                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
-                $"demographicsOnly = \"{demographicsOnly}\", " +
-                $"includeInactivePatients = \"{includeInactivePatients}\" }}";
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Coordination Service Request Submitted",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Check Access Permissions",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            await this.accessOrchestrationService.ValidateAccess(nhsNumber, correlationId);
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Requesting Patient Info",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            Bundle bundle = await this.patientOrchestrationService.GetStructuredRecordAsync(
-                correlationId,
-                nhsNumber,
-                dateOfBirth,
-                demographicsOnly,
-                includeInactivePatients,
-                cancellationToken);
-
-            stopwatch.Stop();
-            long elapsedTime = stopwatch.ElapsedMilliseconds;
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Coordination Service Request Completed in {elapsedTime}ms",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            return bundle;
-        });
 
         public ValueTask<string> GetStructuredRecordSerialisedAsync(
             string nhsNumber,

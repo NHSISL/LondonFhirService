@@ -5,6 +5,7 @@
 using System;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -66,6 +67,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                 Type = Bundle.BundleType.Searchset,
                 Total = GetRandomNumber()
             };
+
+        private static string SerializeBundle(Bundle bundle)
+        {
+            var serializer = new FhirJsonSerializer();
+            return serializer.SerializeToString(bundle);
+        }
 
         public static TheoryData<Xeption> DependencyValidationExceptions()
         {

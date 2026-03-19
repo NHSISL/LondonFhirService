@@ -20,11 +20,6 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
             this.loggingBroker = loggingBroker;
         }
 
-        public async ValueTask<Bundle> ReconcileAsync(List<Bundle> bundles, Provider primaryProvider)
-        {
-            return bundles.FirstOrDefault();
-        }
-
         public ValueTask<string> ReconcileSerialisedAsync(
             List<(string Provider, string Json)> bundles,
             string nhsNumber,

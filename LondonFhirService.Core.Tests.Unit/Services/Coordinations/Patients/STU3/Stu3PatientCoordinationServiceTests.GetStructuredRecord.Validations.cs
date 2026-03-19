@@ -4,7 +4,6 @@
 
 using System.Threading.Tasks;
 using FluentAssertions;
-using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using Moq;
 using Task = System.Threading.Tasks.Task;
@@ -36,12 +35,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     innerException: invalidArgumentPatientCoordinationException);
 
             // when
-            ValueTask<Bundle> everythingTask =
-                this.patientCoordinationService.GetStructuredRecordAsync(nhsNumber: invalidId);
+            ValueTask<string> getStructuredRecordTask =
+                this.patientCoordinationService.GetStructuredRecordSerialisedAsync(nhsNumber: invalidId);
 
             PatientCoordinationValidationException actualPatientCoordinationValidationException =
                 await Assert.ThrowsAsync<PatientCoordinationValidationException>(
-                    everythingTask.AsTask);
+                    getStructuredRecordTask.AsTask);
 
             // then
             actualPatientCoordinationValidationException.Should()
