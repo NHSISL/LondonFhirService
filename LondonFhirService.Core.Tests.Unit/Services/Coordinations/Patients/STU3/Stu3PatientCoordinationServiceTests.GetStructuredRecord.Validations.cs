@@ -24,7 +24,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             var invalidArgumentPatientCoordinationException =
                 new InvalidArgumentPatientCoordinationException(
-                    message: "Invalid patient coordination argument, please correct the errors and try again.");
+                    message: "Invalid argument(s), please correct the errors and try again.");
 
             invalidArgumentPatientCoordinationException.AddData(
                 key: "NhsNumber",

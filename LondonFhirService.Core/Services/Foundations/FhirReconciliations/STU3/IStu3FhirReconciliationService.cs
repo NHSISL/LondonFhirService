@@ -15,6 +15,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
 
         ValueTask<string> ReconcileSerialisedAsync(
             List<(string Provider, string Json)> bundles,
+            string nhsNumber,
             Provider primaryProvider);
     }
 }

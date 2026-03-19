@@ -173,6 +173,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             string reconciledBundle =
                 await this.fhirReconciliationService.ReconcileSerialisedAsync(
                     bundles: bundles,
+                    nhsNumber: nhsNumber,
                     primaryProvider: primaryProvider);
 
             stopwatch.Stop();

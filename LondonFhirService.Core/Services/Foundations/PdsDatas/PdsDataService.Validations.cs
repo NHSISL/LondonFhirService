@@ -30,7 +30,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
 
             Validate(
                 createException: () => new InvalidPdsDataServiceException(
-                    message: "Invalid pdsData. Please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(pdsData.Id), Parameter: nameof(PdsData.Id)),
                 (Rule: IsInvalid(pdsData.NhsNumber), Parameter: nameof(PdsData.NhsNumber)));
@@ -42,7 +42,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
         {
             Validate(
                 createException: () => new InvalidPdsDataServiceException(
-                    message: "Invalid pdsData. Please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
                 (Rule: IsInvalid(organisationCodes), Parameter: nameof(organisationCodes)));
@@ -51,7 +51,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
         public static void ValidatePdsDataId(Guid pdsDataId) =>
             Validate(
                 createException: () => new InvalidPdsDataServiceException(
-                    message: "Invalid pdsData. Please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(pdsDataId), Parameter: nameof(PdsData.Id)));
 
@@ -68,6 +68,14 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             if (pdsData is null)
             {
                 throw new NullPdsDataServiceException(message: "PdsData is null.");
+            }
+        }
+
+        private static void ValidatePatientExists(bool patientExists)
+        {
+            if (patientExists != true)
+            {
+                throw new InvalidPdsDataServiceException(message: $"PDS configuration data not found for patient.");
             }
         }
 

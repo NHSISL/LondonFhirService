@@ -43,18 +43,18 @@ namespace LondonFhirService.Api.Controllers.STU3
                 bool? includeInactivePatients =
                     ExtractBoolParameter(parameters, "includeInactivePatients", partName: "includeInactivePatients");
 
-                string bundle = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                string json = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
                     nhsNumber,
                     dateOfBirth,
                     demographicsOnly,
                     includeInactivePatients,
                     cancellationToken);
 
-                return Content(bundle, "application/fhir+json");
+                return Content(json, "application/fhir+json");
             }
             catch (PatientCoordinationValidationException patientCoordinationValidationException)
             {
-                return BadRequest(patientCoordinationValidationException.InnerException);
+                return NotFound(patientCoordinationValidationException.InnerException);
             }
             catch (PatientCoordinationDependencyValidationException
                 patientCoordinationDependencyValidationException)

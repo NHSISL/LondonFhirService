@@ -17,7 +17,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         {
             Validate(
                 createException: () => new InvalidArgumentPatientOrchestrationException(
-                    message: "Invalid patient orchestration argument, please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(id), Parameter: "Id"),
                 (Rule: IsInvalid(correlationId), Parameter: "CorrelationId"));
@@ -27,7 +27,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         {
             Validate(
                 createException: () => new InvalidArgumentPatientOrchestrationException(
-                    message: "Invalid patient orchestration argument, please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(nhsNumber), Parameter: "NhsNumber"),
                 (Rule: IsInvalid(correlationId), Parameter: "CorrelationId"));
