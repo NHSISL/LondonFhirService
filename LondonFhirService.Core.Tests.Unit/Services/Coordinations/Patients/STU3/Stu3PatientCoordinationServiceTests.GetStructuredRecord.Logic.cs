@@ -26,7 +26,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             Bundle randomBundle = CreateRandomBundle();
             string expectedBundle = SerializeBundle(randomBundle.DeepClone());
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
