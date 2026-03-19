@@ -169,7 +169,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             bool inputFhirProviderIsPrimary = true;
             var fhirProvider = this.ddsFhirProviderMock.Object;
 
-            (string Json, Exception Exception) expectedResult = (null, operationCanceledException);
+            (string Provider, string Json, Exception Exception) expectedResult =
+                (inputFhirProviderName, null, operationCanceledException);
 
             // when
             (string Provider, string Json, Exception Exception) actualResult =
