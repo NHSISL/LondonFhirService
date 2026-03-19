@@ -30,8 +30,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             var invalidArgumentAccessOrchestrationException =
                 new InvalidArgumentAccessOrchestrationException(
-                    message: "Invalid argument access orchestration exception, " +
-                        "please correct the errors and try again.");
+                    message: "Invalid argument(s), please correct the errors and try again.");
 
             invalidArgumentAccessOrchestrationException.AddData(
                 key: "nhsNumber",
