@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
-using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
+using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

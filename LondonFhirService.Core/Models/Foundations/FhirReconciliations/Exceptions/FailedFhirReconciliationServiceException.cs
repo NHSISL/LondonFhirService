@@ -6,7 +6,7 @@ using System;
 using System.Collections;
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions
+namespace LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions
 {
     public class FailedFhirReconciliationServiceException : Xeption
     {

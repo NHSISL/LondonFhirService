@@ -5,7 +5,6 @@
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
-using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
@@ -28,7 +27,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
             {
                 var failedFhirReconciliationServiceException =
                     new FailedFhirReconciliationServiceException(
-                        message: "Failed patient service error occurred, please contact support.",
+                        message: "Failed FHIR reconciliation service error occurred, please contact support.",
                         innerException: exception,
                         data: exception.Data);
 
