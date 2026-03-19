@@ -9,12 +9,14 @@ using System.Linq.Expressions;
 using System.Threading;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using KellermanSoftware.CompareNetObjects;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
@@ -45,6 +47,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         private readonly Stu3PatientService patientService;
         private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
         private readonly FhirJsonSerializer fhirJsonSerializer = new();
+        private readonly ICompareLogic compareLogic;
 
         public Stu3PatientServiceTests()
         {
@@ -54,6 +57,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
             this.storageBrokerMock = new Mock<IStorageBroker>();
+            this.compareLogic = new CompareLogic();
 
             this.patientServiceConfig = new PatientServiceConfig
             {
@@ -192,6 +196,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             return actualException =>
                 actualException.SameExceptionAs(expectedException);
         }
+
+        private Expression<Func<FhirRecord, bool>> SameFhirRecordAs(
+            FhirRecord expectedFhirRecord)
+        {
+            return actualFhirRecord =>
+                this.compareLogic.Compare(expectedFhirRecord, actualFhirRecord)
+                    .AreEqual;
+        }
+
 
         private static Expression<Func<Exception, bool>> SameExceptionAs(
             Exception expectedException)

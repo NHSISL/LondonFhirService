@@ -47,6 +47,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             this.auditBroker = auditBroker;
             this.identifierBroker = identifierBroker;
             this.securityAuditBroker = securityAuditBroker;
+            this.storageBroker = storageBroker;
             this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }
@@ -445,13 +446,16 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                FhirRecord fhirRecord = new FhirRecord
+                Guid identifier = await identifierBroker.GetIdentifierAsync();
+
+                FhirRecord fhirRecord = new()
                 {
-                    Id = await identifierBroker.GetIdentifierAsync(),
+                    Id = identifier,
                     CorrelationId = correlationId.ToString(),
                     JsonPayload = json,
-                    SourceName = $"{provider.DisplayName} - ({providerFriendlyName})",
+                    SourceName = $"{provider.DisplayName} ({providerFriendlyName})",
                     IsPrimarySource = isPrimaryProvider,
+                    IsProcessed = false,
                 };
 
                 fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
