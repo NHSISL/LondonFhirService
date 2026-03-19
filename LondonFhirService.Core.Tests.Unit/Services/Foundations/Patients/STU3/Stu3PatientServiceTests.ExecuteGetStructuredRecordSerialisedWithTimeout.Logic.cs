@@ -295,7 +295,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 $"demographicsOnly = \"{null}\", " +
                 $"includeInactivePatients = \"{null}\" }}";
 
-            (string Json, Exception Exception) expectedResult = (null, exception);
+            (string Provider, string Json, Exception Exception) expectedResult =
+                (inputFhirProviderName, null, exception);
 
             this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordSerialisedAsync(
                 nhsNumber,
