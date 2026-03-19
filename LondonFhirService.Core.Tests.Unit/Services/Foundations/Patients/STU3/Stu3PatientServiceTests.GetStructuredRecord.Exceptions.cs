@@ -55,6 +55,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -170,6 +172,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -290,6 +294,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
