@@ -903,9 +903,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 $"demographicsOnly = \"{inputDemographicsOnly}\", " +
                 $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
-            List<string> expectedBundles = new List<string>
+            List<(string Provider, string Json)> expectedBundles = new List<(string Provider, string Json)>
             {
-                rawOutputDdsBundle
+                (ddsProvider.FriendlyName, rawOutputDdsBundle)
             };
 
             List<Exception> exceptions = new List<Exception>
