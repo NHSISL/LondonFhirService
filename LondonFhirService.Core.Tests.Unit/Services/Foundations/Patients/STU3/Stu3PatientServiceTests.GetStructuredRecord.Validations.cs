@@ -29,8 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputNhsNumber = randomNhsNumber;
 
             var invalidArgumentsPatientServiceException = new InvalidArgumentsPatientServiceException(
-                message: "Invalid argument patient service exception, " +
-                    "please correct the errors and try again.");
+                message: "Invalid argument(s), please correct the errors and try again.");
 
             invalidArgumentsPatientServiceException.AddData(
                 key: "activeProviders",
@@ -86,8 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Guid correlationId = Guid.Empty;
 
             var invalidArgumentsPatientServiceException = new InvalidArgumentsPatientServiceException(
-                message: "Invalid argument patient service exception, " +
-                    "please correct the errors and try again.");
+                message: "Invalid argument(s), please correct the errors and try again.");
 
             invalidArgumentsPatientServiceException.AddData(
                 key: "nhsNumber",
