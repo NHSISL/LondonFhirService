@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Providers;
@@ -13,6 +14,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
         ValueTask<string> ReconcileSerialisedAsync(
             List<(string Provider, string Json)> bundles,
             string nhsNumber,
-            Provider primaryProvider);
+            Provider primaryProvider,
+            Guid correlationId);
     }
 }
