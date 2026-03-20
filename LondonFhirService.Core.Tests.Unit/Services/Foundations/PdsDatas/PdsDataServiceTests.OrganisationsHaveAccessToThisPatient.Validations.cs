@@ -26,7 +26,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // given
             string invalidPatientIdentifier = invalidItem;
             string invalidNhsNumber = invalidItem;
-            Guid invalidCorreltionId = Guid.Empty;
+            Guid invalidCorrelationId = Guid.Empty;
 
             var invalidPdsDataException =
                 new InvalidPdsDataServiceException(
@@ -59,7 +59,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                     invalidPatientIdentifier,
                     invalidNhsNumber,
                     invalidList,
-                    invalidCorreltionId);
+                    invalidCorrelationId);
 
             PdsDataServiceValidationException actualPdsDataValidationException =
                 await Assert.ThrowsAsync<PdsDataServiceValidationException>(
