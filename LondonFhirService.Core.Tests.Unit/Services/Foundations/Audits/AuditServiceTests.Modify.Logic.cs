@@ -6,7 +6,6 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
-using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using Moq;
 
@@ -39,10 +38,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.securityAuditBrokerMock.Setup(broker =>
                 broker.GetUserIdAsync())
                     .ReturnsAsync(randomUserId);
-
-            this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateStorageBrokerAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
 
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(auditId))
@@ -81,6 +76,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             this.storageBrokerMock.Verify(broker =>
                 broker.UpdateAuditAsync(inputAudit),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.DisposeAsync(),
                     Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();

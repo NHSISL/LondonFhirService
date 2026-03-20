@@ -6,7 +6,6 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
-using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using Moq;
@@ -480,10 +479,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     message: "Audit validation errors occurred, please try again.",
                     innerException: invalidAuditException);
 
-            this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateStorageBrokerAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
-
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(invalidAudit.Id))
                     .ReturnsAsync(storageAudit);
@@ -524,6 +519,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                broker.LogErrorAsync(It.Is(SameExceptionAs(
                    expectedAuditValidationException))),
                        Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.DisposeAsync(),
+                    Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
@@ -569,10 +568,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.GetUserIdAsync())
                     .ReturnsAsync(randomUserId);
 
-            this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateStorageBrokerAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
-
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(invalidAudit.Id))
                     .ReturnsAsync(storageAudit);
@@ -612,6 +607,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                broker.LogErrorAsync(It.Is(SameExceptionAs(
                    expectedAuditValidationException))),
                        Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.DisposeAsync(),
+                    Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
@@ -656,10 +655,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.GetUserIdAsync())
                     .ReturnsAsync(randomUserId);
 
-            this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateStorageBrokerAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
-
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(invalidAudit.Id))
                     .ReturnsAsync(storageAudit);
@@ -695,6 +690,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectAuditByIdAsync(invalidAudit.Id),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.DisposeAsync(),
                     Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();

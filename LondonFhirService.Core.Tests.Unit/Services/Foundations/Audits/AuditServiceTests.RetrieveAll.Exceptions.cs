@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using Microsoft.Data.SqlClient;
@@ -31,10 +30,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 new AuditServiceDependencyException(
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: failedAuditStorageException);
-
-            this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateStorageBrokerAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
 
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllAuditsAsync())
@@ -65,6 +60,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     expectedAuditDependencyException))),
                         Times.Once);
 
+            this.storageBrokerMock.Verify(broker =>
+                broker.DisposeAsync(),
+                    Times.Once);
+
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -88,10 +87,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 new AuditServiceException(
                     message: "Audit service error occurred, please contact support.",
                     innerException: failedAuditServiceException);
-
-            this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateStorageBrokerAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
 
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllAuditsAsync())
@@ -121,6 +116,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedAuditServiceException))),
                         Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.DisposeAsync(),
+                    Times.Once);
 
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
