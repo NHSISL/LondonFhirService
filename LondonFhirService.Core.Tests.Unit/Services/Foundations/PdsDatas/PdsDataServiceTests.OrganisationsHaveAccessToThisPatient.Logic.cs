@@ -67,10 +67,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         {
             // given
             Guid inputCorrelationId = Guid.NewGuid();
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
-            string inputPatientIdentifier = GetRandomString();
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
+            string inputNhsNumber = randomPdsDatas.First().NhsNumber;
+            string inputPatientIdentifier = randomPdsDatas.First().NhsNumber;
             randomPdsDatas.ForEach(pdsData => pdsData.NhsNumber = inputNhsNumber);
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = GetRandomStringsWithLengthOf(10);

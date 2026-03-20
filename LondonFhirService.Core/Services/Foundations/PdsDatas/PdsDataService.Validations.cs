@@ -84,9 +84,11 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                 await this.auditBroker.LogInformationAsync(
                     auditType: "Access",
                     title: "PDS Configuration",
+
                     message:
                         $"Patient resource with NHS Number: '{nhsNumber}', does not have a corresponding hash entry in the PDS table.  " +
                         $"CorrelationId: {correlationId.ToString()}",
+
                     fileName: null,
                     correlationId: correlationId.ToString());
 
