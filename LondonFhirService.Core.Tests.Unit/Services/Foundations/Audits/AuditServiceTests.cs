@@ -52,18 +52,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 .Setup(broker => broker.DisposeAsync())
                     .Returns(ValueTask.CompletedTask);
 
-            //this.storageBrokerMock = new Mock<StorageBroker>(this.configurationMock.Object)
-            //{
-            //    CallBase = true,
-            //    DefaultValue = DefaultValue.Empty
-            //};
-
-            //this.storageBrokerFactoryMock = new Mock<IDbContextFactory<StorageBroker>>();
-
-
-
-
-
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
