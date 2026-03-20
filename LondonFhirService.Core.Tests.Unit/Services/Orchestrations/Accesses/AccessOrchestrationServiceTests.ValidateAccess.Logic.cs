@@ -53,6 +53,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             Guid randomGuid = Guid.NewGuid();
             string randomNhsNumber = GetRandomStringWithLength(5);
             string inputNhsNumber = randomNhsNumber;
+            string inputPatientIdentifier = randomNhsNumber;
             string userOrganisation = GetRandomStringWithLength(5);
 
             List<string> userOrganisations =
@@ -97,7 +98,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(userOrganisations);
 
             this.pdsDataServiceMock.Setup(service =>
-                service.OrganisationsHaveAccessToThisPatient(inputNhsNumber, userOrganisations))
+                service.OrganisationsHaveAccessToThisPatient(
+                    inputPatientIdentifier,
+                    inputNhsNumber,
+                    userOrganisations,
+                    correlationId))
                     .ReturnsAsync(true);
 
             // when
@@ -150,7 +155,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     Times.Once);
 
             this.pdsDataServiceMock.Verify(service =>
-                service.OrganisationsHaveAccessToThisPatient(inputNhsNumber, userOrganisations),
+                service.OrganisationsHaveAccessToThisPatient(
+                    inputPatientIdentifier,
+                    inputNhsNumber,
+                    userOrganisations,
+                    correlationId),
                     Times.Once);
 
             this.consumerServiceMock.VerifyNoOtherCalls();

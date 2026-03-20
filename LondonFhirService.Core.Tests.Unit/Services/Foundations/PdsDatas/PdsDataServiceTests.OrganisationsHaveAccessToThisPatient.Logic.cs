@@ -19,9 +19,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldCheckIfOrganisationsHaveAccessToThisPatientAsync()
         {
             // given
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            Guid inputCorrelationId = Guid.NewGuid();
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
+            string inputNhsNumber = randomPdsDatas.First().NhsNumber;
+            string inputPatientIdentifier = randomPdsDatas.First().NhsNumber;
             randomPdsDatas.ForEach(pdsData => pdsData.NhsNumber = inputNhsNumber);
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = randomPdsDatas.Select(pdsData => pdsData.OrgCode).ToList();
@@ -38,7 +39,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             bool actualResult =
                 await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
+                    patientIdentifier: inputPatientIdentifier,
+                    nhsNumber: inputNhsNumber,
+                    organisationCodes: inputOrganisationCodes,
+                    correlationId: inputCorrelationId);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -54,14 +58,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
         public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidOrganisationsAsync()
         {
             // given
+            Guid inputCorrelationId = Guid.NewGuid();
             string randomNhsNumber = GetRandomString();
             string inputNhsNumber = randomNhsNumber;
+            string inputPatientIdentifier = GetRandomString();
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
             randomPdsDatas.ForEach(pdsData => pdsData.NhsNumber = inputNhsNumber);
             List<PdsData> storagePdsDatas = randomPdsDatas;
@@ -79,7 +86,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             bool actualResult =
                 await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
+                    patientIdentifier: inputPatientIdentifier,
+                    nhsNumber: inputNhsNumber,
+                    organisationCodes: inputOrganisationCodes,
+                    correlationId: inputCorrelationId);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -95,14 +105,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
         public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithMissingConfigAsync()
         {
             // given
-            string randomPseudoNhsNumber = GetRandomString();
-            string inputPseudoNhsNumber = randomPseudoNhsNumber;
+            Guid inputCorrelationId = Guid.NewGuid();
+            string inputNhsNumber = GetRandomString();
+            string inputPatientIdentifier = GetRandomString();
             List<string> inputOrganisationCodes = GetRandomStringsWithLengthOf(10);
 
             this.storageBroker.Setup(broker =>
@@ -125,7 +137,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             ValueTask<bool> retrieveAllPdsDatasTask =
                 this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputPseudoNhsNumber, organisationCodes: inputOrganisationCodes);
+                    patientIdentifier: inputPatientIdentifier,
+                    nhsNumber: inputNhsNumber,
+                    organisationCodes: inputOrganisationCodes,
+                    correlationId: inputCorrelationId);
 
             PdsDataServiceValidationException actualPdsDataServiceValidationException =
                 await Assert.ThrowsAsync<PdsDataServiceValidationException>(
@@ -150,14 +165,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
         public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidInputsAsync()
         {
             // given
+            Guid inputCorrelationId = Guid.NewGuid();
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
-            string inputPseudoNhsNumber = randomPdsDatas.First().NhsNumber;
+            string inputNhsNumber = randomPdsDatas.First().NhsNumber;
+            string inputPatientIdentifier = randomPdsDatas.First().NhsNumber;
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = GetRandomStringsWithLengthOf(10);
             bool expectedResult = false;
@@ -173,7 +191,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             bool actualResult =
                 await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputPseudoNhsNumber, organisationCodes: inputOrganisationCodes);
+                    patientIdentifier: inputPatientIdentifier,
+                    nhsNumber: inputNhsNumber,
+                    organisationCodes: inputOrganisationCodes,
+                    correlationId: inputCorrelationId);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -189,20 +210,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
         public async Task ShouldNotHaveAccessToThisPatientIfRelationshipIsInactiveAsync()
         {
             // given
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
+            string inputNhsNumber = GetRandomString();
+            string inputPatientIdentifier = GetRandomString();
+            Guid inputCorrelationId = Guid.NewGuid();
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
+
             randomPdsDatas.ForEach(pdsData =>
             {
                 pdsData.NhsNumber = inputNhsNumber;
                 pdsData.RelationshipWithOrganisationEffectiveFromDate = GetRandomFutureDateTimeOffset();
             });
+
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = randomPdsDatas.Select(pdsData => pdsData.OrgCode).ToList();
             bool expectedResult = false;
@@ -218,7 +243,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             bool actualResult =
                 await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
+                    patientIdentifier: inputPatientIdentifier,
+                    nhsNumber: inputNhsNumber,
+                    organisationCodes: inputOrganisationCodes,
+                    correlationId: inputCorrelationId);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -234,6 +262,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

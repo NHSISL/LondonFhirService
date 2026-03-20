@@ -201,6 +201,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             Guid randomGuid = Guid.NewGuid();
             string randomNhsNumber = GetRandomStringWithLength(5);
             string inputNhsNumber = randomNhsNumber;
+            string inputPatientIdentifier = randomNhsNumber;
 
             var forbiddenAccessOrchestrationException =
                 new ForbiddenAccessOrchestrationException(
@@ -280,7 +281,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     Times.Never);
 
             this.pdsDataServiceMock.Verify(service =>
-                service.OrganisationsHaveAccessToThisPatient(inputNhsNumber, It.IsAny<List<string>>()),
+                service.OrganisationsHaveAccessToThisPatient(
+                    inputPatientIdentifier,
+                    inputNhsNumber,
+                    It.IsAny<List<string>>(),
+                    correlationId),
                     Times.Never);
 
             this.consumerServiceMock.VerifyNoOtherCalls();
@@ -325,6 +330,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             Guid randomGuid = Guid.NewGuid();
             string randomNhsNumber = GetRandomStringWithLength(10);
             string inputNhsNumber = randomNhsNumber;
+            string inputPatientIdentifier = randomNhsNumber;
 
             string userOrganisation = GetRandomStringWithLength(5);
 
@@ -363,7 +369,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     .ReturnsAsync(userOrganisations);
 
             this.pdsDataServiceMock.Setup(service =>
-                service.OrganisationsHaveAccessToThisPatient(inputNhsNumber, userOrganisations))
+                service.OrganisationsHaveAccessToThisPatient(
+                    inputPatientIdentifier,
+                    inputNhsNumber,
+                    userOrganisations,
+                    correlationId))
                     .ReturnsAsync(false);
 
             // when
@@ -394,7 +404,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     Times.Once);
 
             this.pdsDataServiceMock.Verify(service =>
-                service.OrganisationsHaveAccessToThisPatient(inputNhsNumber, userOrganisations),
+                service.OrganisationsHaveAccessToThisPatient(
+                    inputPatientIdentifier,
+                    inputNhsNumber,
+                    userOrganisations,
+                    correlationId),
                     Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
