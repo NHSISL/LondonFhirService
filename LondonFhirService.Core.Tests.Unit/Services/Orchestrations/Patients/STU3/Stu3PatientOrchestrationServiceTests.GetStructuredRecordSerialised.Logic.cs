@@ -73,7 +73,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 service.ReconcileSerialisedAsync(
                     randomBundles,
                     inputNhsNumber,
-                    randomPrimaryProvider))
+                    randomPrimaryProvider,
+                    correlationId))
                     .ReturnsAsync(expectedBundle);
 
             // when
@@ -107,7 +108,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 service.ReconcileSerialisedAsync(
                     randomBundles,
                     inputNhsNumber,
-                    randomPrimaryProvider),
+                    randomPrimaryProvider,
+                    correlationId),
                     Times.Once);
 
             this.auditBrokerMock.Verify(broker =>

@@ -154,8 +154,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 }
 
                 bool organisationsHaveAccessToPatient = await pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: patientIdentifier,
-                    organisationCodes: consumerActiveOrgs);
+                    patientIdentifier: patientIdentifier,
+                    nhsNumber: nhsNumber,
+                    organisationCodes: consumerActiveOrgs,
+                    correlationId: correlationId);
 
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;

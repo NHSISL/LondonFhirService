@@ -99,7 +99,8 @@ namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
                     ["9999888224"] = "",
                     ["9355272536"] = "",
                     ["9660979622"] = "",
-                    ["9435768180"] = ""
+                    ["9435768180"] = "",
+                    ["0000000000"] = ""
                 };
 
             // when

@@ -64,6 +64,12 @@ namespace LondonFhirService.Api.Controllers.STU3
             }
             catch (PatientCoordinationDependencyValidationException
                 patientCoordinationDependencyValidationException)
+                when (patientCoordinationDependencyValidationException.InnerException is ResourceNotFoundException)
+            {
+                return InternalServerError(patientCoordinationDependencyValidationException.InnerException);
+            }
+            catch (PatientCoordinationDependencyValidationException
+                patientCoordinationDependencyValidationException)
             {
                 return NotFound(patientCoordinationDependencyValidationException.InnerException);
             }

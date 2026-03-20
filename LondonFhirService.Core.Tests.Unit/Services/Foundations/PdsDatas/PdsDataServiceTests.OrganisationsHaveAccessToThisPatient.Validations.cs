@@ -20,10 +20,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         [InlineData("", emptyList)]
         [InlineData(" ", emptyList)]
         public async Task ShouldThrowValidationExceptionOnOrganisationsHaveAccessToThisPatientAndLogItAsync(
-            string invalidNhsNumber,
+            string invalidItem,
             List<string> invalidList)
         {
             // given
+            string invalidPatientIdentifier = invalidItem;
+            string invalidNhsNumber = invalidItem;
+            Guid invalidCorrelationId = Guid.Empty;
+
             var invalidPdsDataException =
                 new InvalidPdsDataServiceException(
                     message: "Invalid argument(s), please correct the errors and try again.");
@@ -33,8 +37,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 values: "Text is invalid");
 
             invalidPdsDataException.AddData(
+                key: "patientIdentifier",
+                values: "Text is invalid");
+
+            invalidPdsDataException.AddData(
                 key: "organisationCodes",
                 values: "Items is invalid");
+
+            invalidPdsDataException.AddData(
+                key: "correlationId",
+                values: "Id is invalid");
 
             var expectedPdsDataValidationException =
                 new PdsDataServiceValidationException(
@@ -43,7 +55,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
 
             // when
             ValueTask<bool> retrievePdsDataByIdTask =
-                this.pdsDataService.OrganisationsHaveAccessToThisPatient(invalidNhsNumber, invalidList);
+                this.pdsDataService.OrganisationsHaveAccessToThisPatient(
+                    invalidPatientIdentifier,
+                    invalidNhsNumber,
+                    invalidList,
+                    invalidCorrelationId);
 
             PdsDataServiceValidationException actualPdsDataValidationException =
                 await Assert.ThrowsAsync<PdsDataServiceValidationException>(
@@ -69,6 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBroker.VerifyNoOtherCalls();
             this.storageBroker.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
