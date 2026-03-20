@@ -3,7 +3,6 @@
 // ---------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -31,14 +30,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
-            List<Bundle> randomBundles = CreateRandomBundles();
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -55,9 +53,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     .ThrowsAsync(dependencyValidationException);
 
             // when
-            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+            ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(
+                    .GetStructuredRecordSerialisedAsync(
                         correlationId,
                         inputNhsNumber,
                         inputDateOfBirth,
@@ -68,7 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
                     await Assert.ThrowsAsync<PatientOrchestrationDependencyValidationException>(
-                        retrieveListOfDocumentsToProcessTask.AsTask);
+                        getStructuredRecordSerialisedTask.AsTask);
 
             // then
             actualPatientOrchestrationDependencyValidationException.Should()
@@ -121,14 +119,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
-            List<Bundle> randomBundles = CreateRandomBundles();
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -145,9 +142,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     .ThrowsAsync(dependencyException);
 
             // when
-            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+            ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(
+                    .GetStructuredRecordSerialisedAsync(
                         correlationId,
                         inputNhsNumber,
                         inputDateOfBirth,
@@ -158,7 +155,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             PatientOrchestrationDependencyException
                 actualPatientOrchestrationDependencyException =
                     await Assert.ThrowsAsync<PatientOrchestrationDependencyException>(
-                        retrieveListOfDocumentsToProcessTask.AsTask);
+                        getStructuredRecordSerialisedTask.AsTask);
 
             // then
             actualPatientOrchestrationDependencyException.Should()
@@ -209,14 +206,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
-            List<Bundle> randomBundles = CreateRandomBundles();
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -242,9 +238,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: failedPatientOrchestrationException);
 
             // When
-            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+            ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientOrchestrationService
-                    .GetStructuredRecordAsync(
+                    .GetStructuredRecordSerialisedAsync(
                         correlationId,
                         inputNhsNumber,
                         inputDateOfBirth,
@@ -254,7 +250,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             PatientOrchestrationServiceException actualPatientOrchestrationServiceException =
                 await Assert.ThrowsAsync<PatientOrchestrationServiceException>(
-                    retrieveListOfDocumentsToProcessTask.AsTask);
+                    getStructuredRecordSerialisedTask.AsTask);
 
             // Then
             actualPatientOrchestrationServiceException.Should()

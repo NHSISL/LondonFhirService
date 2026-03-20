@@ -44,80 +44,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<Bundle> GetStructuredRecordAsync(
-            Guid correlationId,
-            string nhsNumber,
-            string dateOfBirth = null,
-            bool? demographicsOnly = null,
-            bool? includeInactivePatients = null,
-            CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
-        {
-            var stopwatch = Stopwatch.StartNew();
-            ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
-            string auditType = "STU3-Patient-GetStructuredRecord";
-
-            string message =
-                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
-                $"demographicsOnly = \"{demographicsOnly}\", " +
-                $"includeInactivePatients = \"{includeInactivePatients}\" }}";
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Orchestration Service Request Submitted",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Retrieve active providers and execute request",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            Provider primaryProvider;
-            List<Provider> activeProviders;
-            (primaryProvider, activeProviders) = await GetProviderInfo();
-
-            List<Bundle> bundles = await this.patientService.GetStructuredRecordAsync(
-                activeProviders,
-                correlationId,
-                nhsNumber,
-                dateOfBirth,
-                demographicsOnly,
-                includeInactivePatients,
-                cancellationToken);
-
-            var stopwatchReconcile = Stopwatch.StartNew();
-
-            Bundle reconciledBundle = await this.fhirReconciliationService.ReconcileAsync(
-                bundles: bundles,
-                primaryProvider: primaryProvider);
-
-            stopwatchReconcile.Stop();
-            long elapsedTimeReconcile = stopwatchReconcile.ElapsedMilliseconds;
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Reconcile Bundles Completed in {elapsedTimeReconcile}ms",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            stopwatch.Stop();
-            long elapsedTime = stopwatch.ElapsedMilliseconds;
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Orchestration Service Request Completed in {elapsedTime}ms",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            return reconciledBundle;
-        });
-
         public ValueTask<string> GetStructuredRecordSerialisedAsync(
             Guid correlationId,
             string nhsNumber,
@@ -154,7 +80,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             List<Provider> activeProviders;
             (primaryProvider, activeProviders) = await GetProviderInfo();
 
-            List<string> bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
+            List<(string Provider, string Json)> bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
                 activeProviders,
                 correlationId,
                 nhsNumber,
@@ -170,9 +96,11 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            string reconciledBundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
-                bundles: bundles,
-                primaryProvider: primaryProvider);
+            string reconciledBundle =
+                await this.fhirReconciliationService.ReconcileSerialisedAsync(
+                    bundles: bundles,
+                    nhsNumber: nhsNumber,
+                    primaryProvider: primaryProvider);
 
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;

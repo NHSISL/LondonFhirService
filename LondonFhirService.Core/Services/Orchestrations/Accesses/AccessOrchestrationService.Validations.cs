@@ -15,8 +15,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             Validate(
                 createException: () => new InvalidArgumentAccessOrchestrationException(
                     message:
-                        "Invalid argument access orchestration exception, " +
-                        "please correct the errors and try again."),
+                        "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
                 (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));

@@ -27,14 +27,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
-            List<Bundle> randomBundles = CreateRandomBundles();
+            List<(string Provider, string Json)> randomBundles = CreateRandomBundles();
             Bundle randomBundle = CreateRandomBundle();
-            Bundle expectedBundle = randomBundle.DeepClone();
+            string expectedBundle = SerializeBundle(randomBundle.DeepClone());
             Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -59,7 +59,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             };
 
             this.patientServiceMock.Setup(service =>
-                service.GetStructuredRecordAsync(
+                service.GetStructuredRecordSerialisedAsync(
                     activeProviders,
                     correlationId,
                     inputNhsNumber,
@@ -70,13 +70,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     .ReturnsAsync(randomBundles);
 
             this.fhirReconciliationServiceMock.Setup(service =>
-                service.ReconcileAsync(
+                service.ReconcileSerialisedAsync(
                     randomBundles,
+                    inputNhsNumber,
                     randomPrimaryProvider))
                     .ReturnsAsync(expectedBundle);
 
             // when
-            Bundle actualBundle = await this.patientOrchestrationService.GetStructuredRecordAsync(
+            string actualJson = await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
                 correlationId,
                 inputNhsNumber,
                 inputDateOfBirth,
@@ -85,14 +86,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 cancellationToken);
 
             // then
-            actualBundle.Should().BeEquivalentTo(expectedBundle);
+            actualJson.Should().BeEquivalentTo(expectedBundle);
 
             this.providerServiceMock.Verify(service =>
                 service.RetrieveAllProvidersAsync(),
                     Times.Once);
 
             this.patientServiceMock.Verify(service =>
-                service.GetStructuredRecordAsync(
+                service.GetStructuredRecordSerialisedAsync(
                     activeProviders,
                     correlationId,
                     inputNhsNumber,
@@ -103,8 +104,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     Times.Once);
 
             this.fhirReconciliationServiceMock.Verify(service =>
-                service.ReconcileAsync(
+                service.ReconcileSerialisedAsync(
                     randomBundles,
+                    inputNhsNumber,
                     randomPrimaryProvider),
                     Times.Once);
 
@@ -129,7 +131,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    It.Is<string>(s => s.StartsWith("Reconcile Bundles")),
+                    It.Is<string>(s => s.StartsWith("Reconcile bundles")),
                     message,
                     null,
                     correlationId.ToString()),

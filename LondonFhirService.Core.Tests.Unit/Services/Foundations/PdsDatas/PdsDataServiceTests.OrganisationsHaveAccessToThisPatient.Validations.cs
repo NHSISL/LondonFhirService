@@ -26,7 +26,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // given
             var invalidPdsDataException =
                 new InvalidPdsDataServiceException(
-                    message: "Invalid pdsData. Please correct the errors and try again.");
+                    message: "Invalid argument(s), please correct the errors and try again.");
 
             invalidPdsDataException.AddData(
                 key: "nhsNumber",

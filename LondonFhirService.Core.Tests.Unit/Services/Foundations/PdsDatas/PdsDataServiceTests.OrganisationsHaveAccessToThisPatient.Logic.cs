@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
+using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
 using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
@@ -25,46 +26,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = randomPdsDatas.Select(pdsData => pdsData.OrgCode).ToList();
             bool expectedResult = true;
-
-            this.storageBroker.Setup(broker =>
-                broker.SelectAllPdsDatasAsync())
-                    .ReturnsAsync(storagePdsDatas.AsQueryable());
-
-            this.dateTimeBroker.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
-                    .ReturnsAsync(DateTimeOffset.UtcNow);
-
-            // when
-            bool actualResult =
-                await this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: inputNhsNumber, organisationCodes: inputOrganisationCodes);
-
-            // then
-            actualResult.Should().Be(expectedResult);
-
-            this.storageBroker.Verify(broker =>
-                broker.SelectAllPdsDatasAsync(),
-                    Times.Once);
-
-            this.dateTimeBroker.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
-
-            this.storageBroker.VerifyNoOtherCalls();
-            this.dateTimeBroker.VerifyNoOtherCalls();
-            this.loggingBrokerMock.VerifyNoOtherCalls();
-        }
-
-        [Fact]
-        public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidNhsNumberAsync()
-        {
-            // given
-            string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
-            List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
-            List<PdsData> storagePdsDatas = randomPdsDatas;
-            List<string> inputOrganisationCodes = randomPdsDatas.Select(pdsData => pdsData.OrgCode).ToList();
-            bool expectedResult = false;
 
             this.storageBroker.Setup(broker =>
                 broker.SelectAllPdsDatasAsync())
@@ -137,12 +98,66 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         }
 
         [Fact]
-        public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidInputsAsync()
+        public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithMissingConfigAsync()
         {
             // given
             string randomPseudoNhsNumber = GetRandomString();
             string inputPseudoNhsNumber = randomPseudoNhsNumber;
+            List<string> inputOrganisationCodes = GetRandomStringsWithLengthOf(10);
+
+            this.storageBroker.Setup(broker =>
+                broker.SelectAllPdsDatasAsync())
+                    .ReturnsAsync(new List<PdsData>().AsQueryable());
+
+            this.dateTimeBroker.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(DateTimeOffset.UtcNow);
+
+            var invalidPdsDataException =
+                new InvalidPdsDataServiceException(
+                    message: "PDS configuration data not found for patient.");
+
+            PdsDataServiceValidationException expectedPdsDataServiceValidationException =
+                new PdsDataServiceValidationException(
+                    message: "PdsData validation error occurred, please fix errors and try again.",
+                    innerException: invalidPdsDataException);
+
+            // when
+            ValueTask<bool> retrieveAllPdsDatasTask =
+                this.pdsDataService.OrganisationsHaveAccessToThisPatient(
+                    nhsNumber: inputPseudoNhsNumber, organisationCodes: inputOrganisationCodes);
+
+            PdsDataServiceValidationException actualPdsDataServiceValidationException =
+                await Assert.ThrowsAsync<PdsDataServiceValidationException>(
+                    testCode: retrieveAllPdsDatasTask.AsTask);
+
+            // then
+            actualPdsDataServiceValidationException.Should().BeEquivalentTo(expectedPdsDataServiceValidationException);
+
+            this.storageBroker.Verify(broker =>
+                broker.SelectAllPdsDatasAsync(),
+                    Times.Once);
+
+            this.dateTimeBroker.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPdsDataServiceValidationException))),
+                        Times.Once);
+
+            this.storageBroker.VerifyNoOtherCalls();
+            this.dateTimeBroker.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldNotHaveAccessOnCheckIfOrganisationsHaveAccessToThisPatientWithInvalidInputsAsync()
+        {
+            // given
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
+            string inputPseudoNhsNumber = randomPdsDatas.First().NhsNumber;
             List<PdsData> storagePdsDatas = randomPdsDatas;
             List<string> inputOrganisationCodes = GetRandomStringsWithLengthOf(10);
             bool expectedResult = false;

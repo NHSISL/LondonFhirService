@@ -5,7 +5,6 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using Moq;
 using Xeptions;
@@ -34,14 +33,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     .ThrowsAsync(dependencyValidationException);
 
             // when
-            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+            ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordSerialisedAsync(nhsNumber: inputNhsNumber);
 
             PatientCoordinationDependencyValidationException
                 actualPatientCoordinationDependencyValidationException =
                     await Assert.ThrowsAsync<PatientCoordinationDependencyValidationException>(
-                        retrieveListOfDocumentsToProcessTask.AsTask);
+                        getStructuredRecordSerialisedTask.AsTask);
 
             // then
             actualPatientCoordinationDependencyValidationException.Should()
@@ -82,13 +81,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     .ThrowsAsync(dependencyException);
 
             // when
-            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+            ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordSerialisedAsync(nhsNumber: inputNhsNumber);
 
             PatientCoordinationDependencyException actualPatientCoordinationDependencyException =
                 await Assert.ThrowsAsync<PatientCoordinationDependencyException>(
-                    retrieveListOfDocumentsToProcessTask.AsTask);
+                    getStructuredRecordSerialisedTask.AsTask);
 
             // then
             actualPatientCoordinationDependencyException.Should()
@@ -135,13 +134,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     innerException: failedPatientCoordinationServiceException);
 
             // When
-            ValueTask<Bundle> retrieveListOfDocumentsToProcessTask =
+            ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
-                    .GetStructuredRecordAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordSerialisedAsync(nhsNumber: inputNhsNumber);
 
             PatientCoordinationServiceException actualPatientCoordinationServiceException =
                 await Assert.ThrowsAsync<PatientCoordinationServiceException>(
-                    retrieveListOfDocumentsToProcessTask.AsTask);
+                    getStructuredRecordSerialisedTask.AsTask);
 
             // Then
             actualPatientCoordinationServiceException.Should()

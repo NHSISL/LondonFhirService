@@ -54,6 +54,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -76,7 +78,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<string>> getStructuredRecordTask =
+            ValueTask<List<(string Provider, string Json)>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -130,6 +132,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -167,6 +172,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -189,7 +196,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<string>> getStructuredRecordTask =
+            ValueTask<List<(string Provider, string Json)>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -243,6 +250,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
 
@@ -285,6 +295,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -307,7 +319,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            ValueTask<List<string>> getStructuredRecordTask =
+            ValueTask<List<(string Provider, string Json)>> getStructuredRecordTask =
                 mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -361,6 +373,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
     }

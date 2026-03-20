@@ -13,6 +13,9 @@ using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Securities;
+using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
@@ -27,120 +30,29 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         private readonly IAuditBroker auditBroker;
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly ISecurityAuditBroker securityAuditBroker;
+        private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly PatientServiceConfig patientServiceConfig;
 
         public Stu3PatientService(
             IStu3FhirBroker fhirBroker,
             IAuditBroker auditBroker,
             IIdentifierBroker identifierBroker,
+            ISecurityAuditBroker securityAuditBroker,
+            IStorageBrokerFactory storageBrokerFactory,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
             this.fhirBroker = fhirBroker;
             this.auditBroker = auditBroker;
             this.identifierBroker = identifierBroker;
+            this.securityAuditBroker = securityAuditBroker;
+            this.storageBrokerFactory = storageBrokerFactory;
             this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }
 
-        public ValueTask<List<Bundle>> GetStructuredRecordAsync(
-            List<Provider> activeProviders,
-            Guid correlationId,
-            string nhsNumber,
-            string dateOfBirth = null,
-            bool? demographicsOnly = null,
-            bool? includeInactivePatients = null,
-            CancellationToken cancellationToken = default) =>
-            TryCatch(async () =>
-            {
-                var stopwatch = Stopwatch.StartNew();
-                dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? null : dateOfBirth.Trim();
-                ValidateOnGetStructuredRecord(activeProviders, nhsNumber, dateOfBirth, correlationId);
-                string auditType = "STU3-Patient-GetStructuredRecord";
-
-                string message =
-                    $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
-                    $"demographicsOnly = \"{demographicsOnly}\", " +
-                    $"includeInactivePatients = \"{includeInactivePatients}\" }}";
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Foundation Service Request Submitted",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
-
-                List<(string providerFriendlyName, bool isPrimaryProvider, IFhirProvider provider)> fhirProviders =
-                    await GetFhirProviders(activeProviders);
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Parallel Provider Execution Started",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
-
-                var tasks = fhirProviders.Select(fhirProviders => ExecuteGetStructuredRecordWithTimeoutAsync(
-                    fhirProviders.providerFriendlyName,
-                    fhirProviders.isPrimaryProvider,
-                    fhirProviders.provider,
-                    cancellationToken,
-                    correlationId,
-                    nhsNumber,
-                    dateOfBirth,
-                    demographicsOnly,
-                    includeInactivePatients)).ToArray();
-
-                var stopwatchOutComes = Stopwatch.StartNew();
-                var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
-                stopwatchOutComes.Stop();
-                var elapsedTimeOutComes = stopwatchOutComes.ElapsedMilliseconds;
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Parallel Provider Execution Completed in {elapsedTimeOutComes}ms",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
-
-                var bundles = new List<Bundle>(outcomes.Length);
-                var exceptions = new List<Exception>();
-
-                foreach (var outcome in outcomes)
-                {
-                    if (outcome.Bundle is not null)
-                    {
-                        bundles.Add(outcome.Bundle);
-                    }
-                    else if (outcome.Exception is not null)
-                    {
-                        exceptions.Add(outcome.Exception);
-                    }
-                }
-
-                if (exceptions.Count > 0)
-                {
-                    var aggregate = new AggregateException(
-                        "One or more provider calls failed or timed out.",
-                        exceptions);
-
-                    await loggingBroker.LogErrorAsync(aggregate);
-                }
-
-                stopwatch.Stop();
-                long elapsedTime = stopwatch.ElapsedMilliseconds;
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Foundation Service Request Completed in {elapsedTime}ms",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
-
-                return bundles;
-            });
-
-        public ValueTask<List<string>> GetStructuredRecordSerialisedAsync(
+        public ValueTask<List<(string Provider, string Json)>> GetStructuredRecordSerialisedAsync(
             List<Provider> activeProviders,
             Guid correlationId,
             string nhsNumber,
@@ -200,14 +112,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                var jsonBundles = new List<string>(outcomes.Length);
+                var jsonBundles = new List<(string, string)>(outcomes.Length);
                 var exceptions = new List<Exception>();
 
                 foreach (var outcome in outcomes)
                 {
                     if (outcome.Json is not null)
                     {
-                        jsonBundles.Add(outcome.Json);
+                        jsonBundles.Add((outcome.Provider, outcome.Json));
                     }
                     else if (outcome.Exception is not null)
                     {
@@ -284,99 +196,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             return fhirProviders;
         }
 
-        virtual internal async Task<(Bundle Bundle, Exception Exception)> ExecuteGetStructuredRecordWithTimeoutAsync(
-            string providerFriendlyName,
-            bool isPrimaryProvider,
-            IFhirProvider provider,
-            CancellationToken globalToken,
-            Guid correlationId,
-            string nhsNumber,
-            string dateOfBirth = null,
-            bool? demographicsOnly = null,
-            bool? includeInactivePatients = null)
-        {
-            if (globalToken.IsCancellationRequested)
-            {
-                return (null, new OperationCanceledException(globalToken));
-            }
-
-            string auditType = "STU3-Patient-GetStructuredRecord";
-
-            string message =
-                $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
-                $"demographicsOnly = \"{demographicsOnly}\", " +
-                $"includeInactivePatients = \"{includeInactivePatients}\" }}";
-
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"{provider.DisplayName} Provider Execution Started",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
-
-            if (maxWaitTimeout > 0)
-            {
-                timeoutCts.CancelAfter(maxWaitTimeout);
-            }
-
-            try
-            {
-                var bundle = await provider.Patients.GetStructuredRecordAsync(
-                    nhsNumber,
-                    dateOfBirth,
-                    demographicsOnly,
-                    includeInactivePatients,
-                    timeoutCts.Token)
-                        .ConfigureAwait(false);
-
-                Coding coding = new Coding
-                {
-                    System = provider.System,
-                    Code = provider.Code,
-                    Display = provider.ProviderName,
-                    Version = provider.FhirVersion,
-                };
-
-                bundle.Meta.Extension.Add(new Extension
-                {
-                    Url = "http://example.org/fhir/StructureDefinition/meta-source",
-                    Value = new FhirUri(provider.Source)
-                });
-
-                bundle.Meta.Tag.Add(coding);
-
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"{provider.DisplayName} Provider Execution Completed",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
-
-                return (bundle, null);
-            }
-            catch (OperationCanceledException operationCancelledException)
-                when (timeoutCts.IsCancellationRequested && !globalToken.IsCancellationRequested)
-            {
-                TimeoutException timeoutException =
-                    new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds.",
-                        operationCancelledException);
-
-                return (null, timeoutException);
-            }
-            catch (OperationCanceledException operationCancelledException)
-            {
-                return (null, operationCancelledException);
-            }
-            catch (Exception exception)
-            {
-                return (null, exception);
-            }
-        }
-
-        virtual internal async Task<(string Json, Exception Exception)>
+        virtual internal async Task<(string Provider, string Json, Exception Exception)>
             ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
                 string providerFriendlyName,
                 bool isPrimaryProvider,
@@ -390,7 +210,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         {
             if (globalToken.IsCancellationRequested)
             {
-                return (null, new OperationCanceledException(globalToken));
+                return (providerFriendlyName, null, new OperationCanceledException(globalToken));
             }
 
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
@@ -437,6 +257,25 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
+                Guid identifier = await identifierBroker.GetIdentifierAsync();
+
+                FhirRecord fhirRecord = new()
+                {
+                    Id = identifier,
+                    CorrelationId = correlationId.ToString(),
+                    JsonPayload = json,
+                    SourceName = $"{provider.DisplayName} ({providerFriendlyName})",
+                    IsPrimarySource = isPrimaryProvider,
+                    IsProcessed = false,
+                };
+
+                fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
+
+                await using IStorageBroker storageBroker =
+                    await this.storageBrokerFactory.CreateStorageBrokerAsync();
+
+                await storageBroker.InsertFhirRecordAsync(fhirRecord);
+
                 await this.auditBroker.LogInformationAsync(
                     auditType,
                     title: $"{provider.DisplayName} Provider Execution Completed in {elapsedTime}ms",
@@ -444,7 +283,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                return (json, null);
+                return (providerFriendlyName, json, null);
             }
             catch (OperationCanceledException operationCancelledException)
                 when (timeoutCts.IsCancellationRequested && !globalToken.IsCancellationRequested)
@@ -453,11 +292,11 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds.",
                         operationCancelledException);
 
-                return (null, timeoutException);
+                return (providerFriendlyName, null, timeoutException);
             }
             catch (OperationCanceledException operationCancelledException)
             {
-                return (null, operationCancelledException);
+                return (providerFriendlyName, null, operationCancelledException);
             }
             catch (Exception exception)
             {
@@ -473,7 +312,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                return (null, exception);
+                return (providerFriendlyName, null, exception);
             }
         }
     }

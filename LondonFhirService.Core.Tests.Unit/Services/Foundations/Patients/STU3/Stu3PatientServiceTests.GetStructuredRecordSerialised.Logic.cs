@@ -55,16 +55,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 $"demographicsOnly = \"{inputDemographicsOnly}\", " +
                 $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
-            List<string> expectedBundles = new List<string>
+            List<(string Provider, string Json)> expectedBundles = new List<(string Provider, string Json)>
             {
-                rawOutputDdsBundle,
-                rawOutputLdsBundle
+                (ddsProvider.FriendlyName, rawOutputDdsBundle),
+                (ldsProvider.FriendlyName, rawOutputLdsBundle)
             };
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
                 this.auditBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.securityAuditBrokerMock.Object,
+                this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -82,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((rawOutputDdsBundle, null));
+                .ReturnsAsync((ddsProvider.FriendlyName, rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
@@ -95,12 +97,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly))
-                .ReturnsAsync((rawOutputLdsBundle, null));
+                .ReturnsAsync((ldsProvider.FriendlyName, rawOutputLdsBundle, null));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
 
             // when
-            List<string> actualBundles =
+            List<(string Provider, string Json)> actualBundles =
                 await mockedPatientService.GetStructuredRecordSerialisedAsync(
                     activeProviders: inputProviders,
                     correlationId: correlationId,
@@ -178,6 +180,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             patientServiceMock.VerifyNoOtherCalls();
         }
     }

@@ -86,12 +86,10 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             TryCatch(async () =>
             {
                 ValidateOnOrganisationsHaveAccessToThisPatient(nhsNumber, organisationCodes);
-
                 var query = await this.storageBroker.SelectAllPdsDatasAsync();
                 DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-                // TODO:  Check if the patient exists in the config table; if not, throw a configuration for patient not found exception.
-                // Otherwise, move on to check the access permission.
+                bool patientExists = query.Any(pdsData => pdsData.NhsNumber == nhsNumber);
+                ValidatePatientExists(patientExists);
 
                 bool hasAccess = query.Any(
                     pdsData => pdsData.NhsNumber == nhsNumber
