@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
+using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 
 namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using KellermanSoftware.CompareNetObjects;
@@ -43,6 +44,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
         private readonly Mock<IStorageBroker> storageBrokerMock;
+        private readonly Mock<IStorageBrokerFactory> storageBrokerFactoryMock;
         private readonly PatientServiceConfig patientServiceConfig;
         private readonly Stu3PatientService patientService;
         private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
@@ -51,12 +53,23 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
         public Stu3PatientServiceTests()
         {
+            this.storageBrokerMock = new Mock<IStorageBroker>();
+            this.storageBrokerFactoryMock = new Mock<IStorageBrokerFactory>();
+
+            this.storageBrokerFactoryMock
+                .Setup(factory => factory.CreateStorageBrokerAsync())
+                    .ReturnsAsync(this.storageBrokerMock.Object);
+
+            this.storageBrokerMock
+                .Setup(broker => broker.DisposeAsync())
+                    .Returns(ValueTask.CompletedTask);
+
+
             this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.auditBrokerMock = new Mock<IAuditBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
-            this.storageBrokerMock = new Mock<IStorageBroker>();
             this.compareLogic = new CompareLogic();
 
             this.patientServiceConfig = new PatientServiceConfig
@@ -87,7 +100,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 auditBroker: this.auditBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
                 securityAuditBroker: this.securityAuditBrokerMock.Object,
-                storageBroker: this.storageBrokerMock.Object,
+                storageBrokerFactory: this.storageBrokerFactoryMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 patientServiceConfig: this.patientServiceConfig);
         }
@@ -146,7 +159,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 LastUpdated = DateTimeOffset.UtcNow,
                 Source = GetRandomString()
             };
-
 
             return bundle;
         }

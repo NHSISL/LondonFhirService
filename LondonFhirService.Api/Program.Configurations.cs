@@ -247,6 +247,7 @@ public partial class Program
         services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
         services.AddTransient<ISecurityBroker, SecurityBroker>();
         services.AddTransient<IStorageBroker, StorageBroker>();
+        services.AddTransient<IStorageBrokerFactory, StorageBrokerFactory>();
         services.AddTransient<IHashBroker, HashBroker>();
     }
 

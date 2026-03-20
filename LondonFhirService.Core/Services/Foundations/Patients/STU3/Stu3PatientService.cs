@@ -31,7 +31,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly ISecurityAuditBroker securityAuditBroker;
-        private readonly IStorageBroker storageBroker;
+        private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly PatientServiceConfig patientServiceConfig;
 
         public Stu3PatientService(
@@ -39,7 +39,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             IAuditBroker auditBroker,
             IIdentifierBroker identifierBroker,
             ISecurityAuditBroker securityAuditBroker,
-            IStorageBroker storageBroker,
+            IStorageBrokerFactory storageBrokerFactory,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
@@ -47,7 +47,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             this.auditBroker = auditBroker;
             this.identifierBroker = identifierBroker;
             this.securityAuditBroker = securityAuditBroker;
-            this.storageBroker = storageBroker;
+            this.storageBrokerFactory = storageBrokerFactory;
             this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }
@@ -270,7 +270,11 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 };
 
                 fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
-                await this.storageBroker.InsertFhirRecordAsync(fhirRecord);
+
+                await using IStorageBroker storageBroker =
+                    await this.storageBrokerFactory.CreateStorageBrokerAsync();
+
+                await storageBroker.InsertFhirRecordAsync(fhirRecord);
 
                 await this.auditBroker.LogInformationAsync(
                     auditType,
