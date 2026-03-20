@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using EFxceptions.Models.Exceptions;
+using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
 using Microsoft.Data.SqlClient;
@@ -29,6 +30,10 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             catch (NullPdsDataServiceException nullPdsDataException)
             {
                 throw CreateAndLogValidationException(nullPdsDataException);
+            }
+            catch (ResourceNotFoundException resourceNotFoundException)
+            {
+                throw CreateAndLogValidationException(resourceNotFoundException);
             }
             catch (InvalidPdsDataServiceException invalidPdsDataException)
             {
@@ -104,6 +109,10 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             catch (InvalidPdsDataServiceException invalidPdsDataException)
             {
                 throw CreateAndLogValidationException(invalidPdsDataException);
+            }
+            catch (ResourceNotFoundException resourceNotFoundException)
+            {
+                throw CreateAndLogValidationException(resourceNotFoundException);
             }
             catch (SqlException sqlException)
             {

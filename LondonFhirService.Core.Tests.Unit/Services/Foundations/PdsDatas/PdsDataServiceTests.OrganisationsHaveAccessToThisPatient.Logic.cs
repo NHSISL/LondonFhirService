@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
 using Moq;
@@ -125,14 +126,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(DateTimeOffset.UtcNow);
 
-            var invalidPdsDataException =
-                new InvalidPdsDataServiceException(
-                    message: "PDS configuration data not found for patient.");
+            var resourceNotFoundException =
+                new ResourceNotFoundException(
+                    message:
+                        $"NotFound:Patient resource with id = '{inputNhsNumber}' not found.  (PDS)  " +
+                        $"CorrelationId: {inputCorrelationId.ToString()}");
 
             PdsDataServiceValidationException expectedPdsDataServiceValidationException =
                 new PdsDataServiceValidationException(
                     message: "PdsData validation error occurred, please fix errors and try again.",
-                    innerException: invalidPdsDataException);
+                    innerException: resourceNotFoundException);
 
             // when
             ValueTask<bool> retrieveAllPdsDatasTask =
@@ -160,6 +163,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedPdsDataServiceValidationException))),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "PDS Configuration",
+
+                    $"Patient resource with NHS Number: '{inputNhsNumber}', does not have a corresponding hash entry in the PDS table.  " +
+                        $"CorrelationId: {inputCorrelationId.ToString()}",
+
+                    null,
+                    inputCorrelationId.ToString()),
                         Times.Once);
 
             this.storageBroker.VerifyNoOtherCalls();

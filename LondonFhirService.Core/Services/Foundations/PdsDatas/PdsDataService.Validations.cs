@@ -91,7 +91,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                     correlationId: correlationId.ToString());
 
                 throw new ResourceNotFoundException(message:
-                    $"NotFound:Patient resource with id = '{nhsNumber}' not found.  " +
+                    $"NotFound:Patient resource with id = '{nhsNumber}' not found.  (PDS)  " +
                     $"CorrelationId: {correlationId.ToString()}");
             }
         }
