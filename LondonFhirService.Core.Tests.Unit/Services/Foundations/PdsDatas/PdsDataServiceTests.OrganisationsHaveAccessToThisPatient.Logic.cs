@@ -231,10 +231,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldNotHaveAccessToThisPatientIfRelationshipIsInactiveAsync()
         {
             // given
-            string inputNhsNumber = GetRandomString();
-            string inputPatientIdentifier = GetRandomString();
             Guid inputCorrelationId = Guid.NewGuid();
             List<PdsData> randomPdsDatas = CreateRandomPdsDatas();
+            string inputNhsNumber = randomPdsDatas.First().NhsNumber;
+            string inputPatientIdentifier = randomPdsDatas.First().NhsNumber;
 
             randomPdsDatas.ForEach(pdsData =>
             {
