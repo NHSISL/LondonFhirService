@@ -33,7 +33,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
             if (bundle == default)
             {
                 throw new ResourceNotFoundException(
-                    $"NotFound:Patient resource with id = '{nhsNumber}' not found." +
+                    $"NotFound:Patient resource with id = '{nhsNumber}' not found.  " +
                     $"CorrelationId: {correlationId.ToString()}");
             }
 
