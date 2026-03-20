@@ -33,7 +33,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     innerException: failedAuditStorageException);
 
             this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateDbContextAsync())
+                broker.CreateStorageBrokerAsync())
                     .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
 
             this.storageBrokerMock.Setup(broker =>
@@ -53,7 +53,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 .BeEquivalentTo(expectedAuditDependencyException);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
@@ -66,6 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -89,7 +90,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     innerException: failedAuditServiceException);
 
             this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateDbContextAsync())
+                broker.CreateStorageBrokerAsync())
                     .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
 
             this.storageBrokerMock.Setup(broker =>
@@ -109,7 +110,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 .BeEquivalentTo(expectedAuditServiceException);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
@@ -122,6 +123,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();

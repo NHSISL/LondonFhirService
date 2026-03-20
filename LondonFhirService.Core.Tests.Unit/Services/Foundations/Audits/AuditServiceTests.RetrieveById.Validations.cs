@@ -51,7 +51,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -81,7 +81,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     innerException: notFoundAuditException);
 
             this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateDbContextAsync())
+                broker.CreateStorageBrokerAsync())
                     .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
 
             this.storageBrokerMock.Setup(broker =>
@@ -100,7 +100,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             actualAuditValidationException.Should().BeEquivalentTo(expectedAuditValidationException);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
@@ -113,6 +113,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();

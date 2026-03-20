@@ -59,7 +59,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -127,7 +127,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -199,7 +199,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -259,7 +259,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -322,7 +322,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -336,6 +336,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }

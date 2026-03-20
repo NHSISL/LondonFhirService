@@ -53,6 +53,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
@@ -159,7 +160,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -171,6 +172,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -246,7 +248,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -258,6 +260,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -333,7 +336,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -345,6 +348,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -384,7 +388,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     .ReturnsAsync(randomDateTimeOffset);
 
             this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateDbContextAsync())
+                broker.CreateStorageBrokerAsync())
                     .ReturnsAsync(this.storageBrokerMock.Object);
 
             this.securityAuditBrokerMock.Setup(broker =>
@@ -420,7 +424,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         Times.Once);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
@@ -432,6 +436,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
