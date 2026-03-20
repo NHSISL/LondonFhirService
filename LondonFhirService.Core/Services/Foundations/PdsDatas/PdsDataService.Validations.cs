@@ -39,15 +39,19 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
         }
 
         private static void ValidateOnOrganisationsHaveAccessToThisPatient(
+            string patientIdentifier,
             string nhsNumber,
-            List<string> organisationCodes)
+            List<string> organisationCodes,
+            Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidPdsDataServiceException(
                     message: "Invalid argument(s), please correct the errors and try again."),
 
+                (Rule: IsInvalid(patientIdentifier), Parameter: nameof(patientIdentifier)),
                 (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
-                (Rule: IsInvalid(organisationCodes), Parameter: nameof(organisationCodes)));
+                (Rule: IsInvalid(organisationCodes), Parameter: nameof(organisationCodes)),
+                (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));
         }
 
         public static void ValidatePdsDataId(Guid pdsDataId) =>

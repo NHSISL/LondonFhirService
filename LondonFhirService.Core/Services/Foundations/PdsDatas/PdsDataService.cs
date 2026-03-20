@@ -91,7 +91,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             Guid correlationId) =>
             TryCatch(async () =>
             {
-                ValidateOnOrganisationsHaveAccessToThisPatient(patientIdentifier, organisationCodes);
+                ValidateOnOrganisationsHaveAccessToThisPatient(patientIdentifier, nhsNumber, organisationCodes, correlationId);
                 var query = await this.storageBroker.SelectAllPdsDatasAsync();
                 DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
                 bool patientExists = query.Any(pdsData => pdsData.NhsNumber == patientIdentifier);

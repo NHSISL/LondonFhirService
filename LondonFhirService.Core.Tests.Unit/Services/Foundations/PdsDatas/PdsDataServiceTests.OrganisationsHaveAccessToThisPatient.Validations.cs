@@ -44,6 +44,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
                 key: "organisationCodes",
                 values: "Items is invalid");
 
+            invalidPdsDataException.AddData(
+                key: "correlationId",
+                values: "Id is invalid");
+
             var expectedPdsDataValidationException =
                 new PdsDataServiceValidationException(
                     message: "PdsData validation error occurred, please fix errors and try again.",
