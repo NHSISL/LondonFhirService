@@ -5,7 +5,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Force.DeepCloner;
-using LondonFhirService.Manage.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using RESTFulSense.Clients.Extensions;

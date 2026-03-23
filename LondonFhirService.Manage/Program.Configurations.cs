@@ -5,12 +5,33 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
 using Hl7.Fhir.Serialization;
+using ISL.Security.Client.Models.Clients;
+using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Hashing;
+using LondonFhirService.Core.Brokers.Identifiers;
+using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Services.Foundations.Audits;
+using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
+using LondonFhirService.Core.Services.Foundations.Consumers;
+using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Services.Foundations.FhirRecords;
+using LondonFhirService.Core.Services.Foundations.OdsDatas;
+using LondonFhirService.Core.Services.Foundations.PdsDatas;
+using LondonFhirService.Core.Services.Foundations.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,9 +90,9 @@ public partial class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddAuthorization();
         builder.Services.AddDbContextFactory<StorageBroker>();
+        builder.Services.AddDbContext<StorageBroker>();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
 
         // ----------------- Domain registrations -----------------
         AddProviders(builder.Services, configuration);
@@ -141,15 +162,17 @@ public partial class Program
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
-        //app.UseInvisibleApiMiddleware(invisibleApiKey);
+        app.UseInvisibleApiMiddleware(invisibleApiKey);
         app.MapControllers();
-        //app.MapFallbackToFile("/index.html");
+        app.MapFallbackToFile("/index.html");
     }
 
     private static IEdmModel GetEdmModel()
     {
         ODataConventionModelBuilder builder = new();
         builder.EntitySet<Audit>("Audits");
+        builder.EntitySet<FhirRecord>("FhirRecords");
+        builder.EntitySet<FhirRecordDifference>("FhirRecordDifferences");
         builder.EnableLowerCamelCase();
         return builder.GetEdmModel();
     }
@@ -160,10 +183,30 @@ public partial class Program
 
     private static void AddBrokers(IServiceCollection services, IConfiguration configuration)
     {
+        SecurityConfigurations securityConfigurations = new();
+        services.AddSingleton(securityConfigurations);
+        services.AddTransient<IAuditBroker, AuditBroker>();
+        services.AddTransient<IDateTimeBroker, DateTimeBroker>();
+        services.AddTransient<IIdentifierBroker, IdentifierBroker>();
+        services.AddTransient<ILoggingBroker, LoggingBroker>();
+        services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
+        services.AddTransient<ISecurityBroker, SecurityBroker>();
+        services.AddScoped<IStorageBroker, StorageBroker>();
+        services.AddScoped<IStorageBrokerFactory, StorageBrokerFactory>();
+        services.AddTransient<IHashBroker, HashBroker>();
     }
 
     private static void AddFoundationServices(IServiceCollection services)
     {
+        services.AddTransient<IAuditService, AuditService>();
+        services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
+        services.AddTransient<IConsumerService, ConsumerService>();
+        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
+        services.AddTransient<IOdsDataService, OdsDataService>();
+        services.AddTransient<IPdsDataService, PdsDataService>();
+        services.AddTransient<IProviderService, ProviderService>();
+        services.AddTransient<IFhirRecordService, FhirRecordService>();
+        services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
     }
 
     private static void AddProcessingServices(IServiceCollection services)
@@ -180,5 +223,6 @@ public partial class Program
 
     private static void AddClients(IServiceCollection services)
     {
+        services.AddTransient<IAuditClient, AuditClient>();
     }
 }
