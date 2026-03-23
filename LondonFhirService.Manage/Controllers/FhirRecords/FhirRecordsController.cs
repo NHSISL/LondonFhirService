@@ -5,10 +5,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Attrify.Attributes;
-using LondonFhirService.Manage.Models.Foundations.FhirRecords;
-using LondonFhirService.Manage.Models.Foundations.FhirRecords.Exceptions;
-using LondonFhirService.Manage.Services.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
+using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -42,7 +41,7 @@ namespace LondonFhirService.Manage.Controllers
                 return BadRequest(fhirRecordValidationException.InnerException);
             }
             catch (FhirRecordDependencyValidationException fhirRecordDependencyValidationException)
-                when (fhirRecordDependencyValidationException.InnerException 
+                when (fhirRecordDependencyValidationException.InnerException
                     is AlreadyExistsFhirRecordException)
             {
                 return Conflict(fhirRecordDependencyValidationException.InnerException);

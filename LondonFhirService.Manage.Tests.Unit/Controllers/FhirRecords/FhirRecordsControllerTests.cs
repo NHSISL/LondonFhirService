@@ -4,10 +4,10 @@
 
 using System;
 using System.Linq;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
+using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Manage.Controllers;
-using LondonFhirService.Manage.Models.Foundations.FhirRecords;
-using LondonFhirService.Manage.Models.Foundations.FhirRecords.Exceptions;
-using LondonFhirService.Manage.Services.Foundations.FhirRecords;
 using Moq;
 using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;
@@ -96,9 +96,6 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecords
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                
-                // TODO:  Add your property configurations here
-
                 .OnProperty(fhirRecord => fhirRecord.CreatedBy).Use(user)
                 .OnProperty(fhirRecord => fhirRecord.UpdatedBy).Use(user);
 

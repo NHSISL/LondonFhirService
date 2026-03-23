@@ -264,7 +264,6 @@ public partial class Program
 
     private static void AddProcessingServices(IServiceCollection services)
     {
-        // intentionally empty for now
     }
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
