@@ -246,7 +246,10 @@ public partial class Program
         services.AddTransient<ILoggingBroker, LoggingBroker>();
         services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
         services.AddTransient<ISecurityBroker, SecurityBroker>();
-        services.AddScoped<IStorageBroker, StorageBroker>();
+
+        services.AddScoped<IStorageBroker>(
+            serviceProvider => serviceProvider.GetRequiredService<StorageBroker>());
+
         services.AddScoped<IStorageBrokerFactory, StorageBrokerFactory>();
         services.AddTransient<IHashBroker, HashBroker>();
     }
