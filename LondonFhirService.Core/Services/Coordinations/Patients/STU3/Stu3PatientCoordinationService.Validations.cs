@@ -14,7 +14,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         {
             Validate(
                 createException: () => new InvalidArgumentPatientCoordinationException(
-                    message: "Invalid patient coordination argument, please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(id), Parameter: "Id"));
         }
@@ -23,7 +23,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         {
             Validate(
                 createException: () => new InvalidArgumentPatientCoordinationException(
-                    message: "Invalid patient coordination argument, please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(nhsNumber), Parameter: "NhsNumber"));
         }

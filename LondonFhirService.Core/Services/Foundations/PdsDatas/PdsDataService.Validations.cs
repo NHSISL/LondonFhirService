@@ -4,6 +4,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
 using Xeptions;
@@ -30,28 +32,32 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
 
             Validate(
                 createException: () => new InvalidPdsDataServiceException(
-                    message: "Invalid pdsData. Please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(pdsData.Id), Parameter: nameof(PdsData.Id)),
                 (Rule: IsInvalid(pdsData.NhsNumber), Parameter: nameof(PdsData.NhsNumber)));
         }
 
         private static void ValidateOnOrganisationsHaveAccessToThisPatient(
+            string patientIdentifier,
             string nhsNumber,
-            List<string> organisationCodes)
+            List<string> organisationCodes,
+            Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidPdsDataServiceException(
-                    message: "Invalid pdsData. Please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
+                (Rule: IsInvalid(patientIdentifier), Parameter: nameof(patientIdentifier)),
                 (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
-                (Rule: IsInvalid(organisationCodes), Parameter: nameof(organisationCodes)));
+                (Rule: IsInvalid(organisationCodes), Parameter: nameof(organisationCodes)),
+                (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)));
         }
 
         public static void ValidatePdsDataId(Guid pdsDataId) =>
             Validate(
                 createException: () => new InvalidPdsDataServiceException(
-                    message: "Invalid pdsData. Please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(pdsDataId), Parameter: nameof(PdsData.Id)));
 
@@ -68,6 +74,27 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             if (pdsData is null)
             {
                 throw new NullPdsDataServiceException(message: "PdsData is null.");
+            }
+        }
+
+        private async ValueTask ValidatePatientExists(bool patientExists, string nhsNumber, Guid correlationId)
+        {
+            if (patientExists != true)
+            {
+                await this.auditBroker.LogInformationAsync(
+                    auditType: "Access",
+                    title: "PDS Configuration",
+
+                    message:
+                        $"Patient resource with NHS Number: '{nhsNumber}', does not have a corresponding hash entry in the PDS table.  " +
+                        $"CorrelationId: {correlationId.ToString()}",
+
+                    fileName: null,
+                    correlationId: correlationId.ToString());
+
+                throw new ResourceNotFoundException(message:
+                    $"NotFound:Patient resource with id = '{nhsNumber}' not found.  (PDS)  " +
+                    $"CorrelationId: {correlationId.ToString()}");
             }
         }
 

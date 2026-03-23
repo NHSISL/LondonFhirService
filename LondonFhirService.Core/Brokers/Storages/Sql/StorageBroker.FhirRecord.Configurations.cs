@@ -46,6 +46,13 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .HasIndex(fhirRecord => fhirRecord.IsPrimarySource);
 
             model
+                .Property(fhirRecord => fhirRecord.IsProcessed)
+                .IsRequired();
+
+            model
+                .HasIndex(fhirRecord => fhirRecord.IsProcessed);
+
+            model
                 .Property(fhirRecord => fhirRecord.CreatedBy)
                 .HasMaxLength(255)
                 .IsRequired();

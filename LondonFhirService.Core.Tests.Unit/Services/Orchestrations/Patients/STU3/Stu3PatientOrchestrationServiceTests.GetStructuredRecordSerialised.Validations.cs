@@ -31,7 +31,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             var invalidArgumentPatientOrchestrationException =
                 new InvalidArgumentPatientOrchestrationException(
-                    message: "Invalid patient orchestration argument, please correct the errors and try again.");
+                    message: "Invalid argument(s), please correct the errors and try again.");
 
             invalidArgumentPatientOrchestrationException.AddData(
                 key: "NhsNumber",
@@ -47,13 +47,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: invalidArgumentPatientOrchestrationException);
 
             // when
-            ValueTask<Bundle> everythingTask = this.patientOrchestrationService.GetStructuredRecordAsync(
-                correlationId: correlationId,
-                nhsNumber: invalidNhsNumber);
+            ValueTask<string> getStructuredRecordTask =
+                this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
+                    correlationId: correlationId,
+                    nhsNumber: invalidNhsNumber);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
-                    everythingTask.AsTask);
+                    getStructuredRecordTask.AsTask);
 
             // then
             actualPatientOrchestrationValidationException.Should()
@@ -82,14 +83,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
-            List<Bundle> randomBundles = CreateRandomBundles();
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -116,7 +116,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: invalidPrimaryProviderPatientOrchestrationException);
 
             // when
-            ValueTask<Bundle> everythingTask = this.patientOrchestrationService.GetStructuredRecordAsync(
+            ValueTask<string> getStructuredRecordTask = this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
                 correlationId,
                 inputNhsNumber,
                 inputDateOfBirth,
@@ -126,7 +126,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
-                    everythingTask.AsTask);
+                    getStructuredRecordTask.AsTask);
 
             // then
             actualPatientOrchestrationValidationException.Should()
@@ -177,7 +177,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
-            List<Bundle> randomBundles = CreateRandomBundles();
             Bundle randomBundle = CreateRandomBundle();
             Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
@@ -185,7 +184,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
             Provider anotherRandomPrimaryProvider = CreateRandomPrimaryProvider();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -215,7 +214,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: invalidPrimaryProviderPatientOrchestrationException);
 
             // when
-            ValueTask<Bundle> everythingTask = this.patientOrchestrationService.GetStructuredRecordAsync(
+            ValueTask<string> getStructuredRecordTask = this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
                 correlationId,
                 inputNhsNumber,
                 inputDateOfBirth,
@@ -225,7 +224,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
-                    everythingTask.AsTask);
+                    getStructuredRecordTask.AsTask);
 
             // then
             actualPatientOrchestrationValidationException.Should()

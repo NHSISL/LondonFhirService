@@ -24,9 +24,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
             Bundle randomBundle = CreateRandomBundle();
-            Bundle expectedBundle = randomBundle.DeepClone();
+            string expectedBundle = SerializeBundle(randomBundle.DeepClone());
             Guid correlationId = Guid.NewGuid();
-            string auditType = "STU3-Patient-GetStructuredRecord";
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -41,7 +41,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                 service.ValidateAccess(inputNhsNumber, correlationId));
 
             this.patientOrchestrationServiceMock.Setup(service =>
-                service.GetStructuredRecordAsync(
+                service.GetStructuredRecordSerialisedAsync(
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
@@ -51,7 +51,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                         .ReturnsAsync(expectedBundle);
 
             // when
-            Bundle actualBundle = await this.patientCoordinationService.GetStructuredRecordAsync(
+            string actualJson = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
                 inputNhsNumber,
                 inputDateOfBirth,
                 inputDemographicsOnly,
@@ -59,7 +59,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                 cancellationToken);
 
             // then
-            actualBundle.Should().BeEquivalentTo(expectedBundle);
+            actualJson.Should().BeEquivalentTo(expectedBundle);
 
             this.identifierBrokerMock.Verify(broker =>
                 broker.GetIdentifierAsync(),
@@ -70,7 +70,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     Times.Once);
 
             this.patientOrchestrationServiceMock.Verify(service =>
-                service.GetStructuredRecordAsync(
+                service.GetStructuredRecordSerialisedAsync(
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,

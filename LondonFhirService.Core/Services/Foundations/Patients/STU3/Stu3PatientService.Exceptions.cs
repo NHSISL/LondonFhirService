@@ -15,7 +15,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
     public partial class Stu3PatientService
     {
         private delegate ValueTask<List<Bundle>> ReturningBundleListFunction();
-        private delegate ValueTask<List<string>> ReturningStringListFunction();
+        private delegate ValueTask<List<(string, string)>> ReturningStringListFunction();
 
         private async ValueTask<List<Bundle>> TryCatch(
             ReturningBundleListFunction returningBundleListFunction)
@@ -55,7 +55,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             }
         }
 
-        private async ValueTask<List<string>> TryCatch(
+        private async ValueTask<List<(string, string)>> TryCatch(
             ReturningStringListFunction returningStringListFunction)
         {
             try

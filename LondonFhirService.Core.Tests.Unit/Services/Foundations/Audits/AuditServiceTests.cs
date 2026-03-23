@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using ISL.Security.Client.Models.Foundations.Users;
 using KellermanSoftware.CompareNetObjects;
 using LondonFhirService.Core.Brokers.DateTimes;
@@ -17,7 +18,6 @@ using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Tynamix.ObjectFiller;
@@ -27,8 +27,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 {
     public partial class AuditServiceTests
     {
-        private readonly Mock<IDbContextFactory<StorageBroker>> storageBrokerFactoryMock;
-        private readonly Mock<StorageBroker> storageBrokerMock;
+        private readonly Mock<IStorageBroker> storageBrokerMock;
+        private readonly Mock<IStorageBrokerFactory> storageBrokerFactoryMock;
         private readonly Mock<IConfiguration> configurationMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
@@ -41,13 +41,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
         {
             this.configurationMock = new Mock<IConfiguration>();
 
-            this.storageBrokerMock = new Mock<StorageBroker>(this.configurationMock.Object)
-            {
-                CallBase = true,
-                DefaultValue = DefaultValue.Empty
-            };
+            this.storageBrokerMock = new Mock<IStorageBroker>();
+            this.storageBrokerFactoryMock = new Mock<IStorageBrokerFactory>();
 
-            this.storageBrokerFactoryMock = new Mock<IDbContextFactory<StorageBroker>>();
+            this.storageBrokerFactoryMock
+                .Setup(factory => factory.CreateStorageBrokerAsync())
+                    .ReturnsAsync(this.storageBrokerMock.Object);
+
+            this.storageBrokerMock
+                .Setup(broker => broker.DisposeAsync())
+                    .Returns(ValueTask.CompletedTask);
+
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();

@@ -7,12 +7,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using KellermanSoftware.CompareNetObjects;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Securities;
+using LondonFhirService.Core.Brokers.Storages.Sql;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
@@ -37,17 +42,35 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly Mock<IAuditBroker> auditBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
+        private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
+        private readonly Mock<IStorageBroker> storageBrokerMock;
+        private readonly Mock<IStorageBrokerFactory> storageBrokerFactoryMock;
         private readonly PatientServiceConfig patientServiceConfig;
         private readonly Stu3PatientService patientService;
         private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
         private readonly FhirJsonSerializer fhirJsonSerializer = new();
+        private readonly ICompareLogic compareLogic;
 
         public Stu3PatientServiceTests()
         {
+            this.storageBrokerMock = new Mock<IStorageBroker>();
+            this.storageBrokerFactoryMock = new Mock<IStorageBrokerFactory>();
+
+            this.storageBrokerFactoryMock
+                .Setup(factory => factory.CreateStorageBrokerAsync())
+                    .ReturnsAsync(this.storageBrokerMock.Object);
+
+            this.storageBrokerMock
+                .Setup(broker => broker.DisposeAsync())
+                    .Returns(ValueTask.CompletedTask);
+
+
             this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.auditBrokerMock = new Mock<IAuditBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
+            this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
+            this.compareLogic = new CompareLogic();
 
             this.patientServiceConfig = new PatientServiceConfig
             {
@@ -76,6 +99,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 fhirBroker: this.fhirBroker,
                 auditBroker: this.auditBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
+                securityAuditBroker: this.securityAuditBrokerMock.Object,
+                storageBrokerFactory: this.storageBrokerFactoryMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 patientServiceConfig: this.patientServiceConfig);
         }
@@ -135,7 +160,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 Source = GetRandomString()
             };
 
-
             return bundle;
         }
 
@@ -184,6 +208,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             return actualException =>
                 actualException.SameExceptionAs(expectedException);
         }
+
+        private Expression<Func<FhirRecord, bool>> SameFhirRecordAs(
+            FhirRecord expectedFhirRecord)
+        {
+            return actualFhirRecord =>
+                this.compareLogic.Compare(expectedFhirRecord, actualFhirRecord)
+                    .AreEqual;
+        }
+
 
         private static Expression<Func<Exception, bool>> SameExceptionAs(
             Exception expectedException)

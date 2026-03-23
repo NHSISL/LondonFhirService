@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -73,17 +74,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
 
-        private static List<Bundle> CreateRandomBundles()
+        private static List<(string Provider, string Json)> CreateRandomBundles()
         {
             int numberOfBundles = GetRandomNumber();
-            var bundles = new List<Bundle>();
+            var items = new List<(string Provider, string Json)>();
 
             for (int i = 0; i < numberOfBundles; i++)
             {
-                bundles.Add(CreateRandomBundle());
+                items.Add((GetRandomString(), SerializeBundle(CreateRandomBundle())));
             }
 
-            return bundles;
+            return items;
         }
 
         private static Bundle CreateRandomBundle() =>
@@ -93,6 +94,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 Type = Bundle.BundleType.Searchset,
                 Total = GetRandomNumber()
             };
+
+        private static string SerializeBundle(Bundle bundle)
+        {
+            var serializer = new FhirJsonSerializer();
+            return serializer.SerializeToString(bundle);
+        }
 
         private static Provider CreateRandomActiveProvider() =>
             CreateProviderFiller(isActive: true).Create();

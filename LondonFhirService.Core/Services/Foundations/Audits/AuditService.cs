@@ -12,20 +12,19 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
-using Microsoft.EntityFrameworkCore;
 
 namespace LondonFhirService.Core.Services.Foundations.Audits
 {
     public partial class AuditService : IAuditService
     {
-        private readonly IDbContextFactory<StorageBroker> storageBrokerFactory;
+        private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly IIdentifierBroker identifierBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ISecurityAuditBroker securityAuditBroker;
         private readonly ILoggingBroker loggingBroker;
 
         public AuditService(
-            IDbContextFactory<StorageBroker> storageBrokerFactory,
+            IStorageBrokerFactory storageBrokerFactory,
             IIdentifierBroker identifierBroker,
             IDateTimeBroker dateTimeBroker,
             ISecurityAuditBroker securityAuditBroker,
@@ -67,8 +66,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
 
             await ValidateAuditOnAddAsync(audit);
 
-            await using StorageBroker storageBroker =
-                await this.storageBrokerFactory.CreateDbContextAsync();
+            await using IStorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
             return await storageBroker.InsertAuditAsync(audit);
         });
@@ -79,8 +78,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                 Audit auditWithAddAuditApplied = await this.securityAuditBroker.ApplyAddAuditValuesAsync(audit);
                 await ValidateAuditOnAddAsync(auditWithAddAuditApplied);
 
-                await using StorageBroker storageBroker =
-                    await this.storageBrokerFactory.CreateDbContextAsync();
+                await using IStorageBroker storageBroker =
+                    await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
                 return await storageBroker.InsertAuditAsync(auditWithAddAuditApplied);
             });
@@ -95,8 +94,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         public ValueTask<IQueryable<Audit>> RetrieveAllAuditsAsync() =>
         TryCatch(async () =>
         {
-            StorageBroker storageBroker =
-                await this.storageBrokerFactory.CreateDbContextAsync();
+            await using IStorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
             return await storageBroker.SelectAllAuditsAsync();
         });
@@ -106,8 +105,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         {
             ValidateAuditId(auditId);
 
-            await using StorageBroker storageBroker =
-                await this.storageBrokerFactory.CreateDbContextAsync();
+            await using IStorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
             Audit maybeAudit = await storageBroker
                 .SelectAuditByIdAsync(auditId);
@@ -122,8 +121,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             int totalRecords = audits.Count;
             var exceptions = new List<Exception>();
 
-            await using StorageBroker storageBroker =
-                await this.storageBrokerFactory.CreateDbContextAsync();
+            await using IStorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
             for (int i = 0; i < totalRecords; i += batchSize)
             {
@@ -151,8 +150,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                 Audit auditWithModifyAuditApplied = await this.securityAuditBroker.ApplyModifyAuditValuesAsync(audit);
                 await ValidateAuditOnModifyAsync(auditWithModifyAuditApplied);
 
-                await using StorageBroker storageBroker =
-                    await this.storageBrokerFactory.CreateDbContextAsync();
+                await using IStorageBroker storageBroker =
+                    await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
                 Audit maybeAudit = await storageBroker.SelectAuditByIdAsync(audit.Id);
                 ValidateStorageAudit(maybeAudit, audit.Id);
@@ -166,8 +165,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         {
             ValidateAuditId(auditId);
 
-            await using StorageBroker storageBroker =
-                await this.storageBrokerFactory.CreateDbContextAsync();
+            await using IStorageBroker storageBroker =
+                await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
             Audit maybeAudit = await storageBroker
                 .SelectAuditByIdAsync(auditId);

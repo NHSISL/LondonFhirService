@@ -54,10 +54,10 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                 await this.patientController.GetStructuredRecord(inputParameters, cancellationToken);
 
             // then
-            actualActionResult.Result.Should().BeOfType<OkObjectResult>();
+            actualActionResult.Result.Should().BeOfType<ContentResult>();
             actualActionResult.Should().BeEquivalentTo(expectedActionResult);
-            var okResult = actualActionResult.Result as OkObjectResult;
-            okResult.Value.Should().BeEquivalentTo(rawExpectedBundle);
+            var contentResult = actualActionResult.Result as ContentResult;
+            contentResult.Content.Should().BeEquivalentTo(rawExpectedBundle);
 
             this.patientCoordinationServiceMock.Verify(coordination =>
                 coordination.GetStructuredRecordSerialisedAsync(

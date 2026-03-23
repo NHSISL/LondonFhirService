@@ -18,6 +18,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         public async Task ShouldThrowCriticalDependencyExceptionOnOrganisationsHaveAccessToThisPatientAndLogItAsync()
         {
             // given
+            Guid someCorrelationId = Guid.NewGuid();
+            string somePatientIdentifier = GetRandomString();
             string someNhsNumber = GetRandomString();
             List<string> someOrganisations = GetRandomStringsWithLengthOf(10);
             SqlException sqlException = CreateSqlException();
@@ -39,7 +41,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             ValueTask<bool> retrieveAllPdsDatasTask =
                 this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: someNhsNumber, organisationCodes: someOrganisations);
+                    patientIdentifier: somePatientIdentifier,
+                    nhsNumber: someNhsNumber,
+                    organisationCodes: someOrganisations,
+                    correlationId: someCorrelationId);
 
             PdsDataServiceDependencyException actualPdsDataDependencyException =
                 await Assert.ThrowsAsync<PdsDataServiceDependencyException>(
@@ -65,13 +70,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
         public async Task ShouldThrowServiceExceptionOnOrganisationsHaveAccessToThisPatientAndLogItAsync()
         {
             // given
+            string somePatientIdentifier = GetRandomString();
             string someNhsNumber = GetRandomString();
+            Guid someCorrelationId = Guid.NewGuid();
             List<string> someOrganisations = GetRandomStringsWithLengthOf(10);
             string exceptionMessage = GetRandomString();
             var serviceException = new Exception(exceptionMessage);
@@ -93,7 +101,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             // when
             ValueTask<bool> retrieveAllPdsDatasTask =
                 this.pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: someNhsNumber, organisationCodes: someOrganisations);
+                    patientIdentifier: somePatientIdentifier,
+                    nhsNumber: someNhsNumber,
+                    organisationCodes: someOrganisations,
+                    correlationId: someCorrelationId);
 
             PdsDataServiceException actualPdsDataServiceException =
                 await Assert.ThrowsAsync<PdsDataServiceException>(
@@ -119,6 +130,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.storageBroker.VerifyNoOtherCalls();
             this.dateTimeBroker.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

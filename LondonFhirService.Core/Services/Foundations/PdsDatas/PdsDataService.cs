@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Storages.Sql;
@@ -18,15 +19,18 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
         private readonly IStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly IAuditBroker auditBroker;
 
         public PdsDataService(
             IStorageBroker storageBroker,
             IDateTimeBroker dateTimeBroker,
-            ILoggingBroker loggingBroker)
+            ILoggingBroker loggingBroker,
+            IAuditBroker auditBroker)
         {
             this.storageBroker = storageBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.loggingBroker = loggingBroker;
+            this.auditBroker = auditBroker;
         }
 
         public ValueTask<PdsData> AddPdsDataAsync(PdsData pdsData) =>
@@ -81,20 +85,20 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             });
 
         public ValueTask<bool> OrganisationsHaveAccessToThisPatient(
+            string patientIdentifier,
             string nhsNumber,
-            List<string> organisationCodes) =>
+            List<string> organisationCodes,
+            Guid correlationId) =>
             TryCatch(async () =>
             {
-                ValidateOnOrganisationsHaveAccessToThisPatient(nhsNumber, organisationCodes);
-
+                ValidateOnOrganisationsHaveAccessToThisPatient(patientIdentifier, nhsNumber, organisationCodes, correlationId);
                 var query = await this.storageBroker.SelectAllPdsDatasAsync();
                 DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-                // TODO:  Check if the patient exists in the config table; if not, throw a configuration for patient not found exception.
-                // Otherwise, move on to check the access permission.
+                bool patientExists = query.Any(pdsData => pdsData.NhsNumber == patientIdentifier);
+                await ValidatePatientExists(patientExists, nhsNumber, correlationId);
 
                 bool hasAccess = query.Any(
-                    pdsData => pdsData.NhsNumber == nhsNumber
+                    pdsData => pdsData.NhsNumber == patientIdentifier
                     && organisationCodes.Contains(pdsData.OrgCode)
                     && (pdsData.RelationshipWithOrganisationEffectiveFromDate == null
                         || pdsData.RelationshipWithOrganisationEffectiveFromDate <= currentDateTime)

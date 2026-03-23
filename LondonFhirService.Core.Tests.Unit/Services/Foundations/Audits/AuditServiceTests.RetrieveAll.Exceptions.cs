@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using Microsoft.Data.SqlClient;
@@ -32,10 +31,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     message: "Audit dependency error occurred, please contact support.",
                     innerException: failedAuditStorageException);
 
-            this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateDbContextAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
-
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllAuditsAsync())
                     .ThrowsAsync(sqlException);
@@ -53,7 +48,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 .BeEquivalentTo(expectedAuditDependencyException);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
@@ -65,7 +60,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     expectedAuditDependencyException))),
                         Times.Once);
 
+            this.storageBrokerMock.Verify(broker =>
+                broker.DisposeAsync(),
+                    Times.Once);
+
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -88,10 +88,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     message: "Audit service error occurred, please contact support.",
                     innerException: failedAuditServiceException);
 
-            this.storageBrokerFactoryMock.Setup(broker =>
-                broker.CreateDbContextAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object as StorageBroker);
-
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllAuditsAsync())
                     .ThrowsAsync(serviceException);
@@ -109,7 +105,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 .BeEquivalentTo(expectedAuditServiceException);
 
             this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateDbContextAsync(),
+                broker.CreateStorageBrokerAsync(),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
@@ -121,7 +117,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                     expectedAuditServiceException))),
                         Times.Once);
 
+            this.storageBrokerMock.Verify(broker =>
+                broker.DisposeAsync(),
+                    Times.Once);
+
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();

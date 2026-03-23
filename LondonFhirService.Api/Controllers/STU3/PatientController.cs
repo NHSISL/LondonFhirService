@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
+using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,23 +44,34 @@ namespace LondonFhirService.Api.Controllers.STU3
                 bool? includeInactivePatients =
                     ExtractBoolParameter(parameters, "includeInactivePatients", partName: "includeInactivePatients");
 
-                string bundle = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                string json = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
                     nhsNumber,
                     dateOfBirth,
                     demographicsOnly,
                     includeInactivePatients,
                     cancellationToken);
 
-                return Content(bundle, "application/fhir+json");
+                return Content(json, "application/fhir+json");
+            }
+            catch (PatientCoordinationValidationException patientCoordinationValidationException)
+                when (patientCoordinationValidationException.InnerException is ResourceNotFoundException)
+            {
+                return InternalServerError(patientCoordinationValidationException.InnerException);
             }
             catch (PatientCoordinationValidationException patientCoordinationValidationException)
             {
-                return BadRequest(patientCoordinationValidationException.InnerException);
+                return NotFound(patientCoordinationValidationException.InnerException);
+            }
+            catch (PatientCoordinationDependencyValidationException
+                patientCoordinationDependencyValidationException)
+                when (patientCoordinationDependencyValidationException.InnerException is ResourceNotFoundException)
+            {
+                return InternalServerError(patientCoordinationDependencyValidationException.InnerException);
             }
             catch (PatientCoordinationDependencyValidationException
                 patientCoordinationDependencyValidationException)
             {
-                return BadRequest(patientCoordinationDependencyValidationException.InnerException);
+                return NotFound(patientCoordinationDependencyValidationException.InnerException);
             }
             catch (PatientCoordinationDependencyException patientCoordinationDependencyException)
             {

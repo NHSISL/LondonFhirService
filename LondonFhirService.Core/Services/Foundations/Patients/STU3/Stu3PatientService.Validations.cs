@@ -20,9 +20,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
-                    message:
-                        "Invalid argument patient service exception, " +
-                        "please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(providerNames), Parameter: nameof(providerNames)),
                 (Rule: IsInvalid(id), Parameter: nameof(id)),
@@ -37,9 +35,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         {
             Validate(
                 createException: () => new InvalidArgumentsPatientServiceException(
-                    message:
-                        "Invalid argument patient service exception, " +
-                        "please correct the errors and try again."),
+                    message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(activeProviders), Parameter: nameof(activeProviders)),
                 (Rule: IsInvalid(nhsNumber), Parameter: nameof(nhsNumber)),
