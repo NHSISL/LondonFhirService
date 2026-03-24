@@ -5,6 +5,7 @@
 using System;
 using System.Text.Json;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
+using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
 
