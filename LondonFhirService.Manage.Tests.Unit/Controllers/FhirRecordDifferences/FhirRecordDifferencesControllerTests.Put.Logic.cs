@@ -4,7 +4,7 @@
 
 using System.Threading.Tasks;
 using Force.DeepCloner;
-using LondonFhirService.Manage.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using RESTFulSense.Clients.Extensions;
@@ -33,7 +33,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecordDifferences
                     .ReturnsAsync(storageFhirRecordDifference);
 
             // when
-            ActionResult<FhirRecordDifference> actualActionResult = await fhirRecordDifferencesController.PutFhirRecordDifferenceAsync(randomFhirRecordDifference);
+            ActionResult<FhirRecordDifference> actualActionResult =
+                await fhirRecordDifferencesController.PutFhirRecordDifferenceAsync(randomFhirRecordDifference);
 
             // then
             actualActionResult.ShouldBeEquivalentTo(expectedActionResult);

@@ -4,8 +4,8 @@
 
 using System;
 using System.Threading.Tasks;
-using LondonFhirService.Manage.Models.Foundations.FhirRecordDifferences;
-using LondonFhirService.Manage.Models.Foundations.FhirRecordDifferences.Exceptions;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using RESTFulSense.Clients.Extensions;

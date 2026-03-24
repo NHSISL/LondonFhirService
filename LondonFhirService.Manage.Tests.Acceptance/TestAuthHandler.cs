@@ -31,7 +31,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance
             new Claim(ClaimTypes.Email, email),
             new Claim("jobTitle", jobTitle),
             new Claim(ClaimTypes.Name, "TestUser"),
-            new Claim(ClaimTypes.Role, "LondonFhirService.Manage.Administrators"),
+            new Claim(ClaimTypes.Role, "Administrators"),
             new Claim(ClaimTypes.Role, "LondonFhirService.Manage.Users")
         };
 

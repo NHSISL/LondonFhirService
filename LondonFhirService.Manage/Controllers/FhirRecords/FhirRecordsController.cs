@@ -26,7 +26,7 @@ namespace LondonFhirService.Manage.Controllers
 
         [HttpPost]
         //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecords.Create")]
+        [Authorize(Roles = "Administrators,FhirRecords.Create")]
         public async ValueTask<ActionResult<FhirRecord>> PostFhirRecordAsync([FromBody] FhirRecord fhirRecord)
         {
             try
@@ -68,7 +68,7 @@ namespace LondonFhirService.Manage.Controllers
         [EnableQuery(PageSize = 5000)]
 #endif
         //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecords.Read")]
+        [Authorize(Roles = "Administrators,FhirRecords.Read")]
         public async ValueTask<ActionResult<IQueryable<FhirRecord>>> Get()
         {
             try
@@ -90,7 +90,7 @@ namespace LondonFhirService.Manage.Controllers
 
         [HttpGet("{fhirRecordId}")]
         //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecords.Read")]
+        [Authorize(Roles = "Administrators,FhirRecords.Read")]
         public async ValueTask<ActionResult<FhirRecord>> GetFhirRecordByIdAsync(Guid fhirRecordId)
         {
             try
@@ -124,7 +124,7 @@ namespace LondonFhirService.Manage.Controllers
 
         [HttpPut]
         //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecords.Update")]
+        [Authorize(Roles = "Administrators,FhirRecords.Update")]
         public async ValueTask<ActionResult<FhirRecord>> PutFhirRecordAsync([FromBody] FhirRecord fhirRecord)
         {
             try
@@ -164,7 +164,7 @@ namespace LondonFhirService.Manage.Controllers
 
         [HttpDelete("{fhirRecordId}")]
         //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecords.Delete")]
+        [Authorize(Roles = "Administrators,FhirRecords.Delete")]
         public async ValueTask<ActionResult<FhirRecord>> DeleteFhirRecordByIdAsync(Guid fhirRecordId)
         {
             try

@@ -25,7 +25,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecords
 
             List<string> expectedAttributeValues = new List<string>
             {
-                "LondonFhirService.Manage.Administrators",
+                "Administrators",
                 "FhirRecords.Delete"
             };
 

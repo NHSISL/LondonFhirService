@@ -5,10 +5,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Attrify.Attributes;
-using LondonFhirService.Manage.Models.Foundations.FhirRecordDifferences;
-using LondonFhirService.Manage.Models.Foundations.FhirRecordDifferences.Exceptions;
-using LondonFhirService.Manage.Services.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions;
+using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -26,9 +25,9 @@ namespace LondonFhirService.Manage.Controllers
             this.fhirRecordDifferenceService = fhirRecordDifferenceService;
 
         [HttpPost]
-        //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecordDifferences.Create")]
-        public async ValueTask<ActionResult<FhirRecordDifference>> PostFhirRecordDifferenceAsync([FromBody] FhirRecordDifference fhirRecordDifference)
+        [Authorize(Roles = "Administrators,FhirRecordDifferences.Create")]
+        public async ValueTask<ActionResult<FhirRecordDifference>> PostFhirRecordDifferenceAsync(
+            [FromBody] FhirRecordDifference fhirRecordDifference)
         {
             try
             {
@@ -42,7 +41,7 @@ namespace LondonFhirService.Manage.Controllers
                 return BadRequest(fhirRecordDifferenceValidationException.InnerException);
             }
             catch (FhirRecordDifferenceDependencyValidationException fhirRecordDifferenceDependencyValidationException)
-                when (fhirRecordDifferenceDependencyValidationException.InnerException 
+                when (fhirRecordDifferenceDependencyValidationException.InnerException
                     is AlreadyExistsFhirRecordDifferenceException)
             {
                 return Conflict(fhirRecordDifferenceDependencyValidationException.InnerException);
@@ -68,8 +67,7 @@ namespace LondonFhirService.Manage.Controllers
 #if DEBUG
         [EnableQuery(PageSize = 5000)]
 #endif
-        //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecordDifferences.Read")]
+        [Authorize(Roles = "Administrators,FhirRecordDifferences.Read")]
         public async ValueTask<ActionResult<IQueryable<FhirRecordDifference>>> Get()
         {
             try
@@ -90,13 +88,14 @@ namespace LondonFhirService.Manage.Controllers
         }
 
         [HttpGet("{fhirRecordDifferenceId}")]
-        //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecordDifferences.Read")]
-        public async ValueTask<ActionResult<FhirRecordDifference>> GetFhirRecordDifferenceByIdAsync(Guid fhirRecordDifferenceId)
+        [Authorize(Roles = "Administrators,FhirRecordDifferences.Read")]
+        public async ValueTask<ActionResult<FhirRecordDifference>> GetFhirRecordDifferenceByIdAsync(
+            Guid fhirRecordDifferenceId)
         {
             try
             {
-                FhirRecordDifference fhirRecordDifference = await this.fhirRecordDifferenceService.RetrieveFhirRecordDifferenceByIdAsync(fhirRecordDifferenceId);
+                FhirRecordDifference fhirRecordDifference = await this.fhirRecordDifferenceService
+                    .RetrieveFhirRecordDifferenceByIdAsync(fhirRecordDifferenceId);
 
                 return Ok(fhirRecordDifference);
             }
@@ -124,9 +123,9 @@ namespace LondonFhirService.Manage.Controllers
         }
 
         [HttpPut]
-        //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecordDifferences.Update")]
-        public async ValueTask<ActionResult<FhirRecordDifference>> PutFhirRecordDifferenceAsync([FromBody] FhirRecordDifference fhirRecordDifference)
+        [Authorize(Roles = "Administrators,FhirRecordDifferences.Update")]
+        public async ValueTask<ActionResult<FhirRecordDifference>> PutFhirRecordDifferenceAsync(
+            [FromBody] FhirRecordDifference fhirRecordDifference)
         {
             try
             {
@@ -145,7 +144,8 @@ namespace LondonFhirService.Manage.Controllers
                 return BadRequest(fhirRecordDifferenceValidationException.InnerException);
             }
             catch (FhirRecordDifferenceDependencyValidationException fhirRecordDifferenceDependencyValidationException)
-                when (fhirRecordDifferenceDependencyValidationException.InnerException is AlreadyExistsFhirRecordDifferenceException)
+                when (fhirRecordDifferenceDependencyValidationException.InnerException
+                    is AlreadyExistsFhirRecordDifferenceException)
             {
                 return Conflict(fhirRecordDifferenceDependencyValidationException.InnerException);
             }
@@ -164,9 +164,9 @@ namespace LondonFhirService.Manage.Controllers
         }
 
         [HttpDelete("{fhirRecordDifferenceId}")]
-        //[InvisibleApi]
-        [Authorize(Roles = "LondonFhirService.Manage.Administrators,FhirRecordDifferences.Delete")]
-        public async ValueTask<ActionResult<FhirRecordDifference>> DeleteFhirRecordDifferenceByIdAsync(Guid fhirRecordDifferenceId)
+        [Authorize(Roles = "Administrators,FhirRecordDifferences.Delete")]
+        public async ValueTask<ActionResult<FhirRecordDifference>> DeleteFhirRecordDifferenceByIdAsync(
+            Guid fhirRecordDifferenceId)
         {
             try
             {
@@ -185,7 +185,8 @@ namespace LondonFhirService.Manage.Controllers
                 return BadRequest(fhirRecordDifferenceValidationException.InnerException);
             }
             catch (FhirRecordDifferenceDependencyValidationException fhirRecordDifferenceDependencyValidationException)
-                when (fhirRecordDifferenceDependencyValidationException.InnerException is LockedFhirRecordDifferenceException)
+                when (fhirRecordDifferenceDependencyValidationException.InnerException
+                    is LockedFhirRecordDifferenceException)
             {
                 return Locked(fhirRecordDifferenceDependencyValidationException.InnerException);
             }

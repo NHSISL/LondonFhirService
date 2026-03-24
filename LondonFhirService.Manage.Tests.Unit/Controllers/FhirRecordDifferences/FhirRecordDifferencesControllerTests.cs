@@ -4,10 +4,10 @@
 
 using System;
 using System.Linq;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions;
+using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Manage.Controllers;
-using LondonFhirService.Manage.Models.Foundations.FhirRecordDifferences;
-using LondonFhirService.Manage.Models.Foundations.FhirRecordDifferences.Exceptions;
-using LondonFhirService.Manage.Services.Foundations.FhirRecordDifferences;
 using Moq;
 using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;
@@ -96,9 +96,6 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecordDifferences
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                
-                // TODO:  Add your property configurations here
-
                 .OnProperty(fhirRecordDifference => fhirRecordDifference.CreatedBy).Use(user)
                 .OnProperty(fhirRecordDifference => fhirRecordDifference.UpdatedBy).Use(user);
 
