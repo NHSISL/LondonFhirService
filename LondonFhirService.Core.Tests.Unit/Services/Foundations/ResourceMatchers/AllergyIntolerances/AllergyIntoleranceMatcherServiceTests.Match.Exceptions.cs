@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.AllergyIntolerances.AllergyIntolerances.Exceptions;
 
@@ -13,26 +14,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AllergyIntolera
 public partial class AllergyIntoleranceMatcherServiceTests
 {
     [Fact]
-    public void ShouldThrowServiceExceptionOnMatchIfServiceErrorOccurs()
+    public async Task ShouldThrowServiceExceptionOnMatchIfServiceErrorOccurs()
     {
         // given
-        JsonElement malformedAllergyIntoleranceResource = CreateMalformedCodingResource();
-        List<JsonElement> source1Resources = [malformedAllergyIntoleranceResource];
+        string snomedCode = "12345";
+        string onsetDateTime = "2024-01-01";
+
+        JsonElement duplicateResource1 = CreateAllergyIntoleranceResource(
+            snomedCode,
+            onsetDateTime,
+            "allergy-1");
+
+        JsonElement duplicateResource2 = CreateAllergyIntoleranceResource(
+            snomedCode,
+            onsetDateTime,
+            "allergy-2");
+
+        List<JsonElement> source1Resources = [duplicateResource1, duplicateResource2];
         List<JsonElement> source2Resources = [];
         Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
         Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
-        var invalidOperationException = new InvalidOperationException(
-            "The requested operation requires an element of type 'Array', but the target element has type 'Object'.");
-
-        var failedAllergyIntoleranceServiceException =
-            new FailedAllergyIntolerancesServiceException(
-                message: "Failed allergy intolerance service error occurred, contact support.",
-                innerException: invalidOperationException);
-
-        var expectedAllergyIntoleranceServiceException =
-            new AllergyIntoleranceServiceException(
-                message: "Allergy intolerance service error occurred, contact support.",
-                innerException: failedAllergyIntoleranceServiceException);
 
         // when
         Action matchAction = () =>
@@ -46,7 +47,19 @@ public partial class AllergyIntoleranceMatcherServiceTests
         AllergyIntoleranceServiceException actualAllergyIntoleranceServiceException =
             Assert.Throws<AllergyIntoleranceServiceException>(matchAction);
 
-        actualAllergyIntoleranceServiceException.Should()
-            .BeEquivalentTo(expectedAllergyIntoleranceServiceException);
+        actualAllergyIntoleranceServiceException.Should().BeOfType<AllergyIntoleranceServiceException>();
+
+        actualAllergyIntoleranceServiceException.Message.Should()
+            .Be("Allergy intolerance service error occurred, contact support.");
+
+        actualAllergyIntoleranceServiceException.InnerException.Should()
+            .BeOfType<FailedAllergyIntolerancesServiceException>();
+
+        actualAllergyIntoleranceServiceException.InnerException.Message.Should()
+            .Be("Failed allergy intolerance service error occurred, contact support.");
+
+        actualAllergyIntoleranceServiceException.InnerException.InnerException.Should()
+            .BeOfType<ArgumentException>();
     }
+
 }

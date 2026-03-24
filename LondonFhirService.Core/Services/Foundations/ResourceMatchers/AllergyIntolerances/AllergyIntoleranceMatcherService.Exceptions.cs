@@ -24,14 +24,6 @@ public partial class AllergyIntoleranceMatcherService
         {
             throw CreateAndThrowValidationException(nullAllergyIntoleranceException);
         }
-        catch (InvalidOperationException invalidOperationException)
-        {
-            throw CreateAndThrowServiceException(invalidOperationException);
-        }
-        catch (JsonException jsonException)
-        {
-            throw CreateAndThrowServiceException(jsonException);
-        }
         catch (Exception exception)
         {
             throw CreateAndThrowServiceException(exception);
@@ -47,14 +39,6 @@ public partial class AllergyIntoleranceMatcherService
         catch (NullAllergyIntoleranceException nullAllergyIntoleranceException)
         {
             throw CreateAndThrowValidationException(nullAllergyIntoleranceException);
-        }
-        catch (InvalidOperationException invalidOperationException)
-        {
-            throw CreateAndThrowServiceException(invalidOperationException);
-        }
-        catch (JsonException jsonException)
-        {
-            throw CreateAndThrowServiceException(jsonException);
         }
         catch (Exception exception)
         {
