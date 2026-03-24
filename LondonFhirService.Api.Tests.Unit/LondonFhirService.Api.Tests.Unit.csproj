@@ -9,15 +9,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="coverlet.collector" Version="8.0.0">
+		<PackageReference Include="coverlet.collector" Version="8.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.1.0" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.1.1" />
 		<PackageReference Include="FluentAssertions" Version="7.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.5" />
 		<PackageReference Include="NHSISL.CsvHelperClient" Version="1.1.0" />
 		<PackageReference Include="RESTFulSense" Version="3.2.0" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
