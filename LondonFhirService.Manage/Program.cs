@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 var builder = WebApplication.CreateBuilder(args);
 
 // Load settings from launchSettings.json (for local debug / tooling)
+var contentRoot = builder.Environment.ContentRootPath;
 var projectDir = Directory.GetCurrentDirectory();
 var launchSettingsPath = Path.Combine(projectDir, "Properties", "launchSettings.json");
 
@@ -23,7 +24,7 @@ if (File.Exists(launchSettingsPath))
 }
 
 builder.Configuration
-    .AddJsonFile(Path.Combine(projectDir, "appsettings.json"), optional: true)
+    .AddJsonFile(Path.Combine(projectDir, "appsettings.json"), optional: false)
     .AddJsonFile(Path.Combine(projectDir, "appsettings.Development.json"), optional: true)
     .AddEnvironmentVariables();
 

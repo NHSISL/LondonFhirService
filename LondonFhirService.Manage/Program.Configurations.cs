@@ -40,7 +40,6 @@ using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
 
-
 public partial class Program
 {
     internal static Action<WebApplicationBuilder>? TestConfigurationOverrides { get; set; } = null;

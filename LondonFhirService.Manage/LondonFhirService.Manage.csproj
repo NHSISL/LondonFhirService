@@ -36,6 +36,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Acceptance" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Integration" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+	
+	<ItemGroup>
 		<Content Update="appsettings.Development.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
