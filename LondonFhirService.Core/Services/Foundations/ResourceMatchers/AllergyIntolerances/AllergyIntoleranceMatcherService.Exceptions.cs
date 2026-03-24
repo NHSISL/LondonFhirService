@@ -62,17 +62,17 @@ public partial class AllergyIntoleranceMatcherService
         }
     }
 
-    private static ResourceMatcherValidationException CreateAndThrowValidationException(Exception exception)
+    private static AllergyIntoleranceValidationException CreateAndThrowValidationException(Exception exception)
     {
         var resourceMatcherValidationException =
-            new ResourceMatcherValidationException(
+            new AllergyIntoleranceValidationException(
                 message: "Resource matcher validation error occurred, please fix the errors and try again.",
                 innerException: exception);
 
         throw resourceMatcherValidationException;
     }
 
-    private static ResourceMatcherServiceException CreateAndThrowServiceException(Exception exception)
+    private static AllergyIntoleranceServiceException CreateAndThrowServiceException(Exception exception)
     {
         var failedResourceMatcherServiceException =
             new FailedAllergyIntolerancesServiceException(
@@ -80,7 +80,7 @@ public partial class AllergyIntoleranceMatcherService
                 innerException: exception);
 
         var resourceMatcherServiceException =
-            new ResourceMatcherServiceException(
+            new AllergyIntoleranceServiceException(
                 message: "Resource matcher service error occurred, contact support.",
                 innerException: failedResourceMatcherServiceException);
 

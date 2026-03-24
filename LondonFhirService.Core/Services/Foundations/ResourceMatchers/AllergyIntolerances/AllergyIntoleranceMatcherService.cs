@@ -18,8 +18,7 @@ public partial class AllergyIntoleranceMatcherService : IResourceMatcherService
     public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex) =>
     TryCatch(() =>
     {
-        ValidateResourceIsNotNull(resource);
-        ValidateResourceIndexIsNotNull(resourceIndex);
+        ValidateGetMatchKeyArguments(resource, resourceIndex);
 
         string? snomedCode = GetSnomedCode(resource);
         string? onsetDateTime = GetOnsetDateTime(resource);
@@ -39,10 +38,11 @@ public partial class AllergyIntoleranceMatcherService : IResourceMatcherService
         Dictionary<string, JsonElement> source2ResourceIndex) =>
     TryCatch(() =>
     {
-        ValidateResourcesListIsNotNull(source1Resources, nameof(source1Resources));
-        ValidateResourcesListIsNotNull(source2Resources, nameof(source2Resources));
-        ValidateResourceIndexIsNotNull(source1ResourceIndex, nameof(source1ResourceIndex));
-        ValidateResourceIndexIsNotNull(source2ResourceIndex, nameof(source2ResourceIndex));
+        ValidateMatchArguments(
+            source1Resources, 
+            source2Resources, 
+            source1ResourceIndex, 
+            source2ResourceIndex);
 
         var resourceMatch = new ResourceMatch();
 

@@ -7,9 +7,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
 
-public class ResourceMatcherValidationException : Xeption
+public class AllergyIntoleranceServiceException : Xeption
 {
-    public ResourceMatcherValidationException(string message, Exception innerException)
+    public AllergyIntoleranceServiceException(string message, Exception innerException)
         : base(message, innerException)
     { }
 }
