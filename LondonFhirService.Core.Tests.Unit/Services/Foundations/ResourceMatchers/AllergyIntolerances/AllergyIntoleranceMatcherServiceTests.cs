@@ -6,11 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text.Json;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
-using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+using LondonFhirService.Core.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 using Xeptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
 public partial class AllergyIntoleranceMatcherServiceTests
 {

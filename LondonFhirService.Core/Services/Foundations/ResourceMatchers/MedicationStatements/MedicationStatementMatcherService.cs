@@ -5,11 +5,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances;
 
-namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationStatements;
+namespace LondonFhirService.Core.Services.Foundations.AllergyIntolerances.MedicationStatements;
 
-public class MedicationStatementMatcherService : IResourceMatcherService
+public class MedicationStatementMatcherService : IAllergyIntoleranceService
 {
     public string ResourceType => "MedicationStatement";
 

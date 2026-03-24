@@ -4,10 +4,10 @@
 
 using System;
 using System.Text.Json;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances.AllergyIntolerances.Exceptions;
 
-namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+namespace LondonFhirService.Core.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
 public partial class AllergyIntoleranceMatcherService
 {
@@ -44,9 +44,9 @@ public partial class AllergyIntoleranceMatcherService
         {
             return returningResourceMatchFunction();
         }
-        catch (NullAllergyIntoleranceException nullResourceMatcherException)
+        catch (NullAllergyIntoleranceException nullAllergyIntoleranceException)
         {
-            throw CreateAndThrowValidationException(nullResourceMatcherException);
+            throw CreateAndThrowValidationException(nullAllergyIntoleranceException);
         }
         catch (InvalidOperationException invalidOperationException)
         {
@@ -74,15 +74,15 @@ public partial class AllergyIntoleranceMatcherService
 
     private static AllergyIntoleranceServiceException CreateAndThrowServiceException(Exception exception)
     {
-        var failedResourceMatcherServiceException =
+        var failedAllergyIntoleranceServiceException =
             new FailedAllergyIntolerancesServiceException(
-                message: "Failed resource matcher service error occurred, contact support.",
+                message: "Failed allergy intolerance service error occurred, contact support.",
                 innerException: exception);
 
         var resourceMatcherServiceException =
             new AllergyIntoleranceServiceException(
-                message: "Resource matcher service error occurred, contact support.",
-                innerException: failedResourceMatcherServiceException);
+                message: "Allergy intolerance service error occurred, contact support.",
+                innerException: failedAllergyIntoleranceServiceException);
 
         throw resourceMatcherServiceException;
     }

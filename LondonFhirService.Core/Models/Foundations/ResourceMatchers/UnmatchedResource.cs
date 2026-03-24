@@ -4,7 +4,7 @@
 
 using System.Text.Json;
 
-namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers
+namespace LondonFhirService.Core.Models.Foundations.AllergyIntolerances
 {
     public record UnmatchedResource(
         JsonElement Resource,

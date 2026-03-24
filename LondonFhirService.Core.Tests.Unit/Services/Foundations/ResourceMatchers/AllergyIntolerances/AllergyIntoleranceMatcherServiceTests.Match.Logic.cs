@@ -5,9 +5,9 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
 public partial class AllergyIntoleranceMatcherServiceTests
 {

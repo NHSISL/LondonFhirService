@@ -5,10 +5,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances.Exceptions;
 using Xeptions;
 
-namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+namespace LondonFhirService.Core.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
 public partial class AllergyIntoleranceMatcherService
 {

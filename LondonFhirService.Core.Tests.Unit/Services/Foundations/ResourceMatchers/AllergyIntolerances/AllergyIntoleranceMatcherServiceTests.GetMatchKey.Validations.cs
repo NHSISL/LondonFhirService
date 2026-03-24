@@ -2,11 +2,13 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using FluentAssertions;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances.AllergyIntolerances.Exceptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
 public partial class AllergyIntoleranceMatcherServiceTests
 {
@@ -17,24 +19,24 @@ public partial class AllergyIntoleranceMatcherServiceTests
         JsonElement nullResource = default;
         Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
 
-        var nullResourceMatcherException =
-            new NullResourceMatcherException(nameof(nullResource));
+        var nullAllergyIntoleranceException =
+            new NullAllergyIntoleranceException(nameof(nullResource));
 
-        var expectedResourceMatcherValidationException =
-            new ResourceMatcherValidationException(
-                message: "Resource matcher validation error occurred, please fix the errors and try again.",
-                innerException: nullResourceMatcherException);
+        var expectedAllergyIntoleranceValidationException =
+            new AllergyIntoleranceValidationException(
+                message: "Allergy intolerance matcher validation error occurred, please fix the errors and try again.",
+                innerException: nullAllergyIntoleranceException);
 
         // when
         Action getMatchKeyAction = () =>
             this.allergyIntoleranceMatcherService.GetMatchKey(nullResource, resourceIndex);
 
         // then
-        ResourceMatcherValidationException actualResourceMatcherValidationException =
-            Assert.Throws<ResourceMatcherValidationException>(getMatchKeyAction);
+        AllergyIntoleranceValidationException actualAllergyIntoleranceValidationException =
+            Assert.Throws<AllergyIntoleranceValidationException>(getMatchKeyAction);
 
-        actualResourceMatcherValidationException.Should()
-            .BeEquivalentTo(expectedResourceMatcherValidationException);
+        actualAllergyIntoleranceValidationException.Should()
+            .BeEquivalentTo(expectedAllergyIntoleranceValidationException);
     }
 
     [Fact]
@@ -48,23 +50,23 @@ public partial class AllergyIntoleranceMatcherServiceTests
 
         Dictionary<string, JsonElement> nullResourceIndex = null;
 
-        var nullResourceMatcherException =
-            new NullResourceMatcherException(nameof(nullResourceIndex));
+        var NullAllergyIntoleranceException =
+            new NullAllergyIntoleranceException(nameof(nullResourceIndex));
 
-        var expectedResourceMatcherValidationException =
-            new ResourceMatcherValidationException(
-                message: "Resource matcher validation error occurred, please fix the errors and try again.",
-                innerException: nullResourceMatcherException);
+        var expectedAllergyIntoleranceValidationException =
+            new AllergyIntoleranceValidationException(
+                message: "allergy intolerance validation error occurred, please fix the errors and try again.",
+                innerException: NullAllergyIntoleranceException);
 
         // when
         Action getMatchKeyAction = () =>
             this.allergyIntoleranceMatcherService.GetMatchKey(allergyIntoleranceResource, nullResourceIndex);
 
         // then
-        ResourceMatcherValidationException actualResourceMatcherValidationException =
-            Assert.Throws<ResourceMatcherValidationException>(getMatchKeyAction);
+        AllergyIntoleranceValidationException actualAllergyIntoleranceValidationException =
+            Assert.Throws<AllergyIntoleranceValidationException>(getMatchKeyAction);
 
-        actualResourceMatcherValidationException.Should()
-            .BeEquivalentTo(expectedResourceMatcherValidationException);
+        actualAllergyIntoleranceValidationException.Should()
+            .BeEquivalentTo(expectedAllergyIntoleranceValidationException);
     }
 }

@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances.AllergyIntolerances.Exceptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
 public partial class AllergyIntoleranceMatcherServiceTests
 {
@@ -24,15 +24,15 @@ public partial class AllergyIntoleranceMatcherServiceTests
         var invalidOperationException = new InvalidOperationException(
             "The requested operation requires an element of type 'Array', but the target element has type 'Object'.");
 
-        var failedResourceMatcherServiceException =
-            new FailedResourceMatcherServiceException(
-                message: "Failed resource matcher service error occurred, contact support.",
+        var failedAllergyIntoleranceServiceException =
+            new FailedAllergyIntolerancesServiceException(
+                message: "Failed allergy intolerance service error occurred, contact support.",
                 innerException: invalidOperationException);
 
-        var expectedResourceMatcherServiceException =
-            new ResourceMatcherServiceException(
-                message: "Resource matcher service error occurred, contact support.",
-                innerException: failedResourceMatcherServiceException);
+        var expectedAllergyIntoleranceServiceException =
+            new AllergyIntoleranceServiceException(
+                message: "Allergy intolerance service error occurred, contact support.",
+                innerException: failedAllergyIntoleranceServiceException);
 
         // when
         Action matchAction = () =>
@@ -43,10 +43,10 @@ public partial class AllergyIntoleranceMatcherServiceTests
                 source2ResourceIndex);
 
         // then
-        ResourceMatcherServiceException actualResourceMatcherServiceException =
-            Assert.Throws<ResourceMatcherServiceException>(matchAction);
+        AllergyIntoleranceServiceException actualAllergyIntoleranceServiceException =
+            Assert.Throws<AllergyIntoleranceServiceException>(matchAction);
 
-        actualResourceMatcherServiceException.Should()
-            .BeEquivalentTo(expectedResourceMatcherServiceException);
+        actualAllergyIntoleranceServiceException.Should()
+            .BeEquivalentTo(expectedAllergyIntoleranceServiceException);
     }
 }

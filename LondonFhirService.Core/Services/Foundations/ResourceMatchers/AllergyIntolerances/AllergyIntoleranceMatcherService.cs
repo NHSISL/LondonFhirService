@@ -5,11 +5,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances;
 
-namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+namespace LondonFhirService.Core.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
-public partial class AllergyIntoleranceMatcherService : IResourceMatcherService
+public partial class AllergyIntoleranceMatcherService : IAllergyIntoleranceService
 {
     private const string SnomedSystem = "http://snomed.info/sct";
 

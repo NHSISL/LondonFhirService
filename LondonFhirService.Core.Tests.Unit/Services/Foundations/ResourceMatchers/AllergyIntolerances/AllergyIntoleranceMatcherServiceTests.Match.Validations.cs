@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
+using LondonFhirService.Core.Models.Foundations.AllergyIntolerances.AllergyIntolerances.Exceptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
 public partial class AllergyIntoleranceMatcherServiceTests
 {
@@ -21,13 +21,13 @@ public partial class AllergyIntoleranceMatcherServiceTests
         Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
         Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
 
-        var nullResourceMatcherException =
-            new NullResourceMatcherException(nameof(nullSource1Resources));
+        var nullAllergyIntoleranceException =
+            new NullAllergyIntoleranceException(nameof(nullSource1Resources));
 
-        var expectedResourceMatcherValidationException =
-            new ResourceMatcherValidationException(
-                message: "Resource matcher validation error occurred, please fix the errors and try again.",
-                innerException: nullResourceMatcherException);
+        var expectedAllergyIntoleranceValidationException =
+            new AllergyIntoleranceValidationException(
+                message: "allergy intolerance validation error occurred, please fix the errors and try again.",
+                innerException: nullAllergyIntoleranceException);
 
         // when
         Action matchAction = () =>
@@ -38,11 +38,11 @@ public partial class AllergyIntoleranceMatcherServiceTests
                 source2ResourceIndex);
 
         // then
-        ResourceMatcherValidationException actualResourceMatcherValidationException =
-            Assert.Throws<ResourceMatcherValidationException>(matchAction);
+        AllergyIntoleranceValidationException actualAllergyIntoleranceValidationException =
+            Assert.Throws<AllergyIntoleranceValidationException>(matchAction);
 
-        actualResourceMatcherValidationException.Should()
-            .BeEquivalentTo(expectedResourceMatcherValidationException);
+        actualAllergyIntoleranceValidationException.Should()
+            .BeEquivalentTo(expectedAllergyIntoleranceValidationException);
     }
 
     [Fact]
@@ -54,13 +54,13 @@ public partial class AllergyIntoleranceMatcherServiceTests
         Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
         Dictionary<string, JsonElement> nullSource2ResourceIndex = null;
 
-        var nullResourceMatcherException =
-            new NullResourceMatcherException(nameof(nullSource2ResourceIndex));
+        var NullAllergyIntoleranceException =
+            new NullAllergyIntoleranceException(nameof(nullSource2ResourceIndex));
 
-        var expectedResourceMatcherValidationException =
-            new ResourceMatcherValidationException(
-                message: "Resource matcher validation error occurred, please fix the errors and try again.",
-                innerException: nullResourceMatcherException);
+        var expectedAllergyIntoleranceValidationException =
+            new AllergyIntoleranceValidationException(
+                message: "allergy intolerance validation error occurred, please fix the errors and try again.",
+                innerException: NullAllergyIntoleranceException);
 
         // when
         Action matchAction = () =>
@@ -71,10 +71,10 @@ public partial class AllergyIntoleranceMatcherServiceTests
                 nullSource2ResourceIndex);
 
         // then
-        ResourceMatcherValidationException actualResourceMatcherValidationException =
-            Assert.Throws<ResourceMatcherValidationException>(matchAction);
+        AllergyIntoleranceValidationException actualAllergyIntoleranceValidationException =
+            Assert.Throws<AllergyIntoleranceValidationException>(matchAction);
 
-        actualResourceMatcherValidationException.Should()
-            .BeEquivalentTo(expectedResourceMatcherValidationException);
+        actualAllergyIntoleranceValidationException.Should()
+            .BeEquivalentTo(expectedAllergyIntoleranceValidationException);
     }
 }

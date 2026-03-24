@@ -4,7 +4,7 @@
 
 using System.Collections.Generic;
 
-namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers
+namespace LondonFhirService.Core.Models.Foundations.AllergyIntolerances
 {
     public class ResourceMatch
     {

@@ -4,7 +4,7 @@
 
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
+namespace LondonFhirService.Core.Models.Foundations.AllergyIntolerances.Exceptions;
 
 public class InvalidAllergyIntoleranceServiceException : Xeption
 {

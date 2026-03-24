@@ -5,7 +5,7 @@
 using System;
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
+namespace LondonFhirService.Core.Models.Foundations.AllergyIntolerances.AllergyIntolerances.Exceptions;
 
 public class AllergyIntoleranceServiceException : Xeption
 {
