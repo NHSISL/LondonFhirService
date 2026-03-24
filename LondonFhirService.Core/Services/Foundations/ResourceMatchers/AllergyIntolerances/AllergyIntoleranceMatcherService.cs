@@ -9,16 +9,20 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
 
-public class AllergyIntoleranceMatcherService : IResourceMatcherService
+public partial class AllergyIntoleranceMatcherService : IResourceMatcherService
 {
-    public string ResourceType => "AllergyIntolerance";
-
     private const string SnomedSystem = "http://snomed.info/sct";
 
-    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+    public string ResourceType => "AllergyIntolerance";
+
+    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex) =>
+    TryCatch(() =>
     {
-        var snomedCode = GetSnomedCode(resource);
-        var onsetDateTime = GetOnsetDateTime(resource);
+        ValidateResourceIsNotNull(resource);
+        ValidateResourceIndexIsNotNull(resourceIndex);
+
+        string? snomedCode = GetSnomedCode(resource);
+        string? onsetDateTime = GetOnsetDateTime(resource);
 
         if (string.IsNullOrWhiteSpace(snomedCode) || string.IsNullOrWhiteSpace(onsetDateTime))
         {
@@ -26,70 +30,89 @@ public class AllergyIntoleranceMatcherService : IResourceMatcherService
         }
 
         return $"{snomedCode}|{onsetDateTime}";
-    }
+    });
 
     public ResourceMatch Match(
         List<JsonElement> source1Resources,
         List<JsonElement> source2Resources,
         Dictionary<string, JsonElement> source1ResourceIndex,
-        Dictionary<string, JsonElement> source2ResourceIndex)
+        Dictionary<string, JsonElement> source2ResourceIndex) =>
+    TryCatch(() =>
     {
+        ValidateResourcesListIsNotNull(source1Resources, nameof(source1Resources));
+        ValidateResourcesListIsNotNull(source2Resources, nameof(source2Resources));
+        ValidateResourceIndexIsNotNull(source1ResourceIndex, nameof(source1ResourceIndex));
+        ValidateResourceIndexIsNotNull(source2ResourceIndex, nameof(source2ResourceIndex));
+
         var resourceMatch = new ResourceMatch();
 
-        var source1ByKey = source1Resources
-            .Select(r => new { Resource = r, Key = GetMatchKey(r, source1ResourceIndex) })
-            .Where(x => x.Key != null)
-            .ToDictionary(x => x.Key!, x => x.Resource);
+        Dictionary<string, JsonElement> source1ByKey = source1Resources
+            .Select(resource => new
+            {
+                Resource = resource,
+                Key = GetMatchKey(resource, source1ResourceIndex)
+            })
+            .Where(entry => entry.Key is not null)
+            .ToDictionary(entry => entry.Key!, entry => entry.Resource);
 
-        var source2ByKey = source2Resources
-            .Select(r => new { Resource = r, Key = GetMatchKey(r, source2ResourceIndex) })
-            .Where(x => x.Key != null)
-            .ToDictionary(x => x.Key!, x => x.Resource);
+        Dictionary<string, JsonElement> source2ByKey = source2Resources
+            .Select(resource => new
+            {
+                Resource = resource,
+                Key = GetMatchKey(resource, source2ResourceIndex)
+            })
+            .Where(entry => entry.Key is not null)
+            .ToDictionary(entry => entry.Key!, entry => entry.Resource);
 
-        var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
+        List<string> allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
 
-        foreach (var key in allKeys)
+        foreach (string key in allKeys)
         {
-            var hasSource1 = source1ByKey.TryGetValue(key, out var source1Resource);
-            var hasSource2 = source2ByKey.TryGetValue(key, out var source2Resource);
+            bool hasSource1 = source1ByKey.TryGetValue(key, out JsonElement source1Resource);
+            bool hasSource2 = source2ByKey.TryGetValue(key, out JsonElement source2Resource);
 
             if (hasSource1 && hasSource2)
             {
-                resourceMatch.Matched.Add(new MatchedResource(source1Resource!, source2Resource!, key));
+                resourceMatch.Matched.Add(new MatchedResource(source1Resource, source2Resource, key));
             }
             else if (hasSource1)
             {
-                resourceMatch.Unmatched.Add(new UnmatchedResource(source1Resource!, ResourceType, key, true));
+                resourceMatch.Unmatched.Add(new UnmatchedResource(source1Resource, this.ResourceType, key, true));
             }
             else if (hasSource2)
             {
-                resourceMatch.Unmatched.Add(new UnmatchedResource(source2Resource!, ResourceType, key, false));
+                resourceMatch.Unmatched.Add(new UnmatchedResource(source2Resource, this.ResourceType, key, false));
             }
         }
 
         return resourceMatch;
-    }
+    });
 
     private static string? GetSnomedCode(JsonElement resource)
     {
-        if (!resource.TryGetProperty("code", out var code))
-            return null;
-
-        if (!code.TryGetProperty("coding", out var coding))
-            return null;
-
-        foreach (var codingElement in coding.EnumerateArray())
+        if (!resource.TryGetProperty("code", out JsonElement code))
         {
-            if (!codingElement.TryGetProperty("system", out var system))
-                continue;
+            return null;
+        }
 
-            var systemValue = system.GetString();
-            if (systemValue == SnomedSystem)
+        if (!code.TryGetProperty("coding", out JsonElement coding))
+        {
+            return null;
+        }
+
+        foreach (JsonElement codingElement in coding.EnumerateArray())
+        {
+            if (!codingElement.TryGetProperty("system", out JsonElement system))
             {
-                if (codingElement.TryGetProperty("code", out var codeValue))
-                {
-                    return codeValue.GetString();
-                }
+                continue;
+            }
+
+            string? systemValue = system.GetString();
+
+            if (systemValue == SnomedSystem &&
+                codingElement.TryGetProperty("code", out JsonElement codeValue))
+            {
+                return codeValue.GetString();
             }
         }
 
@@ -98,8 +121,10 @@ public class AllergyIntoleranceMatcherService : IResourceMatcherService
 
     private static string? GetOnsetDateTime(JsonElement resource)
     {
-        if (!resource.TryGetProperty("onsetDateTime", out var onsetDateTime))
+        if (!resource.TryGetProperty("onsetDateTime", out JsonElement onsetDateTime))
+        {
             return null;
+        }
 
         return onsetDateTime.GetString();
     }
