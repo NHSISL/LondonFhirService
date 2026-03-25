@@ -35,6 +35,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             var auditServiceMock = new Mock<AuditService>(
                 this.storageBrokerFactoryMock.Object,
+                this.storageBrokerMock.Object,
                 this.identifierBrokerMock.Object,
                 this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,

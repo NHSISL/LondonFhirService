@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
@@ -14,23 +15,38 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
 {
-    public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
+    public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        static TestWebApplicationFactory()
         {
-            builder.ConfigureAppConfiguration((context, config) =>
+            // Configure configuration *before* the app’s builder is used
+            Program.TestConfigurationOverrides = builder =>
             {
                 var testProjectPath =
                     Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
 
-                config
-                    .AddJsonFile("appsettings.json", optional: true)
-                    .AddJsonFile("appsettings.Development.json", optional: true)
-                    .AddJsonFile("appsettings.Acceptance.json", optional: true)
-                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.json"), optional: true)
-                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.Development.json"), optional: true)
-                    .AddEnvironmentVariables();
-            });
+                // This runs inside Program.cs right after CreateBuilder(...)
+                // This lets us override any configuration values for testing
+                builder.Configuration
+                    .AddJsonFile(
+                        Path.Combine(testProjectPath, "appsettings.json"),
+                        optional: true)
+                    .AddInMemoryCollection(new Dictionary<string, string>
+                    {
+                        // Put your strong overrides here
+                        //["AzureAd:TenantId"] = "TEST-TENANT",
+                        //["AzureAd:Instance"] = "https://login.microsoftonline.com/",
+                        //["AzureAd:Scopes"]   = "api://test/.default"
+                    });
+            };
+
+            Program.ExcludeAppInsightsForTesting = true;
+        }
+
+        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        {
+            // Make sure the app runs in a predictable test environment
+            builder.UseEnvironment("Test");
 
             builder.ConfigureServices((context, services) =>
             {

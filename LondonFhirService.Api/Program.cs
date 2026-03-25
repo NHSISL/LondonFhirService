@@ -23,7 +23,7 @@ if (File.Exists(launchSettingsPath))
 }
 
 builder.Configuration
-    .AddJsonFile(Path.Combine(projectDir, "appsettings.json"), optional: true)
+    .AddJsonFile(Path.Combine(projectDir, "appsettings.json"), optional: false)
     .AddJsonFile(Path.Combine(projectDir, "appsettings.Development.json"), optional: true)
     .AddEnvironmentVariables();
 
