@@ -99,9 +99,9 @@ public partial class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddAuthorization();
         builder.Services.AddDbContextFactory<StorageBroker>();
+        builder.Services.AddDbContext<StorageBroker>();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
 
         // ----------------- Domain registrations -----------------
         AddProviders(builder.Services, configuration);
@@ -246,8 +246,11 @@ public partial class Program
         services.AddTransient<ILoggingBroker, LoggingBroker>();
         services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
         services.AddTransient<ISecurityBroker, SecurityBroker>();
-        services.AddTransient<IStorageBroker, StorageBroker>();
-        services.AddTransient<IStorageBrokerFactory, StorageBrokerFactory>();
+
+        services.AddScoped<IStorageBroker>(
+            serviceProvider => serviceProvider.GetRequiredService<StorageBroker>());
+
+        services.AddScoped<IStorageBrokerFactory, StorageBrokerFactory>();
         services.AddTransient<IHashBroker, HashBroker>();
     }
 
@@ -265,7 +268,6 @@ public partial class Program
 
     private static void AddProcessingServices(IServiceCollection services)
     {
-        // intentionally empty for now
     }
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)

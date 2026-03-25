@@ -60,6 +60,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             this.auditService = new AuditService(
                 storageBrokerFactory: this.storageBrokerFactoryMock.Object,
+                storageBroker: this.storageBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 securityAuditBroker: this.securityAuditBrokerMock.Object,
