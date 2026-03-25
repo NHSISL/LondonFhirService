@@ -18,6 +18,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
     public partial class AuditService : IAuditService
     {
         private readonly IStorageBrokerFactory storageBrokerFactory;
+        private readonly IStorageBroker storageBroker;
         private readonly IIdentifierBroker identifierBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ISecurityAuditBroker securityAuditBroker;
@@ -25,12 +26,14 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
 
         public AuditService(
             IStorageBrokerFactory storageBrokerFactory,
+            IStorageBroker storageBroker,
             IIdentifierBroker identifierBroker,
             IDateTimeBroker dateTimeBroker,
             ISecurityAuditBroker securityAuditBroker,
             ILoggingBroker loggingBroker)
         {
             this.storageBrokerFactory = storageBrokerFactory;
+            this.storageBroker = storageBroker;
             this.identifierBroker = identifierBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.securityAuditBroker = securityAuditBroker;
@@ -93,12 +96,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
 
         public ValueTask<IQueryable<Audit>> RetrieveAllAuditsAsync() =>
         TryCatch(async () =>
-        {
-            await using IStorageBroker storageBroker =
-                await this.storageBrokerFactory.CreateStorageBrokerAsync();
-
-            return await storageBroker.SelectAllAuditsAsync();
-        });
+            await this.storageBroker.SelectAllAuditsAsync());
 
         public ValueTask<Audit> RetrieveAuditByIdAsync(Guid auditId) =>
         TryCatch(async () =>

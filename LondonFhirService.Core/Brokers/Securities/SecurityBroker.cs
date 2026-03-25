@@ -5,11 +5,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using ISL.Providers.Captcha.Abstractions;
 using ISL.Security.Client.Clients;
 using ISL.Security.Client.Models.Foundations.Users;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 
 namespace LondonFhirService.Core.Brokers.Securities
 {
@@ -21,9 +19,7 @@ namespace LondonFhirService.Core.Brokers.Securities
     {
         private readonly ClaimsPrincipal claimsPrincipal;
         private string remoteIpAddress;
-        private StringValues captchaToken;
         private readonly ISecurityClient securityClient;
-        private readonly ICaptchaAbstractionProvider captchaAbstractionProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityBroker"/> class 
@@ -31,15 +27,11 @@ namespace LondonFhirService.Core.Brokers.Securities
         /// This constructor is intended for REST API usage.
         /// </summary>
         /// <param name="httpContextAccessor">Provides access to the current HTTP context.</param>
-        public SecurityBroker(
-            IHttpContextAccessor httpContextAccessor,
-            ICaptchaAbstractionProvider captchaAbstractionProvider)
+        public SecurityBroker(IHttpContextAccessor httpContextAccessor)
         {
             claimsPrincipal = httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal();
             remoteIpAddress = httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString();
-            httpContextAccessor.HttpContext.Request.Headers.TryGetValue("X-Recaptcha-Token", out captchaToken);
             securityClient = new SecurityClient();
-            this.captchaAbstractionProvider = captchaAbstractionProvider;
         }
 
         /// <summary>
@@ -47,11 +39,10 @@ namespace LondonFhirService.Core.Brokers.Securities
         /// This constructor is intended for Azure Function / non REST API usage.
         /// </summary>
         /// <param name="accessToken">A JWT access token containing user claims.</param>
-        public SecurityBroker(string accessToken, ICaptchaAbstractionProvider captchaAbstractionProvider)
+        public SecurityBroker(string accessToken)
         {
             claimsPrincipal = GetClaimsPrincipalFromToken(accessToken);
             securityClient = new SecurityClient();
-            this.captchaAbstractionProvider = captchaAbstractionProvider;
         }
 
         /// <summary>
@@ -59,11 +50,10 @@ namespace LondonFhirService.Core.Brokers.Securities
         /// This constructor is intended for Azure Functions or non-REST API usage.
         /// </summary>
         /// <param name="claimsPrincipal">A <see cref="ClaimsPrincipal"/> containing user claims.</param>
-        public SecurityBroker(ClaimsPrincipal claimsPrincipal, ICaptchaAbstractionProvider captchaAbstractionProvider)
+        public SecurityBroker(ClaimsPrincipal claimsPrincipal)
         {
             this.claimsPrincipal = claimsPrincipal;
             securityClient = new SecurityClient();
-            this.captchaAbstractionProvider = captchaAbstractionProvider;
         }
 
         /// <summary>

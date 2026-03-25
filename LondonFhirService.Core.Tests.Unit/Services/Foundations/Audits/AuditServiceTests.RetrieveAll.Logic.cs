@@ -32,16 +32,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             // then
             actualAudits.Should().BeEquivalentTo(expectedAudits);
 
-            this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateStorageBrokerAsync(),
-                    Times.Once);
-
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllAuditsAsync(),
-                    Times.Once);
-
-            this.storageBrokerMock.Verify(broker =>
-                broker.DisposeAsync(),
                     Times.Once);
 
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
