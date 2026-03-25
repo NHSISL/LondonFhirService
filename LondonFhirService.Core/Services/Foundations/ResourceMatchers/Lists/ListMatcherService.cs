@@ -9,57 +9,77 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
 
-public class ListMatcherService : IResourceMatcherService
+public partial class ListMatcherService : IResourceMatcherService
 {
     public string ResourceType => "List";
 
-    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
-    {
-        if (!resource.TryGetProperty("title", out var title))
-            return null;
+    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex) =>
+        TryCatch(() =>
+        {
+            ValidateGetMatchKeyArguments(resource, resourceIndex);
 
-        return title.GetString();
-    }
+            if (!resource.TryGetProperty("title", out JsonElement title))
+            {
+                return null;
+            }
+
+            return title.GetString();
+        });
 
     public ResourceMatch Match(
         List<JsonElement> source1Resources,
         List<JsonElement> source2Resources,
         Dictionary<string, JsonElement> source1ResourceIndex,
-        Dictionary<string, JsonElement> source2ResourceIndex)
-    {
-        var resourceMatch = new ResourceMatch();
-
-        var source1ByKey = source1Resources
-            .Select(r => new { Resource = r, Key = GetMatchKey(r, source1ResourceIndex) })
-            .Where(x => x.Key != null)
-            .ToDictionary(x => x.Key!, x => x.Resource);
-
-        var source2ByKey = source2Resources
-            .Select(r => new { Resource = r, Key = GetMatchKey(r, source2ResourceIndex) })
-            .Where(x => x.Key != null)
-            .ToDictionary(x => x.Key!, x => x.Resource);
-
-        var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
-
-        foreach (var key in allKeys)
+        Dictionary<string, JsonElement> source2ResourceIndex) =>
+        TryCatch(() =>
         {
-            var hasSource1 = source1ByKey.TryGetValue(key, out var source1Resource);
-            var hasSource2 = source2ByKey.TryGetValue(key, out var source2Resource);
+            ValidateMatchArguments(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
 
-            if (hasSource1 && hasSource2)
-            {
-                resourceMatch.Matched.Add(new MatchedResource(source1Resource!, source2Resource!, key));
-            }
-            else if (hasSource1)
-            {
-                resourceMatch.Unmatched.Add(new UnmatchedResource(source1Resource!, ResourceType, key, true));
-            }
-            else if (hasSource2)
-            {
-                resourceMatch.Unmatched.Add(new UnmatchedResource(source2Resource!, ResourceType, key, false));
-            }
-        }
+            var resourceMatch = new ResourceMatch();
 
-        return resourceMatch;
-    }
+            Dictionary<string, JsonElement> source1ByKey = source1Resources
+                .Select(resource => new
+                {
+                    Resource = resource,
+                    Key = GetMatchKey(resource, source1ResourceIndex)
+                })
+                .Where(entry => entry.Key is not null)
+                .ToDictionary(entry => entry.Key!, entry => entry.Resource);
+
+            Dictionary<string, JsonElement> source2ByKey = source2Resources
+                .Select(resource => new
+                {
+                    Resource = resource,
+                    Key = GetMatchKey(resource, source2ResourceIndex)
+                })
+                .Where(entry => entry.Key is not null)
+                .ToDictionary(entry => entry.Key!, entry => entry.Resource);
+
+            List<string> allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
+
+            foreach (string key in allKeys)
+            {
+                bool hasSource1 = source1ByKey.TryGetValue(key, out JsonElement source1Resource);
+                bool hasSource2 = source2ByKey.TryGetValue(key, out JsonElement source2Resource);
+
+                if (hasSource1 && hasSource2)
+                {
+                    resourceMatch.Matched.Add(new MatchedResource(source1Resource, source2Resource, key));
+                }
+                else if (hasSource1)
+                {
+                    resourceMatch.Unmatched.Add(new UnmatchedResource(source1Resource, this.ResourceType, key, true));
+                }
+                else if (hasSource2)
+                {
+                    resourceMatch.Unmatched.Add(new UnmatchedResource(source2Resource, this.ResourceType, key, false));
+                }
+            }
+
+            return resourceMatch;
+        });
 }
