@@ -47,10 +47,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             actualAuditDependencyException.Should()
                 .BeEquivalentTo(expectedAuditDependencyException);
 
-            this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateStorageBrokerAsync(),
-                    Times.Once);
-
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllAuditsAsync(),
                     Times.Once);
@@ -59,10 +55,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.LogCriticalAsync(It.Is(SameExceptionAs(
                     expectedAuditDependencyException))),
                         Times.Once);
-
-            this.storageBrokerMock.Verify(broker =>
-                broker.DisposeAsync(),
-                    Times.Once);
 
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -104,10 +96,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             actualAuditServiceException.Should()
                 .BeEquivalentTo(expectedAuditServiceException);
 
-            this.storageBrokerFactoryMock.Verify(broker =>
-                broker.CreateStorageBrokerAsync(),
-                    Times.Once);
-
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllAuditsAsync(),
                     Times.Once);
@@ -116,10 +104,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedAuditServiceException))),
                         Times.Once);
-
-            this.storageBrokerMock.Verify(broker =>
-                broker.DisposeAsync(),
-                    Times.Once);
 
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
