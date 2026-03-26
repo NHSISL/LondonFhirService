@@ -9,11 +9,11 @@ using LondonFhirService.Core.Services.Foundations.AllergyIntolerances;
 
 namespace LondonFhirService.Core.Services.Processings.ResourceMatchings;
 
-public class AllergyIntoleranceProcessingService : IAllergyIntoleranceProcessingService
+public class ResourceMatcherProcessingService : IResourceMatcherProcessingService
 {
-    private readonly Dictionary<string, IAllergyIntoleranceService> matchers;
+    private readonly Dictionary<string, IResourceMatcherService> matchers;
 
-    public AllergyIntoleranceProcessingService(IEnumerable<IAllergyIntoleranceService> matchers)
+    public ResourceMatcherProcessingService(IEnumerable<IResourceMatcherService> matchers)
     {
         this.matchers = matchers.ToDictionary(
             matcher => matcher.ResourceType,
@@ -21,7 +21,7 @@ public class AllergyIntoleranceProcessingService : IAllergyIntoleranceProcessing
             StringComparer.OrdinalIgnoreCase);
     }
 
-    public IAllergyIntoleranceService? GetMatcher(string resourceType)
+    public IResourceMatcherService? GetMatcher(string resourceType)
     {
         return matchers.TryGetValue(resourceType, out var matcher) ? matcher : null;
     }

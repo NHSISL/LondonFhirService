@@ -9,7 +9,7 @@ using LondonFhirService.Core.Models.Foundations.AllergyIntolerances;
 
 namespace LondonFhirService.Core.Services.Foundations.AllergyIntolerances.AllergyIntolerances;
 
-public partial class AllergyIntoleranceMatcherService : IAllergyIntoleranceService
+public partial class AllergyIntoleranceMatcherService : IResourceMatcherService
 {
     private const string SnomedSystem = "http://snomed.info/sct";
 

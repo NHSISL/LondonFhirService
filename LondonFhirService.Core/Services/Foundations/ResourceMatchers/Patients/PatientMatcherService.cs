@@ -9,7 +9,7 @@ using LondonFhirService.Core.Models.Foundations.AllergyIntolerances;
 
 namespace LondonFhirService.Core.Services.Foundations.AllergyIntolerances.Patients;
 
-public class PatientMatcherService : IAllergyIntoleranceService
+public class PatientMatcherService : IResourceMatcherService
 {
     public string ResourceType => "Patient";
 

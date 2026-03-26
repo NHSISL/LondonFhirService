@@ -9,7 +9,7 @@ using LondonFhirService.Core.Models.Foundations.AllergyIntolerances;
 
 namespace LondonFhirService.Core.Services.Foundations.AllergyIntolerances.Lists;
 
-public class ListMatcherService : IAllergyIntoleranceService
+public class ListMatcherService : IResourceMatcherService
 {
     public string ResourceType => "List";
 

@@ -6,9 +6,9 @@ using LondonFhirService.Core.Services.Foundations.AllergyIntolerances;
 
 namespace LondonFhirService.Core.Services.Processings.ResourceMatchings
 {
-    public interface IAllergyIntoleranceProcessingService
+    public interface IResourceMatcherProcessingService
     {
-        IAllergyIntoleranceService? GetMatcher(string resourceType);
+        IResourceMatcherService? GetMatcher(string resourceType);
         bool HasMatcher(string resourceType);
     }
 }

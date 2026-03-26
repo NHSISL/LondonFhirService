@@ -8,7 +8,7 @@ using LondonFhirService.Core.Models.Foundations.AllergyIntolerances;
 
 namespace LondonFhirService.Core.Services.Foundations.AllergyIntolerances
 {
-    public interface IAllergyIntoleranceService
+    public interface IResourceMatcherService
     {
         string ResourceType { get; }
         string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex);
