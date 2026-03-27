@@ -33,7 +33,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             }
             catch (ResourceNotFoundException resourceNotFoundException)
             {
-                throw CreateAndLogValidationException(resourceNotFoundException);
+                throw await CreateAndLogValidationExceptionAsync(resourceNotFoundException);
             }
             catch (InvalidPdsDataServiceException invalidPdsDataException)
             {
@@ -112,7 +112,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             }
             catch (ResourceNotFoundException resourceNotFoundException)
             {
-                throw CreateAndLogValidationException(resourceNotFoundException);
+                throw await CreateAndLogValidationExceptionAsync(resourceNotFoundException);
             }
             catch (SqlException sqlException)
             {
