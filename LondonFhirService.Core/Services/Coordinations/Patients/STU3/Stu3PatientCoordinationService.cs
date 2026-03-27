@@ -65,7 +65,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            if (accessConfigurations.CheckAccessPermissions == true)
+            if (this.accessConfigurations.CheckAccessPermissions)
             {
                 await this.auditBroker.LogInformationAsync(
                     auditType,
