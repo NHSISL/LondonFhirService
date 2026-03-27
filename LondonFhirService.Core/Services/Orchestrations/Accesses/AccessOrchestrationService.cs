@@ -129,6 +129,22 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 List<string> consumerActiveOrgs =
                     await consumerAccessService.RetrieveAllActiveOrganisationsUserHasAccessToAsync(matchingConsumer.Id);
 
+                if (consumerActiveOrgs.Count == 0)
+                {
+                    await this.auditBroker.LogInformationAsync(
+                            auditType: "Access",
+                            title: "Access Forbidden",
+                            message:
+                                $"Access was forbidden as consumer with id {matchingConsumer.Id} does not have access to any organisations.  " +
+                                $"CorrelationId: {correlationId.ToString()}",
+                            fileName: null,
+                            correlationId: correlationId.ToString());
+
+                    throw new ForbiddenAccessOrchestrationException(
+                        "Current consumer does not have access to any organisations.  " +
+                        $"CorrelationId: {correlationId.ToString()}");
+                }
+
                 string patientIdentifier = nhsNumber;
 
                 if (accessConfigurations.UseHashedNhsNumber == true)
@@ -138,8 +154,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 }
 
                 bool organisationsHaveAccessToPatient = await pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    nhsNumber: patientIdentifier,
-                    organisationCodes: consumerActiveOrgs);
+                    patientIdentifier: patientIdentifier,
+                    nhsNumber: nhsNumber,
+                    organisationCodes: consumerActiveOrgs,
+                    correlationId: correlationId);
 
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;

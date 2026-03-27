@@ -17,6 +17,11 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
         ValueTask<PdsData> RetrievePdsDataByIdAsync(Guid pdsDataId);
         ValueTask<PdsData> ModifyPdsDataAsync(PdsData pdsData);
         ValueTask<PdsData> RemovePdsDataByIdAsync(Guid pdsDataId);
-        ValueTask<bool> OrganisationsHaveAccessToThisPatient(string nhsNumber, List<string> organisationCodes);
+
+        ValueTask<bool> OrganisationsHaveAccessToThisPatient(
+            string patientIdentifier,
+            string nhsNumber,
+            List<string> organisationCodes,
+            Guid correlationId);
     }
 }

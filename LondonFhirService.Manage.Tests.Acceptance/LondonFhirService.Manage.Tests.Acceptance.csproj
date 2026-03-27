@@ -29,7 +29,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LondonFhirService.Manage.Client\LondonFhirService.Manage.Client.esproj" />
 		<ProjectReference Include="..\LondonFhirService.Manage\LondonFhirService.Manage.csproj" />
 	</ItemGroup>
 

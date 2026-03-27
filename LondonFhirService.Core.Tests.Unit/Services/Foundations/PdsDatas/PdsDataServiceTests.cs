@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Storages.Sql;
@@ -24,6 +25,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
         private readonly Mock<IStorageBroker> storageBroker;
         private readonly Mock<IDateTimeBroker> dateTimeBroker;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly Mock<IAuditBroker> auditBrokerMock;
         private readonly PdsDataService pdsDataService;
 
         public PdsDataServiceTests()
@@ -31,11 +33,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.PdsDatas
             this.storageBroker = new Mock<IStorageBroker>();
             this.dateTimeBroker = new Mock<IDateTimeBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.auditBrokerMock = new Mock<IAuditBroker>();
 
             this.pdsDataService = new PdsDataService(
                 storageBroker: this.storageBroker.Object,
                 dateTimeBroker: this.dateTimeBroker.Object,
-                loggingBroker: this.loggingBrokerMock.Object);
+                loggingBroker: this.loggingBrokerMock.Object,
+                auditBroker: this.auditBrokerMock.Object);
         }
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>

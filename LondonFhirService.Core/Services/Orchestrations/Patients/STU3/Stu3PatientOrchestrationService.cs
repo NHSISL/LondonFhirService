@@ -100,7 +100,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 await this.fhirReconciliationService.ReconcileSerialisedAsync(
                     bundles: bundles,
                     nhsNumber: nhsNumber,
-                    primaryProvider: primaryProvider);
+                    primaryProvider: primaryProvider,
+                    correlationId: correlationId);
 
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;

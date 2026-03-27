@@ -18,6 +18,7 @@
 	<ItemGroup>
 		<PackageReference Include="Attrify" Version="0.0.0.2" />
 		<PackageReference Include="FluentAssertions" Version="7.2.0" />
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
@@ -35,8 +36,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Acceptance" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Integration" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+	
+	<ItemGroup>
 		<Content Update="appsettings.Development.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="appsettings.json">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 </Project>

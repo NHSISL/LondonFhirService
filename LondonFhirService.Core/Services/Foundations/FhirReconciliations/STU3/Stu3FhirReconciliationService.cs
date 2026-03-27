@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,7 +24,8 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
         public ValueTask<string> ReconcileSerialisedAsync(
             List<(string Provider, string Json)> bundles,
             string nhsNumber,
-            Provider primaryProvider) =>
+            Provider primaryProvider,
+            Guid correlationId) =>
         TryCatch(async () =>
         {
             var bundle = bundles.FirstOrDefault(bundle => !string.IsNullOrEmpty(bundle.Json));
@@ -31,7 +33,8 @@ namespace LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3
             if (bundle == default)
             {
                 throw new ResourceNotFoundException(
-                    $"NotFound:Patient resource with id = '{nhsNumber}' not found.");
+                    $"NotFound:Patient resource with id = '{nhsNumber}' not found.  " +
+                    $"CorrelationId: {correlationId.ToString()}");
             }
 
             return bundle.Json;
