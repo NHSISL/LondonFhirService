@@ -15,17 +15,17 @@
 	<ItemGroup>
 		<PackageReference Include="Attrify" Version="0.0.0.2" />
 		<PackageReference Include="FluentAssertions" Version="7.2.0" />
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.1.0" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.1.1" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-			<Version>10.0.3</Version>
+			<Version>10.0.5</Version>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Identity.Web" Version="4.5.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="4.6.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.5" />
 	</ItemGroup>
 
 	<ItemGroup>

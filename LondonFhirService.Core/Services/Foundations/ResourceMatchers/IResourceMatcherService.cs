@@ -11,7 +11,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers
     public interface IResourceMatcherService
     {
         string ResourceType { get; }
-        string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex);
+        string GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex);
 
         ResourceMatch Match(
             List<JsonElement> source1Resources,
