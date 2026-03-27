@@ -24,7 +24,7 @@
 			<Version>10.0.5</Version>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Identity.Web" Version="4.6.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.5" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.5" />
 	</ItemGroup>
 

@@ -29,15 +29,15 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             }
             catch (NullPdsDataServiceException nullPdsDataException)
             {
-                throw CreateAndLogValidationException(nullPdsDataException);
+                throw await CreateAndLogValidationExceptionAsync(nullPdsDataException);
             }
             catch (ResourceNotFoundException resourceNotFoundException)
             {
-                throw CreateAndLogValidationException(resourceNotFoundException);
+                throw await CreateAndLogValidationExceptionAsync(resourceNotFoundException);
             }
             catch (InvalidPdsDataServiceException invalidPdsDataException)
             {
-                throw CreateAndLogValidationException(invalidPdsDataException);
+                throw await CreateAndLogValidationExceptionAsync(invalidPdsDataException);
             }
             catch (SqlException sqlException)
             {
@@ -46,11 +46,11 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Failed pdsData storage error occurred, contact support.",
                         innerException: sqlException);
 
-                throw CreateAndLogCriticalDependencyException(failedStoragePdsDataException);
+                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStoragePdsDataException);
             }
             catch (NotFoundPdsDataServiceException notFoundPdsDataException)
             {
-                throw CreateAndLogValidationException(notFoundPdsDataException);
+                throw await CreateAndLogValidationExceptionAsync(notFoundPdsDataException);
             }
             catch (DuplicateKeyException duplicateKeyException)
             {
@@ -60,7 +60,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         innerException: duplicateKeyException,
                         data: duplicateKeyException.Data);
 
-                throw CreateAndLogDependencyValidationException(alreadyExistsPdsDataException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(alreadyExistsPdsDataException);
             }
             catch (ForeignKeyConstraintConflictException foreignKeyConstraintConflictException)
             {
@@ -69,7 +69,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Invalid pdsData reference error occurred.",
                         innerException: foreignKeyConstraintConflictException);
 
-                throw CreateAndLogDependencyValidationException(invalidPdsDataReferenceException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(invalidPdsDataReferenceException);
             }
             catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
             {
@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Locked pdsData record exception, please try again later",
                         innerException: dbUpdateConcurrencyException);
 
-                throw CreateAndLogDependencyValidationException(lockedPdsDataException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(lockedPdsDataException);
             }
             catch (DbUpdateException databaseUpdateException)
             {
@@ -87,7 +87,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Failed pdsData operation error occurred, contact support.",
                         innerException: databaseUpdateException);
 
-                throw CreateAndLogDependencyException(failedOperationPdsDataException);
+                throw await CreateAndLogDependencyExceptionAsync(failedOperationPdsDataException);
             }
             catch (Exception exception)
             {
@@ -96,7 +96,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Failed pdsData service occurred, please contact support",
                         innerException: exception);
 
-                throw CreateAndLogServiceException(failedPdsDataServiceException);
+                throw await CreateAndLogServiceExceptionAsync(failedPdsDataServiceException);
             }
         }
 
@@ -108,11 +108,11 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
             }
             catch (InvalidPdsDataServiceException invalidPdsDataException)
             {
-                throw CreateAndLogValidationException(invalidPdsDataException);
+                throw await CreateAndLogValidationExceptionAsync(invalidPdsDataException);
             }
             catch (ResourceNotFoundException resourceNotFoundException)
             {
-                throw CreateAndLogValidationException(resourceNotFoundException);
+                throw await CreateAndLogValidationExceptionAsync(resourceNotFoundException);
             }
             catch (SqlException sqlException)
             {
@@ -121,7 +121,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Failed pdsData storage error occurred, contact support.",
                         innerException: sqlException);
 
-                throw CreateAndLogCriticalDependencyException(failedStoragePdsDataException);
+                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStoragePdsDataException);
             }
             catch (Exception exception)
             {
@@ -130,7 +130,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Failed pdsData service occurred, please contact support",
                         innerException: exception);
 
-                throw CreateAndLogServiceException(failedPdsDataServiceException);
+                throw await CreateAndLogServiceExceptionAsync(failedPdsDataServiceException);
             }
         }
 
@@ -147,7 +147,7 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Failed pdsData storage error occurred, contact support.",
                         innerException: sqlException);
 
-                throw CreateAndLogCriticalDependencyException(failedStoragePdsDataException);
+                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStoragePdsDataException);
             }
             catch (Exception exception)
             {
@@ -156,66 +156,70 @@ namespace LondonFhirService.Core.Services.Foundations.PdsDatas
                         message: "Failed pdsData service occurred, please contact support",
                         innerException: exception);
 
-                throw CreateAndLogServiceException(failedPdsDataServiceException);
+                throw await CreateAndLogServiceExceptionAsync(failedPdsDataServiceException);
             }
         }
 
-        private PdsDataServiceValidationException CreateAndLogValidationException(Xeption exception)
+        private async ValueTask<PdsDataServiceValidationException> CreateAndLogValidationExceptionAsync(
+            Xeption exception)
         {
             var pdsDataValidationException =
                 new PdsDataServiceValidationException(
                     message: "PdsData validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
-            this.loggingBroker.LogErrorAsync(pdsDataValidationException);
+            await this.loggingBroker.LogErrorAsync(pdsDataValidationException);
 
             return pdsDataValidationException;
         }
 
-        private PdsDataServiceDependencyException CreateAndLogCriticalDependencyException(Xeption exception)
+        private async ValueTask<PdsDataServiceDependencyException> CreateAndLogCriticalDependencyExceptionAsync(
+            Xeption exception)
         {
             var pdsDataDependencyException =
                 new PdsDataServiceDependencyException(
                     message: "PdsData dependency error occurred, contact support.",
                     innerException: exception);
 
-            this.loggingBroker.LogCriticalAsync(pdsDataDependencyException);
+            await this.loggingBroker.LogCriticalAsync(pdsDataDependencyException);
 
             return pdsDataDependencyException;
         }
 
-        private PdsDataServiceDependencyValidationException CreateAndLogDependencyValidationException(Xeption exception)
+        private async ValueTask<PdsDataServiceDependencyValidationException>
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
             var pdsDataDependencyValidationException =
                 new PdsDataServiceDependencyValidationException(
                     message: "PdsData dependency validation occurred, please try again.",
                     innerException: exception);
 
-            this.loggingBroker.LogErrorAsync(pdsDataDependencyValidationException);
+            await this.loggingBroker.LogErrorAsync(pdsDataDependencyValidationException);
 
             return pdsDataDependencyValidationException;
         }
 
-        private PdsDataServiceDependencyException CreateAndLogDependencyException(Xeption exception)
+        private async ValueTask<PdsDataServiceDependencyException> CreateAndLogDependencyExceptionAsync(
+            Xeption exception)
         {
             var pdsDataDependencyException =
                 new PdsDataServiceDependencyException(
                     message: "PdsData dependency error occurred, contact support.",
                     innerException: exception);
 
-            this.loggingBroker.LogErrorAsync(pdsDataDependencyException);
+            await this.loggingBroker.LogErrorAsync(pdsDataDependencyException);
 
             return pdsDataDependencyException;
         }
 
-        private PdsDataServiceException CreateAndLogServiceException(Xeption exception)
+        private async ValueTask<PdsDataServiceException> CreateAndLogServiceExceptionAsync(Xeption exception)
         {
             var pdsDataServiceException =
                 new PdsDataServiceException(
                     message: "PdsData service error occurred, contact support.",
                     innerException: exception);
 
-            this.loggingBroker.LogErrorAsync(pdsDataServiceException);
+            await this.loggingBroker.LogErrorAsync(pdsDataServiceException);
 
             return pdsDataServiceException;
         }

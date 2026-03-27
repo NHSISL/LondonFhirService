@@ -15,7 +15,7 @@ public class PatientMatcherService : IResourceMatcherService
 
     private const string NhsNumberSystem = "https://fhir.hl7.org.uk/Id/nhs-number";
 
-    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+    public string GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
     {
         if (!resource.TryGetProperty("identifier", out var identifiers))
             return null;

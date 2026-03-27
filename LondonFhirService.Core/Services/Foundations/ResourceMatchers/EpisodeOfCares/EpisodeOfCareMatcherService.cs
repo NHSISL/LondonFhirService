@@ -13,7 +13,7 @@ public class EpisodeOfCareMatcherService : IResourceMatcherService
 {
     public string ResourceType => "EpisodeOfCare";
 
-    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+    public string GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
     {
         if (!resource.TryGetProperty("period", out var period))
             return null;

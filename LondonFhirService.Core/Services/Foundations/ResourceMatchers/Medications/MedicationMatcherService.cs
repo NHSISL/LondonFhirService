@@ -15,7 +15,7 @@ public class MedicationMatcherService : IResourceMatcherService
 
     private const string SnomedSystem = "http://snomed.info/sct";
 
-    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+    public string GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
     {
         if (!resource.TryGetProperty("code", out var code))
             return null;

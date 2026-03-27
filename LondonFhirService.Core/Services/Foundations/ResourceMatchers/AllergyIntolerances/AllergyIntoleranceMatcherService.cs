@@ -15,7 +15,7 @@ public class AllergyIntoleranceMatcherService : IResourceMatcherService
 
     private const string SnomedSystem = "http://snomed.info/sct";
 
-    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+    public string GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
     {
         var snomedCode = GetSnomedCode(resource);
         var onsetDateTime = GetOnsetDateTime(resource);
