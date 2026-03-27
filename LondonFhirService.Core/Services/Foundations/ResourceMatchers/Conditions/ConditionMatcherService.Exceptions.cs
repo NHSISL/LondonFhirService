@@ -10,7 +10,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions
 {
-    public partial class ConditionMatcherService : IResourceMatcherService
+    public partial class ConditionMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 
@@ -38,27 +38,27 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Condition
         private async ValueTask<ConditionMatcherServiceValidationException> CreateAndLogValidationException(
             Xeption exception)
         {
-            var consumerServiceValidationException =
+            var conditionMatcherServiceValidationException =
                 new ConditionMatcherServiceValidationException(
                     message: "Condition matcher validation errors occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(consumerServiceValidationException);
+            await this.loggingBroker.LogErrorAsync(conditionMatcherServiceValidationException);
 
-            return consumerServiceValidationException;
+            return conditionMatcherServiceValidationException;
         }
 
         private async ValueTask<ConditionMatcherServiceException> CreateAndLogServiceException(
             Xeption exception)
         {
-            var consumerServiceException =
+            var conditionMatcherServiceException =
                 new ConditionMatcherServiceException(
                     message: "Condition matcher service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(consumerServiceException);
+            await this.loggingBroker.LogErrorAsync(conditionMatcherServiceException);
 
-            return consumerServiceException;
+            return conditionMatcherServiceException;
         }
     }
 }

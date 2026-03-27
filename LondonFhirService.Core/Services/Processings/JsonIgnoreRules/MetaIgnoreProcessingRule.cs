@@ -19,6 +19,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         public override ValueTask<bool> ShouldIgnoreAsync(JsonElement element, string path) =>
         TryCatch(async () =>
         {
+            ValidateOnShouldIgnore(element, path);
             var pathParts = path.Split('.');
             var lastPart = pathParts.LastOrDefault();
 
@@ -28,6 +29,8 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         public override ValueTask<JsonElement> GetReplacementAsync(JsonElement element) =>
         TryCatch(async () =>
         {
+            ValidateOnGetReplacement(element);
+
             return await jsonElementService.CreateStringElement("<meta-ignored>");
         });
     }

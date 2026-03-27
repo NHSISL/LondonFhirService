@@ -10,7 +10,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients
 {
-    public partial class PatientMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    public partial class PatientMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 
