@@ -64,7 +64,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingValidationException =
                 new GuidIgnoreProcessingValidationException(
-                    message: "GuidIgnoreProcessing validation error occurred, please fix errors and try again.",
+                    message: "Guid ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingValidationException);
@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingDependencyValidationException =
                 new GuidIgnoreProcessingDependencyValidationException(
-                    message: "GuidIgnoreProcessing dependency validation occurred, please try again.",
+                    message: "Guid ignore processing dependency validation occurred, please try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
@@ -89,7 +89,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingDependencyException =
                 new GuidIgnoreProcessingDependencyException(
-                    message: "GuidIgnoreProcessing dependency error occurred, contact support.",
+                    message: "Guid ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyException);
@@ -102,7 +102,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var odsDataServiceException =
                 new GuidIgnoreProcessingServiceException(
-                    message: "GuidIgnoreProcessing service error occurred, contact support.",
+                    message: "Guid ignore processing service error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(odsDataServiceException);

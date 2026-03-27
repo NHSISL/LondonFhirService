@@ -62,52 +62,53 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         private async ValueTask<IdIgnoreProcessingValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
-            var arrayOrderIgnoreProcessingValidationException =
+            var idIgnoreProcessingValidationException =
                 new IdIgnoreProcessingValidationException(
-                    message: "IdIgnoreProcessing validation error occurred, please fix errors and try again.",
+                    message: "Id ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingValidationException);
+            await this.loggingBroker.LogErrorAsync(idIgnoreProcessingValidationException);
 
-            return arrayOrderIgnoreProcessingValidationException;
+            return idIgnoreProcessingValidationException;
         }
 
         private async ValueTask<IdIgnoreProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
-            var arrayOrderIgnoreProcessingDependencyValidationException =
+            var idIgnoreProcessingDependencyValidationException =
                 new IdIgnoreProcessingDependencyValidationException(
-                    message: "IdIgnoreProcessing dependency validation occurred, please try again.",
+                    message: "Id ignore processing dependency validation occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
-            return arrayOrderIgnoreProcessingDependencyValidationException;
+            await this.loggingBroker.LogErrorAsync(idIgnoreProcessingDependencyValidationException);
+
+            return idIgnoreProcessingDependencyValidationException;
         }
 
         private async ValueTask<IdIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
-            var arrayOrderIgnoreProcessingDependencyException =
+            var idIgnoreProcessingDependencyException =
                 new IdIgnoreProcessingDependencyException(
-                    message: "IdIgnoreProcessing dependency error occurred, contact support.",
+                    message: "Id ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyException);
+            await this.loggingBroker.LogErrorAsync(idIgnoreProcessingDependencyException);
 
-            return arrayOrderIgnoreProcessingDependencyException;
+            return idIgnoreProcessingDependencyException;
         }
 
         private async ValueTask<IdIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
-            var odsDataServiceException =
+            var idIgnoreProcessingServiceException =
                 new IdIgnoreProcessingServiceException(
-                    message: "IdIgnoreProcessing service error occurred, contact support.",
+                    message: "Id ignore processing service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(odsDataServiceException);
+            await this.loggingBroker.LogErrorAsync(idIgnoreProcessingServiceException);
 
-            return odsDataServiceException;
+            return idIgnoreProcessingServiceException;
         }
     }
 }

@@ -62,52 +62,53 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         private async ValueTask<MetaIgnoreProcessingValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
-            var arrayOrderIgnoreProcessingValidationException =
+            var metaIgnoreProcessingValidationException =
                 new MetaIgnoreProcessingValidationException(
                     message: "Meta ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingValidationException);
+            await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingValidationException);
 
-            return arrayOrderIgnoreProcessingValidationException;
+            return metaIgnoreProcessingValidationException;
         }
 
         private async ValueTask<MetaIgnoreProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
-            var arrayOrderIgnoreProcessingDependencyValidationException =
+            var metaIgnoreProcessingDependencyValidationException =
                 new MetaIgnoreProcessingDependencyValidationException(
                     message: "Meta ignore processing dependency validation occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
-            return arrayOrderIgnoreProcessingDependencyValidationException;
+            await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingDependencyValidationException);
+
+            return metaIgnoreProcessingDependencyValidationException;
         }
 
         private async ValueTask<MetaIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
-            var arrayOrderIgnoreProcessingDependencyException =
+            var metaIgnoreProcessingDependencyException =
                 new MetaIgnoreProcessingDependencyException(
                     message: "Meta ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyException);
+            await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingDependencyException);
 
-            return arrayOrderIgnoreProcessingDependencyException;
+            return metaIgnoreProcessingDependencyException;
         }
 
         private async ValueTask<MetaIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
-            var odsDataServiceException =
+            var metaIgnoreProcessingServiceException =
                 new MetaIgnoreProcessingServiceException(
                     message: "Meta ignore processing service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(odsDataServiceException);
+            await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingServiceException);
 
-            return odsDataServiceException;
+            return metaIgnoreProcessingServiceException;
         }
     }
 }

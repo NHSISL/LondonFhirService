@@ -64,7 +64,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingValidationException =
                 new ArrayOrderIgnoreProcessingValidationException(
-                    message: "ArrayOrderIgnoreProcessing validation error occurred, please fix errors and try again.",
+                    message: "Array order ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingValidationException);
@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingDependencyValidationException =
                 new ArrayOrderIgnoreProcessingDependencyValidationException(
-                    message: "ArrayOrderIgnoreProcessing dependency validation occurred, please try again.",
+                    message: "Array order ignore processing dependency validation occurred, please try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
@@ -89,7 +89,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingDependencyException =
                 new ArrayOrderIgnoreProcessingDependencyException(
-                    message: "ArrayOrderIgnoreProcessing dependency error occurred, contact support.",
+                    message: "Array order ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyException);
@@ -102,7 +102,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var odsDataServiceException =
                 new ArrayOrderIgnoreProcessingServiceException(
-                    message: "ArrayOrderIgnoreProcessing service error occurred, contact support.",
+                    message: "Array order ignore processing service error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(odsDataServiceException);
