@@ -118,7 +118,21 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                         correlationId.ToString()),
                             Times.Once);
             }
+            else
+            {
+                this.accessOrchestrationServiceMock.Verify(service =>
+                    service.ValidateAccess(inputNhsNumber, correlationId),
+                        Times.Never);
 
+                this.auditBrokerMock.Verify(broker =>
+                    broker.LogInformationAsync(
+                        auditType,
+                        "Check Access Permissions",
+                        message,
+                        null,
+                        correlationId.ToString()),
+                            Times.Never);
+            }
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
