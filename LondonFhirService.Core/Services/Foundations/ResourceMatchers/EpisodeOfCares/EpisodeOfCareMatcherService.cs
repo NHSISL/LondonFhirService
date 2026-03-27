@@ -13,7 +13,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOf
 {
     public partial class EpisodeOfCareMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
-        public EpisodeOfCareMatcherService(LoggingBroker loggingBroker)
+        public EpisodeOfCareMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
         { }
 

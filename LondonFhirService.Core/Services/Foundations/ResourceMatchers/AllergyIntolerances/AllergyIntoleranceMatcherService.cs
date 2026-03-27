@@ -13,7 +13,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIn
 {
     public partial class AllergyIntoleranceMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
-        public AllergyIntoleranceMatcherService(LoggingBroker loggingBroker)
+        public AllergyIntoleranceMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
         { }
 

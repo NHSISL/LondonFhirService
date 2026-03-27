@@ -13,7 +13,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists
 {
     public partial class ListMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
-        public ListMatcherService(LoggingBroker loggingBroker)
+        public ListMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
         { }
 

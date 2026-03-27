@@ -13,7 +13,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Condition
 {
     public partial class ConditionMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
-        public ConditionMatcherService(LoggingBroker loggingBroker)
+        public ConditionMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
         { }
 
