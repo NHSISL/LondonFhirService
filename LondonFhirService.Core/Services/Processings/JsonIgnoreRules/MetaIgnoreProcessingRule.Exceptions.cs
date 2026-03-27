@@ -50,7 +50,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
                 var failedMetaIgnoreProcessingException =
                     new FailedMetaIgnoreProcessingException(
                         message:
-                            "Failed array order ignore processingException service occurred, please contact support",
+                            "Failed meta ignore processing exception occurred, please contact support",
 
                         innerException: exception,
                         data: exception.Data);
@@ -64,7 +64,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingValidationException =
                 new MetaIgnoreProcessingValidationException(
-                    message: "MetaIgnoreProcessing validation error occurred, please fix errors and try again.",
+                    message: "Meta ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingValidationException);
@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingDependencyValidationException =
                 new MetaIgnoreProcessingDependencyValidationException(
-                    message: "MetaIgnoreProcessing dependency validation occurred, please try again.",
+                    message: "Meta ignore processing dependency validation occurred, please try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
@@ -89,7 +89,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingDependencyException =
                 new MetaIgnoreProcessingDependencyException(
-                    message: "MetaIgnoreProcessing dependency error occurred, contact support.",
+                    message: "Meta ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyException);
@@ -102,7 +102,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var odsDataServiceException =
                 new MetaIgnoreProcessingServiceException(
-                    message: "MetaIgnoreProcessing service error occurred, contact support.",
+                    message: "Meta ignore processing service error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(odsDataServiceException);

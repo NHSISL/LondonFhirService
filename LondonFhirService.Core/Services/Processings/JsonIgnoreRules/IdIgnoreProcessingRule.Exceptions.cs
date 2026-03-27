@@ -50,7 +50,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
                 var failedIdIgnoreProcessingException =
                     new FailedIdIgnoreProcessingException(
                         message:
-                            "Failed array order ignore processingException service occurred, please contact support",
+                            "Failed id ignore processing exception occurred, please contact support",
 
                         innerException: exception,
                         data: exception.Data);
