@@ -8,5 +8,6 @@ namespace LondonFhirService.Core.Models.Orchestrations.Accesses
     {
         public bool UseHashedNhsNumber { get; set; } = true;
         public string HashPepper { get; set; }
+        public bool CheckAccessPermissions { get; set; } = true;
     }
 }

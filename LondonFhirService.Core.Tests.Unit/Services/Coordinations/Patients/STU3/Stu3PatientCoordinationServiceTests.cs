@@ -9,6 +9,7 @@ using Hl7.Fhir.Serialization;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
@@ -28,6 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
         private readonly Mock<IAuditBroker> auditBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly IStu3PatientCoordinationService patientCoordinationService;
+        private readonly AccessConfigurations accessConfigurations;
 
         public Stu3PatientCoordinationServiceTests()
         {
@@ -37,12 +39,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.auditBrokerMock = new Mock<IAuditBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
 
+            this.accessConfigurations = new AccessConfigurations
+            {
+                UseHashedNhsNumber = true,
+                HashPepper = GetRandomStringWithLength(100),
+                CheckAccessPermissions = true
+            };
+
             this.patientCoordinationService = new Stu3PatientCoordinationService(
                 accessOrchestrationService: accessOrchestrationServiceMock.Object,
                 patientOrchestrationService: patientOrchestrationServiceMock.Object,
                 loggingBroker: loggingBrokerMock.Object,
                 auditBroker: auditBrokerMock.Object,
-                identifierBroker: identifierBrokerMock.Object);
+                identifierBroker: identifierBrokerMock.Object,
+                accessConfigurations: this.accessConfigurations);
+        }
+
+        private static string GetRandomStringWithLength(int length)
+        {
+            string result = new MnemonicString(wordCount: 1, wordMinLength: length, wordMaxLength: length).GetValue();
+
+            return result.Length > length ? result.Substring(0, length) : result;
         }
 
         private static int GetRandomNumber() =>
