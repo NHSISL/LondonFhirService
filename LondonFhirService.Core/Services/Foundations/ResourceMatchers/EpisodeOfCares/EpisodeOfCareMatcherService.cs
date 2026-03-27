@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOf
             return resourceMatch;
         });
 
-        internal virtual string InternalGetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceInde)
+        internal virtual string InternalGetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
         {
             if (!resource.TryGetProperty("period", out var period))
                 return null;
