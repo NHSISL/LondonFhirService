@@ -76,6 +76,15 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 
                 await this.accessOrchestrationService.ValidateAccess(nhsNumber, correlationId);
             }
+            else
+            {
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Access permission check skipped due to configuration (CheckAccessPermissions = false)",
+                    message,
+                    fileName: null,
+                    correlationId: correlationId.ToString());
+            }
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
