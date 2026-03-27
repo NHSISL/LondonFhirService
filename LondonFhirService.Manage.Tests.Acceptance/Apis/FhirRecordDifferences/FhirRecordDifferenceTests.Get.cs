@@ -25,7 +25,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.FhirRecordDifferences
             // then
             foreach (FhirRecordDifference expectedFhirRecordDifference in expectedFhirRecordDifferences)
             {
-                FhirRecordDifference actualFhirRecordDifference = 
+                FhirRecordDifference actualFhirRecordDifference =
                     actualFhirRecordDifferences.Single(approval => approval.Id == expectedFhirRecordDifference.Id);
 
                 actualFhirRecordDifference.Should().BeEquivalentTo(expectedFhirRecordDifference, options => options

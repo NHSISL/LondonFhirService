@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Attrify.Attributes;
 using FluentAssertions;
-using LondonFhirService.Manage.Controllers;
+using LondonFhirService.Manage.Controllers.FhirRecords;
 using Microsoft.AspNetCore.Authorization;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecords

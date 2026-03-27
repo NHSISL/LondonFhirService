@@ -16,18 +16,21 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             : base(jsonElementService, loggingBroker)
         { }
 
-        public override ValueTask<bool> ShouldIgnore(JsonElement element, string path) =>
+        public override ValueTask<bool> ShouldIgnoreAsync(JsonElement element, string path) =>
         TryCatch(async () =>
         {
+            ValidateOnShouldIgnore(element, path);
             var pathParts = path.Split('.');
             var lastPart = pathParts.LastOrDefault();
 
             return lastPart == "meta" || path.EndsWith(".meta");
         });
 
-        public override ValueTask<JsonElement> GetReplacement(JsonElement element) =>
+        public override ValueTask<JsonElement> GetReplacementAsync(JsonElement element) =>
         TryCatch(async () =>
         {
+            ValidateOnGetReplacement(element);
+
             return await jsonElementService.CreateStringElement("<meta-ignored>");
         });
     }

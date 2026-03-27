@@ -18,7 +18,7 @@ namespace LondonFhirService.Manage.Tests.Integration.Apis.FhirRecords
             FhirRecord expectedFhirRecord = randomFhirRecord;
 
             // when
-            FhirRecord actualFhirRecord = 
+            FhirRecord actualFhirRecord =
                 await this.apiBroker.GetFhirRecordByIdAsync(randomFhirRecord.Id);
 
             // then

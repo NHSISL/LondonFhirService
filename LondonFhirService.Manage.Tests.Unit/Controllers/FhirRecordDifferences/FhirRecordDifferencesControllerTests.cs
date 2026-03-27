@@ -7,7 +7,7 @@ using System.Linq;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
-using LondonFhirService.Manage.Controllers;
+using LondonFhirService.Manage.Controllers.FhirRecordDifferences;
 using Moq;
 using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;

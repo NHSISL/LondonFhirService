@@ -17,7 +17,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             : base(jsonElementService, loggingBroker)
         { }
 
-        public override ValueTask<bool> ShouldIgnore(JsonElement element, string path) =>
+        public override ValueTask<bool> ShouldIgnoreAsync(JsonElement element, string path) =>
         TryCatch(async () =>
         {
             ValidateOnShouldIgnore(element, path);
@@ -25,7 +25,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             return element.ValueKind == JsonValueKind.Array;
         });
 
-        public override ValueTask<JsonElement> GetReplacement(JsonElement element) =>
+        public override ValueTask<JsonElement> GetReplacementAsync(JsonElement element) =>
         TryCatch(async () =>
         {
             ValidateOnGetReplacement(element);
