@@ -132,7 +132,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                         null,
                         correlationId.ToString()),
                             Times.Never);
+
+                this.auditBrokerMock.Verify(broker =>
+                    broker.LogInformationAsync(
+                        auditType,
+                        $"Access permission check skipped due to configuration (CheckAccessPermissions = false)",
+                        message,
+                        null,
+                        correlationId.ToString()),
+                            Times.Once);
             }
+
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
