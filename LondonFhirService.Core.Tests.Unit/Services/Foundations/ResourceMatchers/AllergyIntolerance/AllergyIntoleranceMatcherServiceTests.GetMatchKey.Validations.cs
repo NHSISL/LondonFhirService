@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 
@@ -24,14 +26,14 @@ public partial class AllergyIntoleranceMatcherServiceTests
             new InvalidArgumentResourceMatcherException(
                 message: "Resource matcher arguments are invalid. Please correct the errors and try again.");
 
-        invalidArgumentResourceMatcherException.UpsertDataList(
-            key: nameof(invalidResource),
-            value: "Json element is invalid.");
+        invalidArgumentResourceMatcherException.AddData(
+            key: "resource",
+            values: "Json element is invalid.");
 
         var expectedAllergyIntoleranceMatcherServiceValidationException =
             new AllergyIntoleranceMatcherServiceValidationException(
-                message: "Allergy intolerance service matcher validation error occurred, " +
-                    "please fix the errors and try again.",
+                message: "Allergy intolerance matcher validation errors occurred, " +
+                    "please try again.",
                 innerException: invalidArgumentResourceMatcherException);
 
         // when
@@ -64,13 +66,13 @@ public partial class AllergyIntoleranceMatcherServiceTests
                 message: "Resource matcher arguments are invalid. Please correct the errors and try again.");
 
         invalidArgumentResourceMatcherException.UpsertDataList(
-            key: nameof(invalidResourceIndex),
+            key: "resourceIndex",
             value: "Dictionary is required.");
 
         var expectedAllergyIntoleranceMatcherServiceValidationException =
             new AllergyIntoleranceMatcherServiceValidationException(
-                message: "Allergy intolerance service matcher validation error occurred, " +
-                    "please fix the errors and try again.",
+                message: "Allergy intolerance matcher validation errors occurred, " +
+                    "please try again.",
                 innerException: invalidArgumentResourceMatcherException);
 
         // when
