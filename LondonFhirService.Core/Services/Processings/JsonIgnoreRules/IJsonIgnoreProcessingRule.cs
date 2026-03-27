@@ -9,7 +9,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
     public interface IJsonIgnoreProcessingRule
     {
-        ValueTask<bool> ShouldIgnore(JsonElement element, string path);
-        ValueTask<JsonElement> GetReplacement(JsonElement element);
+        ValueTask<bool> ShouldIgnoreAsync(JsonElement element, string path);
+        ValueTask<JsonElement> GetReplacementAsync(JsonElement element);
     }
 }

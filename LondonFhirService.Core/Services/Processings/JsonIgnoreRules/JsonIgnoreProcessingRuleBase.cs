@@ -22,8 +22,8 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             this.loggingBroker = loggingBroker;
         }
 
-        public abstract ValueTask<bool> ShouldIgnore(JsonElement element, string path);
+        public abstract ValueTask<bool> ShouldIgnoreAsync(JsonElement element, string path);
 
-        public abstract ValueTask<JsonElement> GetReplacement(JsonElement element);
+        public abstract ValueTask<JsonElement> GetReplacementAsync(JsonElement element);
     }
 }

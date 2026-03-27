@@ -103,7 +103,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                     continue;
                 }
 
-                ResourceMatch resourceMatch = matcher.Match(
+                ResourceMatch resourceMatch = await matcher.MatchAsync(
                     s1Resources,
                     s2Resources,
                     source1ResourceIndex,
@@ -140,8 +140,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                 foreach (MatchedResource match in resourceMatch.Matched)
                 {
                     string resourceId =
-                        matcher.GetMatchKey(match.Source1, source1ResourceIndex)
-                        ?? matcher.GetMatchKey(match.Source2, source2ResourceIndex);
+                        await matcher.GetMatchKeyAsync(match.Source1, source1ResourceIndex)
+                        ?? await matcher.GetMatchKeyAsync(match.Source2, source2ResourceIndex);
 
                     IEnumerable<DiffItem> resourceDiffs = await CompareJsonElements(
                         match.Source1,
@@ -246,9 +246,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
         {
             foreach (var rule in ignoreRules)
             {
-                if (await rule.ShouldIgnore(element, path))
+                if (await rule.ShouldIgnoreAsync(element, path))
                 {
-                    return await rule.GetReplacement(element);
+                    return await rule.GetReplacementAsync(element);
                 }
             }
 

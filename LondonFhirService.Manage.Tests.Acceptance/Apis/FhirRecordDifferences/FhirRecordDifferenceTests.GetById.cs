@@ -2,8 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Manage.Tests.Acceptance.Models.FhirRecordDifferences;
@@ -20,7 +18,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.FhirRecordDifferences
             FhirRecordDifference expectedFhirRecordDifference = randomFhirRecordDifference;
 
             // when
-            FhirRecordDifference actualFhirRecordDifference = 
+            FhirRecordDifference actualFhirRecordDifference =
                 await this.apiBroker.GetFhirRecordDifferenceByIdAsync(randomFhirRecordDifference.Id);
 
             // then

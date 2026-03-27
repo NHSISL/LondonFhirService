@@ -18,7 +18,7 @@ namespace LondonFhirService.Manage.Tests.Integration.Apis.FhirRecordDifferences
             FhirRecordDifference expectedFhirRecordDifference = randomFhirRecordDifference;
 
             // when
-            FhirRecordDifference actualFhirRecordDifference = 
+            FhirRecordDifference actualFhirRecordDifference =
                 await this.apiBroker.GetFhirRecordDifferenceByIdAsync(randomFhirRecordDifference.Id);
 
             // then

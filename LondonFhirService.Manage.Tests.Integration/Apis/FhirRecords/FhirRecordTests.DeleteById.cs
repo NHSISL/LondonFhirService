@@ -20,7 +20,7 @@ namespace LondonFhirService.Manage.Tests.Integration.Apis.FhirRecords
             await this.apiBroker.DeleteFhirRecordByIdAsync(randomFhirRecord.Id);
 
             // then
-            ValueTask<FhirRecord> getFhirRecordByIdTask = 
+            ValueTask<FhirRecord> getFhirRecordByIdTask =
                 this.apiBroker.GetFhirRecordByIdAsync(randomFhirRecord.Id);
 
             await Assert.ThrowsAsync<HttpResponseNotFoundException>(getFhirRecordByIdTask.AsTask);

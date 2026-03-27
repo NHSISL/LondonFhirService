@@ -25,7 +25,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.FhirRecords
             // then
             foreach (FhirRecord expectedFhirRecord in expectedFhirRecords)
             {
-                FhirRecord actualFhirRecord = 
+                FhirRecord actualFhirRecord =
                     actualFhirRecords.Single(approval => approval.Id == expectedFhirRecord.Id);
 
                 actualFhirRecord.Should().BeEquivalentTo(expectedFhirRecord, options => options

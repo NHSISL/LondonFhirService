@@ -5,61 +5,79 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
+using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
-namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
-
-public class ListMatcherService : IResourceMatcherService
+namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists
 {
-    public string ResourceType => "List";
-
-    public string GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+    public partial class ListMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
-        if (!resource.TryGetProperty("title", out var title))
-            return null;
+        public ListMatcherService(LoggingBroker loggingBroker)
+            : base(loggingBroker)
+        { }
 
-        return title.GetString();
-    }
+        public override string ResourceType => "List";
 
-    public ResourceMatch Match(
-        List<JsonElement> source1Resources,
-        List<JsonElement> source2Resources,
-        Dictionary<string, JsonElement> source1ResourceIndex,
-        Dictionary<string, JsonElement> source2ResourceIndex)
-    {
-        var resourceMatch = new ResourceMatch();
-
-        var source1ByKey = source1Resources
-            .Select(r => new { Resource = r, Key = GetMatchKey(r, source1ResourceIndex) })
-            .Where(x => x.Key != null)
-            .ToDictionary(x => x.Key!, x => x.Resource);
-
-        var source2ByKey = source2Resources
-            .Select(r => new { Resource = r, Key = GetMatchKey(r, source2ResourceIndex) })
-            .Where(x => x.Key != null)
-            .ToDictionary(x => x.Key!, x => x.Resource);
-
-        var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
-
-        foreach (var key in allKeys)
+        public override ValueTask<string> GetMatchKeyAsync(
+            JsonElement resource, Dictionary<string, JsonElement> resourceIndex) =>
+        TryCatch(async () =>
         {
-            var hasSource1 = source1ByKey.TryGetValue(key, out var source1Resource);
-            var hasSource2 = source2ByKey.TryGetValue(key, out var source2Resource);
+            ValidateOnGetMatchKeyArguments(resource, resourceIndex);
 
-            if (hasSource1 && hasSource2)
+            return InternalGetMatchKey(resource, resourceIndex);
+        });
+
+        public override ValueTask<ResourceMatch> MatchAsync(
+            List<JsonElement> source1Resources,
+            List<JsonElement> source2Resources,
+            Dictionary<string, JsonElement> source1ResourceIndex,
+            Dictionary<string, JsonElement> source2ResourceIndex) =>
+        TryCatch(async () =>
+        {
+            ValidateOnMatchArguments(source1Resources, source2Resources, source1ResourceIndex, source2ResourceIndex);
+            var resourceMatch = new ResourceMatch();
+
+            var source1ByKey = source1Resources
+                .Select(r => new { Resource = r, Key = InternalGetMatchKey(r, source1ResourceIndex) })
+                .Where(x => x.Key != null)
+                .ToDictionary(x => x.Key!, x => x.Resource);
+
+            var source2ByKey = source2Resources
+                .Select(r => new { Resource = r, Key = InternalGetMatchKey(r, source2ResourceIndex) })
+                .Where(x => x.Key != null)
+                .ToDictionary(x => x.Key!, x => x.Resource);
+
+            var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
+
+            foreach (var key in allKeys)
             {
-                resourceMatch.Matched.Add(new MatchedResource(source1Resource!, source2Resource!, key));
+                var hasSource1 = source1ByKey.TryGetValue(key, out var source1Resource);
+                var hasSource2 = source2ByKey.TryGetValue(key, out var source2Resource);
+
+                if (hasSource1 && hasSource2)
+                {
+                    resourceMatch.Matched.Add(new MatchedResource(source1Resource!, source2Resource!, key));
+                }
+                else if (hasSource1)
+                {
+                    resourceMatch.Unmatched.Add(new UnmatchedResource(source1Resource!, ResourceType, key, true));
+                }
+                else if (hasSource2)
+                {
+                    resourceMatch.Unmatched.Add(new UnmatchedResource(source2Resource!, ResourceType, key, false));
+                }
             }
-            else if (hasSource1)
-            {
-                resourceMatch.Unmatched.Add(new UnmatchedResource(source1Resource!, ResourceType, key, true));
-            }
-            else if (hasSource2)
-            {
-                resourceMatch.Unmatched.Add(new UnmatchedResource(source2Resource!, ResourceType, key, false));
-            }
+
+            return resourceMatch;
+        });
+
+        internal virtual string InternalGetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+        {
+            if (!resource.TryGetProperty("title", out var title))
+                return null;
+
+            return title.GetString();
         }
-
-        return resourceMatch;
     }
 }

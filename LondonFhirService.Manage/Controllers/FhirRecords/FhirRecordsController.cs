@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
 using RESTFulSense.Controllers;
 
-namespace LondonFhirService.Manage.Controllers
+namespace LondonFhirService.Manage.Controllers.FhirRecords
 {
     [ApiController]
     [Route("api/[controller]")]

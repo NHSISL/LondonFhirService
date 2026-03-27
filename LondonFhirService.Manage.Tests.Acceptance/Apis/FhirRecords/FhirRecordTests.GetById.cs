@@ -2,8 +2,6 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Manage.Tests.Acceptance.Models.FhirRecords;
@@ -20,7 +18,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.FhirRecords
             FhirRecord expectedFhirRecord = randomFhirRecord;
 
             // when
-            FhirRecord actualFhirRecord = 
+            FhirRecord actualFhirRecord =
                 await this.apiBroker.GetFhirRecordByIdAsync(randomFhirRecord.Id);
 
             // then
