@@ -69,7 +69,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                 CallBase = true
             };
 
-
             // when
             string actualJson = await patientCoordinationServiceMock.Object.GetStructuredRecordSerialisedAsync(
                 inputNhsNumber,
