@@ -13,7 +13,7 @@ public class ListMatcherService : IResourceMatcherService
 {
     public string ResourceType => "List";
 
-    public string? GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+    public string GetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
     {
         if (!resource.TryGetProperty("title", out var title))
             return null;
