@@ -16,7 +16,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
     public partial class ConditionMatcherServiceTests
     {
         [Fact]
-        private async Task ShouldThrowServiceExceptionOnGetMatchKeysIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnGetMatchKeysIfServiceErrorOccursAndLogItAsync()
         {
             // given
             JsonElement resource = new();

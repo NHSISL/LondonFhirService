@@ -22,7 +22,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
       {
           this.loggingBrokerMock = new Mock<ILoggingBroker>();
           
-
           this.conditionMatcherService =
               new ConditionMatcherService(
                   loggingBroker: this.loggingBrokerMock.Object);
