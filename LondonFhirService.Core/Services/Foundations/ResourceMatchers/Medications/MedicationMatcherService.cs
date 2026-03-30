@@ -13,7 +13,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medicatio
 {
     public partial class MedicationMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
-        public MedicationMatcherService(LoggingBroker loggingBroker)
+        public MedicationMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
         { }
 
