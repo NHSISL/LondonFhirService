@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Conditions.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
+using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Conditions
 {
@@ -30,9 +31,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 key: "resource",
                 values: "Json element is invalid.");
 
-            invalidArgumentResourceMatcherException.UpsertDataList(
+            invalidArgumentResourceMatcherException.AddData(
                 key: "resourceIndex",
-                value: "Dictionary is required.");
+                values: "Dictionary is required.");
 
             var expectedConditionMatcherServiceValidationException =
                 new ConditionMatcherServiceValidationException(
@@ -53,6 +54,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             actualException.Should()
                 .BeEquivalentTo(expectedConditionMatcherServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedConditionMatcherServiceValidationException))),
+                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
