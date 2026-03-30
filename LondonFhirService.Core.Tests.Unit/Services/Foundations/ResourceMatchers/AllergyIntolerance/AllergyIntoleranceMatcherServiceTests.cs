@@ -21,6 +21,7 @@ public partial class AllergyIntoleranceMatcherServiceTests
     public AllergyIntoleranceMatcherServiceTests()
     {
         this.loggingBrokerMock = new Mock<ILoggingBroker>();
+        
 
         this.allergyIntoleranceMatcherService =
             new AllergyIntoleranceMatcherService(

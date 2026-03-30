@@ -12,7 +12,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers
 {
     public abstract partial class ResourceMatcherServiceBase
     {
-        protected internal void ValidateOnGetMatchKeyArguments(
+        virtual internal void ValidateOnGetMatchKeyArguments(
             JsonElement resource,
             Dictionary<string, JsonElement> resourceIndex)
         {
@@ -24,7 +24,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers
                 (Rule: IsInvalid(resourceIndex), Parameter: nameof(resourceIndex)));
         }
 
-        protected internal void ValidateOnMatchArguments(
+        virtual internal void ValidateOnMatchArguments(
             List<JsonElement> source1Resources,
             List<JsonElement> source2Resources,
             Dictionary<string, JsonElement> source1ResourceIndex,

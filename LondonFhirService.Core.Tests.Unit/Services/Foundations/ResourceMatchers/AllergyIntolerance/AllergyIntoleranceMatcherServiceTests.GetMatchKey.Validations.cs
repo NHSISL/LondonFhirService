@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.Consumers;
-using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 
@@ -20,7 +18,7 @@ public partial class AllergyIntoleranceMatcherServiceTests
     {
         // given
         JsonElement invalidResource = default;
-        Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
+        Dictionary<string, JsonElement> invalidResourceIndex = null;
 
         var invalidArgumentResourceMatcherException =
             new InvalidArgumentResourceMatcherException(
@@ -29,41 +27,6 @@ public partial class AllergyIntoleranceMatcherServiceTests
         invalidArgumentResourceMatcherException.AddData(
             key: "resource",
             values: "Json element is invalid.");
-
-        var expectedAllergyIntoleranceMatcherServiceValidationException =
-            new AllergyIntoleranceMatcherServiceValidationException(
-                message: "Allergy intolerance matcher validation errors occurred, " +
-                    "please try again.",
-                innerException: invalidArgumentResourceMatcherException);
-
-        // when
-        ValueTask<string> getMatchKeyTask =
-            this.allergyIntoleranceMatcherService.GetMatchKeyAsync(
-                invalidResource,
-                resourceIndex);
-
-        // then
-        AllergyIntoleranceMatcherServiceValidationException actualException =
-            await Assert.ThrowsAsync<AllergyIntoleranceMatcherServiceValidationException>(
-                getMatchKeyTask.AsTask);
-
-        actualException.Should().BeEquivalentTo(expectedAllergyIntoleranceMatcherServiceValidationException);
-    }
-
-    [Fact]
-    public async Task ShouldThrowValidationExceptionOnGetMatchKeyIfResourceIndexIsInvalidAsync()
-    {
-        // given
-        JsonElement resource =
-            CreateAllergyIntoleranceResource(
-                snomedCode: "91936005",
-                onsetDateTime: "2024-01-01");
-
-        Dictionary<string, JsonElement> invalidResourceIndex = null;
-
-        var invalidArgumentResourceMatcherException =
-            new InvalidArgumentResourceMatcherException(
-                message: "Resource matcher arguments are invalid. Please correct the errors and try again.");
 
         invalidArgumentResourceMatcherException.UpsertDataList(
             key: "resourceIndex",
@@ -78,7 +41,7 @@ public partial class AllergyIntoleranceMatcherServiceTests
         // when
         ValueTask<string> getMatchKeyTask =
             this.allergyIntoleranceMatcherService.GetMatchKeyAsync(
-                resource,
+                invalidResource,
                 invalidResourceIndex);
 
         // then
@@ -87,5 +50,7 @@ public partial class AllergyIntoleranceMatcherServiceTests
                 getMatchKeyTask.AsTask);
 
         actualException.Should().BeEquivalentTo(expectedAllergyIntoleranceMatcherServiceValidationException);
+
+        this.loggingBrokerMock.VerifyNoOtherCalls();
     }
 }
