@@ -12,9 +12,9 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers
 
     public abstract partial class ResourceMatcherServiceBase : IResourceMatcherService
     {
-        protected readonly LoggingBroker loggingBroker;
+        protected readonly ILoggingBroker loggingBroker;
 
-        protected ResourceMatcherServiceBase(LoggingBroker loggingBroker)
+        protected ResourceMatcherServiceBase(ILoggingBroker loggingBroker)
         {
             this.loggingBroker = loggingBroker;
         }
