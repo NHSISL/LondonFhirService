@@ -22,7 +22,9 @@ public partial class AllergyIntoleranceMatcherServiceTests
 
         var invalidArgumentResourceMatcherException =
             new InvalidArgumentResourceMatcherException(
-                message: "Resource matcher arguments are invalid. Please correct the errors and try again.");
+                message:
+                    "Resource matcher arguments are invalid. " +
+                    "Please correct the errors and try again.");
 
         invalidArgumentResourceMatcherException.AddData(
             key: "resource",
@@ -49,7 +51,8 @@ public partial class AllergyIntoleranceMatcherServiceTests
             await Assert.ThrowsAsync<AllergyIntoleranceMatcherServiceValidationException>(
                 getMatchKeyTask.AsTask);
 
-        actualException.Should().BeEquivalentTo(expectedAllergyIntoleranceMatcherServiceValidationException);
+        actualException.Should()
+            .BeEquivalentTo(expectedAllergyIntoleranceMatcherServiceValidationException);
 
         this.loggingBrokerMock.VerifyNoOtherCalls();
     }
