@@ -9,51 +9,52 @@ using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances;
-
-public partial class AllergyIntoleranceMatcherServiceTests
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances
 {
-    [Fact]
-    public async Task ShouldThrowValidationExceptionOnGetMatchKeyIfResourceIsInvalidAsync()
+    public partial class AllergyIntoleranceMatcherServiceTests
     {
-        // given
-        JsonElement invalidResource = default;
-        Dictionary<string, JsonElement> invalidResourceIndex = null;
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnGetMatchKeyIfResourceIsInvalidAsync()
+        {
+            // given
+            JsonElement invalidResource = default;
+            Dictionary<string, JsonElement> invalidResourceIndex = null;
 
-        var invalidArgumentResourceMatcherException =
-            new InvalidArgumentResourceMatcherException(
-                message:
-                    "Resource matcher arguments are invalid. " +
-                    "Please correct the errors and try again.");
+            var invalidArgumentResourceMatcherException =
+                new InvalidArgumentResourceMatcherException(
+                    message:
+                        "Resource matcher arguments are invalid. " +
+                        "Please correct the errors and try again.");
 
-        invalidArgumentResourceMatcherException.AddData(
-            key: "resource",
-            values: "Json element is invalid.");
+            invalidArgumentResourceMatcherException.AddData(
+                key: "resource",
+                values: "Json element is invalid.");
 
-        invalidArgumentResourceMatcherException.UpsertDataList(
-            key: "resourceIndex",
-            value: "Dictionary is required.");
+            invalidArgumentResourceMatcherException.UpsertDataList(
+                key: "resourceIndex",
+                value: "Dictionary is required.");
 
-        var expectedAllergyIntoleranceMatcherServiceValidationException =
-            new AllergyIntoleranceMatcherServiceValidationException(
-                message: "Allergy intolerance matcher validation errors occurred, " +
-                    "please try again.",
-                innerException: invalidArgumentResourceMatcherException);
+            var expectedAllergyIntoleranceMatcherServiceValidationException =
+                new AllergyIntoleranceMatcherServiceValidationException(
+                    message: "Allergy intolerance matcher validation errors occurred, " +
+                        "please try again.",
+                    innerException: invalidArgumentResourceMatcherException);
 
-        // when
-        ValueTask<string> getMatchKeyTask =
-            this.allergyIntoleranceMatcherService.GetMatchKeyAsync(
-                invalidResource,
-                invalidResourceIndex);
+            // when
+            ValueTask<string> getMatchKeyTask =
+                this.allergyIntoleranceMatcherService.GetMatchKeyAsync(
+                    invalidResource,
+                    invalidResourceIndex);
 
-        // then
-        AllergyIntoleranceMatcherServiceValidationException actualException =
-            await Assert.ThrowsAsync<AllergyIntoleranceMatcherServiceValidationException>(
-                getMatchKeyTask.AsTask);
+            // then
+            AllergyIntoleranceMatcherServiceValidationException actualException =
+                await Assert.ThrowsAsync<AllergyIntoleranceMatcherServiceValidationException>(
+                    getMatchKeyTask.AsTask);
 
-        actualException.Should()
-            .BeEquivalentTo(expectedAllergyIntoleranceMatcherServiceValidationException);
+            actualException.Should()
+                .BeEquivalentTo(expectedAllergyIntoleranceMatcherServiceValidationException);
 
-        this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
