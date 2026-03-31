@@ -16,7 +16,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
     public partial class AllergyIntoleranceMatcherServiceTests
     {
         [Fact]
-        private async Task ShouldThrowServiceExceptionOnGetMatchKeysIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnGetMatchKeyIfServiceErrorOccursAndLogItAsync()
         {
             // given
             JsonElement resource = new();
@@ -33,7 +33,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     message: "Allergy intolerance matcher service error occurred, contact support.",
                     innerException: failedAllergyIntoleranceMatcherServiceException);
 
-            var allergyIntoleranceMatcherServiceMock = new Mock<AllergyIntoleranceMatcherService>(loggingBrokerMock.Object)
+            var allergyIntoleranceMatcherServiceMock = 
+                new Mock<AllergyIntoleranceMatcherService>(loggingBrokerMock.Object)
                 { CallBase = true };
 
             allergyIntoleranceMatcherServiceMock.Setup(service =>
