@@ -13,33 +13,33 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Lists
 {
-  public partial class ListMatcherServiceTests
-  {
-      private readonly Mock<ILoggingBroker> loggingBrokerMock;
-      private readonly ListMatcherService listMatcherService;
+    public partial class ListMatcherServiceTests
+    {
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly ListMatcherService listMatcherService;
 
-      public ListMatcherServiceTests()
-      {
-          this.loggingBrokerMock = new Mock<ILoggingBroker>();
-          
+        public ListMatcherServiceTests()
+        {
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-          this.listMatcherService =
-              new ListMatcherService(
-                  loggingBroker: this.loggingBrokerMock.Object);
-      }
 
-      private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
-          actualException => actualException.SameExceptionAs(expectedException);
+            this.listMatcherService =
+                new ListMatcherService(
+                    loggingBroker: this.loggingBrokerMock.Object);
+        }
 
-      private static Dictionary<string, JsonElement> CreateResourceIndex() =>
-          new();
+        private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => actualException.SameExceptionAs(expectedException);
 
-      private static JsonElement CreateListResource(
-          string snomedCode,
-          string onsetDateTime,
-          string id = "allergy-1")
-      {
-          string json = $$"""
+        private static Dictionary<string, JsonElement> CreateResourceIndex() =>
+            new();
+
+        private static JsonElement CreateListResource(
+            string snomedCode,
+            string onsetDateTime,
+            string id = "allergy-1")
+        {
+            string json = $$"""
           {
             "resourceType": "List",
             "id": "{{id}}",
@@ -55,12 +55,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateNonSnomedListResource(string onsetDateTime)
-      {
-          string json = $$"""
+        private static JsonElement CreateNonSnomedListResource(string onsetDateTime)
+        {
+            string json = $$"""
           {
             "resourceType": "List",
             "id": "allergy-1",
@@ -76,12 +76,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateResourceWithoutOnsetDateTime(string snomedCode)
-      {
-          string json = $$"""
+        private static JsonElement CreateResourceWithoutOnsetDateTime(string snomedCode)
+        {
+            string json = $$"""
           {
             "resourceType": "List",
             "id": "allergy-1",
@@ -96,12 +96,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateMalformedCodingResource()
-      {
-          string json = """
+        private static JsonElement CreateMalformedCodingResource()
+        {
+            string json = """
           {
             "resourceType": "List",
             "id": "allergy-1",
@@ -115,10 +115,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement ParseJsonElement(string json) =>
-          JsonDocument.Parse(json).RootElement.Clone();
-  }
+        private static JsonElement ParseJsonElement(string json) =>
+            JsonDocument.Parse(json).RootElement.Clone();
+    }
 }
