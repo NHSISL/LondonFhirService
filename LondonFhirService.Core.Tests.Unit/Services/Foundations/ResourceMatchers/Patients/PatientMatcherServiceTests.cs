@@ -21,7 +21,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
       public PatientMatcherServiceTests()
       {
           this.loggingBrokerMock = new Mock<ILoggingBroker>();
-          
 
           this.patientMatcherService =
               new PatientMatcherService(
