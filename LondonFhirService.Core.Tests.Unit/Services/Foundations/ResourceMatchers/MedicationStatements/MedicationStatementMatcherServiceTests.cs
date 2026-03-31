@@ -13,32 +13,32 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.MedicationStatements
 {
-  public partial class MedicationStatementMatcherServiceTests
-  {
-      private readonly Mock<ILoggingBroker> loggingBrokerMock;
-      private readonly MedicationStatementMatcherService medicationStatementMatcherService;
+    public partial class MedicationStatementMatcherServiceTests
+    {
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly MedicationStatementMatcherService medicationStatementMatcherService;
 
-      public MedicationStatementMatcherServiceTests()
-      {
-          this.loggingBrokerMock = new Mock<ILoggingBroker>();
+        public MedicationStatementMatcherServiceTests()
+        {
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-          this.medicationStatementMatcherService =
-              new MedicationStatementMatcherService(
-                  loggingBroker: this.loggingBrokerMock.Object);
-      }
+            this.medicationStatementMatcherService =
+                new MedicationStatementMatcherService(
+                    loggingBroker: this.loggingBrokerMock.Object);
+        }
 
-      private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
-          actualException => actualException.SameExceptionAs(expectedException);
+        private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => actualException.SameExceptionAs(expectedException);
 
-      private static Dictionary<string, JsonElement> CreateResourceIndex() =>
-          new();
+        private static Dictionary<string, JsonElement> CreateResourceIndex() =>
+            new();
 
-      private static JsonElement CreateMedicationStatementResource(
-          string snomedCode,
-          string onsetDateTime,
-          string id = "allergy-1")
-      {
-          string json = $$"""
+        private static JsonElement CreateMedicationStatementResource(
+            string snomedCode,
+            string onsetDateTime,
+            string id = "allergy-1")
+        {
+            string json = $$"""
           {
             "resourceType": "MedicationStatement",
             "id": "{{id}}",
@@ -54,12 +54,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateNonSnomedMedicationStatementResource(string onsetDateTime)
-      {
-          string json = $$"""
+        private static JsonElement CreateNonSnomedMedicationStatementResource(string onsetDateTime)
+        {
+            string json = $$"""
           {
             "resourceType": "MedicationStatement",
             "id": "allergy-1",
@@ -75,12 +75,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateResourceWithoutOnsetDateTime(string snomedCode)
-      {
-          string json = $$"""
+        private static JsonElement CreateResourceWithoutOnsetDateTime(string snomedCode)
+        {
+            string json = $$"""
           {
             "resourceType": "MedicationStatement",
             "id": "allergy-1",
@@ -95,12 +95,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateMalformedCodingResource()
-      {
-          string json = """
+        private static JsonElement CreateMalformedCodingResource()
+        {
+            string json = """
           {
             "resourceType": "MedicationStatement",
             "id": "allergy-1",
@@ -114,10 +114,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement ParseJsonElement(string json) =>
-          JsonDocument.Parse(json).RootElement.Clone();
-  }
+        private static JsonElement ParseJsonElement(string json) =>
+            JsonDocument.Parse(json).RootElement.Clone();
+    }
 }
