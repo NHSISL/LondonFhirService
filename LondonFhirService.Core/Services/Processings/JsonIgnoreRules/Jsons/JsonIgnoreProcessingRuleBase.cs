@@ -8,15 +8,16 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
     using System.Threading.Tasks;
     using LondonFhirService.Core.Brokers.Loggings;
     using LondonFhirService.Core.Services.Foundations.JsonElements;
+    using LondonFhirService.Core.Services.Processings.JsonIgnoreRules.Jsons;
 
     public abstract partial class JsonIgnoreProcessingRuleBase : IJsonIgnoreProcessingRule
     {
         protected readonly JsonElementService jsonElementService;
-        protected readonly LoggingBroker loggingBroker;
+        protected readonly ILoggingBroker loggingBroker;
 
         protected JsonIgnoreProcessingRuleBase(
             JsonElementService jsonElementService,
-            LoggingBroker loggingBroker)
+            ILoggingBroker loggingBroker)
         {
             this.jsonElementService = jsonElementService;
             this.loggingBroker = loggingBroker;
