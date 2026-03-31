@@ -16,7 +16,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
     public partial class MedicationMatcherServiceTests
     {
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnGetMatchKeysIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnGetMatchKeyIfServiceErrorOccursAndLogItAsync()
         {
             // given
             JsonElement resource = new();
@@ -77,4 +77,4 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             medicationMatcherServiceMock.VerifyNoOtherCalls();
         }
     }
-}    
+}
