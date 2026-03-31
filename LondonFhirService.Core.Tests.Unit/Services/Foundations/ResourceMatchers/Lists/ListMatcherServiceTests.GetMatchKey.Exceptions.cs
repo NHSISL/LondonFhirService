@@ -33,8 +33,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     message: "List matcher service error occurred, contact support.",
                     innerException: failedListMatcherServiceException);
 
-            var listMatcherServiceMock = new Mock<ListMatcherService>(loggingBrokerMock.Object)
-                { CallBase = true };
+            var listMatcherServiceMock = 
+                new Mock<ListMatcherService>(loggingBrokerMock.Object) { CallBase = true };
 
             listMatcherServiceMock.Setup(service =>
                 service.ValidateOnGetMatchKeyArguments(
@@ -77,4 +77,4 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             listMatcherServiceMock.VerifyNoOtherCalls();
         }
     }
-}    
+}
