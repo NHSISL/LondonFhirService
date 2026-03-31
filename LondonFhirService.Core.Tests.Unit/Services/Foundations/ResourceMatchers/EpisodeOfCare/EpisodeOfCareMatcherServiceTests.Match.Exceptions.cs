@@ -36,8 +36,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     message: "Episode of care matcher service error occurred, contact support.",
                     innerException: failedEpisodeOfCareMatcherServiceException);
 
-            var episodeOfCareMatcherServiceMock = new Mock<EpisodeOfCareMatcherService>(loggingBrokerMock.Object)
-            { CallBase = true };
+            var episodeOfCareMatcherServiceMock = 
+                new Mock<EpisodeOfCareMatcherService>(loggingBrokerMock.Object) { CallBase = true };
 
             episodeOfCareMatcherServiceMock.Setup(service =>
                 service.ValidateOnMatchArguments(

@@ -16,7 +16,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
     public partial class EpisodeOfCareMatcherServiceTests
     {
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnGetMatchKeysIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnGetMatchKeyIfServiceErrorOccursAndLogItAsync()
         {
             // given
             JsonElement resource = new();
@@ -33,8 +33,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     message: "Episode of care matcher service error occurred, contact support.",
                     innerException: failedEpisodeOfCareMatcherServiceException);
 
-            var episodeOfCareMatcherServiceMock = new Mock<EpisodeOfCareMatcherService>(loggingBrokerMock.Object)
-            { CallBase = true };
+            var episodeOfCareMatcherServiceMock = 
+                new Mock<EpisodeOfCareMatcherService>(loggingBrokerMock.Object)
+                { CallBase = true };
 
             episodeOfCareMatcherServiceMock.Setup(service =>
                 service.ValidateOnGetMatchKeyArguments(
