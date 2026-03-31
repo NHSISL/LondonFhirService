@@ -13,32 +13,32 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Medications
 {
-  public partial class MedicationMatcherServiceTests
-  {
-      private readonly Mock<ILoggingBroker> loggingBrokerMock;
-      private readonly MedicationMatcherService medicationMatcherService;
+    public partial class MedicationMatcherServiceTests
+    {
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly MedicationMatcherService medicationMatcherService;
 
-      public MedicationMatcherServiceTests()
-      {
-          this.loggingBrokerMock = new Mock<ILoggingBroker>();
+        public MedicationMatcherServiceTests()
+        {
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-          this.medicationMatcherService =
-              new MedicationMatcherService(
-                  loggingBroker: this.loggingBrokerMock.Object);
-      }
+            this.medicationMatcherService =
+                new MedicationMatcherService(
+                    loggingBroker: this.loggingBrokerMock.Object);
+        }
 
-      private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
-          actualException => actualException.SameExceptionAs(expectedException);
+        private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => actualException.SameExceptionAs(expectedException);
 
-      private static Dictionary<string, JsonElement> CreateResourceIndex() =>
-          new();
+        private static Dictionary<string, JsonElement> CreateResourceIndex() =>
+            new();
 
-      private static JsonElement CreateMedicationResource(
-          string snomedCode,
-          string onsetDateTime,
-          string id = "allergy-1")
-      {
-          string json = $$"""
+        private static JsonElement CreateMedicationResource(
+            string snomedCode,
+            string onsetDateTime,
+            string id = "allergy-1")
+        {
+            string json = $$"""
           {
             "resourceType": "Medication",
             "id": "{{id}}",
@@ -54,12 +54,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateNonSnomedMedicationResource(string onsetDateTime)
-      {
-          string json = $$"""
+        private static JsonElement CreateNonSnomedMedicationResource(string onsetDateTime)
+        {
+            string json = $$"""
           {
             "resourceType": "Medication",
             "id": "allergy-1",
@@ -75,12 +75,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateResourceWithoutOnsetDateTime(string snomedCode)
-      {
-          string json = $$"""
+        private static JsonElement CreateResourceWithoutOnsetDateTime(string snomedCode)
+        {
+            string json = $$"""
           {
             "resourceType": "Medication",
             "id": "allergy-1",
@@ -95,12 +95,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateMalformedCodingResource()
-      {
-          string json = """
+        private static JsonElement CreateMalformedCodingResource()
+        {
+            string json = """
           {
             "resourceType": "Medication",
             "id": "allergy-1",
@@ -114,10 +114,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement ParseJsonElement(string json) =>
-          JsonDocument.Parse(json).RootElement.Clone();
-  }
+        private static JsonElement ParseJsonElement(string json) =>
+            JsonDocument.Parse(json).RootElement.Clone();
+    }
 }
