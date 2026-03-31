@@ -36,7 +36,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     message: "Medication statement matcher service error occurred, contact support.",
                     innerException: failedMedicationStatementMatcherServiceException);
 
-            var medicationStatementMatcherServiceMock = new Mock<MedicationStatementMatcherService>(loggingBrokerMock.Object)
+            var medicationStatementMatcherServiceMock = 
+                new Mock<MedicationStatementMatcherService>(loggingBrokerMock.Object)
                 { CallBase = true };
 
             medicationStatementMatcherServiceMock.Setup(service =>
