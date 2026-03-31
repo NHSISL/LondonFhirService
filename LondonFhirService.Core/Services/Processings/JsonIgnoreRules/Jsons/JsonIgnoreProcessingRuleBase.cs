@@ -12,11 +12,11 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 
     public abstract partial class JsonIgnoreProcessingRuleBase : IJsonIgnoreProcessingRule
     {
-        protected readonly JsonElementService jsonElementService;
+        protected readonly IJsonElementService jsonElementService;
         protected readonly ILoggingBroker loggingBroker;
 
         protected JsonIgnoreProcessingRuleBase(
-            JsonElementService jsonElementService,
+            IJsonElementService jsonElementService,
             ILoggingBroker loggingBroker)
         {
             this.jsonElementService = jsonElementService;
