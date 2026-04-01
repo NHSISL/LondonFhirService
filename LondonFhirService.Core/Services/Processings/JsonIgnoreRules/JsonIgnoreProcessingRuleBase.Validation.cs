@@ -11,7 +11,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
     public abstract partial class JsonIgnoreProcessingRuleBase
     {
-        virtual internal void ValidateOnShouldIgnore(JsonElement element, string path)
+        protected internal virtual void ValidateOnShouldIgnore(JsonElement element, string path)
         {
             Validate(
                 createException: () => new InvalidJsonIgnoreProcessingException(
@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
                 (Rule: IsInvalid(element), Parameter: nameof(element)));
         }
 
-        virtual internal void ValidateOnGetReplacement(JsonElement element)
+        protected internal virtual void ValidateOnGetReplacement(JsonElement element)
         {
             Validate(
                 createException: () => new InvalidJsonIgnoreProcessingException(

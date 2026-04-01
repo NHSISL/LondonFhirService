@@ -17,7 +17,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task ShouldThrowValidationExceptionOnShouldIgonoreIfResourceIsInvalidAsync(string invalidText)
+        public async Task ShouldThrowValidationExceptionOnShouldIgnoreIfResourceIsInvalidAsync(string invalidText)
         {
             // given
             JsonElement invalidElement = default;

@@ -32,6 +32,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     message:
                         "Array order ignore processing validation error occurred, " +
                         "please fix errors and try again.",
+                        
                     innerException: invalidJsonIgnoreProcessingException);
 
             // when

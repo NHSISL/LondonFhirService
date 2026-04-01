@@ -81,6 +81,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
+            
             return arrayOrderIgnoreProcessingDependencyValidationException;
         }
 
