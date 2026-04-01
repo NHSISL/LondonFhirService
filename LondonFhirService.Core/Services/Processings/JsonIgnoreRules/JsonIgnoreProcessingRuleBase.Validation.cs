@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
                 (Rule: IsInvalid(element), Parameter: nameof(element)));
         }
 
-        protected internal void ValidateOnGetReplacement(JsonElement element)
+        virtual internal void ValidateOnGetReplacement(JsonElement element)
         {
             Validate(
                 createException: () => new InvalidJsonIgnoreProcessingException(

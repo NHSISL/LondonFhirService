@@ -9,6 +9,8 @@ using System.Net.NetworkInformation;
 using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
+using LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
 using Moq;
@@ -70,16 +72,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             return new TheoryData<Xeption>
             {
-                new ConsumerServiceValidationException(
-                    message: "Consumer validation errors occurred, please try again",
+                new JsonElementServiceValidationException(
+                    message: "Json element service validation error occurred, please contact support.",
                     innerException),
 
-                new ConsumerServiceValidationException(
-                    message: "Consumer dependency validation occurred, please try again.",
+                new JsonElementServiceDependencyValidationException(
+                    message: "Json element service dependancy validation error occurred, please contact support.",
                     innerException),
-
-
-
             };
         }
 
@@ -91,12 +90,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             return new TheoryData<Xeption>
             {
-                new ConsumerServiceDependencyException(
-                    message: "Consumer dependency error occurred, please contact support.",
+                new JsonElementServiceDependencyException(
+                    message: "Json element service dependency error occurred, please try again",
                     innerException),
 
-                new ConsumerServiceException(
-                    message: "Consumer service error occurred, please contact support.",
+                new JsonElementServiceException(
+                    message: "Json element service error occurred, please try again.",
                     innerException),
             };
         }
