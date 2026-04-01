@@ -25,14 +25,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             invalidJsonIgnoreProcessingException.AddData(
                 key: "element",
-                values: "Json element is invalid.");
+                values: "Json element is undefined.");
 
             var expectedArrayOrderIgnoreProcessingValidationException =
                 new ArrayOrderIgnoreProcessingValidationException(
                     message:
                         "Array order ignore processing validation error occurred, " +
                         "please fix errors and try again.",
-                        
+
                     innerException: invalidJsonIgnoreProcessingException);
 
             // when

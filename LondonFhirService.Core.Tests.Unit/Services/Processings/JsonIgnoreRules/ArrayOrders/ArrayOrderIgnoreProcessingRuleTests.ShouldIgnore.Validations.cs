@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             invalidJsonIgnoreProcessingException.AddData(
                 key: "element",
-                values: "Json element is invalid.");
+                values: "Json element is undefined.");
 
             invalidJsonIgnoreProcessingException.UpsertDataList(
                 key: "path",

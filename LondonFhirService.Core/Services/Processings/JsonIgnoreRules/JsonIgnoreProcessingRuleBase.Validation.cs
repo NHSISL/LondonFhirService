@@ -39,7 +39,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         private static dynamic IsInvalid(JsonElement element) => new
         {
             Condition = element.ValueKind == JsonValueKind.Undefined,
-            Message = "Json element is invalid."
+            Message = "Json element is undefined."
         };
 
         private static void Validate<T>(
