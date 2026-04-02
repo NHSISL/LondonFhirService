@@ -5,7 +5,7 @@
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
+namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules.Jsons
 {
     public interface IJsonIgnoreProcessingRule
     {

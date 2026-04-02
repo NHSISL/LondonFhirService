@@ -8,12 +8,13 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
+using LondonFhirService.Core.Services.Processings.JsonIgnoreRules.Jsons;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
     public partial class ArrayOrderIgnoreProcessingRule : JsonIgnoreProcessingRuleBase, IJsonIgnoreProcessingRule
     {
-        public ArrayOrderIgnoreProcessingRule(JsonElementService jsonElementService, LoggingBroker loggingBroker)
+        public ArrayOrderIgnoreProcessingRule(IJsonElementService jsonElementService, ILoggingBroker loggingBroker)
             : base(jsonElementService, loggingBroker)
         { }
 
