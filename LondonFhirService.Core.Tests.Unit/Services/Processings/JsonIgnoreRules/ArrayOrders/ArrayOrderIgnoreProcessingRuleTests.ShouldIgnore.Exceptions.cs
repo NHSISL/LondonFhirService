@@ -33,12 +33,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     message: "Array order ignore processing service error occurred, contact support.",
                     innerException: failedArrayOrderIgnoreProcessingException);
 
-            var arrayOrderMatcherServiceMock = new Mock<ArrayOrderIgnoreProcessingRule>(
+            var arrayOrderIgnoreProcessingRuleMock = new Mock<ArrayOrderIgnoreProcessingRule>(
                 jsonElementServiceMock.Object,
                 loggingBrokerMock.Object)
             { CallBase = true };
 
-            arrayOrderMatcherServiceMock.Setup(service =>
+            arrayOrderIgnoreProcessingRuleMock.Setup(service =>
                 service.ValidateOnShouldIgnore(
                     randomElement,
                     randomPath))
@@ -46,7 +46,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             // when
             ValueTask<bool> shouldIgnoreTask =
-                arrayOrderMatcherServiceMock.Object.ShouldIgnoreAsync(
+                arrayOrderIgnoreProcessingRuleMock.Object.ShouldIgnoreAsync(
                     randomElement,
                     randomPath);
 
@@ -58,13 +58,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             actualArrayOrderIgnoreProcessingServiceException.Should()
                 .BeEquivalentTo(expectedArrayOrderIgnoreProcessingServiceException);
 
-            arrayOrderMatcherServiceMock.Verify(service =>
+            arrayOrderIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnShouldIgnore(
                     randomElement,
                     randomPath),
                         Times.Once);
 
-            arrayOrderMatcherServiceMock.Verify(service =>
+            arrayOrderIgnoreProcessingRuleMock.Verify(service =>
                 service.ShouldIgnoreAsync(
                     randomElement,
                     randomPath),
@@ -76,7 +76,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            arrayOrderMatcherServiceMock.VerifyNoOtherCalls();
+            arrayOrderIgnoreProcessingRuleMock.VerifyNoOtherCalls();
             jsonElementServiceMock.VerifyNoOtherCalls();
         }
     }
