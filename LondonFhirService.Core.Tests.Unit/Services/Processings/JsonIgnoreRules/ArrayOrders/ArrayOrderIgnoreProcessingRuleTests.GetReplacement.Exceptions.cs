@@ -97,7 +97,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             ValueTask<JsonElement> getReplacementTask =
                 arrayOrderIgnoreProcessingRuleMock.Object.GetReplacementAsync(randomElement);
 
-            ArrayOrderIgnoreProcessingDependencyValidationException 
+            ArrayOrderIgnoreProcessingDependencyValidationException
                 actualArrayOrderIgnoreProcessingDependencyValidationException =
                     await Assert.ThrowsAsync<ArrayOrderIgnoreProcessingDependencyValidationException>(
                         testCode: getReplacementTask.AsTask);
