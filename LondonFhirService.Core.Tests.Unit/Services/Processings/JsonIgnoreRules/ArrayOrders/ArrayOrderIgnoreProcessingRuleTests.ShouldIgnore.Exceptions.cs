@@ -15,7 +15,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
     public partial class ArrayOrderIgnoreProcessingRuleTests
     {
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnShouldIgnoreIfResourceIsInvalidAsync()
+        public async Task ShouldThrowServiceExceptionOnShouldIgnoreIfServiceFailureOccursAsync()
         {
             // given
             JsonElement randomElement = new();

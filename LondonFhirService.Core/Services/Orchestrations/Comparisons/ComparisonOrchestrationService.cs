@@ -44,10 +44,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
             string source2Json)
         {
             var diffs = new List<DiffItem>();
-
             using JsonDocument source1Doc = JsonDocument.Parse(source1Json);
             using JsonDocument source2Doc = JsonDocument.Parse(source2Json);
-
             JsonElement source1Bundle = source1Doc.RootElement;
             JsonElement source2Bundle = source2Doc.RootElement;
 

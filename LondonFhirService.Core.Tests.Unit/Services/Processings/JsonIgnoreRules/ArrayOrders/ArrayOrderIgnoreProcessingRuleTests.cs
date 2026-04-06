@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     innerException),
 
                 new JsonElementServiceDependencyValidationException(
-                    message: "Json element service dependancy validation error occurred, please contact support.",
+                    message: "Json element service dependency validation error occurred, please contact support.",
                     innerException),
             };
         }

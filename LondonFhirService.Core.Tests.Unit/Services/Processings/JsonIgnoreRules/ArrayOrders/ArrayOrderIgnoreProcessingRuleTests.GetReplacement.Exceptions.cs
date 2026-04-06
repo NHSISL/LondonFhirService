@@ -97,9 +97,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             ValueTask<JsonElement> getReplacementTask =
                 arrayOrderIgnoreProcessingRuleMock.Object.GetReplacementAsync(randomElement);
 
-            ArrayOrderIgnoreProcessingDependencyValidationException actualArrayOrderIgnoreProcessingDependencyValidationException =
-                await Assert.ThrowsAsync<ArrayOrderIgnoreProcessingDependencyValidationException>(
-                    testCode: getReplacementTask.AsTask);
+            ArrayOrderIgnoreProcessingDependencyValidationException 
+                actualArrayOrderIgnoreProcessingDependencyValidationException =
+                    await Assert.ThrowsAsync<ArrayOrderIgnoreProcessingDependencyValidationException>(
+                        testCode: getReplacementTask.AsTask);
 
             // then
             actualArrayOrderIgnoreProcessingDependencyValidationException
@@ -130,7 +131,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
         {
             // given
             JsonElement randomElement = new();
-            string randomPath = GetRandomString();
             var serviceException = new Exception();
 
             var failedArrayOrderIgnoreProcessingException =

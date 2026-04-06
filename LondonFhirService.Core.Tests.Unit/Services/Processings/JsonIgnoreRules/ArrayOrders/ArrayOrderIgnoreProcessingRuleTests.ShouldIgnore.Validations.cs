@@ -17,7 +17,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task ShouldThrowValidationExceptionOnShouldIgonoreIfResourceIsInvalidAsync(string invalidText)
+        public async Task ShouldThrowValidationExceptionOnShouldIgnoreIfResourceIsInvalidAsync(string invalidText)
         {
             // given
             JsonElement invalidElement = default;
@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             invalidJsonIgnoreProcessingException.AddData(
                 key: "element",
-                values: "Json element is invalid.");
+                values: "Json element is undefined.");
 
             invalidJsonIgnoreProcessingException.UpsertDataList(
                 key: "path",
