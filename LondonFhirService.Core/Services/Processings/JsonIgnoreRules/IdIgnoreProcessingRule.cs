@@ -12,7 +12,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
     public partial class IdIgnoreProcessingRule : JsonIgnoreProcessingRuleBase, IJsonIgnoreProcessingRule
     {
-        public IdIgnoreProcessingRule(JsonElementService jsonElementService, LoggingBroker loggingBroker)
+        public IdIgnoreProcessingRule(IJsonElementService jsonElementService, ILoggingBroker loggingBroker)
             : base(jsonElementService, loggingBroker)
         { }
 
