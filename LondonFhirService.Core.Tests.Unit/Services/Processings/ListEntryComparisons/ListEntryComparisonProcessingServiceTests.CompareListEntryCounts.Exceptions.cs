@@ -15,7 +15,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
     public partial class ArrayOrderIgnoreProcessingRuleTests
     {
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnShouldIgnoreIfServiceFailureOccursAsync()
+        public async Task ShouldThrowServiceExceptionOnCompareListEntryIfServiceFailureOccursAsync()
         {
             // given
             JsonElement randomElement = new();

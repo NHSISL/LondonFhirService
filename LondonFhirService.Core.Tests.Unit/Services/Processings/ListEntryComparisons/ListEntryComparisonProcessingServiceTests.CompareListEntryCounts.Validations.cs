@@ -11,24 +11,25 @@ using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryComparisons
 {
-    public partial class ArrayOrderIgnoreProcessingRuleTests
+    public partial class ListEntryComparisonProcessingServiceTests
     {
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData(" ")]
-        public async Task ShouldThrowValidationExceptionOnShouldIgnoreIfResourceIsInvalidAsync(string invalidText)
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnCompareListEntryCountsIfResourceIsInvalidAsync()
         {
             // given
-            JsonElement invalidElement = default;
-            string invalidPath = invalidText;
+            JsonElement invalidSource1List = default;
+            JsonElement invalidSource2List = default;
 
             var invalidJsonIgnoreProcessingException =
                 new InvalidJsonIgnoreProcessingException(
                     message: "Invalid arguments. Please correct the errors and try again.");
 
             invalidJsonIgnoreProcessingException.AddData(
-                key: "element",
+                key: "source1List",
+                values: "Json element is undefined.");
+
+            invalidJsonIgnoreProcessingException.AddData(
+                key: "source2List",
                 values: "Json element is undefined.");
 
             invalidJsonIgnoreProcessingException.UpsertDataList(
@@ -44,7 +45,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
 
             // when
             ValueTask<bool> shouldIgnoreTask =
-                this.arrayOrderIgnoreProcessingRule.ShouldIgnoreAsync(
+                this.listEntryComparisonProcessingService.CompareListEntryCounts(
                     invalidElement,
                     invalidPath);
 
