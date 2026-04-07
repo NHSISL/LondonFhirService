@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var metaIgnoreProcessingDependencyValidationException =
                 new MetaIgnoreProcessingDependencyValidationException(
-                    message: "Meta ignore processing dependency validation occurred, please try again.",
+                    message: "Meta ignore processing dependency validation error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingDependencyValidationException);
