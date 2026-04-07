@@ -32,6 +32,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     jsonElementService: this.jsonElementServiceMock.Object,
                     loggingBroker: this.loggingBrokerMock.Object);
         }
+
         private static string GetRandomString() =>
             new MnemonicString().GetValue();
 
@@ -53,6 +54,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                 string leafJson = $"[{string.Join(
                     ",",
                     Enumerable.Range(0, count).Select(_ => GetRandomNumber()))}]";
+                    
                 return ParseJsonElement(leafJson);
             }
 
