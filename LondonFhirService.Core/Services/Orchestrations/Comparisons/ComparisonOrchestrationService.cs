@@ -12,7 +12,7 @@ using LondonFhirService.Core.Models.Orchestrations.Comparisons;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
-using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
+using LondonFhirService.Core.Services.Processings.JsonIgnoreRules.Jsons;
 using LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Services.Processings.ResourceMatchings;
 
@@ -44,10 +44,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
             string source2Json)
         {
             var diffs = new List<DiffItem>();
-
             using JsonDocument source1Doc = JsonDocument.Parse(source1Json);
             using JsonDocument source2Doc = JsonDocument.Parse(source2Json);
-
             JsonElement source1Bundle = source1Doc.RootElement;
             JsonElement source2Bundle = source2Doc.RootElement;
 
