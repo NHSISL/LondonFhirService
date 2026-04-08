@@ -11,7 +11,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
     public abstract partial class JsonIgnoreProcessingRuleBase
     {
-        virtual internal void ValidateOnShouldIgnore(JsonElement element, string path)
+        protected internal virtual void ValidateOnShouldIgnore(JsonElement element, string path)
         {
             Validate(
                 createException: () => new InvalidJsonIgnoreProcessingException(
@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
                 (Rule: IsInvalid(element), Parameter: nameof(element)));
         }
 
-        virtual internal void ValidateOnGetReplacement(JsonElement element)
+        protected internal virtual void ValidateOnGetReplacement(JsonElement element)
         {
             Validate(
                 createException: () => new InvalidJsonIgnoreProcessingException(
@@ -33,13 +33,13 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         private static dynamic IsInvalid(string value) => new
         {
             Condition = String.IsNullOrWhiteSpace(value),
-            Message = "Text is invalid"
+            Message = "Text is invalid."
         };
 
         private static dynamic IsInvalid(JsonElement element) => new
         {
             Condition = element.ValueKind == JsonValueKind.Undefined,
-            Message = "Json element is undefined"
+            Message = "Json element is undefined."
         };
 
         private static void Validate<T>(
