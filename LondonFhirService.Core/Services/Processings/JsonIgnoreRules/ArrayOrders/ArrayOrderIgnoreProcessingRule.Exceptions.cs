@@ -5,13 +5,13 @@
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.GuidIgnoreRules.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
-    public partial class GuidIgnoreProcessingRule
+    public partial class ArrayOrderIgnoreProcessingRule
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 
@@ -47,24 +47,24 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             }
             catch (Exception exception)
             {
-                var failedGuidIgnoreProcessingException =
-                    new FailedGuidIgnoreProcessingException(
+                var failedArrayOrderIgnoreProcessingException =
+                    new FailedArrayOrderIgnoreProcessingException(
                         message:
-                            "Failed guid ignore processing exception occurred, please contact support",
+                            "Failed array order ignore processing exception occurred, please contact support",
 
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateAndLogServiceExceptionAsync(failedGuidIgnoreProcessingException);
+                throw await CreateAndLogServiceExceptionAsync(failedArrayOrderIgnoreProcessingException);
             }
         }
 
-        private async ValueTask<GuidIgnoreProcessingValidationException> CreateAndLogValidationExceptionAsync(
+        private async ValueTask<ArrayOrderIgnoreProcessingValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
             var arrayOrderIgnoreProcessingValidationException =
-                new GuidIgnoreProcessingValidationException(
-                    message: "Guid ignore processing validation error occurred, please fix errors and try again.",
+                new ArrayOrderIgnoreProcessingValidationException(
+                    message: "Array order ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingValidationException);
@@ -72,24 +72,25 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             return arrayOrderIgnoreProcessingValidationException;
         }
 
-        private async ValueTask<GuidIgnoreProcessingDependencyValidationException>
+        private async ValueTask<ArrayOrderIgnoreProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
             var arrayOrderIgnoreProcessingDependencyValidationException =
-                new GuidIgnoreProcessingDependencyValidationException(
-                    message: "Guid ignore processing dependency validation error occurred, contact support.",
+                new ArrayOrderIgnoreProcessingDependencyValidationException(
+                    message: "Array order ignore processing dependency validation error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
+ 
             return arrayOrderIgnoreProcessingDependencyValidationException;
         }
 
-        private async ValueTask<GuidIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
+        private async ValueTask<ArrayOrderIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
             var arrayOrderIgnoreProcessingDependencyException =
-                new GuidIgnoreProcessingDependencyException(
-                    message: "Guid ignore processing dependency error occurred, contact support.",
+                new ArrayOrderIgnoreProcessingDependencyException(
+                    message: "Array order ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyException);
@@ -97,12 +98,12 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             return arrayOrderIgnoreProcessingDependencyException;
         }
 
-        private async ValueTask<GuidIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
+        private async ValueTask<ArrayOrderIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
             var odsDataServiceException =
-                new GuidIgnoreProcessingServiceException(
-                    message: "Guid ignore processing service error occurred, contact support.",
+                new ArrayOrderIgnoreProcessingServiceException(
+                    message: "Array order ignore processing service error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(odsDataServiceException);

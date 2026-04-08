@@ -2,17 +2,18 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System.Linq;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
+using LondonFhirService.Core.Services.Processings.JsonIgnoreRules.Jsons;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
-    public partial class GuidIgnoreProcessingRule : JsonIgnoreProcessingRuleBase, IJsonIgnoreProcessingRule
+    public partial class MetaIgnoreProcessingRule : JsonIgnoreProcessingRuleBase, IJsonIgnoreProcessingRule
     {
-        public GuidIgnoreProcessingRule(IJsonElementService jsonElementService, ILoggingBroker loggingBroker)
+        public MetaIgnoreProcessingRule(JsonElementService jsonElementService, LoggingBroker loggingBroker)
             : base(jsonElementService, loggingBroker)
         { }
 
@@ -20,13 +21,10 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         TryCatch(async () =>
         {
             ValidateOnShouldIgnore(element, path);
+            var pathParts = path.Split('.');
+            var lastPart = pathParts.LastOrDefault();
 
-            if (element.ValueKind != JsonValueKind.String)
-                return false;
-
-            var value = element.GetString();
-
-            return !string.IsNullOrEmpty(value) && GuidPattern.IsMatch(value);
+            return lastPart == "meta" || path.EndsWith(".meta");
         });
 
         public override ValueTask<JsonElement> GetReplacementAsync(JsonElement element) =>
@@ -34,11 +32,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             ValidateOnGetReplacement(element);
 
-            return await jsonElementService.CreateStringElement("<GUID>");
+            return await jsonElementService.CreateStringElement("<meta-ignored>");
         });
-
-        private static readonly Regex GuidPattern = new(
-            @"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
-            RegexOptions.Compiled);
     }
 }
