@@ -5,12 +5,9 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net.NetworkInformation;
 using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
 using LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
 using Moq;
