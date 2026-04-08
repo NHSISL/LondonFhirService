@@ -51,6 +51,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             if (depth <= 1)
             {
                 string leafJson = $"[{string.Join(",", Enumerable.Range(0, count).Select(_ => GetRandomNumber()))}]";
+                
                 return ParseJsonElement(leafJson);
             }
 
