@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 
@@ -12,7 +13,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
     public partial class ListEntryComparisonProcessingServiceTests
     {
         [Fact]
-        public void ShouldReturnEmptyDiffsOnCompareListEntryCountsWhenCountsMatch()
+        public async Task ShouldReturnEmptyDiffsOnCompareListEntryCountsWhenCountsMatchAsync()
         {
             // given
             int randomEntryCount = GetRandomNumber();
@@ -23,7 +24,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
 
             // when
             List<DiffItem> actualDiffs =
-                this.listEntryComparisonProcessingService.CompareListEntryCounts(
+                await this.listEntryComparisonProcessingService.CompareListEntryCountsAsync(
                     source1List,
                     source2List,
                     randomListTitle);
@@ -34,7 +35,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
         }
 
         [Fact]
-        public void ShouldReturnDiffItemOnCompareListEntryCountsWhenCountsDoNotMatch()
+        public async Task ShouldReturnDiffItemOnCompareListEntryCountsWhenCountsDoNotMatchAsync()
         {
             // given
             int source1EntryCount = GetRandomNumber();
@@ -61,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
 
             // when
             List<DiffItem> actualDiffs =
-                this.listEntryComparisonProcessingService.CompareListEntryCounts(
+                await this.listEntryComparisonProcessingService.CompareListEntryCountsAsync(
                     source1List,
                     source2List,
                     randomListTitle);

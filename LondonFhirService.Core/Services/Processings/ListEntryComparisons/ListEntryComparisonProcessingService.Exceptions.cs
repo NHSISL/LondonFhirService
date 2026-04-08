@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons.Exceptions;
 using Xeptions;
 
@@ -10,17 +11,17 @@ namespace LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 
 public partial class ListEntryComparisonProcessingService
 {
-    private delegate T ReturningFunction<T>();
+    private delegate ValueTask<T> ReturningFunction<T>();
 
-    private T TryCatch<T>(ReturningFunction<T> returningFunction)
+    private async ValueTask<T> TryCatch<T>(ReturningFunction<T> returningFunction)
     {
         try
         {
-            return returningFunction();
+            return await returningFunction();
         }
         catch (InvalidListEntryComparisonProcessingException invalidListEntryComparisonProcessingException)
         {
-            throw CreateAndLogValidationException(invalidListEntryComparisonProcessingException);
+            throw await CreateAndLogValidationExceptionAsync(invalidListEntryComparisonProcessingException);
         }
         catch (Exception exception)
         {
@@ -30,12 +31,12 @@ public partial class ListEntryComparisonProcessingService
                     innerException: exception,
                     data: exception.Data);
 
-            throw CreateAndLogServiceException(failedListEntryComparisonProcessingException);
+            throw await CreateAndLogServiceExceptionAsync(failedListEntryComparisonProcessingException);
         }
     }
 
-    private ListEntryComparisonProcessingValidationException CreateAndLogValidationException(
-        Xeption exception)
+    private async ValueTask<ListEntryComparisonProcessingValidationException>
+        CreateAndLogValidationExceptionAsync(Xeption exception)
     {
         var listEntryComparisonProcessingValidationException =
             new ListEntryComparisonProcessingValidationException(
@@ -44,22 +45,20 @@ public partial class ListEntryComparisonProcessingService
                     "please fix errors and try again.",
                 innerException: exception);
 
-        this.loggingBroker.LogErrorAsync(listEntryComparisonProcessingValidationException)
-            .GetAwaiter().GetResult();
+        await this.loggingBroker.LogErrorAsync(listEntryComparisonProcessingValidationException);
 
         return listEntryComparisonProcessingValidationException;
     }
 
-    private ListEntryComparisonProcessingServiceException CreateAndLogServiceException(
-        Xeption exception)
+    private async ValueTask<ListEntryComparisonProcessingServiceException>
+        CreateAndLogServiceExceptionAsync(Xeption exception)
     {
         var listEntryComparisonProcessingServiceException =
             new ListEntryComparisonProcessingServiceException(
                 message: "List entry comparison processing service error occurred, contact support.",
                 innerException: exception);
 
-        this.loggingBroker.LogErrorAsync(listEntryComparisonProcessingServiceException)
-            .GetAwaiter().GetResult();
+        await this.loggingBroker.LogErrorAsync(listEntryComparisonProcessingServiceException);
 
         return listEntryComparisonProcessingServiceException;
     }

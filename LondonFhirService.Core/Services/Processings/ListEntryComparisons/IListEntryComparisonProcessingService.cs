@@ -4,15 +4,15 @@
 
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 
 namespace LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 
 public interface IListEntryComparisonProcessingService
 {
-    List<DiffItem> CompareListEntryCounts(
-      JsonElement source1List,
-      JsonElement source2List,
-      string listTitle
-    );
+    ValueTask<List<DiffItem>> CompareListEntryCountsAsync(
+        JsonElement source1List,
+        JsonElement source2List,
+        string listTitle);
 }

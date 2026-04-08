@@ -2,9 +2,11 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
+using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons.Exceptions;
 using Moq;
 
@@ -16,7 +18,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void ShouldThrowValidationExceptionOnCompareListEntryCountsIfArgumentsAreInvalid(
+        public async Task ShouldThrowValidationExceptionOnCompareListEntryCountsIfArgumentsAreInvalidAsync(
             string invalidListTitle)
         {
             // given
@@ -31,11 +33,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
 
             invalidListEntryComparisonProcessingException.AddData(
                 key: "source1List",
-                values: "Json element is undefined.");
+                values: "Json element must be a non-null JSON object.");
 
             invalidListEntryComparisonProcessingException.AddData(
                 key: "source2List",
-                values: "Json element is undefined.");
+                values: "Json element must be a non-null JSON object.");
 
             invalidListEntryComparisonProcessingException.AddData(
                 key: "listTitle",
@@ -49,15 +51,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
                     innerException: invalidListEntryComparisonProcessingException);
 
             // when
-            Action compareAction = () =>
-                this.listEntryComparisonProcessingService.CompareListEntryCounts(
+            ValueTask<List<DiffItem>> compareTask =
+                this.listEntryComparisonProcessingService.CompareListEntryCountsAsync(
                     invalidSource1List,
                     invalidSource2List,
                     invalidListTitle);
 
             // then
             ListEntryComparisonProcessingValidationException actualException =
-                Assert.Throws<ListEntryComparisonProcessingValidationException>(compareAction);
+                await Assert.ThrowsAsync<ListEntryComparisonProcessingValidationException>(compareTask.AsTask);
 
             actualException.Should()
                 .BeEquivalentTo(expectedListEntryComparisonProcessingValidationException);

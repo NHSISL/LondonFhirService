@@ -35,8 +35,8 @@ public partial class ListEntryComparisonProcessingService
 
     private static dynamic IsInvalid(JsonElement element) => new
     {
-        Condition = element.ValueKind == JsonValueKind.Undefined,
-        Message = "Json element is undefined."
+        Condition = element.ValueKind != JsonValueKind.Object,
+        Message = "Json element must be a non-null JSON object."
     };
 
     private static void Validate<T>(

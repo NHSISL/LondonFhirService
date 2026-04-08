@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons.Exceptions;
@@ -16,7 +17,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
     public partial class ListEntryComparisonProcessingServiceTests
     {
         [Fact]
-        public void ShouldThrowServiceExceptionOnCompareListEntryCountsIfServiceFailureOccurs()
+        public async Task ShouldThrowServiceExceptionOnCompareListEntryCountsIfServiceFailureOccursAsync()
         {
             // given
             JsonElement randomSource1List = new();
@@ -37,7 +38,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
 
             var listEntryComparisonProcessingServiceMock =
                 new Mock<ListEntryComparisonProcessingService>(loggingBrokerMock.Object)
-            { CallBase = true };
+                { CallBase = true };
 
             listEntryComparisonProcessingServiceMock.Setup(service =>
                 service.ValidateOnCompareListEntryCounts(
@@ -47,15 +48,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
                         .Throws(serviceException);
 
             // when
-            Action compareAction = () =>
-                listEntryComparisonProcessingServiceMock.Object.CompareListEntryCounts(
+            ValueTask<List<DiffItem>> compareTask =
+                listEntryComparisonProcessingServiceMock.Object.CompareListEntryCountsAsync(
                     randomSource1List,
                     randomSource2List,
                     randomListTitle);
 
             // then
             ListEntryComparisonProcessingServiceException actualException =
-                Assert.Throws<ListEntryComparisonProcessingServiceException>(compareAction);
+                await Assert.ThrowsAsync<ListEntryComparisonProcessingServiceException>(compareTask.AsTask);
 
             actualException.Should()
                 .BeEquivalentTo(expectedListEntryComparisonProcessingServiceException);

@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 
@@ -16,11 +17,11 @@ public partial class ListEntryComparisonProcessingService : IListEntryComparison
     public ListEntryComparisonProcessingService(ILoggingBroker loggingBroker) =>
         this.loggingBroker = loggingBroker;
 
-    public List<DiffItem> CompareListEntryCounts(
+    public async ValueTask<List<DiffItem>> CompareListEntryCountsAsync(
         JsonElement source1List,
         JsonElement source2List,
         string listTitle) =>
-    TryCatch(() =>
+    await TryCatch(async () =>
     {
         ValidateOnCompareListEntryCounts(source1List, source2List, listTitle);
         var diffs = new List<DiffItem>();
