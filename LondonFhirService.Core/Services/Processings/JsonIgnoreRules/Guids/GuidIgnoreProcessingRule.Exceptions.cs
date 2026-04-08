@@ -77,7 +77,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         {
             var arrayOrderIgnoreProcessingDependencyValidationException =
                 new GuidIgnoreProcessingDependencyValidationException(
-                    message: "Guid ignore processing dependency validation occurred, please try again.",
+                    message: "Guid ignore processing dependency validation error occurred, contact support.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
