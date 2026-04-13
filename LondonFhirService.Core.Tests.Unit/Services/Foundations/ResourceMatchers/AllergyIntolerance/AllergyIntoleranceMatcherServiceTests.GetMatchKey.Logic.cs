@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances
 {
@@ -17,7 +16,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         {
             // given
             string randomSnomedCode = GetRandomSnomedCode();
-            string randomOnsetDateTime = GetRandomDateString();
+            string randomOnsetDateTime = GetRandomDateTimeOffset().ToString();
             string expectedMatchKey = $"{randomSnomedCode}|{randomOnsetDateTime}";
             JsonElement randomResource = CreateAllergyIntoleranceResource(randomSnomedCode, randomOnsetDateTime);
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
@@ -37,7 +36,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldReturnNullKeyWhenResourceHasNoSnomedCodingAsync()
         {
             // given
-            string randomOnsetDateTime = GetRandomDateString();
+            string randomOnsetDateTime = GetRandomDateTimeOffset().ToString();
             JsonElement resource = CreateNonSnomedAllergyIntoleranceResource(randomOnsetDateTime);
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
 

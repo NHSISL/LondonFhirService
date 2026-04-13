@@ -3,11 +3,11 @@
 // ---------------------------------------------------------
 
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
-using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances
 {
@@ -18,14 +18,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         {
             // given
             string randomSnomedCode = GetRandomSnomedCode();
-            string randomOnsetDateTime = GetRandomDateString();
+            string randomOnsetDateTime = GetRandomDateTimeOffset().ToString();
             string expectedMatchKey = $"{randomSnomedCode}|{randomOnsetDateTime}";
 
             JsonElement source1Resource =
-                CreateAllergyIntoleranceResource(randomSnomedCode, randomOnsetDateTime, id: "allergy-1");
+                CreateAllergyIntoleranceResource(randomSnomedCode, randomOnsetDateTime);
 
             JsonElement source2Resource =
-                CreateAllergyIntoleranceResource(randomSnomedCode, randomOnsetDateTime, id: "allergy-2");
+                CreateAllergyIntoleranceResource(randomSnomedCode, randomOnsetDateTime);
 
             var source1Resources = new List<JsonElement> { source1Resource };
             var source2Resources = new List<JsonElement> { source2Resource };
@@ -54,7 +54,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         {
             // given
             string randomSnomedCode = GetRandomSnomedCode();
-            string randomOnsetDateTime = GetRandomDateString();
+            string randomOnsetDateTime = GetRandomDateTimeOffset().ToString();
             string expectedMatchKey = $"{randomSnomedCode}|{randomOnsetDateTime}";
             JsonElement source1Resource = CreateAllergyIntoleranceResource(randomSnomedCode, randomOnsetDateTime);
             var source1Resources = new List<JsonElement> { source1Resource };
@@ -84,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         {
             // given
             string randomSnomedCode = GetRandomSnomedCode();
-            string randomOnsetDateTime = GetRandomDateString();
+            string randomOnsetDateTime = GetRandomDateTimeOffset().ToString();
             string expectedMatchKey = $"{randomSnomedCode}|{randomOnsetDateTime}";
             JsonElement source2Resource = CreateAllergyIntoleranceResource(randomSnomedCode, randomOnsetDateTime);
             var source1Resources = new List<JsonElement>();
@@ -136,8 +136,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldSkipResourcesWithNoMatchKeyWhenMatchingAsync()
         {
             // given
-            string randomOnsetDateTime = GetRandomDateString();
             string randomSnomedCode = GetRandomSnomedCode();
+            string randomOnsetDateTime = GetRandomDateTimeOffset().ToString();
 
             JsonElement nonSnomedResource =
                 CreateNonSnomedAllergyIntoleranceResource(randomOnsetDateTime);

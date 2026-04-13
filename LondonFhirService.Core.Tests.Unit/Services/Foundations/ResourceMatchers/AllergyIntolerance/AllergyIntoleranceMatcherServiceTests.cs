@@ -35,35 +35,46 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
       private static Dictionary<string, JsonElement> CreateResourceIndex() =>
           new();
 
-      private static string GetRandomSnomedCode() =>
+    private static string GetRandomString() =>
+        new MnemonicString(wordCount: GetRandomNumber()).GetValue();
+
+        private static string GetRandomSnomedCode() =>
           new IntRange(min: 1000000, max: 9999999).GetValue().ToString();
 
-      private static string GetRandomDateString() =>
-          new DateTimeRange(earliestDate: new DateTime(2000, 1, 1)).GetValue().ToString("yyyy-MM-dd");
+        private static int GetRandomNumber() =>
+              new IntRange(min: 2, max: 10).GetValue();
 
-      private static JsonElement CreateAllergyIntoleranceResource(
+        private static int GetRandomNegativeNumber() =>
+            -1 * new IntRange(min: 2, max: 10).GetValue();
+
+        private static DateTimeOffset GetRandomDateTimeOffset() =>
+            new DateTimeRange(earliestDate: new DateTime()).GetValue();
+
+        private static JsonElement CreateAllergyIntoleranceResource(
           string snomedCode,
-          string onsetDateTime,
-          string id = "allergy-1")
-      {
-          string json = $$"""
-          {
-            "resourceType": "AllergyIntolerance",
-            "id": "{{id}}",
-            "code": {
-              "coding": [
-                {
-                  "system": "http://snomed.info/sct",
-                  "code": "{{snomedCode}}"
-                }
-              ]
-            },
-            "onsetDateTime": "{{onsetDateTime}}"
-          }
-          """;
+          string onsetDateTime)
+        {
+            string id = GetRandomString();
 
-          return ParseJsonElement(json);
-      }
+            string json = $$"""
+                {
+                    "resourceType": "AllergyIntolerance",
+                    "id": "{{id}}",
+                    "code": {
+                        "coding": [
+                            {
+                                "system": "http://snomed.info/sct",
+                                "code": "{{snomedCode}}"
+                            }
+                        ]
+                    },
+                    "onsetDateTime": "{{onsetDateTime}}"
+                }
+            """;
+
+            return ParseJsonElement(json);
+        }
+      
 
       private static JsonElement CreateNonSnomedAllergyIntoleranceResource(string onsetDateTime)
       {
