@@ -48,7 +48,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ListEntryCompar
             return ParseJsonElement(json);
         }
 
-        private static JsonElement ParseJsonElement(string json) =>
-            JsonDocument.Parse(json).RootElement.Clone();
+        private static JsonElement ParseJsonElement(string json)
+        {
+            using var document = JsonDocument.Parse(json);
+
+            return document.RootElement.Clone();
+        }
     }
 }
