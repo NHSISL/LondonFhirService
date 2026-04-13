@@ -9,6 +9,7 @@ using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
 using Moq;
+using Tynamix.ObjectFiller;
 using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances
@@ -33,6 +34,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
       private static Dictionary<string, JsonElement> CreateResourceIndex() =>
           new();
+
+      private static string GetRandomSnomedCode() =>
+          new IntRange(min: 1000000, max: 9999999).GetValue().ToString();
+
+      private static string GetRandomDateString() =>
+          new DateTimeRange(earliestDate: new DateTime(2000, 1, 1)).GetValue().ToString("yyyy-MM-dd");
 
       private static JsonElement CreateAllergyIntoleranceResource(
           string snomedCode,
