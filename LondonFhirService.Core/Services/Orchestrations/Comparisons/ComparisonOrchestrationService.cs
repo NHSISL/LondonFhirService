@@ -154,7 +154,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                         resourceId is not null)
                     {
                         IEnumerable<DiffItem> listEntryDiffs =
-                            listEntryComparisonProcessingService.CompareListEntryCounts(
+                            await listEntryComparisonProcessingService.CompareListEntryCountsAsync(
                                 match.Source1,
                                 match.Source2,
                                 resourceId);
