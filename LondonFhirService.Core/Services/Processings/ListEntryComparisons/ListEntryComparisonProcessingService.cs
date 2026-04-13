@@ -17,11 +17,11 @@ public partial class ListEntryComparisonProcessingService : IListEntryComparison
     public ListEntryComparisonProcessingService(ILoggingBroker loggingBroker) =>
         this.loggingBroker = loggingBroker;
 
-    public async ValueTask<List<DiffItem>> CompareListEntryCountsAsync(
+    public ValueTask<List<DiffItem>> CompareListEntryCountsAsync(
         JsonElement source1List,
         JsonElement source2List,
         string listTitle) =>
-    await TryCatch(async () =>
+    TryCatch(async () =>
     {
         ValidateOnCompareListEntryCounts(source1List, source2List, listTitle);
         var diffs = new List<DiffItem>();
