@@ -42,10 +42,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           new IntRange(min: 1000000, max: 9999999).GetValue().ToString();
 
         private static int GetRandomNumber() =>
-              new IntRange(min: 2, max: 10).GetValue();
-
-        private static int GetRandomNegativeNumber() =>
-            -1 * new IntRange(min: 2, max: 10).GetValue();
+          new IntRange(min: 2, max: 10).GetValue();
 
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: new DateTime()).GetValue();
