@@ -38,7 +38,7 @@
 **test-031** [ERROR] Always end with `VerifyNoOtherCalls()` on all mocks.
 **test-032** [ERROR] Always verify the logging broker received the expected error.
 **test-033** [ERROR] Keep validation and exception behaviors local and explicit — no shared helpers.
-**test-034** [ERROR] Use deep cloning (DeepCloner) to prevent shared state between input, expected, and actual objects.
+**test-034** [ERROR] Use deep cloning (DeepCloner) at the point where state must be isolated from further mutation. Applied to the final assertion target; not every intermediate alias requires a clone.
 **test-035** [ERROR] Use randomized data (Tynamix.ObjectFiller) — never use hard-coded test values.
 **test-036** [ERROR] Use `Xeption.SameExceptionAs()` for exception equality comparison.
 **test-037** [ERROR] Foundation services are the primary validation boundary and must enforce all deterministic validations.
@@ -112,6 +112,8 @@
 **test-102** [ERROR] Use FluentAssertions for readable assertions (`Should().BeEquivalentTo()`).
 **test-103** [ERROR] Use xUnit: `[Fact]` for single cases, `[Theory] [InlineData]` for parameterized cases.
 **test-104** [ERROR] Test method names: `Should{Action}Async` for success cases; `ShouldThrow{Exception}On{Action}If{Condition}AndLogItAsync` for error cases.
+**test-105** [ERROR] Test data variables MUST use a `random` prefix for randomized sources and MUST be aliased to intent-revealing names that describe their role at each stage of the flow. DeepClone MUST be applied at the point where state isolation is required — typically the final assertion target. Mock setup and broker verification MUST reference the exact named variable at each step.
+**test-106** [ERROR] `It.IsAny<T>()` MUST NOT appear in Logic or Validations test files. It is only permitted in Exceptions test files where exception behavior — not input correctness — is under test.
 
 ## EXACT IMPLEMENTATION ORDER (Foundation Service Add)
 
