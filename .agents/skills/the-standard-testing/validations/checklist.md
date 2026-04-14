@@ -30,8 +30,8 @@ Each item is binary: PASS or FAIL.
 - [ ] **test-030** Exact broker calls are verified (`Times.Once` / `Times.Never`).
 - [ ] **test-031** Every test ends with `VerifyNoOtherCalls()` on all mocks.
 - [ ] **test-032** Logging broker verification is present for all error cases.
-- [ ] **test-034** Deep cloning is used to isolate input/expected/actual objects.
-- [ ] **test-035** All test data is randomized via ObjectFiller — no hard-coded values.
+- [ ] **test-034** Deep cloning is applied at the point where state must be isolated — typically the final assertion target. Not every intermediate alias requires a clone.
+- [ ] **test-035** All test data is randomized via ObjectFiller — no hard-coded values. Randomized value is assigned to `random[Entity]` first.
 - [ ] **test-036** Exception equality uses `Xeption.SameExceptionAs()`.
 
 ---
@@ -61,6 +61,8 @@ Each item is binary: PASS or FAIL.
 - [ ] **test-102** Assertions use FluentAssertions (`Should().BeEquivalentTo()`).
 - [ ] **test-103** Single-case tests use `[Fact]`; parameterized tests use `[Theory][InlineData]`.
 - [ ] **test-104** Test names follow `Should{Action}Async` or `ShouldThrow{Exception}On{Action}If{Condition}AndLogItAsync`.
+- [ ] **test-105** Test data uses `random`-prefixed source variables, aliases to intent-revealing names at each stage, applies DeepClone where state isolation is needed, and references exact named variables in mock setup and verification.
+- [ ] **test-106** `It.IsAny<T>()` is absent from Logic and Validations test files — only present in Exceptions test files.
 
 ---
 

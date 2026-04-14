@@ -245,11 +245,12 @@ Use it whenever deciding what to test first, how to map exceptions in tests, or 
 3. Use GWT: Given / When / Then.
 4. Mock all dependencies.
 5. Use readable assertions.
-6. Use deep cloning to protect expectation identity.
-7. Use randomized data by default.
+6. Use deep cloning to isolate state at the point where mutation or propagation must be prevented — typically the final assertion target. Not every intermediate alias requires a clone.
+7. Use randomized data by default: assign to a `random`-prefixed variable, then alias to intent-revealing names at each stage of the flow.
 8. Verify exact dependency calls.
 9. End with VerifyNoOtherCalls.
 10. Keep naming explicit and scenario-driven.
+11. Never use `It.IsAny<T>()` in logic or validation tests — only in exception tests.
 
 ## Exact test implementation order for foundation-service add routines
 
@@ -294,12 +295,86 @@ Each entity's tests mirror the same partial-class split as the service:
 | -------------------- | ------------------------------------------------------------------------------------------- |
 | Mocking              | **Moq** — `Mock<IStorageBroker>`, `Mock<IModernApiBroker>`, `Mock<ILoggingBroker>`         |
 | Assertions           | **FluentAssertions** — `Should().BeEquivalentTo()`                                         |
-| Deep cloning         | **DeepCloner** — to isolate input/expected/actual objects                                   |
-| Data generation      | **Tynamix.ObjectFiller** — `Filler<{Entity}>` with custom property setup                  |
+| Deep cloning         | **DeepCloner** — applied at the point where state must be isolated from further mutation. Always applied to the final assertion target. Not every intermediate alias requires a clone. |
+| Data generation      | **Tynamix.ObjectFiller** — randomized value assigned to a `random`-prefixed variable (`randomId`, `random[Entity]`), then aliased to intent-revealing names at each stage |
+| Variable naming      | Start with `random` prefix; alias at each stage to describe the variable’s role (e.g. `inputConsumerId`, `storageConsumer`, `expectedInputConsumer`, `deletedConsumer`, `expectedConsumer`) |
+| `It.IsAny<T>()` use  | Only permitted in Exceptions test files. Logic and Validations files MUST use exact named variables. |
 | Exception comparison | `Xeption.SameExceptionAs()` via `SameExceptionAs` expression helper                        |
 | Test naming          | `Should{Action}Async` / `ShouldThrow{Exception}On{Action}If{Condition}AndLogItAsync`      |
 | Verify calls         | Every test verifies broker calls (`Times.Once` / `Times.Never`) and ends with `VerifyNoOtherCalls()` |
 | Test framework       | **xUnit** — `[Fact]` for single cases, `[Theory] [InlineData]` for parameterised cases     |
+
+### 8.2a Test Data Variable Naming Principle
+
+The purpose of this naming pattern is **test readability**. `inputStudent` and `storageStudent` may both hold the same underlying value as `randomStudent`, but the aliases make the test read as a narrative. When you see `inputStudent` in a mock setup you immediately know it is the value being passed in. When you see `storageStudent` you immediately know it is what storage returned. If `randomStudent` appeared everywhere you would have to mentally track the current state of that object at each line rather than reading the test as a story.
+
+All Logic and Validations tests MUST follow these naming rules:
+
+1. **Randomized values** start with a `random` prefix: `randomId`, `randomStudent`.
+2. **Each stage of the flow** aliases the previous variable with an intent-revealing name that describes its role at that point in the test.
+3. **DeepClone** is applied at the point where state must be isolated from further mutation — typically the final assertion target. Not every intermediate alias requires a clone.
+
+**Example — simple Add flow (`Student` entity):**
+
+```csharp
+Student randomStudent = CreateRandomStudent();
+Student inputStudent = randomStudent;
+Student storageStudent = inputStudent.DeepClone();
+Student expectedStudent = storageStudent.DeepClone();
+
+this.storageBrokerMock.Setup(broker =>
+    broker.InsertStudentAsync(inputStudent))
+        .ReturnsAsync(storageStudent);
+
+// when
+Student actualStudent = await this.studentService.AddStudentAsync(inputStudent);
+
+// then
+actualStudent.Should().BeEquivalentTo(expectedStudent);
+
+this.storageBrokerMock.Verify(broker =>
+    broker.InsertStudentAsync(inputStudent),
+        Times.Once);
+```
+
+Reading this: the test passes `inputStudent` in → storage returns `storageStudent` → the assertion compares `actualStudent` to `expectedStudent`. Each variable's role is self-evident. Using `randomStudent` everywhere would obscure which role the object plays at each step.
+
+**Multi-step flow (e.g. retrieve then delete):**
+
+```csharp
+Guid randomId = Guid.NewGuid();
+Guid inputStudentId = randomId;
+Student randomStudent = CreateRandomStudent();
+Student storageStudent = randomStudent;
+Student deletedStudent = storageStudent;
+Student expectedStudent = deletedStudent.DeepClone();
+```
+
+The chain length varies with the complexity of the operation. DeepClone is only applied where state isolation becomes necessary.
+
+Mock setup and broker verification MUST reference the exact named variable at each step:
+
+```csharp
+this.storageBrokerMock.Setup(broker =>
+    broker.SelectStudentByIdAsync(inputStudentId))
+        .ReturnsAsync(storageStudent);
+
+this.storageBrokerMock.Setup(broker =>
+    broker.DeleteStudentAsync(storageStudent))
+        .ReturnsAsync(deletedStudent);
+
+actualStudent.Should().BeEquivalentTo(expectedStudent);
+
+this.storageBrokerMock.Verify(broker =>
+    broker.SelectStudentByIdAsync(inputStudentId),
+        Times.Once);
+
+this.storageBrokerMock.Verify(broker =>
+    broker.DeleteStudentAsync(expectedStudent),
+        Times.Once);
+```
+
+`It.IsAny<T>()` MUST NOT appear in Logic or Validations test files. It is only permitted in Exceptions test files, where the subject under test is exception behavior — not whether the correct input value was passed.
 
 ### 8.3 Test Pattern — GWT (Given / When / Then)
 
