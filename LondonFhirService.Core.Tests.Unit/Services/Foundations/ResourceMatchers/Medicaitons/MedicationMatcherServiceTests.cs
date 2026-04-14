@@ -117,6 +117,34 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
+        private static string GetRandomSnomedCode() =>
+            Guid.NewGuid().ToString("N").Substring(0, 9);
+
+        private static JsonElement CreateMedicationResourceWithNoCodeProperty()
+        {
+            string json = """
+              {
+                "resourceType": "Medication",
+                "id": "medication-1"
+              }
+              """;
+
+            return ParseJsonElement(json);
+        }
+
+        private static JsonElement CreateMedicationResourceWithNoCodingProperty()
+        {
+            string json = """
+              {
+                "resourceType": "Medication",
+                "id": "medication-1",
+                "code": {}
+              }
+              """;
+
+            return ParseJsonElement(json);
+        }
+
         private static JsonElement ParseJsonElement(string json) =>
             JsonDocument.Parse(json).RootElement.Clone();
     }
