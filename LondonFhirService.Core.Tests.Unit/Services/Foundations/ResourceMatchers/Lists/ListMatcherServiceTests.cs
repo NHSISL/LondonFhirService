@@ -9,6 +9,7 @@ using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
 using Moq;
+using Tynamix.ObjectFiller;
 using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Lists
@@ -112,6 +113,34 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
               }
             },
             "onsetDateTime": "2024-01-01"
+          }
+          """;
+
+            return ParseJsonElement(json);
+        }
+
+        private static string GetRandomString() =>
+            new MnemonicString().GetValue();
+
+        private static JsonElement CreateListResourceWithTitle(string title, string id = "list-1")
+        {
+            string json = $$"""
+          {
+            "resourceType": "List",
+            "id": "{{id}}",
+            "title": "{{title}}"
+          }
+          """;
+
+            return ParseJsonElement(json);
+        }
+
+        private static JsonElement CreateListResourceWithoutTitle(string id = "list-1")
+        {
+            string json = $$"""
+          {
+            "resourceType": "List",
+            "id": "{{id}}"
           }
           """;
 
