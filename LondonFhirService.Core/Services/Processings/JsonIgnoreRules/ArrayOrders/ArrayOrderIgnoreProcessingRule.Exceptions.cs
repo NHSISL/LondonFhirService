@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             {
                 return await returningFunction();
             }
-            catch (InvalidJsonIgnoreProcessingException invalidJsonIgnoreProcessingException)
+            catch (InvalidJsonIgnoreRulesProcessingException invalidJsonIgnoreProcessingException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidJsonIgnoreProcessingException);
             }
@@ -59,7 +59,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             }
         }
 
-        private async ValueTask<ArrayOrderIgnoreProcessingValidationException> CreateAndLogValidationExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
             var arrayOrderIgnoreProcessingValidationException =
@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             return arrayOrderIgnoreProcessingValidationException;
         }
 
-        private async ValueTask<ArrayOrderIgnoreProcessingDependencyValidationException>
+        private async ValueTask<JsonIgnoreRulesProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
             var arrayOrderIgnoreProcessingDependencyValidationException =
@@ -85,7 +85,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             return arrayOrderIgnoreProcessingDependencyValidationException;
         }
 
-        private async ValueTask<ArrayOrderIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
             var arrayOrderIgnoreProcessingDependencyException =
@@ -98,7 +98,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             return arrayOrderIgnoreProcessingDependencyException;
         }
 
-        private async ValueTask<ArrayOrderIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
             var odsDataServiceException =

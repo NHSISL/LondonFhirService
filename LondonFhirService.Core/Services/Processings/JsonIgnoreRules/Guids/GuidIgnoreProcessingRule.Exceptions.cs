@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             {
                 return await returningFunction();
             }
-            catch (InvalidJsonIgnoreProcessingException invalidJsonIgnoreProcessingException)
+            catch (InvalidJsonIgnoreRulesProcessingException invalidJsonIgnoreProcessingException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidJsonIgnoreProcessingException);
             }

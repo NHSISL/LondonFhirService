@@ -2,16 +2,14 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
-using System.Collections;
 using Xeptions;
 
 namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions
 {
-    public class FailedArrayOrderIgnoreProcessingException : Xeption
+    public class JsonIgnoreRulesProcessingDependencyException : Xeption
     {
-        public FailedArrayOrderIgnoreProcessingException(string message, Exception innerException, IDictionary data)
-            : base(message, innerException, data)
+        public JsonIgnoreRulesProcessingDependencyException(string message, Xeption innerException)
+            : base(message, innerException)
         { }
     }
 }

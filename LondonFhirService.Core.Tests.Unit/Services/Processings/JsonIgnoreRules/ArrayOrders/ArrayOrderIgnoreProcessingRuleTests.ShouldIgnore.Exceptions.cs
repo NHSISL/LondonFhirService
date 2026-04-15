@@ -50,8 +50,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     randomElement,
                     randomPath);
 
-            ArrayOrderIgnoreProcessingServiceException actualArrayOrderIgnoreProcessingServiceException =
-                await Assert.ThrowsAsync<ArrayOrderIgnoreProcessingServiceException>(
+            JsonIgnoreRulesProcessingServiceException actualArrayOrderIgnoreProcessingServiceException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingServiceException>(
                     shouldIgnoreTask.AsTask);
 
             // then

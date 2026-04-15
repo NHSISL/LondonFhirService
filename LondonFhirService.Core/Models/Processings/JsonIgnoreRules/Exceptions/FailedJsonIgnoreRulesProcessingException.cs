@@ -6,11 +6,11 @@ using System;
 using System.Collections;
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.MetaIgnoreRules.Exceptions
+namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions
 {
-    public class FailedMetaIgnoreProcessingException : Xeption
+    public class FailedJsonIgnoreRulesProcessingException : Xeption
     {
-        public FailedMetaIgnoreProcessingException(string message, Exception innerException, IDictionary data)
+        public FailedJsonIgnoreRulesProcessingException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)
         { }
     }

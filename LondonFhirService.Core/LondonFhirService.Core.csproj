@@ -45,5 +45,9 @@
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Models\Processings\JsonIgnoreRules\ArrayOrderIgnoreRules\Exceptions\" />
+	</ItemGroup>
+
 
 </Project>

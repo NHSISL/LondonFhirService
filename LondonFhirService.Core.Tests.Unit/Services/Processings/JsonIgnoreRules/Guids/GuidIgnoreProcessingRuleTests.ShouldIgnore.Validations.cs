@@ -24,7 +24,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             string invalidPath = invalidText;
 
             var invalidJsonIgnoreProcessingException =
-                new InvalidJsonIgnoreProcessingException(
+                new InvalidJsonIgnoreRulesProcessingException(
                     message: "Invalid arguments. Please correct the errors and try again.");
 
             invalidJsonIgnoreProcessingException.AddData(

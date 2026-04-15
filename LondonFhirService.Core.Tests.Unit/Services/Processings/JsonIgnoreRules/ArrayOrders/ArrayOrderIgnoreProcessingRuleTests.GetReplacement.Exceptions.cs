@@ -42,8 +42,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             ValueTask<JsonElement> getReplacementTask =
                 arrayOrderIgnoreProcessingRuleMock.Object.GetReplacementAsync(randomElement);
 
-            ArrayOrderIgnoreProcessingDependencyException actualArrayOrderIgnoreProcessingDependencyException =
-                await Assert.ThrowsAsync<ArrayOrderIgnoreProcessingDependencyException>(
+            JsonIgnoreRulesProcessingDependencyException actualArrayOrderIgnoreProcessingDependencyException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingDependencyException>(
                     testCode: getReplacementTask.AsTask);
 
             // then
@@ -97,9 +97,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             ValueTask<JsonElement> getReplacementTask =
                 arrayOrderIgnoreProcessingRuleMock.Object.GetReplacementAsync(randomElement);
 
-            ArrayOrderIgnoreProcessingDependencyValidationException
+            JsonIgnoreRulesProcessingDependencyValidationException
                 actualArrayOrderIgnoreProcessingDependencyValidationException =
-                    await Assert.ThrowsAsync<ArrayOrderIgnoreProcessingDependencyValidationException>(
+                    await Assert.ThrowsAsync<JsonIgnoreRulesProcessingDependencyValidationException>(
                         testCode: getReplacementTask.AsTask);
 
             // then
@@ -159,8 +159,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                 arrayOrderIgnoreProcessingRuleMock.Object.GetReplacementAsync(
                     randomElement);
 
-            ArrayOrderIgnoreProcessingServiceException actualArrayOrderIgnoreProcessingServiceException =
-                await Assert.ThrowsAsync<ArrayOrderIgnoreProcessingServiceException>(
+            JsonIgnoreRulesProcessingServiceException actualArrayOrderIgnoreProcessingServiceException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingServiceException>(
                     getReplacementTask.AsTask);
 
             // then

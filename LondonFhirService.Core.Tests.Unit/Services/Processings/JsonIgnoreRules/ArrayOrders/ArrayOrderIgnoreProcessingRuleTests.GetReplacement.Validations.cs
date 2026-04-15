@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             JsonElement invalidElement = default;
 
             var invalidJsonIgnoreProcessingException =
-                new InvalidJsonIgnoreProcessingException(
+                new InvalidJsonIgnoreRulesProcessingException(
                     message: "Invalid arguments. Please correct the errors and try again.");
 
             invalidJsonIgnoreProcessingException.AddData(
@@ -41,8 +41,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     invalidElement);
 
             // then
-            ArrayOrderIgnoreProcessingValidationException actualException =
-                await Assert.ThrowsAsync<ArrayOrderIgnoreProcessingValidationException>(
+            JsonIgnoreRulesProcessingValidationException actualException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingValidationException>(
                     getReplacementTask.AsTask);
 
             actualException.Should()
