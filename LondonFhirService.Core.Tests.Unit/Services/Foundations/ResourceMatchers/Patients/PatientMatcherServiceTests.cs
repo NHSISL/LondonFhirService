@@ -117,6 +117,54 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           return ParseJsonElement(json);
       }
 
+      private static JsonElement CreatePatientWithNhsNumber(string nhsNumber, string id = "patient-1")
+      {
+          string json = $$"""
+          {
+            "resourceType": "Patient",
+            "id": "{{id}}",
+            "identifier": [
+              {
+                "system": "https://fhir.hl7.org.uk/Id/nhs-number",
+                "value": "{{nhsNumber}}"
+              }
+            ]
+          }
+          """;
+
+          return ParseJsonElement(json);
+      }
+
+      private static JsonElement CreatePatientWithoutIdentifier(string id = "patient-1")
+      {
+          string json = $$"""
+          {
+            "resourceType": "Patient",
+            "id": "{{id}}"
+          }
+          """;
+
+          return ParseJsonElement(json);
+      }
+
+      private static JsonElement CreatePatientWithNonNhsIdentifier(string id = "patient-1")
+      {
+          string json = $$"""
+          {
+            "resourceType": "Patient",
+            "id": "{{id}}",
+            "identifier": [
+              {
+                "system": "http://example.org/system",
+                "value": "12345"
+              }
+            ]
+          }
+          """;
+
+          return ParseJsonElement(json);
+      }
+
       private static JsonElement ParseJsonElement(string json) =>
           JsonDocument.Parse(json).RootElement.Clone();
   }
