@@ -8,7 +8,6 @@ using System.Linq.Expressions;
 using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
 using Moq;
