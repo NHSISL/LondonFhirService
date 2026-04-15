@@ -117,6 +117,50 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
+        private static JsonElement CreateEpisodeOfCareResourceWithPeriodStart(
+            string periodStart,
+            string id = "episode-1")
+        {
+            string json = $$"""
+          {
+            "resourceType": "EpisodeOfCare",
+            "id": "{{id}}",
+            "period": {
+              "start": "{{periodStart}}"
+            }
+          }
+          """;
+
+            return ParseJsonElement(json);
+        }
+
+        private static JsonElement CreateEpisodeOfCareResourceWithPeriodButNoStart(string id = "episode-1")
+        {
+            string json = $$"""
+          {
+            "resourceType": "EpisodeOfCare",
+            "id": "{{id}}",
+            "period": {
+              "end": "2024-12-31"
+            }
+          }
+          """;
+
+            return ParseJsonElement(json);
+        }
+
+        private static JsonElement CreateEpisodeOfCareResourceWithNoPeriod(string id = "episode-1")
+        {
+            string json = $$"""
+          {
+            "resourceType": "EpisodeOfCare",
+            "id": "{{id}}"
+          }
+          """;
+
+            return ParseJsonElement(json);
+        }
+
         private static JsonElement ParseJsonElement(string json) =>
             JsonDocument.Parse(json).RootElement.Clone();
     }
