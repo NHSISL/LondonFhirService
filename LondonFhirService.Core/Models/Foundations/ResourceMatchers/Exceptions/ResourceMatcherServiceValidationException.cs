@@ -2,14 +2,13 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.Medications.Exceptions
+namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions
 {
-    public class FailedMedicationMatcherServiceException : Xeption
+    public class ResourceMatcherServiceValidationException : Xeption
     {
-        public FailedMedicationMatcherServiceException(string message, Exception innerException)
+        public ResourceMatcherServiceValidationException(string message, Xeption innerException)
             : base(message, innerException)
         { }
     }
