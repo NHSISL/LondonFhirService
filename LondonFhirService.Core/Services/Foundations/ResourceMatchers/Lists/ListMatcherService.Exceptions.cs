@@ -5,7 +5,6 @@
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Lists.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists
@@ -26,39 +25,37 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists
             }
             catch (Exception exception)
             {
-                var failedListMatcherServiceException =
-                    new FailedListMatcherServiceException(
+                var failedResourceMatcherServiceException =
+                    new FailedResourceMatcherServiceException(
                         message: "Failed list matcher service occurred, please contact support",
                         innerException: exception);
 
-                throw await CreateAndLogServiceException(failedListMatcherServiceException);
+                throw await CreateAndLogServiceException(failedResourceMatcherServiceException);
             }
         }
 
-        private async ValueTask<ListMatcherServiceValidationException> CreateAndLogValidationException(
+        private async ValueTask<ResourceMatcherServiceValidationException> CreateAndLogValidationException(
             Xeption exception)
         {
-            var listMatcherServiceValidationException =
-                new ListMatcherServiceValidationException(
+            var resourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "List matcher validation errors occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(listMatcherServiceValidationException);
-
-            return listMatcherServiceValidationException;
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceValidationException);
+            return resourceMatcherServiceValidationException;
         }
 
-        private async ValueTask<ListMatcherServiceException> CreateAndLogServiceException(
+        private async ValueTask<ResourceMatcherServiceException> CreateAndLogServiceException(
             Xeption exception)
         {
-            var listMatcherServiceException =
-                new ListMatcherServiceException(
+            var resourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "List matcher service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(listMatcherServiceException);
-
-            return listMatcherServiceException;
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
+            return resourceMatcherServiceException;
         }
     }
 }

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Patients.Exceptions;
 using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Patients
@@ -44,8 +43,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 key: "source2ResourceIndex",
                 values: "Dictionary is required.");
 
-            var expectedPatientMatcherServiceValidationException =
-                new PatientMatcherServiceValidationException(
+            var expectedResourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "Patient matcher validation errors occurred, " +
                         "please try again.",
                     innerException: invalidArgumentResourceMatcherException);
@@ -59,16 +58,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     invalidSource2ResourceIndex);
 
             // then
-            PatientMatcherServiceValidationException actualException =
-                await Assert.ThrowsAsync<PatientMatcherServiceValidationException>(
+            ResourceMatcherServiceValidationException actualException =
+                await Assert.ThrowsAsync<ResourceMatcherServiceValidationException>(
                     matchTask.AsTask);
 
             actualException.Should()
-                .BeEquivalentTo(expectedPatientMatcherServiceValidationException);
+                .BeEquivalentTo(expectedResourceMatcherServiceValidationException);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedPatientMatcherServiceValidationException))),
+                    expectedResourceMatcherServiceValidationException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

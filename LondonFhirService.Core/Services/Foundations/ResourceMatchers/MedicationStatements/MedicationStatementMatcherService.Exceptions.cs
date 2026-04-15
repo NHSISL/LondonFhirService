@@ -5,7 +5,6 @@
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.MedicationStatements.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationStatements
@@ -26,39 +25,38 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medicatio
             }
             catch (Exception exception)
             {
-                var failedMedicationStatementMatcherServiceException =
-                    new FailedMedicationStatementMatcherServiceException(
+                var failedResourceMatcherServiceException =
+                    new FailedResourceMatcherServiceException(
                         message: "Failed medication statement matcher service occurred, please contact support",
                         innerException: exception);
 
-                throw await CreateAndLogServiceException(failedMedicationStatementMatcherServiceException);
+                throw await CreateAndLogServiceException(failedResourceMatcherServiceException);
             }
         }
 
-        private async ValueTask<MedicationStatementMatcherServiceValidationException> CreateAndLogValidationException(
+        private async ValueTask<ResourceMatcherServiceValidationException> CreateAndLogValidationException(
             Xeption exception)
         {
-            var medicationStatementMatcherServiceValidationException =
-                new MedicationStatementMatcherServiceValidationException(
+            var resourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "Medication statement matcher validation errors occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(medicationStatementMatcherServiceValidationException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceValidationException);
 
-            return medicationStatementMatcherServiceValidationException;
+            return resourceMatcherServiceValidationException;
         }
 
-        private async ValueTask<MedicationStatementMatcherServiceException> CreateAndLogServiceException(
+        private async ValueTask<ResourceMatcherServiceException> CreateAndLogServiceException(
             Xeption exception)
         {
-            var medicationStatementMatcherServiceException =
-                new MedicationStatementMatcherServiceException(
+            var resourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "Medication statement matcher service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(medicationStatementMatcherServiceException);
-
-            return medicationStatementMatcherServiceException;
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
+            return resourceMatcherServiceException;
         }
     }
 }
