@@ -9,58 +9,72 @@ using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
 using Moq;
+using Tynamix.ObjectFiller;
 using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.AllergyIntolerances
 {
-  public partial class AllergyIntoleranceMatcherServiceTests
-  {
-      private readonly Mock<ILoggingBroker> loggingBrokerMock;
-      private readonly AllergyIntoleranceMatcherService allergyIntoleranceMatcherService;
+    public partial class AllergyIntoleranceMatcherServiceTests
+    {
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly AllergyIntoleranceMatcherService allergyIntoleranceMatcherService;
 
-      public AllergyIntoleranceMatcherServiceTests()
-      {
-          this.loggingBrokerMock = new Mock<ILoggingBroker>();
-          
+        public AllergyIntoleranceMatcherServiceTests()
+        {
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-          this.allergyIntoleranceMatcherService =
-              new AllergyIntoleranceMatcherService(
-                  loggingBroker: this.loggingBrokerMock.Object);
-      }
+            this.allergyIntoleranceMatcherService =
+                new AllergyIntoleranceMatcherService(
+                    loggingBroker: this.loggingBrokerMock.Object);
+        }
 
-      private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
-          actualException => actualException.SameExceptionAs(expectedException);
+        private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => actualException.SameExceptionAs(expectedException);
 
-      private static Dictionary<string, JsonElement> CreateResourceIndex() =>
-          new();
+        private static Dictionary<string, JsonElement> CreateResourceIndex() =>
+            new();
 
-      private static JsonElement CreateAllergyIntoleranceResource(
+        private static string GetRandomString() =>
+            new MnemonicString(wordCount: GetRandomNumber()).GetValue();
+
+        private static string GetRandomSnomedCode() =>
+            new IntRange(min: 1000000, max: 9999999).GetValue().ToString();
+
+        private static int GetRandomNumber() =>
+            new IntRange(min: 2, max: 10).GetValue();
+
+        private static DateTimeOffset GetRandomDateTimeOffset() =>
+            new DateTimeRange(earliestDate: new DateTime()).GetValue();
+
+        private static JsonElement CreateAllergyIntoleranceResource(
           string snomedCode,
-          string onsetDateTime,
-          string id = "allergy-1")
-      {
-          string json = $$"""
-          {
-            "resourceType": "AllergyIntolerance",
-            "id": "{{id}}",
-            "code": {
-              "coding": [
+          string onsetDateTime)
+        {
+            string id = GetRandomString();
+
+            string json = $$"""
                 {
-                  "system": "http://snomed.info/sct",
-                  "code": "{{snomedCode}}"
+                    "resourceType": "AllergyIntolerance",
+                    "id": "{{id}}",
+                    "code": {
+                        "coding": [
+                            {
+                                "system": "http://snomed.info/sct",
+                                "code": "{{snomedCode}}"
+                            }
+                        ]
+                    },
+                    "onsetDateTime": "{{onsetDateTime}}"
                 }
-              ]
-            },
-            "onsetDateTime": "{{onsetDateTime}}"
-          }
-          """;
+            """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateNonSnomedAllergyIntoleranceResource(string onsetDateTime)
-      {
-          string json = $$"""
+
+        private static JsonElement CreateNonSnomedAllergyIntoleranceResource(string onsetDateTime)
+        {
+            string json = $$"""
           {
             "resourceType": "AllergyIntolerance",
             "id": "allergy-1",
@@ -76,12 +90,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateResourceWithoutOnsetDateTime(string snomedCode)
-      {
-          string json = $$"""
+        private static JsonElement CreateResourceWithoutOnsetDateTime(string snomedCode)
+        {
+            string json = $$"""
           {
             "resourceType": "AllergyIntolerance",
             "id": "allergy-1",
@@ -96,12 +110,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement CreateMalformedCodingResource()
-      {
-          string json = """
+        private static JsonElement CreateMalformedCodingResource()
+        {
+            string json = """
           {
             "resourceType": "AllergyIntolerance",
             "id": "allergy-1",
@@ -115,10 +129,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
           }
           """;
 
-          return ParseJsonElement(json);
-      }
+            return ParseJsonElement(json);
+        }
 
-      private static JsonElement ParseJsonElement(string json) =>
-          JsonDocument.Parse(json).RootElement.Clone();
-  }
+        private static JsonElement ParseJsonElement(string json) =>
+            JsonDocument.Parse(json).RootElement.Clone();
+    }
 }

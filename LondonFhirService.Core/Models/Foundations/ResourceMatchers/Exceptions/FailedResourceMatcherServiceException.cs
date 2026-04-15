@@ -5,11 +5,11 @@
 using System;
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions
+namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions
 {
-    public class AllergyIntoleranceMatcherServiceException : Xeption
+    public class FailedResourceMatcherServiceException : Xeption
     {
-        public AllergyIntoleranceMatcherServiceException(string message, Exception innerException)
+        public FailedResourceMatcherServiceException(string message, Exception innerException)
             : base(message, innerException)
         { }
     }

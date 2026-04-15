@@ -4,7 +4,6 @@
 
 using System;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Conditions.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using Xeptions;
 
@@ -26,39 +25,39 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Condition
             }
             catch (Exception exception)
             {
-                var failedConditionMatcherServiceException =
-                    new FailedConditionMatcherServiceException(
+                var failedResourceMatcherServiceException =
+                    new FailedResourceMatcherServiceException(
                         message: "Failed condition matcher service occurred, please contact support",
                         innerException: exception);
 
-                throw await CreateAndLogServiceException(failedConditionMatcherServiceException);
+                throw await CreateAndLogServiceException(failedResourceMatcherServiceException);
             }
         }
 
-        private async ValueTask<ConditionMatcherServiceValidationException> CreateAndLogValidationException(
+        private async ValueTask<ResourceMatcherServiceValidationException> CreateAndLogValidationException(
             Xeption exception)
         {
-            var conditionMatcherServiceValidationException =
-                new ConditionMatcherServiceValidationException(
+            var resourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "Condition matcher validation errors occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(conditionMatcherServiceValidationException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceValidationException);
 
-            return conditionMatcherServiceValidationException;
+            return resourceMatcherServiceValidationException;
         }
 
-        private async ValueTask<ConditionMatcherServiceException> CreateAndLogServiceException(
+        private async ValueTask<ResourceMatcherServiceException> CreateAndLogServiceException(
             Xeption exception)
         {
-            var conditionMatcherServiceException =
-                new ConditionMatcherServiceException(
+            var resourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "Condition matcher service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(conditionMatcherServiceException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
 
-            return conditionMatcherServiceException;
+            return resourceMatcherServiceException;
         }
     }
 }

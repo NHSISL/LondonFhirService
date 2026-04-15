@@ -5,11 +5,11 @@
 using System;
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.Conditions.Exceptions
+namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions
 {
-    public class ConditionMatcherServiceException : Xeption
+    public class ResourceMatcherServiceException : Xeption
     {
-        public ConditionMatcherServiceException(string message, Exception innerException)
+        public ResourceMatcherServiceException(string message, Exception innerException)
             : base(message, innerException)
         { }
     }
