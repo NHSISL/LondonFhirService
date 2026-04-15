@@ -97,7 +97,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
-        public async Task ShouldReturnNullGetMatchKeyWhenDateAssertedIsMissingAsync()
+        public async Task ShouldReturnNullOnGetMatchKeyWhenDateAssertedIsMissingAsync()
         {
             // given
             string randomSnomedCode = "123456789";
