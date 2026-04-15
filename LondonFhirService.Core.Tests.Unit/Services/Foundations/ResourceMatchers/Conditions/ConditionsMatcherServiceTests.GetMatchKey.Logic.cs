@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -15,11 +16,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldGetMatchKeyWhenConditionHasSnomedCodeAsync()
         {
             // given
-            string inputSnomedCode = "444814009";
+            string inputSnomedCode = GetRandomSnomedCode();
+            string randomDateTimeOffset = GetRandomDateTimeOffset().ToString();
+            string randomId = GetRandomString();
 
             JsonElement conditionResource = CreateConditionResource(
                 snomedCode: inputSnomedCode,
-                onsetDateTime: "2024-01-01");
+                onsetDateTime: randomDateTimeOffset,
+                id : randomId);
 
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
             string expectedMatchKey = inputSnomedCode;
@@ -37,7 +41,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldReturnNullOnGetMatchKeyWhenConditionHasNoCodingPropertyAsync()
         {
             // given
-            JsonElement conditionResource = CreateConditionResourceWithoutCodingProperty();
+            string randomDateTimeOffset = GetRandomDateTimeOffset().ToString();
+            string randomId = GetRandomString();
+
+            JsonElement conditionResource =
+                CreateConditionResourceWithoutCodingProperty(
+                    id: randomId,
+                    onsetDateTime: randomDateTimeOffset);
+
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
 
             // when
@@ -53,7 +64,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldReturnNullOnGetMatchKeyWhenConditionHasNonSnomedCodingAsync()
         {
             // given
-            JsonElement conditionResource = CreateNonSnomedConditionResource(onsetDateTime: "2024-01-01");
+            string randomDateTimeOffset = GetRandomDateTimeOffset().ToString();
+            JsonElement conditionResource = CreateNonSnomedConditionResource(onsetDateTime: randomDateTimeOffset);
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
 
             // when
@@ -69,7 +81,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldReturnNullOnGetMatchKeyWhenConditionHasNoCodePropertyAsync()
         {
             // given
-            JsonElement conditionResource = CreateConditionResourceWithoutCodeProperty();
+            string randomDateTimeOffset = GetRandomDateTimeOffset().ToString();
+            string randomId = GetRandomString();
+
+            JsonElement conditionResource =
+                CreateConditionResourceWithoutCodeProperty(
+                    id: randomId,
+                    onsetDateTime: randomDateTimeOffset);
+
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
 
             // when
@@ -81,27 +100,31 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
-        private static JsonElement CreateConditionResourceWithoutCodeProperty()
+        private static JsonElement CreateConditionResourceWithoutCodeProperty(
+            string id,
+            string onsetDateTime)
         {
-            string json = """
+            string json = $$"""
                 {
                   "resourceType": "Condition",
-                  "id": "condition-no-code",
-                  "onsetDateTime": "2024-01-01"
+                  "id": "{{id}}",
+                  "onsetDateTime": "{{onsetDateTime}}"
                 }
                 """;
 
             return ParseJsonElement(json);
         }
 
-        private static JsonElement CreateConditionResourceWithoutCodingProperty()
+        private static JsonElement CreateConditionResourceWithoutCodingProperty(
+            string id,
+            string onsetDateTime)
         {
-            string json = """
+            string json = $$"""
                 {
                   "resourceType": "Condition",
-                  "id": "condition-no-coding",
+                  "id": "{{id}}",
                   "code": {},
-                  "onsetDateTime": "2024-01-01"
+                  "onsetDateTime": "{{onsetDateTime}}"
                 }
                 """;
 
