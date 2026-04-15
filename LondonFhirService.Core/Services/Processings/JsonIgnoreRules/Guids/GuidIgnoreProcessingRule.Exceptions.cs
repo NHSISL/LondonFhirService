@@ -75,40 +75,40 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         private async ValueTask<GuidIgnoreProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
-            var arrayOrderIgnoreProcessingDependencyValidationException =
+            var guidIgnoreProcessingDependencyValidationException =
                 new GuidIgnoreProcessingDependencyValidationException(
-                    message: "Guid ignore processing dependency validation occurred, please try again.",
+                    message: "Guid ignore processing dependency validation error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
+            await this.loggingBroker.LogErrorAsync(guidIgnoreProcessingDependencyValidationException);
             
-            return arrayOrderIgnoreProcessingDependencyValidationException;
+            return guidIgnoreProcessingDependencyValidationException;
         }
 
         private async ValueTask<GuidIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
-            var arrayOrderIgnoreProcessingDependencyException =
+            var guidIgnoreProcessingDependencyException =
                 new GuidIgnoreProcessingDependencyException(
                     message: "Guid ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyException);
+            await this.loggingBroker.LogErrorAsync(guidIgnoreProcessingDependencyException);
 
-            return arrayOrderIgnoreProcessingDependencyException;
+            return guidIgnoreProcessingDependencyException;
         }
 
         private async ValueTask<GuidIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
-            var odsDataServiceException =
+            var guidIgnoreProcessingServiceException =
                 new GuidIgnoreProcessingServiceException(
                     message: "Guid ignore processing service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(odsDataServiceException);
+            await this.loggingBroker.LogErrorAsync(guidIgnoreProcessingServiceException);
 
-            return odsDataServiceException;
+            return guidIgnoreProcessingServiceException;
         }
     }
 }
