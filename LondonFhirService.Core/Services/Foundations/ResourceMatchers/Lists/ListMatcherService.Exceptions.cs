@@ -43,6 +43,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(resourceMatcherServiceValidationException);
+
             return resourceMatcherServiceValidationException;
         }
 
@@ -55,6 +56,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
+
             return resourceMatcherServiceException;
         }
     }

@@ -56,6 +56,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medicatio
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
+
             return resourceMatcherServiceException;
         }
     }
