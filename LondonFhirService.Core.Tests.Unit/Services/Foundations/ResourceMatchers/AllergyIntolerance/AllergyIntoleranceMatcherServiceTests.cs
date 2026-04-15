@@ -23,7 +23,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         {
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-
             this.allergyIntoleranceMatcherService =
                 new AllergyIntoleranceMatcherService(
                     loggingBroker: this.loggingBrokerMock.Object);
