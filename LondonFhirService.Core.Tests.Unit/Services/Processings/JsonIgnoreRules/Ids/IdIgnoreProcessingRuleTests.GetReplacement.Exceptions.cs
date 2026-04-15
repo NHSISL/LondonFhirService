@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,7 +6,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.IdIgnoreRules.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
 using Moq;
 using Xeptions;
@@ -23,8 +23,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             // given
             JsonElement randomElement = new();
 
-            var expectedIdIgnoreProcessingDependencyException =
-                new IdIgnoreProcessingDependencyException(
+            var expectedJsonIgnoreRulesProcessingDependencyException =
+                new JsonIgnoreRulesProcessingDependencyException(
                     message: "Id ignore processing dependency error occurred, contact support.",
                     innerException: dependencyException);
 
@@ -42,13 +42,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             ValueTask<JsonElement> getReplacementTask =
                 idIgnoreProcessingRuleMock.Object.GetReplacementAsync(randomElement);
 
-            IdIgnoreProcessingDependencyException actualIdIgnoreProcessingDependencyException =
-                await Assert.ThrowsAsync<IdIgnoreProcessingDependencyException>(
+            JsonIgnoreRulesProcessingDependencyException actualJsonIgnoreRulesProcessingDependencyException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingDependencyException>(
                     testCode: getReplacementTask.AsTask);
 
             // then
-            actualIdIgnoreProcessingDependencyException
-                .Should().BeEquivalentTo(expectedIdIgnoreProcessingDependencyException);
+            actualJsonIgnoreRulesProcessingDependencyException
+                .Should().BeEquivalentTo(expectedJsonIgnoreRulesProcessingDependencyException);
 
             idIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnGetReplacement(
@@ -62,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedIdIgnoreProcessingDependencyException))),
+                   expectedJsonIgnoreRulesProcessingDependencyException))),
                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -78,8 +78,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             // given
             JsonElement randomElement = new();
 
-            var expectedIdIgnoreProcessingDependencyValidationException =
-                new IdIgnoreProcessingDependencyValidationException(
+            var expectedJsonIgnoreRulesProcessingDependencyValidationException =
+                new JsonIgnoreRulesProcessingDependencyValidationException(
                     message: "Id ignore processing dependency validation error occurred, contact support.",
                     innerException: dependencyValidationException);
 
@@ -97,14 +97,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             ValueTask<JsonElement> getReplacementTask =
                 idIgnoreProcessingRuleMock.Object.GetReplacementAsync(randomElement);
 
-            IdIgnoreProcessingDependencyValidationException 
-                actualIdIgnoreProcessingDependencyValidationException =
-                    await Assert.ThrowsAsync<IdIgnoreProcessingDependencyValidationException>(
+            JsonIgnoreRulesProcessingDependencyValidationException 
+                actualJsonIgnoreRulesProcessingDependencyValidationException =
+                    await Assert.ThrowsAsync<JsonIgnoreRulesProcessingDependencyValidationException>(
                         testCode: getReplacementTask.AsTask);
 
             // then
-            actualIdIgnoreProcessingDependencyValidationException
-                .Should().BeEquivalentTo(expectedIdIgnoreProcessingDependencyValidationException);
+            actualJsonIgnoreRulesProcessingDependencyValidationException
+                .Should().BeEquivalentTo(expectedJsonIgnoreRulesProcessingDependencyValidationException);
 
             idIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnGetReplacement(
@@ -118,7 +118,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedIdIgnoreProcessingDependencyValidationException))),
+                   expectedJsonIgnoreRulesProcessingDependencyValidationException))),
                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -133,16 +133,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             JsonElement randomElement = new();
             var serviceException = new Exception();
 
-            var failedIdIgnoreProcessingException =
-                new FailedIdIgnoreProcessingException(
+            var failedJsonIgnoreRulesProcessingException =
+                new FailedJsonIgnoreRulesProcessingException(
                     message: "Failed id ignore processing exception occurred, please contact support",
                     innerException: serviceException,
                     data: serviceException.Data);
 
-            var expectedIdIgnoreProcessingServiceException =
-                new IdIgnoreProcessingServiceException(
+            var expectedJsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Id ignore processing service error occurred, contact support.",
-                    innerException: failedIdIgnoreProcessingException);
+                    innerException: failedJsonIgnoreRulesProcessingException);
 
             var idIgnoreProcessingRuleMock = new Mock<IdIgnoreProcessingRule>(
                 jsonElementServiceMock.Object,
@@ -159,13 +159,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                 idIgnoreProcessingRuleMock.Object.GetReplacementAsync(
                     randomElement);
 
-            IdIgnoreProcessingServiceException actualIdIgnoreProcessingServiceException =
-                await Assert.ThrowsAsync<IdIgnoreProcessingServiceException>(
+            JsonIgnoreRulesProcessingServiceException actualJsonIgnoreRulesProcessingServiceException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingServiceException>(
                     getReplacementTask.AsTask);
 
             // then
-            actualIdIgnoreProcessingServiceException.Should()
-                .BeEquivalentTo(expectedIdIgnoreProcessingServiceException);
+            actualJsonIgnoreRulesProcessingServiceException.Should()
+                .BeEquivalentTo(expectedJsonIgnoreRulesProcessingServiceException);
 
             idIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnGetReplacement(
@@ -179,7 +179,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedIdIgnoreProcessingServiceException))),
+                    expectedJsonIgnoreRulesProcessingServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -22,16 +22,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             string randomPath = GetRandomString();
             var serviceException = new Exception();
 
-            var failedArrayOrderIgnoreProcessingException =
-                new FailedArrayOrderIgnoreProcessingException(
+            var failedJsonIgnoreRulesProcessingException =
+                new FailedJsonIgnoreRulesProcessingException(
                     message: "Failed array order ignore processing exception occurred, please contact support",
                     innerException: serviceException,
                     data: serviceException.Data);
 
-            var expectedArrayOrderIgnoreProcessingServiceException =
-                new ArrayOrderIgnoreProcessingServiceException(
+            var expectedJsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Array order ignore processing service error occurred, contact support.",
-                    innerException: failedArrayOrderIgnoreProcessingException);
+                    innerException: failedJsonIgnoreRulesProcessingException);
 
             var arrayOrderIgnoreProcessingRuleMock = new Mock<ArrayOrderIgnoreProcessingRule>(
                 jsonElementServiceMock.Object,
@@ -50,13 +50,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     randomElement,
                     randomPath);
 
-            JsonIgnoreRulesProcessingServiceException actualArrayOrderIgnoreProcessingServiceException =
+            JsonIgnoreRulesProcessingServiceException actualJsonIgnoreRulesProcessingServiceException =
                 await Assert.ThrowsAsync<JsonIgnoreRulesProcessingServiceException>(
                     shouldIgnoreTask.AsTask);
 
             // then
-            actualArrayOrderIgnoreProcessingServiceException.Should()
-                .BeEquivalentTo(expectedArrayOrderIgnoreProcessingServiceException);
+            actualJsonIgnoreRulesProcessingServiceException.Should()
+                .BeEquivalentTo(expectedJsonIgnoreRulesProcessingServiceException);
 
             arrayOrderIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnShouldIgnore(
@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedArrayOrderIgnoreProcessingServiceException))),
+                    expectedJsonIgnoreRulesProcessingServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

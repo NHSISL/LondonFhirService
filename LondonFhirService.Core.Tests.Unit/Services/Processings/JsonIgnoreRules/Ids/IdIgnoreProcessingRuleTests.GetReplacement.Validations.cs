@@ -1,11 +1,11 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.IdIgnoreRules.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
 using Moq;
 
@@ -27,8 +27,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                 key: "element",
                 values: "Json element is undefined.");
 
-            var expectedIdIgnoreProcessingValidationException =
-                new IdIgnoreProcessingValidationException(
+            var expectedJsonIgnoreRulesProcessingValidationException =
+                new JsonIgnoreRulesProcessingValidationException(
                     message:
                         "Id ignore processing validation error occurred, " +
                         "please fix errors and try again.",
@@ -41,16 +41,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     invalidElement);
 
             // then
-            IdIgnoreProcessingValidationException actualException =
-                await Assert.ThrowsAsync<IdIgnoreProcessingValidationException>(
+            JsonIgnoreRulesProcessingValidationException actualException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingValidationException>(
                     getReplacementTask.AsTask);
 
             actualException.Should()
-                .BeEquivalentTo(expectedIdIgnoreProcessingValidationException);
+                .BeEquivalentTo(expectedJsonIgnoreRulesProcessingValidationException);
 
             this.loggingBrokerMock.Verify(broker =>
                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedIdIgnoreProcessingValidationException))),
+                   expectedJsonIgnoreRulesProcessingValidationException))),
                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

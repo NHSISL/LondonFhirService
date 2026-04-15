@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -35,8 +35,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                 key: "path",
                 value: "Text is invalid.");
 
-            var expectedArrayOrderIgnoreProcessingValidationException =
-                new ArrayOrderIgnoreProcessingValidationException(
+            var expectedJsonIgnoreRulesProcessingValidationException =
+                new JsonIgnoreRulesProcessingValidationException(
                     message:
                         "Array order ignore processing validation error occurred, " +
                         "please fix errors and try again.",
@@ -54,11 +54,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     shouldIgnoreTask.AsTask);
 
             actualException.Should()
-                .BeEquivalentTo(expectedArrayOrderIgnoreProcessingValidationException);
+                .BeEquivalentTo(expectedJsonIgnoreRulesProcessingValidationException);
 
             this.loggingBrokerMock.Verify(broker =>
                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedArrayOrderIgnoreProcessingValidationException))),
+                   expectedJsonIgnoreRulesProcessingValidationException))),
                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

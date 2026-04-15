@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -47,68 +47,68 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             }
             catch (Exception exception)
             {
-                var failedArrayOrderIgnoreProcessingException =
-                    new FailedArrayOrderIgnoreProcessingException(
+                var failedJsonIgnoreRulesProcessingException =
+                    new FailedJsonIgnoreRulesProcessingException(
                         message:
                             "Failed array order ignore processing exception occurred, please contact support",
 
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateAndLogServiceExceptionAsync(failedArrayOrderIgnoreProcessingException);
+                throw await CreateAndLogServiceExceptionAsync(failedJsonIgnoreRulesProcessingException);
             }
         }
 
         private async ValueTask<JsonIgnoreRulesProcessingValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
-            var arrayOrderIgnoreProcessingValidationException =
-                new ArrayOrderIgnoreProcessingValidationException(
+            var jsonIgnoreRulesProcessingValidationException =
+                new JsonIgnoreRulesProcessingValidationException(
                     message: "Array order ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingValidationException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingValidationException);
 
-            return arrayOrderIgnoreProcessingValidationException;
+            return jsonIgnoreRulesProcessingValidationException;
         }
 
         private async ValueTask<JsonIgnoreRulesProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
-            var arrayOrderIgnoreProcessingDependencyValidationException =
-                new ArrayOrderIgnoreProcessingDependencyValidationException(
+            var jsonIgnoreRulesProcessingDependencyValidationException =
+                new JsonIgnoreRulesProcessingDependencyValidationException(
                     message: "Array order ignore processing dependency validation error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyValidationException);
- 
-            return arrayOrderIgnoreProcessingDependencyValidationException;
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingDependencyValidationException);
+
+            return jsonIgnoreRulesProcessingDependencyValidationException;
         }
 
         private async ValueTask<JsonIgnoreRulesProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
-            var arrayOrderIgnoreProcessingDependencyException =
-                new ArrayOrderIgnoreProcessingDependencyException(
+            var jsonIgnoreRulesProcessingDependencyException =
+                new JsonIgnoreRulesProcessingDependencyException(
                     message: "Array order ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingDependencyException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingDependencyException);
 
-            return arrayOrderIgnoreProcessingDependencyException;
+            return jsonIgnoreRulesProcessingDependencyException;
         }
 
         private async ValueTask<JsonIgnoreRulesProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
-            var odsDataServiceException =
-                new ArrayOrderIgnoreProcessingServiceException(
+            var jsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Array order ignore processing service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(odsDataServiceException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingServiceException);
 
-            return odsDataServiceException;
+            return jsonIgnoreRulesProcessingServiceException;
         }
     }
 }

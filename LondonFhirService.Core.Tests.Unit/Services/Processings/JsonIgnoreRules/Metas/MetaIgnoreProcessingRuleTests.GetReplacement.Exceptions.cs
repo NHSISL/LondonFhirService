@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,7 +6,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.MetaIgnoreRules.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
 using Moq;
 using Xeptions;
@@ -23,8 +23,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             // given
             JsonElement randomElement = new();
 
-            var expectedMetaIgnoreProcessingDependencyException =
-                new MetaIgnoreProcessingDependencyException(
+            var expectedJsonIgnoreRulesProcessingDependencyException =
+                new JsonIgnoreRulesProcessingDependencyException(
                     message: "Meta ignore processing dependency error occurred, contact support.",
                     innerException: dependencyException);
 
@@ -42,13 +42,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             ValueTask<JsonElement> getReplacementTask =
                 metaIgnoreProcessingRuleMock.Object.GetReplacementAsync(randomElement);
 
-            MetaIgnoreProcessingDependencyException actualMetaIgnoreProcessingDependencyException =
-                await Assert.ThrowsAsync<MetaIgnoreProcessingDependencyException>(
+            JsonIgnoreRulesProcessingDependencyException actualJsonIgnoreRulesProcessingDependencyException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingDependencyException>(
                     testCode: getReplacementTask.AsTask);
 
             // then
-            actualMetaIgnoreProcessingDependencyException
-                .Should().BeEquivalentTo(expectedMetaIgnoreProcessingDependencyException);
+            actualJsonIgnoreRulesProcessingDependencyException
+                .Should().BeEquivalentTo(expectedJsonIgnoreRulesProcessingDependencyException);
 
             metaIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnGetReplacement(
@@ -62,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedMetaIgnoreProcessingDependencyException))),
+                   expectedJsonIgnoreRulesProcessingDependencyException))),
                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -78,8 +78,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             // given
             JsonElement randomElement = new();
 
-            var expectedMetaIgnoreProcessingDependencyValidationException =
-                new MetaIgnoreProcessingDependencyValidationException(
+            var expectedJsonIgnoreRulesProcessingDependencyValidationException =
+                new JsonIgnoreRulesProcessingDependencyValidationException(
                     message: "Meta ignore processing dependency validation error occurred, contact support.",
                     innerException: dependencyValidationException);
 
@@ -97,14 +97,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             ValueTask<JsonElement> getReplacementTask =
                 metaIgnoreProcessingRuleMock.Object.GetReplacementAsync(randomElement);
 
-            MetaIgnoreProcessingDependencyValidationException
-                actualMetaIgnoreProcessingDependencyValidationException =
-                    await Assert.ThrowsAsync<MetaIgnoreProcessingDependencyValidationException>(
+            JsonIgnoreRulesProcessingDependencyValidationException
+                actualJsonIgnoreRulesProcessingDependencyValidationException =
+                    await Assert.ThrowsAsync<JsonIgnoreRulesProcessingDependencyValidationException>(
                         testCode: getReplacementTask.AsTask);
 
             // then
-            actualMetaIgnoreProcessingDependencyValidationException
-                .Should().BeEquivalentTo(expectedMetaIgnoreProcessingDependencyValidationException);
+            actualJsonIgnoreRulesProcessingDependencyValidationException
+                .Should().BeEquivalentTo(expectedJsonIgnoreRulesProcessingDependencyValidationException);
 
             metaIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnGetReplacement(
@@ -118,7 +118,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedMetaIgnoreProcessingDependencyValidationException))),
+                   expectedJsonIgnoreRulesProcessingDependencyValidationException))),
                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -133,16 +133,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             JsonElement randomElement = new();
             var serviceException = new Exception();
 
-            var failedMetaIgnoreProcessingException =
-                new FailedMetaIgnoreProcessingException(
+            var failedJsonIgnoreRulesProcessingException =
+                new FailedJsonIgnoreRulesProcessingException(
                     message: "Failed meta ignore processing exception occurred, please contact support",
                     innerException: serviceException,
                     data: serviceException.Data);
 
-            var expectedMetaIgnoreProcessingServiceException =
-                new MetaIgnoreProcessingServiceException(
+            var expectedJsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Meta ignore processing service error occurred, contact support.",
-                    innerException: failedMetaIgnoreProcessingException);
+                    innerException: failedJsonIgnoreRulesProcessingException);
 
             var metaIgnoreProcessingRuleMock = new Mock<MetaIgnoreProcessingRule>(
                 jsonElementServiceMock.Object,
@@ -159,13 +159,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                 metaIgnoreProcessingRuleMock.Object.GetReplacementAsync(
                     randomElement);
 
-            MetaIgnoreProcessingServiceException actualMetaIgnoreProcessingServiceException =
-                await Assert.ThrowsAsync<MetaIgnoreProcessingServiceException>(
+            JsonIgnoreRulesProcessingServiceException actualJsonIgnoreRulesProcessingServiceException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingServiceException>(
                     getReplacementTask.AsTask);
 
             // then
-            actualMetaIgnoreProcessingServiceException.Should()
-                .BeEquivalentTo(expectedMetaIgnoreProcessingServiceException);
+            actualJsonIgnoreRulesProcessingServiceException.Should()
+                .BeEquivalentTo(expectedJsonIgnoreRulesProcessingServiceException);
 
             metaIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnGetReplacement(
@@ -179,7 +179,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedMetaIgnoreProcessingServiceException))),
+                    expectedJsonIgnoreRulesProcessingServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
