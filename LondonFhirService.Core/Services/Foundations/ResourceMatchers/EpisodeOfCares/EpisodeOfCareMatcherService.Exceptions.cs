@@ -4,7 +4,6 @@
 
 using System;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.EpisodeOfCares.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using Xeptions;
 
@@ -26,39 +25,39 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOf
             }
             catch (Exception exception)
             {
-                var failedEpisodeOfCareMatcherServiceException =
-                    new FailedEpisodeOfCareMatcherServiceException(
+                var failedResourceMatcherServiceException =
+                    new FailedResourceMatcherServiceException(
                         message: "Failed episode of care matcher service occurred, please contact support",
                         innerException: exception);
 
-                throw await CreateAndLogServiceException(failedEpisodeOfCareMatcherServiceException);
+                throw await CreateAndLogServiceException(failedResourceMatcherServiceException);
             }
         }
 
-        private async ValueTask<EpisodeOfCareMatcherServiceValidationException> CreateAndLogValidationException(
+        private async ValueTask<ResourceMatcherServiceValidationException> CreateAndLogValidationException(
             Xeption exception)
         {
-            var episodeOfCareMatcherServiceValidationException =
-                new EpisodeOfCareMatcherServiceValidationException(
+            var resourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "Episode of care matcher validation errors occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(episodeOfCareMatcherServiceValidationException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceValidationException);
 
-            return episodeOfCareMatcherServiceValidationException;
+            return resourceMatcherServiceValidationException;
         }
 
-        private async ValueTask<EpisodeOfCareMatcherServiceException> CreateAndLogServiceException(
+        private async ValueTask<ResourceMatcherServiceException> CreateAndLogServiceException(
             Xeption exception)
         {
-            var episodeOfCareMatcherServiceException =
-                new EpisodeOfCareMatcherServiceException(
+            var resourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "Episode of care matcher service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(episodeOfCareMatcherServiceException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
 
-            return episodeOfCareMatcherServiceException;
+            return resourceMatcherServiceException;
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Patients.Exceptions;
+using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
 using Moq;
 
@@ -23,15 +23,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
-            var failedPatientMatcherServiceException =
-                new FailedPatientMatcherServiceException(
+            var failedResourceMatcherServiceException =
+                new FailedResourceMatcherServiceException(
                     message: "Failed patient matcher service occurred, please contact support",
                     innerException: serviceException);
 
-            var expectedPatientMatcherServiceException =
-                new PatientMatcherServiceException(
+            var expectedResourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "Patient matcher service error occurred, contact support.",
-                    innerException: failedPatientMatcherServiceException);
+                    innerException: failedResourceMatcherServiceException);
 
             var patientMatcherServiceMock = new Mock<PatientMatcherService>(loggingBrokerMock.Object)
                 { CallBase = true };
@@ -48,13 +48,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     resource,
                     resourceIndex);
 
-            PatientMatcherServiceException actualPatientMatcherServiceException =
-                await Assert.ThrowsAsync<PatientMatcherServiceException>(
+            ResourceMatcherServiceException actualResourceMatcherServiceException =
+                await Assert.ThrowsAsync<ResourceMatcherServiceException>(
                     matchTask.AsTask);
 
             // then
-            actualPatientMatcherServiceException.Should()
-                .BeEquivalentTo(expectedPatientMatcherServiceException);
+            actualResourceMatcherServiceException.Should()
+                .BeEquivalentTo(expectedResourceMatcherServiceException);
 
             patientMatcherServiceMock.Verify(service =>
                 service.ValidateOnGetMatchKeyArguments(
@@ -70,7 +70,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedPatientMatcherServiceException))),
+                    expectedResourceMatcherServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

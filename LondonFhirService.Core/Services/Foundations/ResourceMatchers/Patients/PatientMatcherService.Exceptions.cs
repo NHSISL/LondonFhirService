@@ -5,7 +5,6 @@
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Patients.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients
@@ -26,39 +25,39 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients
             }
             catch (Exception exception)
             {
-                var failedPatientMatcherServiceException =
-                    new FailedPatientMatcherServiceException(
+                var failedResourceMatcherServiceException =
+                    new FailedResourceMatcherServiceException(
                         message: "Failed patient matcher service occurred, please contact support",
                         innerException: exception);
 
-                throw await CreateAndLogServiceException(failedPatientMatcherServiceException);
+                throw await CreateAndLogServiceException(failedResourceMatcherServiceException);
             }
         }
 
-        private async ValueTask<PatientMatcherServiceValidationException> CreateAndLogValidationException(
+        private async ValueTask<ResourceMatcherServiceValidationException> CreateAndLogValidationException(
             Xeption exception)
         {
-            var patientMatcherServiceValidationException =
-                new PatientMatcherServiceValidationException(
+            var resourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "Patient matcher validation errors occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(patientMatcherServiceValidationException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceValidationException);
 
-            return patientMatcherServiceValidationException;
+            return resourceMatcherServiceValidationException;
         }
 
-        private async ValueTask<PatientMatcherServiceException> CreateAndLogServiceException(
+        private async ValueTask<ResourceMatcherServiceException> CreateAndLogServiceException(
             Xeption exception)
         {
-            var patientMatcherServiceException =
-                new PatientMatcherServiceException(
+            var resourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "Patient matcher service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(patientMatcherServiceException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
 
-            return patientMatcherServiceException;
+            return resourceMatcherServiceException;
         }
     }
 }

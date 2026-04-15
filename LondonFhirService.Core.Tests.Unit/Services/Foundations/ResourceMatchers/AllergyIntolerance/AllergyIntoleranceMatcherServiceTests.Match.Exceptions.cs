@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
+using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
 using Moq;
 
@@ -26,15 +26,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             Dictionary<string, JsonElement> invalidSource2ResourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
-            var failedAllergyIntoleranceMatcherServiceException =
-                new FailedAllergyIntoleranceMatcherServiceException(
+            var failedResourceMatcherServiceException =
+                new FailedResourceMatcherServiceException(
                     message: "Failed allergy intolerance matcher service occurred, please contact support",
                     innerException: serviceException);
 
-            var expectedAllergyIntoleranceMatcherServiceException =
-                new AllergyIntoleranceMatcherServiceException(
+            var expectedResourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "Allergy intolerance matcher service error occurred, contact support.",
-                    innerException: failedAllergyIntoleranceMatcherServiceException);
+                    innerException: failedResourceMatcherServiceException);
 
             var allergyIntoleranceMatcherServiceMock = new Mock<AllergyIntoleranceMatcherService>(loggingBrokerMock.Object)
                 { CallBase = true };
@@ -55,13 +55,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     invalidSource1ResourceIndex,
                     invalidSource2ResourceIndex);
 
-            AllergyIntoleranceMatcherServiceException actualAllergyIntoleranceMatcherServiceException =
-                await Assert.ThrowsAsync<AllergyIntoleranceMatcherServiceException>(
+            ResourceMatcherServiceException actualResourceMatcherServiceException =
+                await Assert.ThrowsAsync<ResourceMatcherServiceException>(
                     matchTask.AsTask);
 
             // then
-            actualAllergyIntoleranceMatcherServiceException.Should()
-                .BeEquivalentTo(expectedAllergyIntoleranceMatcherServiceException);
+            actualResourceMatcherServiceException.Should()
+                .BeEquivalentTo(expectedResourceMatcherServiceException);
 
             allergyIntoleranceMatcherServiceMock.Verify(service =>
                 service.ValidateOnMatchArguments(
@@ -81,7 +81,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedAllergyIntoleranceMatcherServiceException))),
+                    expectedResourceMatcherServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
