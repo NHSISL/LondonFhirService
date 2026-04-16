@@ -73,8 +73,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                 List<JsonElement> s2Resources =
                     source2Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
 
-                IResourceMatcherService matcher =
-                    resourceMatcherProcessingService.GetMatcher(resourceType);
+                IResourceMatcherService? matcher =
+                    await resourceMatcherProcessingService.GetMatcherAsync(resourceType);
 
                 if (matcher is null)
                 {
