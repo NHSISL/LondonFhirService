@@ -28,7 +28,11 @@ using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Consumers;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.OdsDatas;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.PdsDatas;
@@ -180,6 +184,8 @@ public partial class Program
     {
         ODataConventionModelBuilder builder = new();
         builder.EntitySet<Audit>("Audits");
+        builder.EntitySet<FhirRecord>("FhirRecords");
+        builder.EntitySet<FhirRecordDifference>("FhirRecordDifferences");
         builder.EnableLowerCamelCase();
         return builder.GetEdmModel();
     }
@@ -259,6 +265,8 @@ public partial class Program
         services.AddTransient<IAuditService, AuditService>();
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
         services.AddTransient<IConsumerService, ConsumerService>();
+        services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
+        services.AddTransient<IFhirRecordService, FhirRecordService>();
         services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
         services.AddTransient<IOdsDataService, OdsDataService>();
         services.AddTransient<IStu3PatientService, Stu3PatientService>();

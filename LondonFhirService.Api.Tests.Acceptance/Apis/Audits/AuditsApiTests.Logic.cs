@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Api.Tests.Acceptance.Models.Audits;
 
-namespace LondonFhirService.Api.Tests.Acceptance.Apis
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.Audits
 {
     public partial class AuditsApiTests
     {

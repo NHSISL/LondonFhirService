@@ -398,8 +398,15 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 // If seeding a primary, check by FhirVersion alone
                 if (provider.IsPrimary)
                 {
+                    DateTimeOffset now = DateTimeOffset.UtcNow;
+
                     var existingPrimary = providerQuery
-                        .FirstOrDefault(p => p.FhirVersion == provider.FhirVersion && p.IsPrimary);
+                        .FirstOrDefault(p =>
+                            p.FhirVersion == provider.FhirVersion
+                            && p.IsPrimary
+                            && p.IsActive
+                            && (p.ActiveFrom == null || p.ActiveFrom <= now)
+                            && (p.ActiveTo == null || p.ActiveTo >= now));
 
                     if (existingPrimary is not null)
                     {
