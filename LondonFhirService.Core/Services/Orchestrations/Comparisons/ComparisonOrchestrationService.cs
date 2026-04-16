@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Models.Orchestrations.Comparisons;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
@@ -18,24 +19,26 @@ using LondonFhirService.Core.Services.Processings.ResourceMatchings;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
 {
-    public partial class ComparisonOrchestrationService
+    public partial class ComparisonOrchestrationService : IComparisonOrchestrationService
     {
         private readonly List<IJsonIgnoreProcessingRule> ignoreRules;
         private readonly IResourceMatcherProcessingService resourceMatcherProcessingService;
         private readonly IListEntryComparisonProcessingService listEntryComparisonProcessingService;
         private readonly IJsonElementService jsonElementService;
-
+        private readonly ILoggingBroker loggingBroker;
 
         public ComparisonOrchestrationService(
             List<IJsonIgnoreProcessingRule> ignoreRules,
             IResourceMatcherProcessingService resourceMatcherProcessingService,
             IListEntryComparisonProcessingService listEntryComparisonProcessingService,
-            IJsonElementService jsonElementService)
+            IJsonElementService jsonElementService,
+            ILoggingBroker loggingBroker)
         {
             this.ignoreRules = ignoreRules;
             this.resourceMatcherProcessingService = resourceMatcherProcessingService;
             this.listEntryComparisonProcessingService = listEntryComparisonProcessingService;
             this.jsonElementService = jsonElementService;
+            this.loggingBroker = loggingBroker;
         }
 
         public async ValueTask<ComparisonResult> CompareAsync(
