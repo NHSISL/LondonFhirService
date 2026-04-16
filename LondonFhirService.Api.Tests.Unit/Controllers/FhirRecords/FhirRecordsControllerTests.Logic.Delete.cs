@@ -30,7 +30,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.FhirRecords
                 new ActionResult<FhirRecord>(expectedObjectResult);
 
             fhirRecordServiceMock
-                .Setup(service => service.RemoveFhirRecordByIdAsync(It.IsAny<Guid>()))
+                .Setup(service => service.RemoveFhirRecordByIdAsync(inputId))
                     .ReturnsAsync(storageFhirRecord);
 
             // when
@@ -41,7 +41,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.FhirRecords
             actualActionResult.ShouldBeEquivalentTo(expectedActionResult);
 
             fhirRecordServiceMock
-                .Verify(service => service.RemoveFhirRecordByIdAsync(It.IsAny<Guid>()),
+                .Verify(service => service.RemoveFhirRecordByIdAsync(inputId),
                     Times.Once);
 
             fhirRecordServiceMock.VerifyNoOtherCalls();

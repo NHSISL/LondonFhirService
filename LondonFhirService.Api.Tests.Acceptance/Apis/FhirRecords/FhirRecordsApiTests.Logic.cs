@@ -116,19 +116,15 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis
             // given
             FhirRecord randomFhirRecord = await PostRandomFhirRecordAsync();
             FhirRecord inputFhirRecord = randomFhirRecord;
-            FhirRecord expectedFhirRecord = inputFhirRecord;
 
             // when
-            FhirRecord deletedFhirRecord =
-                await this.apiBroker.DeleteFhirRecordByIdAsync(inputFhirRecord.Id);
+            await this.apiBroker.DeleteFhirRecordByIdAsync(inputFhirRecord.Id);
+
+            List<FhirRecord> actualResult =
+                await this.apiBroker.GetSpecificFhirRecordByIdAsync(inputFhirRecord.Id);
 
             // then
-            deletedFhirRecord.Should().BeEquivalentTo(expectedFhirRecord,
-                options => options
-                    .Excluding(fhirRecord => fhirRecord.CreatedBy)
-                    .Excluding(fhirRecord => fhirRecord.CreatedDate)
-                    .Excluding(fhirRecord => fhirRecord.UpdatedBy)
-                    .Excluding(fhirRecord => fhirRecord.UpdatedDate));
+            actualResult.Count().Should().Be(0);
         }
     }
 }
