@@ -2,13 +2,14 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System.Threading.Tasks;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Processings.ResourceMatchings
 {
     public interface IResourceMatcherProcessingService
     {
-        IResourceMatcherService? GetMatcher(string resourceType);
-        bool HasMatcher(string resourceType);
+        ValueTask<IResourceMatcherService?> GetMatcherAsync(string resourceType);
+        ValueTask<bool> HasMatcherAsync(string resourceType);
     }
 }

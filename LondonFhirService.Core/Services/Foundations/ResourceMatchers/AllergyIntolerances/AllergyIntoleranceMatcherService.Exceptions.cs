@@ -4,7 +4,6 @@
 
 using System;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using Xeptions;
 
@@ -26,39 +25,39 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIn
             }
             catch (Exception exception)
             {
-                var failedAllergyIntoleranceMatcherServiceException =
-                    new FailedAllergyIntoleranceMatcherServiceException(
+                var failedResourceMatcherServiceException =
+                    new FailedResourceMatcherServiceException(
                         message: "Failed allergy intolerance matcher service occurred, please contact support",
                         innerException: exception);
 
-                throw await CreateAndLogServiceException(failedAllergyIntoleranceMatcherServiceException);
+                throw await CreateAndLogServiceException(failedResourceMatcherServiceException);
             }
         }
 
-        private async ValueTask<AllergyIntoleranceMatcherServiceValidationException> CreateAndLogValidationException(
+        private async ValueTask<ResourceMatcherServiceValidationException> CreateAndLogValidationException(
             Xeption exception)
         {
-            var allergyIntoleranceMatcherServiceValidationException =
-                new AllergyIntoleranceMatcherServiceValidationException(
+            var resourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "Allergy intolerance matcher validation errors occurred, please try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(allergyIntoleranceMatcherServiceValidationException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceValidationException);
 
-            return allergyIntoleranceMatcherServiceValidationException;
+            return resourceMatcherServiceValidationException;
         }
 
-        private async ValueTask<AllergyIntoleranceMatcherServiceException> CreateAndLogServiceException(
+        private async ValueTask<ResourceMatcherServiceException> CreateAndLogServiceException(
             Xeption exception)
         {
-            var allergyIntoleranceMatcherServiceException =
-                new AllergyIntoleranceMatcherServiceException(
+            var resourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "Allergy intolerance matcher service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(allergyIntoleranceMatcherServiceException);
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
 
-            return allergyIntoleranceMatcherServiceException;
+            return resourceMatcherServiceException;
         }
     }
 }

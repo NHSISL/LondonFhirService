@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.EpisodeOfCares.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using Moq;
 
@@ -35,8 +34,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 key: "resourceIndex",
                 value: "Dictionary is required.");
 
-            var expectedEpisodeOfCareMatcherServiceValidationException =
-                new EpisodeOfCareMatcherServiceValidationException(
+            var expectedResourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "Episode of care matcher validation errors occurred, " +
                         "please try again.",
                     innerException: invalidArgumentResourceMatcherException);
@@ -48,16 +47,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     invalidResourceIndex);
 
             // then
-            EpisodeOfCareMatcherServiceValidationException actualException =
-                await Assert.ThrowsAsync<EpisodeOfCareMatcherServiceValidationException>(
+            ResourceMatcherServiceValidationException actualException =
+                await Assert.ThrowsAsync<ResourceMatcherServiceValidationException>(
                     getMatchKeyTask.AsTask);
 
             actualException.Should()
-                .BeEquivalentTo(expectedEpisodeOfCareMatcherServiceValidationException);
+                .BeEquivalentTo(expectedResourceMatcherServiceValidationException);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedEpisodeOfCareMatcherServiceValidationException))),
+                    expectedResourceMatcherServiceValidationException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

@@ -12,7 +12,7 @@ using LondonFhirService.Core.Models.Orchestrations.Comparisons;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
-using LondonFhirService.Core.Services.Processings.JsonIgnoreRules.Jsons;
+using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
 using LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Services.Processings.ResourceMatchings;
 
@@ -73,8 +73,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                 List<JsonElement> s2Resources =
                     source2Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
 
-                IResourceMatcherService matcher =
-                    resourceMatcherProcessingService.GetMatcher(resourceType);
+                IResourceMatcherService? matcher =
+                    await resourceMatcherProcessingService.GetMatcherAsync(resourceType);
 
                 if (matcher is null)
                 {

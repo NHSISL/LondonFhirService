@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Conditions.Exceptions;
+using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
 using Moq;
 
@@ -23,15 +23,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
-            var failedConditionMatcherServiceException =
-                new FailedConditionMatcherServiceException(
+            var failedResourceMatcherServiceException =
+                new FailedResourceMatcherServiceException(
                     message: "Failed condition matcher service occurred, please contact support",
                     innerException: serviceException);
 
-            var expectedConditionMatcherServiceException =
-                new ConditionMatcherServiceException(
+            var expectedResourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "Condition matcher service error occurred, contact support.",
-                    innerException: failedConditionMatcherServiceException);
+                    innerException: failedResourceMatcherServiceException);
 
             var conditionMatcherServiceMock = new Mock<ConditionMatcherService>(loggingBrokerMock.Object)
                 { CallBase = true };
@@ -48,13 +48,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     resource,
                     resourceIndex);
 
-            ConditionMatcherServiceException actualConditionMatcherServiceException =
-                await Assert.ThrowsAsync<ConditionMatcherServiceException>(
+            ResourceMatcherServiceException actualResourceMatcherServiceException =
+                await Assert.ThrowsAsync<ResourceMatcherServiceException>(
                     matchTask.AsTask);
 
             // then
-            actualConditionMatcherServiceException.Should()
-                .BeEquivalentTo(expectedConditionMatcherServiceException);
+            actualResourceMatcherServiceException.Should()
+                .BeEquivalentTo(expectedResourceMatcherServiceException);
 
             conditionMatcherServiceMock.Verify(service =>
                 service.ValidateOnGetMatchKeyArguments(
@@ -70,7 +70,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConditionMatcherServiceException))),
+                    expectedResourceMatcherServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

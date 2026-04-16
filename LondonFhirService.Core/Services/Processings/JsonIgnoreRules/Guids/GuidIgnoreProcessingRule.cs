@@ -7,13 +7,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
-using LondonFhirService.Core.Services.Processings.JsonIgnoreRules.Jsons;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
     public partial class GuidIgnoreProcessingRule : JsonIgnoreProcessingRuleBase, IJsonIgnoreProcessingRule
     {
-        public GuidIgnoreProcessingRule(JsonElementService jsonElementService, LoggingBroker loggingBroker)
+        public GuidIgnoreProcessingRule(IJsonElementService jsonElementService, ILoggingBroker loggingBroker)
             : base(jsonElementService, loggingBroker)
         { }
 

@@ -9,6 +9,7 @@ using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
 using Moq;
+using Tynamix.ObjectFiller;
 using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Conditions
@@ -33,10 +34,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         private static Dictionary<string, JsonElement> CreateResourceIndex() =>
             new();
 
+        private static string GetRandomString() =>
+            new MnemonicString(wordCount: GetRandomNumber()).GetValue();
+
+        private static string GetRandomSnomedCode() =>
+            new IntRange(min: 1000000, max: 9999999).GetValue().ToString();
+
+        private static int GetRandomNumber() =>
+            new IntRange(min: 2, max: 10).GetValue();
+
+        private static DateTimeOffset GetRandomDateTimeOffset() =>
+            new DateTimeRange(earliestDate: new DateTime()).GetValue();
+
         private static JsonElement CreateConditionResource(
             string snomedCode,
             string onsetDateTime,
-            string id = "allergy-1")
+            string id)
         {
             string json = $$"""
           {

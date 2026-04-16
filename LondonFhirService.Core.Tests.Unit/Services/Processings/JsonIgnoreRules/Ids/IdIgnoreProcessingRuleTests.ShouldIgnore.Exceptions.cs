@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,7 +6,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.IdIgnoreRules.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
 using Moq;
 
@@ -22,16 +22,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             string randomPath = GetRandomString();
             var serviceException = new Exception();
 
-            var failedIdIgnoreProcessingException =
-                new FailedIdIgnoreProcessingException(
+            var failedJsonIgnoreRulesProcessingException =
+                new FailedJsonIgnoreRulesProcessingException(
                     message: "Failed id ignore processing exception occurred, please contact support",
                     innerException: serviceException,
                     data: serviceException.Data);
 
-            var expectedIdIgnoreProcessingServiceException =
-                new IdIgnoreProcessingServiceException(
+            var expectedJsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Id ignore processing service error occurred, contact support.",
-                    innerException: failedIdIgnoreProcessingException);
+                    innerException: failedJsonIgnoreRulesProcessingException);
 
             var idIgnoreProcessingRuleMock = new Mock<IdIgnoreProcessingRule>(
                 jsonElementServiceMock.Object,
@@ -50,13 +50,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     randomElement,
                     randomPath);
 
-            IdIgnoreProcessingServiceException actualIdIgnoreProcessingServiceException =
-                await Assert.ThrowsAsync<IdIgnoreProcessingServiceException>(
+            JsonIgnoreRulesProcessingServiceException actualJsonIgnoreRulesProcessingServiceException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingServiceException>(
                     shouldIgnoreTask.AsTask);
 
             // then
-            actualIdIgnoreProcessingServiceException.Should()
-                .BeEquivalentTo(expectedIdIgnoreProcessingServiceException);
+            actualJsonIgnoreRulesProcessingServiceException.Should()
+                .BeEquivalentTo(expectedJsonIgnoreRulesProcessingServiceException);
 
             idIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnShouldIgnore(
@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedIdIgnoreProcessingServiceException))),
+                    expectedJsonIgnoreRulesProcessingServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

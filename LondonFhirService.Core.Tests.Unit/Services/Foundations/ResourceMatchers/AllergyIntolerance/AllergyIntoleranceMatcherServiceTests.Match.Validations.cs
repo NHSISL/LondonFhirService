@@ -7,7 +7,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.AllergyIntolerances.Exceptions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using Moq;
 
@@ -44,8 +43,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 key: "source2ResourceIndex",
                 values: "Dictionary is required.");
 
-            var expectedAllergyIntoleranceMatcherServiceValidationException =
-                new AllergyIntoleranceMatcherServiceValidationException(
+            var expectedResourceMatcherServiceValidationException =
+                new ResourceMatcherServiceValidationException(
                     message: "Allergy intolerance matcher validation errors occurred, " +
                         "please try again.",
                     innerException: invalidArgumentResourceMatcherException);
@@ -59,16 +58,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     invalidSource2ResourceIndex);
 
             // then
-            AllergyIntoleranceMatcherServiceValidationException actualException =
-                await Assert.ThrowsAsync<AllergyIntoleranceMatcherServiceValidationException>(
+            ResourceMatcherServiceValidationException actualException =
+                await Assert.ThrowsAsync<ResourceMatcherServiceValidationException>(
                     matchTask.AsTask);
 
             actualException.Should()
-                .BeEquivalentTo(expectedAllergyIntoleranceMatcherServiceValidationException);
+                .BeEquivalentTo(expectedResourceMatcherServiceValidationException);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedAllergyIntoleranceMatcherServiceValidationException))),
+                    expectedResourceMatcherServiceValidationException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

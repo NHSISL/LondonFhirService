@@ -1,12 +1,12 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.MetaIgnoreRules.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             {
                 return await returningFunction();
             }
-            catch (InvalidJsonIgnoreProcessingException invalidJsonIgnoreProcessingException)
+            catch (InvalidJsonIgnoreRulesProcessingException invalidJsonIgnoreProcessingException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidJsonIgnoreProcessingException);
             }
@@ -47,68 +47,68 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             }
             catch (Exception exception)
             {
-                var failedMetaIgnoreProcessingException =
-                    new FailedMetaIgnoreProcessingException(
+                var failedJsonIgnoreRulesProcessingException =
+                    new FailedJsonIgnoreRulesProcessingException(
                         message:
                             "Failed meta ignore processing exception occurred, please contact support",
 
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateAndLogServiceExceptionAsync(failedMetaIgnoreProcessingException);
+                throw await CreateAndLogServiceExceptionAsync(failedJsonIgnoreRulesProcessingException);
             }
         }
 
-        private async ValueTask<MetaIgnoreProcessingValidationException> CreateAndLogValidationExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
-            var metaIgnoreProcessingValidationException =
-                new MetaIgnoreProcessingValidationException(
+            var jsonIgnoreRulesProcessingValidationException =
+                new JsonIgnoreRulesProcessingValidationException(
                     message: "Meta ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingValidationException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingValidationException);
 
-            return metaIgnoreProcessingValidationException;
+            return jsonIgnoreRulesProcessingValidationException;
         }
 
-        private async ValueTask<MetaIgnoreProcessingDependencyValidationException>
+        private async ValueTask<JsonIgnoreRulesProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
-            var metaIgnoreProcessingDependencyValidationException =
-                new MetaIgnoreProcessingDependencyValidationException(
-                    message: "Meta ignore processing dependency validation occurred, please try again.",
+            var jsonIgnoreRulesProcessingDependencyValidationException =
+                new JsonIgnoreRulesProcessingDependencyValidationException(
+                    message: "Meta ignore processing dependency validation error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingDependencyValidationException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingDependencyValidationException);
 
-            return metaIgnoreProcessingDependencyValidationException;
+            return jsonIgnoreRulesProcessingDependencyValidationException;
         }
 
-        private async ValueTask<MetaIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
-            var metaIgnoreProcessingDependencyException =
-                new MetaIgnoreProcessingDependencyException(
+            var jsonIgnoreRulesProcessingDependencyException =
+                new JsonIgnoreRulesProcessingDependencyException(
                     message: "Meta ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingDependencyException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingDependencyException);
 
-            return metaIgnoreProcessingDependencyException;
+            return jsonIgnoreRulesProcessingDependencyException;
         }
 
-        private async ValueTask<MetaIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
-            var metaIgnoreProcessingServiceException =
-                new MetaIgnoreProcessingServiceException(
+            var jsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Meta ignore processing service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(metaIgnoreProcessingServiceException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingServiceException);
 
-            return metaIgnoreProcessingServiceException;
+            return jsonIgnoreRulesProcessingServiceException;
         }
     }
 }

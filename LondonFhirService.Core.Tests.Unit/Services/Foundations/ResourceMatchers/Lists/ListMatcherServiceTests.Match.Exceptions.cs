@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Lists.Exceptions;
+using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
 using Moq;
 
@@ -26,15 +26,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             Dictionary<string, JsonElement> invalidSource2ResourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
-            var failedListMatcherServiceException =
-                new FailedListMatcherServiceException(
+            var failedResourceMatcherServiceException =
+                new FailedResourceMatcherServiceException(
                     message: "Failed list matcher service occurred, please contact support",
                     innerException: serviceException);
 
-            var expectedListMatcherServiceException =
-                new ListMatcherServiceException(
+            var expectedResourceMatcherServiceException =
+                new ResourceMatcherServiceException(
                     message: "List matcher service error occurred, contact support.",
-                    innerException: failedListMatcherServiceException);
+                    innerException: failedResourceMatcherServiceException);
 
             var listMatcherServiceMock = 
                 new Mock<ListMatcherService>(loggingBrokerMock.Object) { CallBase = true };
@@ -55,13 +55,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     invalidSource1ResourceIndex,
                     invalidSource2ResourceIndex);
 
-            ListMatcherServiceException actualListMatcherServiceException =
-                await Assert.ThrowsAsync<ListMatcherServiceException>(
+            ResourceMatcherServiceException actualResourceMatcherServiceException =
+                await Assert.ThrowsAsync<ResourceMatcherServiceException>(
                     matchTask.AsTask);
 
             // then
-            actualListMatcherServiceException.Should()
-                .BeEquivalentTo(expectedListMatcherServiceException);
+            actualResourceMatcherServiceException.Should()
+                .BeEquivalentTo(expectedResourceMatcherServiceException);
 
             listMatcherServiceMock.Verify(service =>
                 service.ValidateOnMatchArguments(
@@ -81,7 +81,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedListMatcherServiceException))),
+                    expectedResourceMatcherServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
