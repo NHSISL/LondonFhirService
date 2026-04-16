@@ -10,7 +10,7 @@ namespace LondonFhirService.Core.Services.Processings.ResourceMatchings;
 
 public partial class ResourceMatcherProcessingService
 {
-    private void ValidateResourceType(string resourceType)
+    virtual internal void ValidateResourceType(string resourceType)
     {
         Validate(
             createException: () => new InvalidArgumentResourceMatcherProcessingException(
