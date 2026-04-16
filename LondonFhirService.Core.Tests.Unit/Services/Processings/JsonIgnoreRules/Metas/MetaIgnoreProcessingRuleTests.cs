@@ -50,7 +50,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             if (depth <= 1)
             {
-                string leafJson = $"[{string.Join(",", Enumerable.Range(0, count).Select(_ => GetRandomNumber()))}]";
+                string leafJson = 
+                    $"[{string.Join(",", Enumerable.Range(0, count).Select(_ => GetRandomNumber()))}]";
+
                 return ParseJsonElement(leafJson);
             }
 
@@ -74,7 +76,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     innerException),
 
                 new JsonElementServiceDependencyValidationException(
-                    message: "Json element service dependency validation error occurred, please contact support.",
+                    message: 
+                        "Json element service dependency validation error occurred, " +
+                        "please contact support.",
                     innerException),
             };
         }

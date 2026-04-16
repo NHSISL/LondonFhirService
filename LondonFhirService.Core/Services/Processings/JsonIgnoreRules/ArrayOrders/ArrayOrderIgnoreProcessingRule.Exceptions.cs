@@ -35,7 +35,8 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
                 throw await CreateAndLogDependencyExceptionAsync(
                     jsonElementServiceDependencyException);
             }
-            catch (JsonElementServiceDependencyValidationException jsonElementServiceDependencyValidationException)
+            catch (JsonElementServiceDependencyValidationException 
+                jsonElementServiceDependencyValidationException)
             {
                 throw await CreateAndLogDependencyValidationExceptionAsync(
                     jsonElementServiceDependencyValidationException);
@@ -59,12 +60,14 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             }
         }
 
-        private async ValueTask<JsonIgnoreRulesProcessingValidationException> CreateAndLogValidationExceptionAsync(
-            Xeption exception)
+        private async ValueTask<JsonIgnoreRulesProcessingValidationException> 
+            CreateAndLogValidationExceptionAsync(Xeption exception)
         {
             var jsonIgnoreRulesProcessingValidationException =
                 new JsonIgnoreRulesProcessingValidationException(
-                    message: "Array order ignore processing validation error occurred, please fix errors and try again.",
+                    message: 
+                        "Array order ignore processing validation error occurred, " +
+                        "please fix errors and try again.",
                     innerException: exception);
 
             await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingValidationException);

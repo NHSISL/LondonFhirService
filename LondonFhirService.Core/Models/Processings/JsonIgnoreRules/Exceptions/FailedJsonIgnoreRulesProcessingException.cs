@@ -10,8 +10,11 @@ namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIg
 {
     public class FailedJsonIgnoreRulesProcessingException : Xeption
     {
-        public FailedJsonIgnoreRulesProcessingException(string message, Exception innerException, IDictionary data)
-            : base(message, innerException, data)
+        public FailedJsonIgnoreRulesProcessingException(
+            string message, 
+            Exception innerException, 
+            IDictionary data)
+                : base(message, innerException, data)
         { }
     }
 }
