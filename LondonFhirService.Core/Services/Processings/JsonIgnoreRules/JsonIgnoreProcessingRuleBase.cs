@@ -8,7 +8,6 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
     using System.Threading.Tasks;
     using LondonFhirService.Core.Brokers.Loggings;
     using LondonFhirService.Core.Services.Foundations.JsonElements;
-    using LondonFhirService.Core.Services.Processings.JsonIgnoreRules.Jsons;
 
     public abstract partial class JsonIgnoreProcessingRuleBase : IJsonIgnoreProcessingRule
     {
