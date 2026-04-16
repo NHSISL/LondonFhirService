@@ -9,7 +9,7 @@ using LondonFhirService.Api.Tests.Acceptance.Brokers;
 using LondonFhirService.Api.Tests.Acceptance.Models.FhirRecords;
 using Tynamix.ObjectFiller;
 
-namespace LondonFhirService.Api.Tests.Acceptance.Apis
+namespace LondonFhirService.Api.Tests.Acceptance.Apis.FhirRecords
 {
     [Collection(nameof(ApiTestCollection))]
     public partial class FhirRecordsApiTests
