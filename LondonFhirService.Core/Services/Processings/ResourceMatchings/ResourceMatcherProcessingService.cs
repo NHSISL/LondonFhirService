@@ -33,7 +33,7 @@ public partial class ResourceMatcherProcessingService : IResourceMatcherProcessi
         {
             ValidateResourceType(resourceType);
 
-            return matchers.TryGetValue(resourceType, out IResourceMatcherService? matcher)
+            return this.matchers.TryGetValue(resourceType, out IResourceMatcherService? matcher)
                 ? matcher
                 : null;
         });
@@ -43,6 +43,6 @@ public partial class ResourceMatcherProcessingService : IResourceMatcherProcessi
         {
             ValidateResourceType(resourceType);
 
-            return matchers.ContainsKey(resourceType);
+            return this.matchers.ContainsKey(resourceType);
         });
 }
