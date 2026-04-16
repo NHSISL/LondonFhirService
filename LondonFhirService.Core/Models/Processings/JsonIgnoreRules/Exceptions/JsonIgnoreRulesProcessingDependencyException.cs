@@ -4,11 +4,11 @@
 
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.GuidIgnoreRules.Exceptions
+namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions
 {
-    public class GuidIgnoreProcessingValidationException : Xeption
+    public class JsonIgnoreRulesProcessingDependencyException : Xeption
     {
-        public GuidIgnoreProcessingValidationException(string message, Xeption innerException)
+        public JsonIgnoreRulesProcessingDependencyException(string message, Xeption innerException)
             : base(message, innerException)
         { }
     }

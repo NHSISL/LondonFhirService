@@ -1,12 +1,12 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.GuidIgnoreRules.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             {
                 return await returningFunction();
             }
-            catch (InvalidJsonIgnoreProcessingException invalidJsonIgnoreProcessingException)
+            catch (InvalidJsonIgnoreRulesProcessingException invalidJsonIgnoreProcessingException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidJsonIgnoreProcessingException);
             }
@@ -47,68 +47,68 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             }
             catch (Exception exception)
             {
-                var failedGuidIgnoreProcessingException =
-                    new FailedGuidIgnoreProcessingException(
+                var failedJsonIgnoreRulesProcessingException =
+                    new FailedJsonIgnoreRulesProcessingException(
                         message:
                             "Failed guid ignore processing exception occurred, please contact support",
 
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateAndLogServiceExceptionAsync(failedGuidIgnoreProcessingException);
+                throw await CreateAndLogServiceExceptionAsync(failedJsonIgnoreRulesProcessingException);
             }
         }
 
-        private async ValueTask<GuidIgnoreProcessingValidationException> CreateAndLogValidationExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
-            var arrayOrderIgnoreProcessingValidationException =
-                new GuidIgnoreProcessingValidationException(
+            var jsonIgnoreRulesProcessingValidationException =
+                new JsonIgnoreRulesProcessingValidationException(
                     message: "Guid ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(arrayOrderIgnoreProcessingValidationException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingValidationException);
 
-            return arrayOrderIgnoreProcessingValidationException;
+            return jsonIgnoreRulesProcessingValidationException;
         }
 
-        private async ValueTask<GuidIgnoreProcessingDependencyValidationException>
+        private async ValueTask<JsonIgnoreRulesProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
-            var guidIgnoreProcessingDependencyValidationException =
-                new GuidIgnoreProcessingDependencyValidationException(
+            var jsonIgnoreRulesProcessingDependencyValidationException =
+                new JsonIgnoreRulesProcessingDependencyValidationException(
                     message: "Guid ignore processing dependency validation error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(guidIgnoreProcessingDependencyValidationException);
-            
-            return guidIgnoreProcessingDependencyValidationException;
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingDependencyValidationException);
+
+            return jsonIgnoreRulesProcessingDependencyValidationException;
         }
 
-        private async ValueTask<GuidIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
-            var guidIgnoreProcessingDependencyException =
-                new GuidIgnoreProcessingDependencyException(
+            var jsonIgnoreRulesProcessingDependencyException =
+                new JsonIgnoreRulesProcessingDependencyException(
                     message: "Guid ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(guidIgnoreProcessingDependencyException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingDependencyException);
 
-            return guidIgnoreProcessingDependencyException;
+            return jsonIgnoreRulesProcessingDependencyException;
         }
 
-        private async ValueTask<GuidIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
-            var guidIgnoreProcessingServiceException =
-                new GuidIgnoreProcessingServiceException(
+            var jsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Guid ignore processing service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(guidIgnoreProcessingServiceException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingServiceException);
 
-            return guidIgnoreProcessingServiceException;
+            return jsonIgnoreRulesProcessingServiceException;
         }
     }
 }

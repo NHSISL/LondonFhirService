@@ -14,7 +14,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         protected internal virtual void ValidateOnShouldIgnore(JsonElement element, string path)
         {
             Validate(
-                createException: () => new InvalidJsonIgnoreProcessingException(
+                createException: () => new InvalidJsonIgnoreRulesProcessingException(
                     message: "Invalid arguments. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(path), Parameter: nameof(path)),
@@ -24,7 +24,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
         protected internal virtual void ValidateOnGetReplacement(JsonElement element)
         {
             Validate(
-                createException: () => new InvalidJsonIgnoreProcessingException(
+                createException: () => new InvalidJsonIgnoreRulesProcessingException(
                     message: "Invalid arguments. Please correct the errors and try again."),
 
                 (Rule: IsInvalid(element), Parameter: nameof(element)));

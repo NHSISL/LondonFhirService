@@ -1,12 +1,12 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.IdIgnoreRules.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             {
                 return await returningFunction();
             }
-            catch (InvalidJsonIgnoreProcessingException invalidJsonIgnoreProcessingException)
+            catch (InvalidJsonIgnoreRulesProcessingException invalidJsonIgnoreProcessingException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidJsonIgnoreProcessingException);
             }
@@ -47,68 +47,68 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
             }
             catch (Exception exception)
             {
-                var failedIdIgnoreProcessingException =
-                    new FailedIdIgnoreProcessingException(
+                var failedJsonIgnoreRulesProcessingException =
+                    new FailedJsonIgnoreRulesProcessingException(
                         message:
                             "Failed id ignore processing exception occurred, please contact support",
 
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateAndLogServiceExceptionAsync(failedIdIgnoreProcessingException);
+                throw await CreateAndLogServiceExceptionAsync(failedJsonIgnoreRulesProcessingException);
             }
         }
 
-        private async ValueTask<IdIgnoreProcessingValidationException> CreateAndLogValidationExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
-            var idIgnoreProcessingValidationException =
-                new IdIgnoreProcessingValidationException(
+            var jsonIgnoreRulesProcessingValidationException =
+                new JsonIgnoreRulesProcessingValidationException(
                     message: "Id ignore processing validation error occurred, please fix errors and try again.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(idIgnoreProcessingValidationException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingValidationException);
 
-            return idIgnoreProcessingValidationException;
+            return jsonIgnoreRulesProcessingValidationException;
         }
 
-        private async ValueTask<IdIgnoreProcessingDependencyValidationException>
+        private async ValueTask<JsonIgnoreRulesProcessingDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
-            var idIgnoreProcessingDependencyValidationException =
-                new IdIgnoreProcessingDependencyValidationException(
+            var jsonIgnoreRulesProcessingDependencyValidationException =
+                new JsonIgnoreRulesProcessingDependencyValidationException(
                     message: "Id ignore processing dependency validation error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(idIgnoreProcessingDependencyValidationException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingDependencyValidationException);
 
-            return idIgnoreProcessingDependencyValidationException;
+            return jsonIgnoreRulesProcessingDependencyValidationException;
         }
 
-        private async ValueTask<IdIgnoreProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingDependencyException> CreateAndLogDependencyExceptionAsync(
             Xeption exception)
         {
-            var idIgnoreProcessingDependencyException =
-                new IdIgnoreProcessingDependencyException(
+            var jsonIgnoreRulesProcessingDependencyException =
+                new JsonIgnoreRulesProcessingDependencyException(
                     message: "Id ignore processing dependency error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(idIgnoreProcessingDependencyException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingDependencyException);
 
-            return idIgnoreProcessingDependencyException;
+            return jsonIgnoreRulesProcessingDependencyException;
         }
 
-        private async ValueTask<IdIgnoreProcessingServiceException> CreateAndLogServiceExceptionAsync(
+        private async ValueTask<JsonIgnoreRulesProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
-            var idIgnoreProcessingServiceException =
-                new IdIgnoreProcessingServiceException(
+            var jsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Id ignore processing service error occurred, contact support.",
                     innerException: exception);
 
-            await this.loggingBroker.LogErrorAsync(idIgnoreProcessingServiceException);
+            await this.loggingBroker.LogErrorAsync(jsonIgnoreRulesProcessingServiceException);
 
-            return idIgnoreProcessingServiceException;
+            return jsonIgnoreRulesProcessingServiceException;
         }
     }
 }

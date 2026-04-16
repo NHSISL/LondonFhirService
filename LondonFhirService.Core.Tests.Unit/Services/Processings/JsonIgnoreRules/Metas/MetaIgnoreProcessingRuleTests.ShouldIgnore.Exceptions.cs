@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,7 +6,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.MetaIgnoreRules.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
 using Moq;
 
@@ -22,16 +22,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
             string randomPath = GetRandomString();
             var serviceException = new Exception();
 
-            var failedMetaIgnoreProcessingException =
-                new FailedMetaIgnoreProcessingException(
+            var failedJsonIgnoreRulesProcessingException =
+                new FailedJsonIgnoreRulesProcessingException(
                     message: "Failed meta ignore processing exception occurred, please contact support",
                     innerException: serviceException,
                     data: serviceException.Data);
 
-            var expectedMetaIgnoreProcessingServiceException =
-                new MetaIgnoreProcessingServiceException(
+            var expectedJsonIgnoreRulesProcessingServiceException =
+                new JsonIgnoreRulesProcessingServiceException(
                     message: "Meta ignore processing service error occurred, contact support.",
-                    innerException: failedMetaIgnoreProcessingException);
+                    innerException: failedJsonIgnoreRulesProcessingException);
 
             var metaIgnoreProcessingRuleMock = new Mock<MetaIgnoreProcessingRule>(
                 jsonElementServiceMock.Object,
@@ -50,13 +50,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     randomElement,
                     randomPath);
 
-            MetaIgnoreProcessingServiceException actualMetaIgnoreProcessingServiceException =
-                await Assert.ThrowsAsync<MetaIgnoreProcessingServiceException>(
+            JsonIgnoreRulesProcessingServiceException actualJsonIgnoreRulesProcessingServiceException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingServiceException>(
                     shouldIgnoreTask.AsTask);
 
             // then
-            actualMetaIgnoreProcessingServiceException.Should()
-                .BeEquivalentTo(expectedMetaIgnoreProcessingServiceException);
+            actualJsonIgnoreRulesProcessingServiceException.Should()
+                .BeEquivalentTo(expectedJsonIgnoreRulesProcessingServiceException);
 
             metaIgnoreProcessingRuleMock.Verify(service =>
                 service.ValidateOnShouldIgnore(
@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedMetaIgnoreProcessingServiceException))),
+                    expectedJsonIgnoreRulesProcessingServiceException))),
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

@@ -6,9 +6,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions
 {
-    public class ArrayOrderIgnoreProcessingServiceException : Xeption
+    public class JsonIgnoreRulesProcessingDependencyValidationException : Xeption
     {
-        public ArrayOrderIgnoreProcessingServiceException(string message, Xeption innerException)
+        public JsonIgnoreRulesProcessingDependencyValidationException(string message, Xeption innerException)
             : base(message, innerException)
         { }
     }

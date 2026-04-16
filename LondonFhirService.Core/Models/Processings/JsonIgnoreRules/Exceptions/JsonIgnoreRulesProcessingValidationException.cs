@@ -4,11 +4,11 @@
 
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.MetaIgnoreRules.Exceptions
+namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions
 {
-    public class MetaIgnoreProcessingServiceException : Xeption
+    public class JsonIgnoreRulesProcessingValidationException : Xeption
     {
-        public MetaIgnoreProcessingServiceException(string message, Xeption innerException)
+        public JsonIgnoreRulesProcessingValidationException(string message, Xeption innerException)
             : base(message, innerException)
         { }
     }

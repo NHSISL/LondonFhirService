@@ -1,11 +1,11 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.IdIgnoreRules.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions;
 using Moq;
 
@@ -17,14 +17,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task ShouldThrowValidationExceptionOnShouldIgnoreIfResourceIsInvalidAsync(string invalidText)
+        public async Task ShouldThrowValidationExceptionOnShouldIgnoreIfResourceIsInvalidAsync(
+            string invalidText)
         {
             // given
             JsonElement invalidElement = default;
             string invalidPath = invalidText;
 
             var invalidJsonIgnoreProcessingException =
-                new InvalidJsonIgnoreProcessingException(
+                new InvalidJsonIgnoreRulesProcessingException(
                     message: "Invalid arguments. Please correct the errors and try again.");
 
             invalidJsonIgnoreProcessingException.AddData(
@@ -35,8 +36,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                 key: "path",
                 value: "Text is invalid.");
 
-            var expectedIdIgnoreProcessingValidationException =
-                new IdIgnoreProcessingValidationException(
+            var expectedJsonIgnoreRulesProcessingValidationException =
+                new JsonIgnoreRulesProcessingValidationException(
                     message:
                         "Id ignore processing validation error occurred, " +
                         "please fix errors and try again.",
@@ -49,16 +50,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.JsonIgnoreRules
                     invalidPath);
 
             // then
-            IdIgnoreProcessingValidationException actualException =
-                await Assert.ThrowsAsync<IdIgnoreProcessingValidationException>(
+            JsonIgnoreRulesProcessingValidationException actualException =
+                await Assert.ThrowsAsync<JsonIgnoreRulesProcessingValidationException>(
                     shouldIgnoreTask.AsTask);
 
             actualException.Should()
-                .BeEquivalentTo(expectedIdIgnoreProcessingValidationException);
+                .BeEquivalentTo(expectedJsonIgnoreRulesProcessingValidationException);
 
             this.loggingBrokerMock.Verify(broker =>
                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedIdIgnoreProcessingValidationException))),
+                   expectedJsonIgnoreRulesProcessingValidationException))),
                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
