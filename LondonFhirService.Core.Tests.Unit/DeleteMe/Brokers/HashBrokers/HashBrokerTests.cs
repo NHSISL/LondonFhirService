@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -7,7 +7,7 @@ using System.IO;
 using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using Microsoft.Extensions.Configuration;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace LondonFhirService.Core.Tests.Unit.DeleteMe.Brokers.HashBrokers
 {
