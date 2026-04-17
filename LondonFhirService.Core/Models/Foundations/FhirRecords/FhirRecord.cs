@@ -15,6 +15,7 @@ namespace LondonFhirService.Core.Models.Foundations.FhirRecords
         public string SourceName { get; set; }
         public bool IsPrimarySource { get; set; }
         public bool IsProcessed { get; set; }
+        public StatusType Status { get; set; } = StatusType.Pending;
         public string CreatedBy { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
         public string UpdatedBy { get; set; }
