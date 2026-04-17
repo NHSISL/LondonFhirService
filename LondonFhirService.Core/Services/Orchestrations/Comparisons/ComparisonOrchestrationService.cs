@@ -41,11 +41,13 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
             this.loggingBroker = loggingBroker;
         }
 
-        public async ValueTask<ComparisonResult> CompareAsync(
+        public ValueTask<ComparisonResult> CompareAsync(
             string correlationId,
             string source1Json,
-            string source2Json)
+            string source2Json) =>
+        TryCatch(async () =>
         {
+            ValidateCompareArguments(correlationId, source1Json, source2Json);
             var diffs = new List<DiffItem>();
             using JsonDocument source1Doc = JsonDocument.Parse(source1Json);
             using JsonDocument source2Doc = JsonDocument.Parse(source2Json);
@@ -173,7 +175,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                 DiffCount = diffs.Count,
                 Diffs = diffs
             };
-        }
+        });
 
         private Dictionary<string, List<JsonElement>> ExtractResourcesByType(JsonElement bundle)
         {
