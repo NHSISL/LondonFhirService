@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Tests.Performance.Models;
 using Microsoft.Extensions.Configuration;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace LondonFhirService.Api.Tests.Performance
 {

@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -20,7 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
 {
