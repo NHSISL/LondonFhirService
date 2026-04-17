@@ -30,11 +30,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
             string randomSource2Json = GetRandomJsonWithResources();
             string inputSource2Json = randomSource2Json;
 
-            var expectedComparisonOrchestrationDependencyValidationException =
-                new ComparisonOrchestrationDependencyValidationException(
-                    message: "Comparison orchestration dependency validation error occurred, " +
-                        "fix the errors and try again.",
-                    innerException: dependencyValidationException.InnerException as Xeption);
+            var failedComparisonOrchestrationServiceException =
+                new FailedComparisonOrchestrationServiceException(
+                    message: "Issue comparing resource Patient",
+                    innerException: dependencyValidationException.InnerException,
+                    data: null);
+
+            var loopAggregateException = new AggregateException(
+                message: "1 errors occurred during comparison. See inner exceptions for details.",
+                innerExceptions: failedComparisonOrchestrationServiceException);
+
+            var expectedComparisonOrchestrationServiceException =
+                new ComparisonOrchestrationServiceException(
+                    message: "Comparison orchestration service error occurred, please contact support.",
+                    innerException: loopAggregateException);
 
             this.resourceMatcherProcessingServiceMock
                 .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
@@ -47,14 +56,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
                     source1Json: inputSource1Json,
                     source2Json: inputSource2Json);
 
-            ComparisonOrchestrationDependencyValidationException
-                actualComparisonOrchestrationDependencyValidationException =
-                    await Assert.ThrowsAsync<ComparisonOrchestrationDependencyValidationException>(
-                        testCode: compareTask.AsTask);
+            ComparisonOrchestrationServiceException actualComparisonOrchestrationServiceException =
+                await Assert.ThrowsAsync<ComparisonOrchestrationServiceException>(
+                    testCode: compareTask.AsTask);
 
             // then
-            actualComparisonOrchestrationDependencyValidationException
-                .Should().BeEquivalentTo(expectedComparisonOrchestrationDependencyValidationException);
+            actualComparisonOrchestrationServiceException
+                .Should().BeEquivalentTo(expectedComparisonOrchestrationServiceException);
 
             this.resourceMatcherProcessingServiceMock.Verify(service =>
                 service.GetMatcherAsync(It.IsAny<string>()),
@@ -62,7 +70,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedComparisonOrchestrationDependencyValidationException))),
+                    expectedComparisonOrchestrationServiceException))),
                         Times.Once);
 
             this.resourceMatcherProcessingServiceMock.VerifyNoOtherCalls();
@@ -84,11 +92,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
             string randomSource2Json = GetRandomJsonWithResources();
             string inputSource2Json = randomSource2Json;
 
-            var expectedComparisonOrchestrationDependencyException =
-                new ComparisonOrchestrationDependencyException(
-                    message: "Comparison orchestration dependency error occurred, " +
-                        "fix the errors and try again.",
-                    innerException: dependencyException.InnerException as Xeption);
+            var failedComparisonOrchestrationServiceException =
+                new FailedComparisonOrchestrationServiceException(
+                    message: "Issue comparing resource Patient",
+                    innerException: dependencyException.InnerException,
+                    data: null);
+
+            var loopAggregateException = new AggregateException(
+                message: "1 errors occurred during comparison. See inner exceptions for details.",
+                innerExceptions: failedComparisonOrchestrationServiceException);
+
+            var expectedComparisonOrchestrationServiceException =
+                new ComparisonOrchestrationServiceException(
+                    message: "Comparison orchestration service error occurred, please contact support.",
+                    innerException: loopAggregateException);
 
             this.resourceMatcherProcessingServiceMock
                 .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
@@ -101,13 +118,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
                     source1Json: inputSource1Json,
                     source2Json: inputSource2Json);
 
-            ComparisonOrchestrationDependencyException actualComparisonOrchestrationDependencyException =
-                await Assert.ThrowsAsync<ComparisonOrchestrationDependencyException>(
+            ComparisonOrchestrationServiceException actualComparisonOrchestrationServiceException =
+                await Assert.ThrowsAsync<ComparisonOrchestrationServiceException>(
                     testCode: compareTask.AsTask);
 
             // then
-            actualComparisonOrchestrationDependencyException
-                .Should().BeEquivalentTo(expectedComparisonOrchestrationDependencyException);
+            actualComparisonOrchestrationServiceException
+                .Should().BeEquivalentTo(expectedComparisonOrchestrationServiceException);
 
             this.resourceMatcherProcessingServiceMock.Verify(service =>
                 service.GetMatcherAsync(It.IsAny<string>()),
@@ -115,7 +132,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedComparisonOrchestrationDependencyException))),
+                    expectedComparisonOrchestrationServiceException))),
                         Times.Once);
 
             this.resourceMatcherProcessingServiceMock.VerifyNoOtherCalls();
