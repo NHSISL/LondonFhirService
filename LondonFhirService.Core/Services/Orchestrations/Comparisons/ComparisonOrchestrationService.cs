@@ -11,7 +11,10 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Models.Orchestrations.Comparisons;
 using LondonFhirService.Core.Models.Orchestrations.Comparisons.Exceptions;
+using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
+using LondonFhirService.Core.Models.Processings.ListEntryComparisons.Exceptions;
+using LondonFhirService.Core.Models.Processings.ResourceMatchings.Exceptions;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
@@ -49,6 +52,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
         TryCatch(async () =>
         {
             ValidateCompareArguments(correlationId, source1Json, source2Json);
+            List<Exception> exceptions = new List<Exception>();
             var diffs = new List<DiffItem>();
             using JsonDocument source1Doc = JsonDocument.Parse(source1Json);
             using JsonDocument source2Doc = JsonDocument.Parse(source2Json);
@@ -71,14 +75,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                 .Union(source2Resources.Keys)
                 .ToList();
 
-            List<Exception> exceptions = new List<Exception>();
-
             foreach (string resourceType in allResourceTypes)
             {
                 try
                 {
                     List<JsonElement> s1Resources =
-                                        source1Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
+                        source1Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
 
                     List<JsonElement> s2Resources =
                         source2Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
@@ -147,6 +149,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                             }
                         }
                         catch (Exception exception)
+                            when (
+                                exception is ResourceMatcherProcessingServiceException
+                                || exception is ListEntryComparisonProcessingServiceException
+                                || exception is JsonIgnoreRulesProcessingServiceException
+                                || exception is JsonIgnoreRulesProcessingDependencyException
+                                || exception is ResourceMatcherProcessingValidationException
+                                || exception is ListEntryComparisonProcessingValidationException
+                                || exception is JsonIgnoreRulesProcessingValidationException
+                                || exception is JsonIgnoreRulesProcessingDependencyValidationException)
+                        {
+                            FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                                new FailedComparisonOrchestrationServiceException(
+                                    $"Issue comparing matched resource {resourceType}", exception.InnerException, null);
+
+                            exceptions.Add(failedComparisonOrchestrationServiceException);
+                        }
+                        catch (Exception exception)
                         {
                             FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
                                 new FailedComparisonOrchestrationServiceException(
@@ -186,6 +205,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                             }
                         }
                         catch (Exception exception)
+                            when (
+                                exception is ResourceMatcherProcessingServiceException
+                                || exception is ListEntryComparisonProcessingServiceException
+                                || exception is JsonIgnoreRulesProcessingServiceException
+                                || exception is JsonIgnoreRulesProcessingDependencyException
+                                || exception is ResourceMatcherProcessingValidationException
+                                || exception is ListEntryComparisonProcessingValidationException
+                                || exception is JsonIgnoreRulesProcessingValidationException
+                                || exception is JsonIgnoreRulesProcessingDependencyValidationException)
+                        {
+                            FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                                new FailedComparisonOrchestrationServiceException(
+                                    $"Issue comparing matched resource {resourceType}", exception.InnerException, null);
+
+                            exceptions.Add(failedComparisonOrchestrationServiceException);
+                        }
+                        catch (Exception exception)
                         {
                             FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
                                 new FailedComparisonOrchestrationServiceException(
@@ -195,6 +231,24 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                         }
 
                     }
+                }
+                catch (Exception exception)
+                    when (
+                        exception is ResourceMatcherProcessingServiceException
+                        || exception is ListEntryComparisonProcessingServiceException
+                        || exception is JsonIgnoreRulesProcessingServiceException
+                        || exception is JsonIgnoreRulesProcessingDependencyException
+                        || exception is ResourceMatcherProcessingValidationException
+                        || exception is ListEntryComparisonProcessingValidationException
+                        || exception is JsonIgnoreRulesProcessingValidationException
+                        || exception is JsonIgnoreRulesProcessingDependencyValidationException
+                        )
+                {
+                    FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                        new FailedComparisonOrchestrationServiceException(
+                            $"Issue comparing resource {resourceType}", exception.InnerException, null);
+
+                    exceptions.Add(failedComparisonOrchestrationServiceException);
                 }
                 catch (Exception exception)
                 {

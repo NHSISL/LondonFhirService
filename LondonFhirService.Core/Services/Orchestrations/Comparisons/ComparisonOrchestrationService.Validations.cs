@@ -10,7 +10,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
 {
     public partial class ComparisonOrchestrationService
     {
-        private static void ValidateCompareArguments(
+        internal virtual void ValidateCompareArguments(
             string correlationId,
             string source1Json,
             string source2Json)
