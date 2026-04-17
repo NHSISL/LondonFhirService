@@ -44,10 +44,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             {
                 try
                 {
-                    // do a try catch here and do aggregate exception handling to make sure
-                    // any failure in processing one item will not break the loop
-                    // and will be logged properly for troubleshooting
-
                     // if item does not have secondary records to compare with
                     // mark as complete and continue next iteration
                     if (compareQueueItem.PrimaryFhirRecord == null)
