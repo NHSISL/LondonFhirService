@@ -79,10 +79,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
             {
                 try
                 {
-                    List<JsonElement> s1Resources =
+                    List<JsonElement> source1ResourcesForType =
                         source1Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
 
-                    List<JsonElement> s2Resources =
+                    List<JsonElement> source2ResourcesForType =
                         source2Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
 
                     IResourceMatcherService? matcher =
@@ -90,7 +90,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
 
                     if (matcher is null)
                     {
-                        foreach (JsonElement _ in s1Resources)
+                        foreach (JsonElement _ in source1ResourcesForType)
                         {
                             diffs.Add(new DiffItem
                             {
@@ -100,7 +100,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                             });
                         }
 
-                        foreach (JsonElement _ in s2Resources)
+                        foreach (JsonElement _ in source2ResourcesForType)
                         {
                             diffs.Add(new DiffItem
                             {
@@ -114,8 +114,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                     }
 
                     ResourceMatch resourceMatch = await matcher.MatchAsync(
-                        s1Resources,
-                        s2Resources,
+                        source1ResourcesForType,
+                        source2ResourcesForType,
                         source1ResourceIndex,
                         source2ResourceIndex);
 
