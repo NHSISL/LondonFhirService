@@ -5,12 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
-using LondonFhirService.Core.Models.Orchestrations.Comparisons;
 using LondonFhirService.Core.Models.Processings.JsonIgnoreRules.ArrayOrderIgnoreRules.Exceptions;
-using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons.Exceptions;
 using LondonFhirService.Core.Models.Processings.ResourceMatchings.Exceptions;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
@@ -30,7 +26,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
         private readonly Mock<IListEntryComparisonProcessingService> listEntryComparisonProcessingServiceMock;
         private readonly Mock<IJsonElementService> jsonElementServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly ComparisonOrchestrationService comparisonOrchestrationService;
+        private readonly IComparisonOrchestrationService comparisonOrchestrationService;
 
         public ComparisonOrchestrationServiceTests()
         {
@@ -54,7 +50,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
             "{\"resourceType\":\"Bundle\",\"entry\":[]}";
 
         private static string GetRandomJsonWithResources() =>
-            "{\"resourceType\":\"Bundle\",\"entry\":[{\"resource\":{\"resourceType\":\"Patient\",\"id\":\"1\"}}]}";
+            "{\"resourceType\":\"Bundle\"," +
+            "\"entry\":[{\"resource\":{\"resourceType\":\"Patient\",\"id\":\"1\"}}]}";
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
@@ -110,27 +107,5 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
                     innerException)
             };
         }
-
-        private static JsonElement CreateEmptyBundleElement()
-        {
-            using JsonDocument document = JsonDocument.Parse("{\"resourceType\":\"Bundle\",\"entry\":[]}");
-
-            return document.RootElement.Clone();
-        }
-
-        private static ComparisonResult CreateRandomComparisonResult(string correlationId) =>
-            new ComparisonResult
-            {
-                CorrelationId = correlationId,
-                DiffCount = 0,
-                Diffs = new List<DiffItem>()
-            };
-
-        private static ResourceMatch CreateEmptyResourceMatch() =>
-            new ResourceMatch
-            {
-                Matched = new List<MatchedResource>(),
-                Unmatched = new List<UnmatchedResource>()
-            };
     }
 }

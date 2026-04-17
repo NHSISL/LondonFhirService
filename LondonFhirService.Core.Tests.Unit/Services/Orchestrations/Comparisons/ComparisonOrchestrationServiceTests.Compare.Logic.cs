@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Orchestrations.Comparisons;
-using Moq;
+using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 using Xunit;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
@@ -19,19 +19,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
             // given
             string randomCorrelationId = GetRandomString();
             string inputCorrelationId = randomCorrelationId;
-            string inputSource1Json = GetRandomJson();
-            string inputSource2Json = GetRandomJson();
-
-            this.resourceMatcherProcessingServiceMock
-                .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
-                    .ReturnsAsync((null as object) as
-                        LondonFhirService.Core.Services.Foundations.ResourceMatchers.IResourceMatcherService);
+            string randomSource1Json = GetRandomJson();
+            string inputSource1Json = randomSource1Json;
+            string randomSource2Json = GetRandomJson();
+            string inputSource2Json = randomSource2Json;
 
             var expectedComparisonResult = new ComparisonResult
             {
                 CorrelationId = inputCorrelationId,
                 DiffCount = 0,
-                Diffs = new List<Models.Processings.ListEntryComparisons.DiffItem>()
+                Diffs = new List<DiffItem>()
             };
 
             // when
@@ -42,12 +39,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
                     source2Json: inputSource2Json);
 
             // then
-            actualComparisonResult.CorrelationId.Should().Be(expectedComparisonResult.CorrelationId);
+            actualComparisonResult.Should().BeEquivalentTo(expectedComparisonResult);
 
-            this.resourceMatcherProcessingServiceMock.Verify(service =>
-                service.GetMatcherAsync(It.IsAny<string>()),
-                    Times.Never);
-
+            this.resourceMatcherProcessingServiceMock.VerifyNoOtherCalls();
             this.listEntryComparisonProcessingServiceMock.VerifyNoOtherCalls();
             this.jsonElementServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();

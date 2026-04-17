@@ -17,17 +17,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
     {
         [Theory]
         [MemberData(nameof(DependencyValidationExceptions))]
-        public async Task ShouldThrowDependencyValidationExceptionOnCompareAndLogItAsync(
+        public async Task ShouldThrowDependencyValidationExceptionOnCompareIfErrorsAndLogItAsync(
             Xeption dependencyValidationException)
         {
             // given
             string randomCorrelationId = GetRandomString();
+            string inputCorrelationId = randomCorrelationId;
             string randomSource1Json = GetRandomJsonWithResources();
+            string inputSource1Json = randomSource1Json;
             string randomSource2Json = GetRandomJsonWithResources();
-
-            this.resourceMatcherProcessingServiceMock
-                .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
-                    .ThrowsAsync(dependencyValidationException);
+            string inputSource2Json = randomSource2Json;
 
             var expectedComparisonOrchestrationDependencyValidationException =
                 new ComparisonOrchestrationDependencyValidationException(
@@ -35,12 +34,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
                         "fix the errors and try again.",
                     innerException: dependencyValidationException.InnerException as Xeption);
 
+            this.resourceMatcherProcessingServiceMock
+                .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
+                    .ThrowsAsync(dependencyValidationException);
+
             // when
             ValueTask<ComparisonResult> compareTask =
                 this.comparisonOrchestrationService.CompareAsync(
-                    correlationId: randomCorrelationId,
-                    source1Json: randomSource1Json,
-                    source2Json: randomSource2Json);
+                    correlationId: inputCorrelationId,
+                    source1Json: inputSource1Json,
+                    source2Json: inputSource2Json);
 
             ComparisonOrchestrationDependencyValidationException
                 actualComparisonOrchestrationDependencyValidationException =
@@ -53,13 +56,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
 
             this.resourceMatcherProcessingServiceMock.Verify(service =>
                 service.GetMatcherAsync(It.IsAny<string>()),
-                    Times.AtLeastOnce);
+                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedComparisonOrchestrationDependencyValidationException))),
                         Times.Once);
 
+            this.resourceMatcherProcessingServiceMock.VerifyNoOtherCalls();
             this.listEntryComparisonProcessingServiceMock.VerifyNoOtherCalls();
             this.jsonElementServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -67,17 +71,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
 
         [Theory]
         [MemberData(nameof(DependencyExceptions))]
-        public async Task ShouldThrowDependencyExceptionOnCompareAndLogItAsync(
+        public async Task ShouldThrowDependencyExceptionOnCompareIfErrorsAndLogItAsync(
             Xeption dependencyException)
         {
             // given
             string randomCorrelationId = GetRandomString();
+            string inputCorrelationId = randomCorrelationId;
             string randomSource1Json = GetRandomJsonWithResources();
+            string inputSource1Json = randomSource1Json;
             string randomSource2Json = GetRandomJsonWithResources();
-
-            this.resourceMatcherProcessingServiceMock
-                .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
-                    .ThrowsAsync(dependencyException);
+            string inputSource2Json = randomSource2Json;
 
             var expectedComparisonOrchestrationDependencyException =
                 new ComparisonOrchestrationDependencyException(
@@ -85,12 +88,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
                         "fix the errors and try again.",
                     innerException: dependencyException.InnerException as Xeption);
 
+            this.resourceMatcherProcessingServiceMock
+                .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
+                    .ThrowsAsync(dependencyException);
+
             // when
             ValueTask<ComparisonResult> compareTask =
                 this.comparisonOrchestrationService.CompareAsync(
-                    correlationId: randomCorrelationId,
-                    source1Json: randomSource1Json,
-                    source2Json: randomSource2Json);
+                    correlationId: inputCorrelationId,
+                    source1Json: inputSource1Json,
+                    source2Json: inputSource2Json);
 
             ComparisonOrchestrationDependencyException actualComparisonOrchestrationDependencyException =
                 await Assert.ThrowsAsync<ComparisonOrchestrationDependencyException>(
@@ -102,30 +109,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
 
             this.resourceMatcherProcessingServiceMock.Verify(service =>
                 service.GetMatcherAsync(It.IsAny<string>()),
-                    Times.AtLeastOnce);
+                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedComparisonOrchestrationDependencyException))),
                         Times.Once);
 
+            this.resourceMatcherProcessingServiceMock.VerifyNoOtherCalls();
             this.listEntryComparisonProcessingServiceMock.VerifyNoOtherCalls();
             this.jsonElementServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnCompareAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnCompareIfServiceErrorOccursAndLogItAsync()
         {
             // given
             string randomCorrelationId = GetRandomString();
+            string inputCorrelationId = randomCorrelationId;
             string randomSource1Json = GetRandomJsonWithResources();
+            string inputSource1Json = randomSource1Json;
             string randomSource2Json = GetRandomJsonWithResources();
+            string inputSource2Json = randomSource2Json;
             var serviceException = new Exception();
-
-            this.resourceMatcherProcessingServiceMock
-                .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
-                    .ThrowsAsync(serviceException);
 
             var failedComparisonOrchestrationServiceException =
                 new FailedComparisonOrchestrationServiceException(
@@ -138,12 +145,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
                     message: "Comparison orchestration service error occurred, please contact support.",
                     innerException: failedComparisonOrchestrationServiceException);
 
+            this.resourceMatcherProcessingServiceMock
+                .Setup(service => service.GetMatcherAsync(It.IsAny<string>()))
+                    .ThrowsAsync(serviceException);
+
             // when
             ValueTask<ComparisonResult> compareTask =
                 this.comparisonOrchestrationService.CompareAsync(
-                    correlationId: randomCorrelationId,
-                    source1Json: randomSource1Json,
-                    source2Json: randomSource2Json);
+                    correlationId: inputCorrelationId,
+                    source1Json: inputSource1Json,
+                    source2Json: inputSource2Json);
 
             ComparisonOrchestrationServiceException actualComparisonOrchestrationServiceException =
                 await Assert.ThrowsAsync<ComparisonOrchestrationServiceException>(
@@ -155,13 +166,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
 
             this.resourceMatcherProcessingServiceMock.Verify(service =>
                 service.GetMatcherAsync(It.IsAny<string>()),
-                    Times.AtLeastOnce);
+                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedComparisonOrchestrationServiceException))),
                         Times.Once);
 
+            this.resourceMatcherProcessingServiceMock.VerifyNoOtherCalls();
             this.listEntryComparisonProcessingServiceMock.VerifyNoOtherCalls();
             this.jsonElementServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();

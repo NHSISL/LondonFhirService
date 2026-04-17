@@ -22,7 +22,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
         {
             // given
             string randomSource1Json = GetRandomJson();
+            string inputSource1Json = randomSource1Json;
             string randomSource2Json = GetRandomJson();
+            string inputSource2Json = randomSource2Json;
 
             var invalidComparisonOrchestrationException =
                 new InvalidComparisonOrchestrationException(
@@ -43,8 +45,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
             ValueTask<ComparisonResult> compareTask =
                 this.comparisonOrchestrationService.CompareAsync(
                     correlationId: invalidCorrelationId,
-                    source1Json: randomSource1Json,
-                    source2Json: randomSource2Json);
+                    source1Json: inputSource1Json,
+                    source2Json: inputSource2Json);
 
             ComparisonOrchestrationValidationException actualComparisonOrchestrationValidationException =
                 await Assert.ThrowsAsync<ComparisonOrchestrationValidationException>(
@@ -74,7 +76,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
         {
             // given
             string randomCorrelationId = GetRandomString();
+            string inputCorrelationId = randomCorrelationId;
             string randomSource2Json = GetRandomJson();
+            string inputSource2Json = randomSource2Json;
 
             var invalidComparisonOrchestrationException =
                 new InvalidComparisonOrchestrationException(
@@ -94,9 +98,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
             // when
             ValueTask<ComparisonResult> compareTask =
                 this.comparisonOrchestrationService.CompareAsync(
-                    correlationId: randomCorrelationId,
+                    correlationId: inputCorrelationId,
                     source1Json: invalidSource1Json,
-                    source2Json: randomSource2Json);
+                    source2Json: inputSource2Json);
 
             ComparisonOrchestrationValidationException actualComparisonOrchestrationValidationException =
                 await Assert.ThrowsAsync<ComparisonOrchestrationValidationException>(
@@ -126,7 +130,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
         {
             // given
             string randomCorrelationId = GetRandomString();
+            string inputCorrelationId = randomCorrelationId;
             string randomSource1Json = GetRandomJson();
+            string inputSource1Json = randomSource1Json;
 
             var invalidComparisonOrchestrationException =
                 new InvalidComparisonOrchestrationException(
@@ -146,8 +152,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
             // when
             ValueTask<ComparisonResult> compareTask =
                 this.comparisonOrchestrationService.CompareAsync(
-                    correlationId: randomCorrelationId,
-                    source1Json: randomSource1Json,
+                    correlationId: inputCorrelationId,
+                    source1Json: inputSource1Json,
                     source2Json: invalidSource2Json);
 
             ComparisonOrchestrationValidationException actualComparisonOrchestrationValidationException =
