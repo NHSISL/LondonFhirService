@@ -149,27 +149,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                             }
                         }
                         catch (Exception exception)
-                            when (
-                                exception is ResourceMatcherProcessingServiceException
-                                || exception is ListEntryComparisonProcessingServiceException
-                                || exception is JsonIgnoreRulesProcessingServiceException
-                                || exception is JsonIgnoreRulesProcessingDependencyException
-                                || exception is ResourceMatcherProcessingValidationException
-                                || exception is ListEntryComparisonProcessingValidationException
-                                || exception is JsonIgnoreRulesProcessingValidationException
-                                || exception is JsonIgnoreRulesProcessingDependencyValidationException)
                         {
-                            FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
-                                new FailedComparisonOrchestrationServiceException(
-                                    $"Issue comparing unmatched resource {resourceType}", exception.InnerException, null);
+                            Exception inner = IsKnownProcessingException(exception)
+                                ? exception.InnerException
+                                : exception;
 
-                            exceptions.Add(failedComparisonOrchestrationServiceException);
-                        }
-                        catch (Exception exception)
-                        {
-                            FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                            var failedComparisonOrchestrationServiceException =
                                 new FailedComparisonOrchestrationServiceException(
-                                    $"Issue comparing unmatched resource {resourceType}", exception, null);
+                                    $"Issue comparing unmatched resource {resourceType}", inner, null);
 
                             exceptions.Add(failedComparisonOrchestrationServiceException);
                         }
@@ -205,27 +192,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                             }
                         }
                         catch (Exception exception)
-                            when (
-                                exception is ResourceMatcherProcessingServiceException
-                                || exception is ListEntryComparisonProcessingServiceException
-                                || exception is JsonIgnoreRulesProcessingServiceException
-                                || exception is JsonIgnoreRulesProcessingDependencyException
-                                || exception is ResourceMatcherProcessingValidationException
-                                || exception is ListEntryComparisonProcessingValidationException
-                                || exception is JsonIgnoreRulesProcessingValidationException
-                                || exception is JsonIgnoreRulesProcessingDependencyValidationException)
                         {
-                            FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
-                                new FailedComparisonOrchestrationServiceException(
-                                    $"Issue comparing matched resource {resourceType}", exception.InnerException, null);
+                            Exception inner = IsKnownProcessingException(exception)
+                                ? exception.InnerException
+                                : exception;
 
-                            exceptions.Add(failedComparisonOrchestrationServiceException);
-                        }
-                        catch (Exception exception)
-                        {
-                            FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                            var failedComparisonOrchestrationServiceException =
                                 new FailedComparisonOrchestrationServiceException(
-                                    $"Issue comparing matched resource {resourceType}", exception, null);
+                                    $"Issue comparing matched resource {resourceType}", inner, null);
 
                             exceptions.Add(failedComparisonOrchestrationServiceException);
                         }
@@ -233,28 +207,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                     }
                 }
                 catch (Exception exception)
-                    when (
-                        exception is ResourceMatcherProcessingServiceException
-                        || exception is ListEntryComparisonProcessingServiceException
-                        || exception is JsonIgnoreRulesProcessingServiceException
-                        || exception is JsonIgnoreRulesProcessingDependencyException
-                        || exception is ResourceMatcherProcessingValidationException
-                        || exception is ListEntryComparisonProcessingValidationException
-                        || exception is JsonIgnoreRulesProcessingValidationException
-                        || exception is JsonIgnoreRulesProcessingDependencyValidationException
-                        )
                 {
-                    FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
-                        new FailedComparisonOrchestrationServiceException(
-                            $"Issue comparing resource {resourceType}", exception.InnerException, null);
+                    Exception inner = IsKnownProcessingException(exception)
+                        ? exception.InnerException
+                        : exception;
 
-                    exceptions.Add(failedComparisonOrchestrationServiceException);
-                }
-                catch (Exception exception)
-                {
-                    FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                    var failedComparisonOrchestrationServiceException =
                         new FailedComparisonOrchestrationServiceException(
-                            $"Issue comparing resource {resourceType}", exception, null);
+                            $"Issue comparing resource {resourceType}", inner, null);
 
                     exceptions.Add(failedComparisonOrchestrationServiceException);
                 }
@@ -521,5 +481,15 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                 });
             }
         }
+
+        private static bool IsKnownProcessingException(Exception exception) =>
+            exception is ResourceMatcherProcessingServiceException
+            || exception is ListEntryComparisonProcessingServiceException
+            || exception is JsonIgnoreRulesProcessingServiceException
+            || exception is JsonIgnoreRulesProcessingDependencyException
+            || exception is ResourceMatcherProcessingValidationException
+            || exception is ListEntryComparisonProcessingValidationException
+            || exception is JsonIgnoreRulesProcessingValidationException
+            || exception is JsonIgnoreRulesProcessingDependencyValidationException;
     }
 }
