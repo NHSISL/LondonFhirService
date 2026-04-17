@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Models.Orchestrations.Comparisons;
+using LondonFhirService.Core.Models.Orchestrations.Comparisons.Exceptions;
 using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
@@ -70,103 +71,146 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                 .Union(source2Resources.Keys)
                 .ToList();
 
+            List<Exception> exceptions = new List<Exception>();
+
             foreach (string resourceType in allResourceTypes)
             {
-                List<JsonElement> s1Resources =
-                    source1Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
-
-                List<JsonElement> s2Resources =
-                    source2Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
-
-                IResourceMatcherService? matcher =
-                    await resourceMatcherProcessingService.GetMatcherAsync(resourceType);
-
-                if (matcher is null)
+                try
                 {
-                    foreach (JsonElement _ in s1Resources)
+                    List<JsonElement> s1Resources =
+                                        source1Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
+
+                    List<JsonElement> s2Resources =
+                        source2Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
+
+                    IResourceMatcherService? matcher =
+                        await resourceMatcherProcessingService.GetMatcherAsync(resourceType);
+
+                    if (matcher is null)
                     {
-                        diffs.Add(new DiffItem
+                        foreach (JsonElement _ in s1Resources)
                         {
-                            Type = "manual-review-required",
-                            Reason = $"No matching strategy for {resourceType} resources",
-                            ResourceType = resourceType
-                        });
+                            diffs.Add(new DiffItem
+                            {
+                                Type = "manual-review-required",
+                                Reason = $"No matching strategy for {resourceType} resources",
+                                ResourceType = resourceType
+                            });
+                        }
+
+                        foreach (JsonElement _ in s2Resources)
+                        {
+                            diffs.Add(new DiffItem
+                            {
+                                Type = "manual-review-required",
+                                Reason = $"No matching strategy for {resourceType} resources",
+                                ResourceType = resourceType
+                            });
+                        }
+
+                        continue;
                     }
 
-                    foreach (JsonElement _ in s2Resources)
+                    ResourceMatch resourceMatch = await matcher.MatchAsync(
+                        s1Resources,
+                        s2Resources,
+                        source1ResourceIndex,
+                        source2ResourceIndex);
+
+                    foreach (UnmatchedResource unmatchedResource in resourceMatch.Unmatched)
                     {
-                        diffs.Add(new DiffItem
+                        try
                         {
-                            Type = "manual-review-required",
-                            Reason = $"No matching strategy for {resourceType} resources",
-                            ResourceType = resourceType
-                        });
+                            if (unmatchedResource.IsFromSource1)
+                            {
+                                diffs.Add(new DiffItem
+                                {
+                                    Type = "manual-review-required",
+                                    Reason = string.IsNullOrEmpty(unmatchedResource.Identifier)
+                                        ? $"No match key found for {resourceType}"
+                                        : $"Match key '{unmatchedResource.Identifier}' not found in Source2",
+                                    ResourceType = resourceType,
+                                    Identifier = unmatchedResource.Identifier
+                                });
+                            }
+                            else
+                            {
+                                diffs.Add(new DiffItem
+                                {
+                                    Type = "manual-review-required",
+                                    Reason = string.IsNullOrEmpty(unmatchedResource.Identifier)
+                                        ? $"No match key found for {resourceType}"
+                                        : $"Match key '{unmatchedResource.Identifier}' not found in Source1",
+                                    ResourceType = resourceType,
+                                    Identifier = unmatchedResource.Identifier
+                                });
+                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                                new FailedComparisonOrchestrationServiceException(
+                                    $"Issue comparing unmatched resource {resourceType}", exception, null);
+
+                            exceptions.Add(failedComparisonOrchestrationServiceException);
+                        }
                     }
 
-                    continue;
-                }
-
-                ResourceMatch resourceMatch = await matcher.MatchAsync(
-                    s1Resources,
-                    s2Resources,
-                    source1ResourceIndex,
-                    source2ResourceIndex);
-
-                foreach (UnmatchedResource unmatchedResource in resourceMatch.Unmatched)
-                {
-                    if (unmatchedResource.IsFromSource1)
+                    foreach (MatchedResource match in resourceMatch.Matched)
                     {
-                        diffs.Add(new DiffItem
+                        try
                         {
-                            Type = "manual-review-required",
-                            Reason = string.IsNullOrEmpty(unmatchedResource.Identifier)
-                                ? $"No match key found for {resourceType}"
-                                : $"Match key '{unmatchedResource.Identifier}' not found in Source2",
-                            ResourceType = resourceType,
-                            Identifier = unmatchedResource.Identifier
-                        });
-                    }
-                    else
-                    {
-                        diffs.Add(new DiffItem
-                        {
-                            Type = "manual-review-required",
-                            Reason = string.IsNullOrEmpty(unmatchedResource.Identifier)
-                                ? $"No match key found for {resourceType}"
-                                : $"Match key '{unmatchedResource.Identifier}' not found in Source1",
-                            ResourceType = resourceType,
-                            Identifier = unmatchedResource.Identifier
-                        });
-                    }
-                }
+                            string resourceId =
+                                await matcher.GetMatchKeyAsync(match.Source1, source1ResourceIndex)
+                                ?? await matcher.GetMatchKeyAsync(match.Source2, source2ResourceIndex);
 
-                foreach (MatchedResource match in resourceMatch.Matched)
-                {
-                    string resourceId =
-                        await matcher.GetMatchKeyAsync(match.Source1, source1ResourceIndex)
-                        ?? await matcher.GetMatchKeyAsync(match.Source2, source2ResourceIndex);
-
-                    IEnumerable<DiffItem> resourceDiffs = await CompareJsonElements(
-                        match.Source1,
-                        match.Source2,
-                        $"$.{resourceType}[{resourceId}]",
-                        resourceType,
-                        resourceId);
-
-                    diffs.AddRange(resourceDiffs);
-
-                    if (string.Equals(resourceType, "List", StringComparison.OrdinalIgnoreCase) &&
-                        resourceId is not null)
-                    {
-                        IEnumerable<DiffItem> listEntryDiffs =
-                            await listEntryComparisonProcessingService.CompareListEntryCountsAsync(
+                            IEnumerable<DiffItem> resourceDiffs = await CompareJsonElements(
                                 match.Source1,
                                 match.Source2,
+                                $"$.{resourceType}[{resourceId}]",
+                                resourceType,
                                 resourceId);
 
-                        diffs.AddRange(listEntryDiffs);
+                            diffs.AddRange(resourceDiffs);
+
+                            if (string.Equals(resourceType, "List", StringComparison.OrdinalIgnoreCase) &&
+                                resourceId is not null)
+                            {
+                                IEnumerable<DiffItem> listEntryDiffs =
+                                    await listEntryComparisonProcessingService.CompareListEntryCountsAsync(
+                                        match.Source1,
+                                        match.Source2,
+                                        resourceId);
+
+                                diffs.AddRange(listEntryDiffs);
+                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                                new FailedComparisonOrchestrationServiceException(
+                                    $"Issue comparing matched resource {resourceType}", exception, null);
+
+                            exceptions.Add(failedComparisonOrchestrationServiceException);
+                        }
+
                     }
                 }
+                catch (Exception exception)
+                {
+                    FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
+                        new FailedComparisonOrchestrationServiceException(
+                            $"Issue comparing resource {resourceType}", exception, null);
+
+                    exceptions.Add(failedComparisonOrchestrationServiceException);
+                }
+            }
+
+            if (exceptions.Count > 0)
+            {
+                throw new AggregateException(
+                    message: $"{exceptions.Count} errors occurred during comparison. See inner exceptions for details.",
+                    innerExceptions: exceptions);
             }
 
             return new ComparisonResult

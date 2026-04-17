@@ -79,6 +79,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
             {
                 throw await CreateAndLogDependencyExceptionAsync(jsonIgnoreRulesDependencyException);
             }
+            catch (AggregateException aggregateException)
+            {
+                throw await CreateAndLogServiceExceptionAsync(aggregateException);
+            }
             catch (Exception exception)
             {
                 var failedComparisonOrchestrationServiceException =
@@ -134,7 +138,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
         }
 
         private async ValueTask<ComparisonOrchestrationServiceException>
-            CreateAndLogServiceExceptionAsync(Xeption exception)
+            CreateAndLogServiceExceptionAsync(Exception exception)
         {
             var comparisonOrchestrationServiceException =
                 new ComparisonOrchestrationServiceException(
