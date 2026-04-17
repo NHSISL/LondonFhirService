@@ -4,14 +4,15 @@
 
 using System;
 using System.Threading.Tasks;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Orchestrations.CompareQueue;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Accesses
 {
     public interface ICompareQueueOrchestrationService
     {
-        ValueTask<CompareQueueItems> GetUnprocessedRecordAsync();
-        ValueTask MarkFhirRecordsAsync(Guid fhirRecordId);
-        ValueTask PersistFhirRecordDifferencesAsync(CompareQueueItems compareQueueItems);
+        ValueTask<CompareQueueItem> GetUnprocessedRecordAsync();
+        ValueTask ChangeFhirRecordStatusAsync(Guid fhirRecordId, StatusType status);
+        ValueTask PersistFhirRecordDifferencesAsync(CompareQueueItem compareQueueItems);
     }
 }

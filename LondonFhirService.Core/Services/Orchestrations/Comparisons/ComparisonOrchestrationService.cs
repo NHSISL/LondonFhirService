@@ -46,6 +46,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
             string source1Json,
             string source2Json)
         {
+
+            // review logic, see if code is safe.  Do we need to do any aggregate exception handling on the loops?
+
             var diffs = new List<DiffItem>();
             using JsonDocument source1Doc = JsonDocument.Parse(source1Json);
             using JsonDocument source2Doc = JsonDocument.Parse(source2Json);

@@ -266,6 +266,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     JsonPayload = json,
                     SourceName = $"{provider.DisplayName} ({providerFriendlyName})",
                     IsPrimarySource = isPrimaryProvider,
+                    Status = StatusType.Pending,
                     IsProcessed = false,
                 };
 
