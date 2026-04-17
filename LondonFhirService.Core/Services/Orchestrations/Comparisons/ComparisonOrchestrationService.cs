@@ -52,7 +52,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
         TryCatch(async () =>
         {
             ValidateCompareArguments(correlationId, source1Json, source2Json);
-            List<Exception> exceptions = new List<Exception>();
+            var exceptions = new List<Exception>();
             var diffs = new List<DiffItem>();
             using JsonDocument source1Doc = JsonDocument.Parse(source1Json);
             using JsonDocument source2Doc = JsonDocument.Parse(source2Json);
@@ -161,7 +161,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                         {
                             FailedComparisonOrchestrationServiceException failedComparisonOrchestrationServiceException =
                                 new FailedComparisonOrchestrationServiceException(
-                                    $"Issue comparing matched resource {resourceType}", exception.InnerException, null);
+                                    $"Issue comparing unmatched resource {resourceType}", exception.InnerException, null);
 
                             exceptions.Add(failedComparisonOrchestrationServiceException);
                         }

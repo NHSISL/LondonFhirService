@@ -19,7 +19,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
     {
         [Theory]
         [MemberData(nameof(DependencyValidationExceptions))]
-        public async Task ShouldThrowDependencyValidationExceptionOnCompareIfErrorsAndLogItAsync(
+        public async Task ShouldThrowServiceExceptionOnCompareIfDependencyValidationErrorOccursAndLogItAsync(
             Xeption dependencyValidationException)
         {
             // given
@@ -81,7 +81,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
 
         [Theory]
         [MemberData(nameof(DependencyExceptions))]
-        public async Task ShouldThrowDependencyExceptionOnCompareIfErrorsAndLogItAsync(
+        public async Task ShouldThrowServiceExceptionOnCompareIfDependencyErrorOccursAndLogItAsync(
             Xeption dependencyException)
         {
             // given
@@ -143,7 +143,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Comparisons
 
 
         [Fact]
-        public async Task ShouldThrowAggregateExceptionOnCompareIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnCompareIfAggregateExceptionOccursAndLogItAsync()
         {
             // given
             string randomCorrelationId = GetRandomString();
