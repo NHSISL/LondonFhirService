@@ -12,6 +12,7 @@ using ISL.Providers.Captcha.FakeCaptcha.Providers.FakeCaptcha;
 using ISL.Providers.Captcha.GoogleReCaptcha.Models.Brokers.GoogleReCaptcha;
 using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
+using LondonFhirService.Api.Workers;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
@@ -22,16 +23,16 @@ using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits;
+using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
+using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
-using LondonFhirService.Core.Models.Foundations.FhirRecords;
-using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.OdsDatas;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
@@ -115,6 +116,7 @@ public partial class Program
         AddProcessingServices(builder.Services);
         AddCoordinationServices(builder.Services, configuration);
         AddClients(builder.Services);
+        AddBackgroundWorkers(builder.Services);
 
         // IConfiguration registration (optional, but mirrors original)
         builder.Services.AddSingleton<IConfiguration>(configuration);
@@ -287,10 +289,19 @@ public partial class Program
     private static void AddCoordinationServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddTransient<IStu3PatientCoordinationService, Stu3PatientCoordinationService>();
+        services.AddTransient<IComparisonCoordinationService, ComparisonCoordinationService>();
+
+        services.Configure<ComparisonWorkerSettings>(
+            configuration.GetSection("ComparisonWorkerSettings"));
     }
 
     private static void AddClients(IServiceCollection services)
     {
         services.AddTransient<IAuditClient, AuditClient>();
+    }
+
+    private static void AddBackgroundWorkers(IServiceCollection services)
+    {
+        services.AddHostedService<ComparisonWorker>();
     }
 }
