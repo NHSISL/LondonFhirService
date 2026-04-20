@@ -12,9 +12,9 @@ using LondonFhirService.Core.Models.Orchestrations.CompareQueue;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
 
-namespace LondonFhirService.Core.Services.Orchestrations.Accesses
+namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
 {
-    public class CompareQueueOrchestrationService : ICompareQueueOrchestrationService
+    public partial class CompareQueueOrchestrationService : ICompareQueueOrchestrationService
     {
         private readonly IFhirRecordService fhirRecordService;
         private readonly IFhirRecordDifferenceService fhirRecordDifferenceService;
@@ -33,82 +33,78 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             this.loggingBroker = loggingBroker;
         }
 
-        public async ValueTask<CompareQueueItem> GetUnprocessedRecordAsync()
-        {
-            DateTimeOffset currentDateTime =
-                await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-            DateTimeOffset bufferedDateTime =
-                currentDateTime.AddMinutes(-5); // add buffer to ensure all records are ingested before processing
-
-            IQueryable<FhirRecord> secondaryFhirRecordQueryable =
-                await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
-
-            // get the oldest unprocessed secondary record that is past the buffer time
-            secondaryFhirRecordQueryable = secondaryFhirRecordQueryable
-                .Where(record =>
-                    record.Status == StatusType.Pending
-                    && !record.IsPrimarySource
-                    && record.CreatedDate <= bufferedDateTime)
-                .OrderBy(record => record.CreatedDate);
-
-            FhirRecord secondaryFhirRecord = secondaryFhirRecordQueryable.FirstOrDefault();
-
-            if (secondaryFhirRecord == null)
+        public ValueTask<CompareQueueItem> GetUnprocessedRecordAsync() =>
+            TryCatch(async () =>
             {
-                // no unprocessed records found, return null to end the queue processing
-                return null;
-            }
+                DateTimeOffset currentDateTime =
+                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
-            // prevent queue from picking up the same record by marking it as processed before comparison
-            secondaryFhirRecord.Status = StatusType.Processing;
-            secondaryFhirRecord = await this.fhirRecordService.ModifyFhirRecordAsync(secondaryFhirRecord);
+                DateTimeOffset bufferedDateTime = currentDateTime.AddMinutes(-5);
 
-            // get the corresponding primary record for comparison
-            IQueryable<FhirRecord> primaryFhirRecordQueryable =
-                await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
+                IQueryable<FhirRecord> secondaryFhirRecordQueryable =
+                    await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
 
-            primaryFhirRecordQueryable = primaryFhirRecordQueryable
-                .Where(record =>
-                record.CorrelationId == secondaryFhirRecord.CorrelationId
-                && record.IsPrimarySource);
+                secondaryFhirRecordQueryable = secondaryFhirRecordQueryable
+                    .Where(fhirRecord =>
+                        fhirRecord.Status == StatusType.Pending
+                        && !fhirRecord.IsPrimarySource
+                        && fhirRecord.CreatedDate <= bufferedDateTime)
+                    .OrderBy(fhirRecord => fhirRecord.CreatedDate);
 
-            FhirRecord primaryFhirRecord = primaryFhirRecordQueryable.FirstOrDefault();
+                FhirRecord secondaryFhirRecord = secondaryFhirRecordQueryable.FirstOrDefault();
 
-            CompareQueueItem compareQueueItems = new CompareQueueItem()
+                if (secondaryFhirRecord == null)
+                {
+                    return null;
+                }
+
+                secondaryFhirRecord.Status = StatusType.Processing;
+
+                secondaryFhirRecord =
+                    await this.fhirRecordService.ModifyFhirRecordAsync(secondaryFhirRecord);
+
+                IQueryable<FhirRecord> primaryFhirRecordQueryable =
+                    await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
+
+                primaryFhirRecordQueryable = primaryFhirRecordQueryable
+                    .Where(fhirRecord =>
+                        fhirRecord.CorrelationId == secondaryFhirRecord.CorrelationId
+                        && fhirRecord.IsPrimarySource);
+
+                FhirRecord primaryFhirRecord = primaryFhirRecordQueryable.FirstOrDefault();
+
+                var compareQueueItem = new CompareQueueItem();
+                compareQueueItem.PrimaryFhirRecord = primaryFhirRecord;
+                compareQueueItem.SecondaryFhirRecord = secondaryFhirRecord;
+
+                return compareQueueItem;
+            });
+
+        public ValueTask ChangeFhirRecordStatusAsync(Guid fhirRecordId, StatusType status) =>
+            TryCatch(async () =>
             {
-                PrimaryFhirRecord = primaryFhirRecord,
-                SecondaryFhirRecord = secondaryFhirRecord
-            };
+                ValidateChangeFhirRecordStatus(fhirRecordId);
 
-            return compareQueueItems;
-        }
+                FhirRecord maybeFhirRecord =
+                    await this.fhirRecordService.RetrieveFhirRecordByIdAsync(fhirRecordId);
 
-        public async ValueTask ChangeFhirRecordStatusAsync(Guid fhirRecordId, StatusType status)
-        {
-            // ValidateOnMarkFhirRecordsAsProcessed(fhirRecordId, status)
+                maybeFhirRecord.Status = status;
 
-            FhirRecord maybeFhirRecord =
-                await this.fhirRecordService.RetrieveFhirRecordByIdAsync(fhirRecordId);
+                if (status == StatusType.Completed || status == StatusType.Failed)
+                {
+                    maybeFhirRecord.IsProcessed = true;
+                }
 
-            //ValidateStorageFhirRecord(maybeFhirRecord, maybeFhirRecord.Id);
+                await this.fhirRecordService.ModifyFhirRecordAsync(maybeFhirRecord);
+            });
 
-            maybeFhirRecord.Status = status;
-
-            if (status == StatusType.Completed || status == StatusType.Failed)
+        public ValueTask PersistFhirRecordDifferencesAsync(CompareQueueItem compareQueueItem) =>
+            TryCatch(async () =>
             {
-                maybeFhirRecord.IsProcessed = true;
-            }
+                ValidatePersistFhirRecordDifferences(compareQueueItem);
 
-            await this.fhirRecordService.ModifyFhirRecordAsync(maybeFhirRecord);
-        }
-
-        public async ValueTask PersistFhirRecordDifferencesAsync(CompareQueueItem compareQueueItems)
-        {
-            // ValidateOnPersistFhirRecordDifferences(compareQueueItems)
-
-            await this.fhirRecordDifferenceService
-                .AddFhirRecordDifferenceAsync(compareQueueItems.FhirRecordDifference);
-        }
+                await this.fhirRecordDifferenceService
+                    .AddFhirRecordDifferenceAsync(compareQueueItem.FhirRecordDifference);
+            });
     }
 }
