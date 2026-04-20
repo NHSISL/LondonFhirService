@@ -217,7 +217,8 @@ public partial class Program
 
             var stu3Providers = new List<STU3FhirAbstractions.IFhirProvider>
             {
-                new DdsStu3Provider(config, logger)
+                new DdsStu3Provider(config, logger),
+                //new LdsStu3Provider(config, logger, httpContextAccessor)
             };
 
             return new STU3FhirAbstractions.FhirAbstractionProvider(stu3Providers);
