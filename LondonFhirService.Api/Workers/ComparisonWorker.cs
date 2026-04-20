@@ -43,15 +43,22 @@ namespace LondonFhirService.Api.Workers
                         scope.ServiceProvider.GetRequiredService<IComparisonCoordinationService>();
 
                     await comparisonCoordinationService.ProcessFhirRecords();
-                }
-                catch (Exception exception)
-                {
-                    logger.LogError(exception, "ComparisonWorker encountered an error during processing.");
-                }
+                    }
+                    catch (Exception exception)
+                    {
+                        logger.LogError(exception, "ComparisonWorker encountered an error during processing.");
+                    }
 
-                await Task.Delay(
-                    TimeSpan.FromSeconds(settings.Value.SleepIntervalSeconds),
-                    stoppingToken);
+                    try
+                    {
+                        await Task.Delay(
+                            TimeSpan.FromSeconds(settings.Value.SleepIntervalSeconds),
+                            stoppingToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
             }
 
             logger.LogInformation("ComparisonWorker stopped.");
