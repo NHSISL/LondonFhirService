@@ -116,7 +116,7 @@ public partial class Program
         AddProcessingServices(builder.Services);
         AddCoordinationServices(builder.Services, configuration);
         AddClients(builder.Services);
-        AddBackgroundWorkers(builder.Services);
+        AddBackgroundWorkers(builder.Services, configuration);
 
         // IConfiguration registration (optional, but mirrors original)
         builder.Services.AddSingleton<IConfiguration>(configuration);
@@ -291,9 +291,6 @@ public partial class Program
     {
         services.AddTransient<IStu3PatientCoordinationService, Stu3PatientCoordinationService>();
         services.AddTransient<IComparisonCoordinationService, ComparisonCoordinationService>();
-
-        services.Configure<ComparisonWorkerSettings>(
-            configuration.GetSection("ComparisonWorkerSettings"));
     }
 
     private static void AddClients(IServiceCollection services)
@@ -301,8 +298,10 @@ public partial class Program
         services.AddTransient<IAuditClient, AuditClient>();
     }
 
-    private static void AddBackgroundWorkers(IServiceCollection services)
+    private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)
     {
+
+        services.Configure<ComparisonWorkerSettings>(configuration.GetSection("ComparisonWorkerSettings"));
         services.AddHostedService<ComparisonWorker>();
     }
 }
