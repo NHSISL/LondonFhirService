@@ -234,7 +234,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             return new TheoryData<Xeption>
             {
                 new FhirAbstractionProviderValidationException(
-                    message: "Fhir abstraction provider validation errors occured, please try again",
+                    message: "Fhir abstraction provider validation errors occurred, please try again",
                     innerException: innerException,
                     data: innerException.Data)
             };
@@ -257,6 +257,64 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     message: "Fhir abstraction provider service error occurred, please contact support.",
                     innerException: innerException,
                     data: innerException.Data)
+            };
+        }
+
+        public static TheoryData<Xeption> CancelledExceptions()
+        {
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+            var operationCanceledException = new OperationCanceledException(cancellationTokenSource.Token);
+
+            var cancelledXeptionWrapper = new Xeption(
+                message: operationCanceledException.Message,
+                innerException: operationCanceledException,
+                data: operationCanceledException.Data);
+
+            return new TheoryData<Xeption>
+            {
+                new FhirAbstractionProviderValidationException(
+                    message: "Fhir abstraction provider validation errors occurred, please try again",
+                    innerException: cancelledXeptionWrapper,
+                    data: cancelledXeptionWrapper.Data),
+
+                new FhirAbstractionProviderDependencyException(
+                    message: "Fhir abstraction provider dependency error occurred, please contact support.",
+                    innerException: cancelledXeptionWrapper,
+                    data: cancelledXeptionWrapper.Data),
+
+                new FhirAbstractionProviderServiceException(
+                    message: "Fhir abstraction provider service error occurred, please contact support.",
+                    innerException: cancelledXeptionWrapper,
+                    data: cancelledXeptionWrapper.Data)
+            };
+        }
+
+        public static TheoryData<Xeption> NetworkExceptions()
+        {
+            var operationCanceledException = new OperationCanceledException();
+
+            var networkXeptionWrapper = new Xeption(
+                message: operationCanceledException.Message,
+                innerException: operationCanceledException,
+                data: operationCanceledException.Data);
+
+            return new TheoryData<Xeption>
+            {
+                new FhirAbstractionProviderValidationException(
+                    message: "Fhir abstraction provider validation errors occurred, please try again",
+                    innerException: networkXeptionWrapper,
+                    data: networkXeptionWrapper.Data),
+
+                new FhirAbstractionProviderDependencyException(
+                    message: "Fhir abstraction provider dependency error occurred, please contact support.",
+                    innerException: networkXeptionWrapper,
+                    data: networkXeptionWrapper.Data),
+
+                new FhirAbstractionProviderServiceException(
+                    message: "Fhir abstraction provider service error occurred, please contact support.",
+                    innerException: networkXeptionWrapper,
+                    data: networkXeptionWrapper.Data)
             };
         }
 

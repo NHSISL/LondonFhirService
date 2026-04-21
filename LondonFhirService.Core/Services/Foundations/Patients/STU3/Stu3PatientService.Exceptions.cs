@@ -29,19 +29,60 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentsPatientServiceException);
             }
             catch (Exception exception)
-                when (exception is IFhirValidationException)
+               when ((exception is IFhirValidationException
+                   || exception is IFhirDependencyException
+                   || exception is IFhirServiceException)
+                  && exception.InnerException?.InnerException is OperationCanceledException cancelledInnerException
+                  && cancelledInnerException.CancellationToken.IsCancellationRequested)
             {
-                throw await CreateAndLogDependencyValidationException(exception as Xeption);
+                var cancelledPatientServiceException =
+                    new CancelledPatientServiceException(
+                        message: "Patient service was cancelled, please try again.",
+                        innerException: cancelledInnerException,
+                        data: cancelledInnerException.Data);
+
+                throw await CreateAndLogDependencyException(cancelledPatientServiceException);
             }
             catch (Exception exception)
-               when (exception is IFhirDependencyException)
+               when ((exception is IFhirValidationException
+                   || exception is IFhirDependencyException
+                   || exception is IFhirServiceException)
+                  && exception.InnerException?.InnerException is OperationCanceledException)
             {
-                throw await CreateAndLogDependencyException(exception as Xeption);
+                var networkOperationCanceledException =
+                    (OperationCanceledException)exception.InnerException.InnerException;
+
+                var networkPatientServiceException =
+                    new NetworkPatientServiceException(
+                        message: "Network connectivity failure occurred, please check connection and try again.",
+                        innerException: networkOperationCanceledException,
+                        data: networkOperationCanceledException.Data);
+
+                throw await CreateAndLogServiceExceptionAsync(networkPatientServiceException);
             }
             catch (Exception exception)
-               when (exception is IFhirServiceException)
+               when (exception is IFhirValidationException)
             {
-                throw await CreateAndLogDependencyException(exception as Xeption);
+                var failedPatientDependencyValidationException =
+                    new FailedPatientDependencyValidationException(
+                        message: "Failed patient dependency validation error occurred, please try again.",
+                        innerException: exception.InnerException,
+                        data: exception.Data);
+
+                throw await CreateAndLogDependencyValidationException(
+                    failedPatientDependencyValidationException);
+            }
+            catch (Exception exception)
+               when (exception is IFhirDependencyException
+                   || exception is IFhirServiceException)
+            {
+                var failedPatientDependencyException =
+                    new FailedPatientDependencyException(
+                        message: "Failed patient dependency error occurred, contact support.",
+                        innerException: exception.InnerException,
+                        data: exception.Data);
+
+                throw await CreateAndLogDependencyException(failedPatientDependencyException);
             }
             catch (Exception exception)
             {
@@ -67,19 +108,60 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentsPatientServiceException);
             }
             catch (Exception exception)
-                when (exception is IFhirValidationException)
+               when ((exception is IFhirValidationException
+                   || exception is IFhirDependencyException
+                   || exception is IFhirServiceException)
+                  && exception.InnerException?.InnerException is OperationCanceledException cancelledInnerException
+                  && cancelledInnerException.CancellationToken.IsCancellationRequested)
             {
-                throw await CreateAndLogDependencyValidationException(exception as Xeption);
+                var cancelledPatientServiceException =
+                    new CancelledPatientServiceException(
+                        message: "Patient service was cancelled, please try again.",
+                        innerException: cancelledInnerException,
+                        data: cancelledInnerException.Data);
+
+                throw await CreateAndLogDependencyException(cancelledPatientServiceException);
             }
             catch (Exception exception)
-               when (exception is IFhirDependencyException)
+               when ((exception is IFhirValidationException
+                   || exception is IFhirDependencyException
+                   || exception is IFhirServiceException)
+                  && exception.InnerException?.InnerException is OperationCanceledException)
             {
-                throw await CreateAndLogDependencyException(exception as Xeption);
+                var networkOperationCanceledException =
+                    (OperationCanceledException)exception.InnerException.InnerException;
+
+                var networkPatientServiceException =
+                    new NetworkPatientServiceException(
+                        message: "Network connectivity failure occurred, please check connection and try again.",
+                        innerException: networkOperationCanceledException,
+                        data: networkOperationCanceledException.Data);
+
+                throw await CreateAndLogServiceExceptionAsync(networkPatientServiceException);
             }
             catch (Exception exception)
-               when (exception is IFhirServiceException)
+               when (exception is IFhirValidationException)
             {
-                throw await CreateAndLogDependencyException(exception as Xeption);
+                var failedPatientDependencyValidationException =
+                    new FailedPatientDependencyValidationException(
+                        message: "Failed patient dependency validation error occurred, please try again.",
+                        innerException: exception.InnerException,
+                        data: exception.Data);
+
+                throw await CreateAndLogDependencyValidationException(
+                    failedPatientDependencyValidationException);
+            }
+            catch (Exception exception)
+               when (exception is IFhirDependencyException
+                   || exception is IFhirServiceException)
+            {
+                var failedPatientDependencyException =
+                    new FailedPatientDependencyException(
+                        message: "Failed patient dependency error occurred, contact support.",
+                        innerException: exception.InnerException,
+                        data: exception.Data);
+
+                throw await CreateAndLogDependencyException(failedPatientDependencyException);
             }
             catch (Exception exception)
             {
