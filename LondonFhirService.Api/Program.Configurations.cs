@@ -300,7 +300,6 @@ public partial class Program
 
     private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)
     {
-
         services.Configure<ComparisonWorkerSettings>(configuration.GetSection("ComparisonWorkerSettings"));
         services.AddHostedService<ComparisonWorker>();
     }
