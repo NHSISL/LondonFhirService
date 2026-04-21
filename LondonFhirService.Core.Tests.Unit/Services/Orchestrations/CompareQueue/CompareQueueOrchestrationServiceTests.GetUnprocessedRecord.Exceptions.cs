@@ -27,7 +27,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                 new CompareQueueOrchestrationDependencyValidationException(
                     message: "Compare queue orchestration dependency validation error occurred, " +
                         "fix errors and try again.",
-                    innerException: dependencyValidationException);
+                    innerException: dependencyValidationException.InnerException as Xeption);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
@@ -80,7 +80,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             var expectedCompareQueueOrchestrationDependencyException =
                 new CompareQueueOrchestrationDependencyException(
                     message: "Compare queue orchestration dependency error occurred, please contact support.",
-                    innerException: dependencyException);
+                    innerException: dependencyException.InnerException as Xeption);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())

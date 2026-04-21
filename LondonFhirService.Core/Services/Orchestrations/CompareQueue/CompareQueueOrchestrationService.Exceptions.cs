@@ -145,7 +145,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 new CompareQueueOrchestrationDependencyValidationException(
                     message: "Compare queue orchestration dependency validation error occurred, " +
                         "fix errors and try again.",
-                    innerException: exception);
+                    innerException: exception.InnerException as Xeption);
 
             await this.loggingBroker.LogErrorAsync(compareQueueOrchestrationDependencyValidationException);
 
@@ -158,7 +158,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
             var compareQueueOrchestrationDependencyException =
                 new CompareQueueOrchestrationDependencyException(
                     message: "Compare queue orchestration dependency error occurred, please contact support.",
-                    innerException: exception);
+                    innerException: exception.InnerException as Xeption);
 
             await this.loggingBroker.LogErrorAsync(compareQueueOrchestrationDependencyException);
 
