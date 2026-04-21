@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Orchestrations.CompareQueue;
 using LondonFhirService.Core.Models.Orchestrations.Comparisons;
-using LondonFhirService.Core.Services.Orchestrations.Accesses;
+using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
