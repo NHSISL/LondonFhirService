@@ -234,7 +234,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             return new TheoryData<Xeption>
             {
                 new FhirAbstractionProviderValidationException(
-                    message: "Fhir abstraction provider validation errors occured, please try again",
+                    message: "Fhir abstraction provider validation errors occurred, please try again",
                     innerException: innerException,
                     data: innerException.Data)
             };
@@ -274,7 +274,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             return new TheoryData<Xeption>
             {
                 new FhirAbstractionProviderValidationException(
-                    message: "Fhir abstraction provider validation errors occured, please try again",
+                    message: "Fhir abstraction provider validation errors occurred, please try again",
                     innerException: cancelledXeptionWrapper,
                     data: cancelledXeptionWrapper.Data),
 
@@ -302,7 +302,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             return new TheoryData<Xeption>
             {
                 new FhirAbstractionProviderValidationException(
-                    message: "Fhir abstraction provider validation errors occured, please try again",
+                    message: "Fhir abstraction provider validation errors occurred, please try again",
                     innerException: networkXeptionWrapper,
                     data: networkXeptionWrapper.Data),
 

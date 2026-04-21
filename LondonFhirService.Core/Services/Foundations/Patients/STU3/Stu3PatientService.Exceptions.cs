@@ -73,18 +73,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     failedPatientDependencyValidationException);
             }
             catch (Exception exception)
-               when (exception is IFhirDependencyException)
-            {
-                var failedPatientDependencyException =
-                    new FailedPatientDependencyException(
-                        message: "Failed patient dependency error occurred, contact support.",
-                        innerException: exception.InnerException,
-                        data: exception.Data);
-
-                throw await CreateAndLogDependencyException(failedPatientDependencyException);
-            }
-            catch (Exception exception)
-               when (exception is IFhirServiceException)
+               when (exception is IFhirDependencyException
+                   || exception is IFhirServiceException)
             {
                 var failedPatientDependencyException =
                     new FailedPatientDependencyException(
@@ -162,18 +152,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     failedPatientDependencyValidationException);
             }
             catch (Exception exception)
-               when (exception is IFhirDependencyException)
-            {
-                var failedPatientDependencyException =
-                    new FailedPatientDependencyException(
-                        message: "Failed patient dependency error occurred, contact support.",
-                        innerException: exception.InnerException,
-                        data: exception.Data);
-
-                throw await CreateAndLogDependencyException(failedPatientDependencyException);
-            }
-            catch (Exception exception)
-               when (exception is IFhirServiceException)
+               when (exception is IFhirDependencyException
+                   || exception is IFhirServiceException)
             {
                 var failedPatientDependencyException =
                     new FailedPatientDependencyException(
