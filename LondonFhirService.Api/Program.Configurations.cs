@@ -183,6 +183,7 @@ public partial class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseRequestTimeouts();
         app.UseAuthentication();
         app.UseAuthorization();
         //app.UseInvisibleApiMiddleware(invisibleApiKey);
