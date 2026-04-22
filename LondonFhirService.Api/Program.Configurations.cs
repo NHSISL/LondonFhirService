@@ -103,6 +103,14 @@ public partial class Program
         // ----------------- Core ASP.NET services -----------------
         builder.Services.AddSwaggerGen();
         builder.Services.AddAuthorization();
+
+        builder.Services.AddRequestTimeouts(options =>
+            options.DefaultPolicy =
+                new Microsoft.AspNetCore.Http.Timeouts.RequestTimeoutPolicy
+                {
+                    Timeout = TimeSpan.FromSeconds(130)
+                });
+
         builder.Services.AddDbContextFactory<StorageBroker>();
         builder.Services.AddDbContext<StorageBroker>();
         builder.Services.AddHttpContextAccessor();
@@ -175,6 +183,7 @@ public partial class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseRequestTimeouts();
         app.UseAuthentication();
         app.UseAuthorization();
         //app.UseInvisibleApiMiddleware(invisibleApiKey);
