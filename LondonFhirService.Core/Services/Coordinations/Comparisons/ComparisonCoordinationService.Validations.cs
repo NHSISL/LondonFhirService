@@ -3,7 +3,6 @@
 // ---------------------------------------------------------
 
 using System;
-using LondonFhirService.Core.Models.Coordinations.Comparisons.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
