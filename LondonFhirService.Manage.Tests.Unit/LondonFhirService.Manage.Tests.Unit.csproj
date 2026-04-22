@@ -18,9 +18,9 @@
 		<PackageReference Include="ISL.Providers.ReIdentification.DemoData" Version="0.0.0.5" />
 		<PackageReference Include="ISL.Providers.ReIdentification.Necs" Version="0.0.0.5" />
 		<PackageReference Include="ISL.Providers.ReIdentification.OfflineFileSources" Version="0.0.0.5" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.6" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.7" />
 		<PackageReference Include="RESTFulSense" Version="3.2.0" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.0" />
 		<PackageReference Include="Moq" Version="4.20.72" />
 		<PackageReference Include="xunit.analyzers" Version="1.27.0">
 			<PrivateAssets>all</PrivateAssets>
