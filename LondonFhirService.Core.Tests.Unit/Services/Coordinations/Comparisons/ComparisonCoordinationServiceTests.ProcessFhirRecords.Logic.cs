@@ -57,7 +57,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     .ReturnsAsync(randomDateTimeOffset);
 
             // when
-            await this.comparisonCoordinationService.ProcessFhirRecords();
+            await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             // then
             this.compareQueueOrchestrationServiceMock.Verify(service =>
@@ -124,7 +124,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     .ReturnsAsync((CompareQueueItem)null);
 
             // when
-            await this.comparisonCoordinationService.ProcessFhirRecords();
+            await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             // then
             this.compareQueueOrchestrationServiceMock.Verify(service =>
@@ -178,7 +178,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     .ReturnsAsync(randomDateTimeOffset);
 
             // when
-            await this.comparisonCoordinationService.ProcessFhirRecords();
+            await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             // then
             this.compareQueueOrchestrationServiceMock.Verify(service =>

@@ -31,7 +31,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             // when
             ValueTask processFhirRecordsTask =
-                this.comparisonCoordinationService.ProcessFhirRecords();
+                this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             ComparisonCoordinationDependencyValidationException
                 actualComparisonCoordinationDependencyValidationException =
@@ -74,7 +74,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             // when
             ValueTask processFhirRecordsTask =
-                this.comparisonCoordinationService.ProcessFhirRecords();
+                this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             ComparisonCoordinationDependencyException actualComparisonCoordinationDependencyException =
                 await Assert.ThrowsAsync<ComparisonCoordinationDependencyException>(
@@ -123,7 +123,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             // when
             ValueTask processFhirRecordsTask =
-                this.comparisonCoordinationService.ProcessFhirRecords();
+                this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             ComparisonCoordinationServiceException actualComparisonCoordinationServiceException =
                 await Assert.ThrowsAsync<ComparisonCoordinationServiceException>(

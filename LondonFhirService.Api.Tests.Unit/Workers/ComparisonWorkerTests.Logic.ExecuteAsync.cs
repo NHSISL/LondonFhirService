@@ -17,7 +17,7 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
             var cts = new CancellationTokenSource();
 
             comparisonCoordinationServiceMock
-                .Setup(service => service.ProcessFhirRecords())
+                .Setup(service => service.ProcessFhirRecordsAsync())
                 .Callback(cts.Cancel)
                 .Returns(ValueTask.CompletedTask);
 
@@ -30,7 +30,7 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
                 Times.Once);
 
             comparisonCoordinationServiceMock.Verify(
-                service => service.ProcessFhirRecords(),
+                service => service.ProcessFhirRecordsAsync(),
                 Times.Once);
 
             comparisonCoordinationServiceMock.VerifyNoOtherCalls();

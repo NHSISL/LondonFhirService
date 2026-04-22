@@ -22,7 +22,7 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
             int callCount = 0;
 
             comparisonCoordinationServiceMock
-                .Setup(service => service.ProcessFhirRecords())
+                .Setup(service => service.ProcessFhirRecordsAsync())
                 .Returns(() =>
                 {
                     callCount++;
@@ -40,7 +40,7 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
 
             // then
             comparisonCoordinationServiceMock.Verify(
-                service => service.ProcessFhirRecords(),
+                service => service.ProcessFhirRecordsAsync(),
                 Times.Exactly(2));
 
             loggerMock.Verify(logger => logger.Log(

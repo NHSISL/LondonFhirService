@@ -34,7 +34,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask ProcessFhirRecords() =>
+        public ValueTask ProcessFhirRecordsAsync() =>
             TryCatch(async () =>
             {
                 CompareQueueItem compareQueueItem;

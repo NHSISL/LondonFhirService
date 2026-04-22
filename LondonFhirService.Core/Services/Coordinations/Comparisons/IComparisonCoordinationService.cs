@@ -8,6 +8,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
     public interface IComparisonCoordinationService
     {
-        ValueTask ProcessFhirRecords();
+        ValueTask ProcessFhirRecordsAsync();
     }
 }
