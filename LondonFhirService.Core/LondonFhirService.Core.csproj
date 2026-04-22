@@ -6,9 +6,9 @@
 		<ImplicitUsings>disable</ImplicitUsings>
 		<OutputType>Library</OutputType>
 		<NoWarn>CS1998</NoWarn>
-		<Version>0.4.0.0</Version>
-		<AssemblyVersion>0.4.0.0</AssemblyVersion>
-		<FileVersion>0.4.0.0</FileVersion>
+		<Version>0.5.0.0</Version>
+		<AssemblyVersion>0.5.0.0</AssemblyVersion>
+		<FileVersion>0.5.0.0</FileVersion>
 		<PackageReleaseNotes>
 			Minor improvements and bug fixes to the London FHIR Service Core Library mainly related to timeout handling and logging.
 		</PackageReleaseNotes>
