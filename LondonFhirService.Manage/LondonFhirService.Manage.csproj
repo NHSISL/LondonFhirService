@@ -20,15 +20,15 @@
 		<PackageReference Include="FluentAssertions" Version="7.2.0" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.6" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.6" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-			<Version>10.0.6</Version>
+			<Version>10.0.7</Version>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Identity.Web" Version="4.8.0" />
 		<PackageReference Include="NHSISL.CsvHelperClient" Version="1.1.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.6" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.7" />
 	</ItemGroup>
 
 	<ItemGroup>
