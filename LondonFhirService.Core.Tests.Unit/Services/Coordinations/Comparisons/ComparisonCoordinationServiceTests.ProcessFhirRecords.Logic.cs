@@ -161,6 +161,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             ComparisonResult randomComparisonResult =
                 CreateRandomComparisonResult(inputPrimaryFhirRecord.CorrelationId);
 
+            string expectedDiffJson = SerializeComparisonResult(randomComparisonResult);
+
+            var expectedFhirRecordDifference = new FhirRecordDifference
+            {
+                PrimaryId = inputPrimaryFhirRecord.Id,
+                SecondaryId = inputSecondaryFhirRecord.Id,
+                CorrelationId = randomComparisonResult.CorrelationId,
+                DiffJson = expectedDiffJson,
+                DiffCount = randomComparisonResult.DiffCount,
+                ComparedAt = randomDateTimeOffset
+            };
+
             this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
                 service.GetUnprocessedRecordAsync())
                     .ReturnsAsync(inputCompareQueueItem)
@@ -197,8 +209,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     Times.Once);
 
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.PersistFhirRecordDifferencesAsync(It.IsAny<CompareQueueItem>()),
-                    Times.Once);
+                service.PersistFhirRecordDifferencesAsync(
+                    It.Is<CompareQueueItem>(item =>
+                        item.FhirRecordDifference.PrimaryId == expectedFhirRecordDifference.PrimaryId
+                        && item.FhirRecordDifference.SecondaryId == expectedFhirRecordDifference.SecondaryId
+                        && item.FhirRecordDifference.CorrelationId == expectedFhirRecordDifference.CorrelationId
+                        && item.FhirRecordDifference.DiffJson == expectedFhirRecordDifference.DiffJson
+                        && item.FhirRecordDifference.DiffCount == expectedFhirRecordDifference.DiffCount
+                        && item.FhirRecordDifference.ComparedAt == expectedFhirRecordDifference.ComparedAt)),
+                            Times.Once);
 
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.ChangeFhirRecordStatusAsync(
