@@ -30,7 +30,7 @@ namespace LondonFhirService.Core.Brokers.Securities
         public SecurityBroker(IHttpContextAccessor httpContextAccessor)
         {
             claimsPrincipal = httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal();
-            remoteIpAddress = httpContextAccessor.HttpContext.Connection.RemoteIpAddress?.ToString();
+            remoteIpAddress = httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
             securityClient = new SecurityClient();
         }
 

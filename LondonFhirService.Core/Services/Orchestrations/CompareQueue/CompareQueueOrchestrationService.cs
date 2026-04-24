@@ -48,7 +48,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     .Where(fhirRecord =>
                         fhirRecord.Status == StatusType.Pending
                         && !fhirRecord.IsPrimarySource
-                        && fhirRecord.CreatedDate <= bufferedDateTime)
+                        && fhirRecord.UpdatedDate <= bufferedDateTime)
                     .OrderBy(fhirRecord => fhirRecord.CreatedDate);
 
                 FhirRecord secondaryFhirRecord = secondaryFhirRecordQueryable.FirstOrDefault();
