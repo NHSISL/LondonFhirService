@@ -6,6 +6,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -21,16 +22,19 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         private readonly IComparisonOrchestrationService comparisonOrchestrationService;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly IIdentifierBroker identifierBroker;
 
         public ComparisonCoordinationService(
             ICompareQueueOrchestrationService compareQueueOrchestrationService,
             IComparisonOrchestrationService comparisonOrchestrationService,
             IDateTimeBroker dateTimeBroker,
+            IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker)
         {
             this.compareQueueOrchestrationService = compareQueueOrchestrationService;
             this.comparisonOrchestrationService = comparisonOrchestrationService;
             this.dateTimeBroker = dateTimeBroker;
+            this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
         }
 
@@ -71,8 +75,11 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     string diffJson = JsonSerializer.Serialize(comparisonResult);  // Create serializationBroker
                     DateTimeOffset currentTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
+                    Guid id = await this.identifierBroker.GetIdentifierAsync();
+
                     FhirRecordDifference fhirRecordDifference = new FhirRecordDifference
                     {
+                        Id = id,
                         PrimaryId = compareQueueItem.PrimaryFhirRecord.Id,
                         SecondaryId = compareQueueItem.SecondaryFhirRecord.Id,
                         CorrelationId = comparisonResult.CorrelationId,

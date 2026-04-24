@@ -76,6 +76,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 var compareQueueItem = new CompareQueueItem();
                 compareQueueItem.PrimaryFhirRecord = primaryFhirRecord;
                 compareQueueItem.SecondaryFhirRecord = secondaryFhirRecord;
+
                 return compareQueueItem;
             });
 
