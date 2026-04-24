@@ -38,7 +38,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
 
             this.storageBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }

@@ -17,20 +17,17 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
     {
         private readonly IStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;
-        private readonly ISecurityBroker securityBroker;
         private readonly ISecurityAuditBroker securityAuditBroker;
         private readonly ILoggingBroker loggingBroker;
 
         public FhirRecordDifferenceService(
             IStorageBroker storageBroker,
             IDateTimeBroker dateTimeBroker,
-            ISecurityBroker securityBroker,
             ISecurityAuditBroker securityAuditBroker,
             ILoggingBroker loggingBroker)
         {
             this.storageBroker = storageBroker;
             this.dateTimeBroker = dateTimeBroker;
-            this.securityBroker = securityBroker;
             this.securityAuditBroker = securityAuditBroker;
             this.loggingBroker = loggingBroker;
         }

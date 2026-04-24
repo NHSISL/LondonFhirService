@@ -6,6 +6,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -21,16 +22,19 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         private readonly IComparisonOrchestrationService comparisonOrchestrationService;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly IIdentifierBroker identifierBroker;
 
         public ComparisonCoordinationService(
             ICompareQueueOrchestrationService compareQueueOrchestrationService,
             IComparisonOrchestrationService comparisonOrchestrationService,
             IDateTimeBroker dateTimeBroker,
+            IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker)
         {
             this.compareQueueOrchestrationService = compareQueueOrchestrationService;
             this.comparisonOrchestrationService = comparisonOrchestrationService;
             this.dateTimeBroker = dateTimeBroker;
+            this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
         }
 
@@ -82,7 +86,33 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                         compareQueueItem.FhirRecordDifference = fhirRecordDifference;
 
                         await this.compareQueueOrchestrationService
-                            .PersistFhirRecordDifferencesAsync(compareQueueItem);
+                            .ChangeFhirRecordStatusAsync(compareQueueItem.SecondaryFhirRecord.Id, StatusType.Failed);
+
+                        continue;
+                    }
+
+                    // compare primary record with current secondary record
+                    ComparisonResult comparisonResult = await this.comparisonOrchestrationService.CompareAsync(
+                        correlationId: compareQueueItem.PrimaryFhirRecord.CorrelationId,
+                        source1Json: compareQueueItem.PrimaryFhirRecord.JsonPayload,
+                        source2Json: compareQueueItem.SecondaryFhirRecord.JsonPayload);
+
+                    // serialize comparison result to JSON and create FhirRecordDifference
+                    string diffJson = JsonSerializer.Serialize(comparisonResult);  // Create serializationBroker
+                    DateTimeOffset currentTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+                    Guid id = await this.identifierBroker.GetIdentifierAsync();
+
+                    FhirRecordDifference fhirRecordDifference = new FhirRecordDifference
+                    {
+                        Id = id,
+                        PrimaryId = compareQueueItem.PrimaryFhirRecord.Id,
+                        SecondaryId = compareQueueItem.SecondaryFhirRecord.Id,
+                        CorrelationId = comparisonResult.CorrelationId,
+                        DiffJson = diffJson,
+                        DiffCount = comparisonResult.DiffCount,
+                        ComparedAt = currentTime
+                    };
 
                         await this.compareQueueOrchestrationService
                             .ChangeFhirRecordStatusAsync(

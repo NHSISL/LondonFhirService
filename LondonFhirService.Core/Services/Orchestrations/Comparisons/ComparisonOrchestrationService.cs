@@ -32,13 +32,13 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
         private readonly ILoggingBroker loggingBroker;
 
         public ComparisonOrchestrationService(
-            List<IJsonIgnoreProcessingRule> ignoreRules,
+            IEnumerable<IJsonIgnoreProcessingRule> ignoreRules,
             IResourceMatcherProcessingService resourceMatcherProcessingService,
             IListEntryComparisonProcessingService listEntryComparisonProcessingService,
             IJsonElementService jsonElementService,
             ILoggingBroker loggingBroker)
         {
-            this.ignoreRules = ignoreRules;
+            this.ignoreRules = ignoreRules.ToList();
             this.resourceMatcherProcessingService = resourceMatcherProcessingService;
             this.listEntryComparisonProcessingService = listEntryComparisonProcessingService;
             this.jsonElementService = jsonElementService;

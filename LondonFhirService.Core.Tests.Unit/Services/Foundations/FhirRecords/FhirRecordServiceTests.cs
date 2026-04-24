@@ -25,7 +25,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
     {
         private readonly Mock<IStorageBroker> storageBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
-        private readonly Mock<ISecurityBroker> securityBrokerMock;
         private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly IFhirRecordService fhirRecordService;
@@ -34,14 +33,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
         {
             this.storageBrokerMock = new Mock<IStorageBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
-            this.securityBrokerMock = new Mock<ISecurityBroker>();
             this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.fhirRecordService = new FhirRecordService(
                 storageBroker: this.storageBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
-                securityBroker: this.securityBrokerMock.Object,
                 securityAuditBroker: this.securityAuditBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object);
         }

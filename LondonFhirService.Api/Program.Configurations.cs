@@ -34,12 +34,26 @@ using LondonFhirService.Core.Services.Foundations.Consumers;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
+using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.OdsDatas;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medications;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationStatements;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
+using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
+using LondonFhirService.Core.Services.Orchestrations.Comparisons;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
+using LondonFhirService.Core.Services.Processings.JsonIgnoreRules;
+using LondonFhirService.Core.Services.Processings.ListEntryComparisons;
+using LondonFhirService.Core.Services.Processings.ResourceMatchings;
 using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Models.Brokers.DdsHttp;
 using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -284,16 +298,32 @@ public partial class Program
         services.AddTransient<IStu3PatientService, Stu3PatientService>();
         services.AddTransient<IPdsDataService, PdsDataService>();
         services.AddTransient<IProviderService, ProviderService>();
+        services.AddSingleton<IJsonElementService, JsonElementService>();
+        services.AddTransient<IResourceMatcherService, AllergyIntoleranceMatcherService>();
+        services.AddTransient<IResourceMatcherService, ConditionMatcherService>();
+        services.AddTransient<IResourceMatcherService, EpisodeOfCareMatcherService>();
+        services.AddTransient<IResourceMatcherService, ListMatcherService>();
+        services.AddTransient<IResourceMatcherService, MedicationMatcherService>();
+        services.AddTransient<IResourceMatcherService, MedicationStatementMatcherService>();
+        services.AddTransient<IResourceMatcherService, PatientMatcherService>();
     }
 
     private static void AddProcessingServices(IServiceCollection services)
     {
+        services.AddTransient<IListEntryComparisonProcessingService, ListEntryComparisonProcessingService>();
+        services.AddTransient<IResourceMatcherProcessingService, ResourceMatcherProcessingService>();
+        services.AddTransient<IJsonIgnoreProcessingRule, ArrayOrderIgnoreProcessingRule>();
+        services.AddTransient<IJsonIgnoreProcessingRule, GuidIgnoreProcessingRule>();
+        services.AddTransient<IJsonIgnoreProcessingRule, IdIgnoreProcessingRule>();
+        services.AddTransient<IJsonIgnoreProcessingRule, MetaIgnoreProcessingRule>();
     }
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddTransient<IAccessOrchestrationService, AccessOrchestrationService>();
         services.AddTransient<IStu3PatientOrchestrationService, Stu3PatientOrchestrationService>();
+        services.AddTransient<ICompareQueueOrchestrationService, CompareQueueOrchestrationService>();
+        services.AddTransient<IComparisonOrchestrationService, ComparisonOrchestrationService>();
     }
 
     private static void AddCoordinationServices(IServiceCollection services, IConfiguration configuration)
