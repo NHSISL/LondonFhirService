@@ -61,7 +61,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -136,9 +136,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.ApplyModifyAuditValuesAsync(invalidFhirRecord))
                     .ReturnsAsync(invalidFhirRecord);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUser.UserId);
 
             // when
             ValueTask<FhirRecord> modifyFhirRecordTask =
@@ -160,8 +160,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -174,7 +174,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -222,9 +222,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.ApplyModifyAuditValuesAsync(invalidFhirRecord))
                     .ReturnsAsync(invalidFhirRecord);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUser.UserId);
 
             // when
             ValueTask<FhirRecord> modifyFhirRecordTask =
@@ -246,8 +246,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once());
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -260,7 +260,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -300,9 +300,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUser.UserId);
 
             // when
             ValueTask<FhirRecord> modifyFhirRecordTask =
@@ -324,8 +324,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -338,7 +338,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -383,9 +382,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync())
                 .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUser.UserId);
 
             // when
             ValueTask<FhirRecord> modifyFhirRecordTask =
@@ -416,12 +415,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()),
                     Times.Never);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -461,9 +459,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUser.UserId);
 
             // when 
             ValueTask<FhirRecord> modifyFhirRecordTask =
@@ -489,8 +487,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -499,7 +497,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                         Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -548,9 +545,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUser.UserId);
 
             this.securityAuditBrokerMock.Setup(broker =>
                 broker.EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(invalidFhirRecord, storageFhirRecord))
@@ -580,8 +577,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.securityAuditBrokerMock.Verify(broker =>
@@ -594,7 +591,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                        Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -641,9 +637,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUser.UserId);
 
             this.securityAuditBrokerMock.Setup(broker =>
                 broker.EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(invalidFhirRecord, storageFhirRecord))
@@ -672,8 +668,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.securityAuditBrokerMock.Verify(broker =>
@@ -686,7 +682,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                        Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -731,9 +726,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(randomUser);
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUser.UserId);
 
             this.securityAuditBrokerMock.Setup(broker =>
                 broker.EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(invalidFhirRecord, storageFhirRecord))
@@ -755,8 +750,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -773,7 +768,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();

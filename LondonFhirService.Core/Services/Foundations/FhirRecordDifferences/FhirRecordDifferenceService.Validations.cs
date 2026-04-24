@@ -4,7 +4,6 @@
 
 using System;
 using System.Threading.Tasks;
-using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions;
 using Xeptions;
@@ -16,7 +15,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
         private async ValueTask ValidateFhirRecordDifferenceOnAdd(FhirRecordDifference fhirRecordDifference)
         {
             ValidateFhirRecordDifferenceIsNotNull(fhirRecordDifference);
-            User currentUser = await this.securityBroker.GetCurrentUserAsync();
+            string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
                 createException: () => new InvalidFhirRecordDifferenceException(
@@ -42,7 +41,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
                 Parameter: nameof(FhirRecordDifference.UpdatedDate)),
 
                 (Rule: IsNotSame(
-                    first: currentUser.UserId,
+                    first: currentUserId,
                     second: fhirRecordDifference.CreatedBy),
                 Parameter: nameof(FhirRecordDifference.CreatedBy)),
 
@@ -58,7 +57,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
         private async ValueTask ValidateFhirRecordDifferenceOnModify(FhirRecordDifference fhirRecordDifference)
         {
             ValidateFhirRecordDifferenceIsNotNull(fhirRecordDifference);
-            User currentUser = await this.securityBroker.GetCurrentUserAsync();
+            string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
                 createException: () => new InvalidFhirRecordDifferenceException(
@@ -78,7 +77,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
                 (Rule: IsGreaterThan(fhirRecordDifference.UpdatedBy, 255), Parameter: nameof(FhirRecordDifference.UpdatedBy)),
 
                  (Rule: IsNotSame(
-                    first: currentUser.UserId,
+                    first: currentUserId,
                     second: fhirRecordDifference.UpdatedBy),
                 Parameter: nameof(FhirRecordDifference.UpdatedBy)),
 

@@ -4,7 +4,6 @@
 
 using System;
 using System.Threading.Tasks;
-using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
 using Xeptions;
@@ -16,7 +15,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
         private async ValueTask ValidateFhirRecordOnAdd(FhirRecord fhirRecord)
         {
             ValidateFhirRecordIsNotNull(fhirRecord);
-            User currentUser = await this.securityBroker.GetCurrentUserAsync();
+            string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
                 createException: () => new InvalidFhirRecordException(
@@ -42,7 +41,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 Parameter: nameof(FhirRecord.UpdatedDate)),
 
                 (Rule: IsNotSame(
-                    first: currentUser.UserId,
+                    first: currentUserId,
                     second: fhirRecord.CreatedBy),
                 Parameter: nameof(FhirRecord.CreatedBy)),
 
@@ -58,7 +57,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
         private async ValueTask ValidateFhirRecordOnModify(FhirRecord fhirRecord)
         {
             ValidateFhirRecordIsNotNull(fhirRecord);
-            User currentUser = await this.securityBroker.GetCurrentUserAsync();
+            string currentUserId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
                 createException: () => new InvalidFhirRecordException(
@@ -78,7 +77,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 (Rule: IsGreaterThan(fhirRecord.UpdatedBy, 255), Parameter: nameof(FhirRecord.UpdatedBy)),
 
                  (Rule: IsNotSame(
-                    first: currentUser.UserId,
+                    first: currentUserId,
                     second: fhirRecord.UpdatedBy),
                 Parameter: nameof(FhirRecord.UpdatedBy)),
 
