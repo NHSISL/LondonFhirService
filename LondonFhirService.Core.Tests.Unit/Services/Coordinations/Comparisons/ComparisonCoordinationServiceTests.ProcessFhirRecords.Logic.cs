@@ -47,9 +47,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.comparisonOrchestrationServiceMock.Setup(service =>
                 service.CompareAsync(
-                    inputPrimaryFhirRecord.CorrelationId,
-                    inputPrimaryFhirRecord.JsonPayload,
-                    inputSecondaryFhirRecord.JsonPayload))
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload))
                         .ReturnsAsync(randomComparisonResult);
 
             this.dateTimeBrokerMock.Setup(broker =>
@@ -66,9 +66,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.comparisonOrchestrationServiceMock.Verify(service =>
                 service.CompareAsync(
-                    inputPrimaryFhirRecord.CorrelationId,
-                    inputPrimaryFhirRecord.JsonPayload,
-                    inputSecondaryFhirRecord.JsonPayload),
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload),
                         Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -168,9 +168,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.comparisonOrchestrationServiceMock.Setup(service =>
                 service.CompareAsync(
-                    inputPrimaryFhirRecord.CorrelationId,
-                    inputPrimaryFhirRecord.JsonPayload,
-                    inputSecondaryFhirRecord.JsonPayload))
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload))
                         .ReturnsAsync(randomComparisonResult);
 
             this.dateTimeBrokerMock.Setup(broker =>
@@ -187,9 +187,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.comparisonOrchestrationServiceMock.Verify(service =>
                 service.CompareAsync(
-                    inputPrimaryFhirRecord.CorrelationId,
-                    inputPrimaryFhirRecord.JsonPayload,
-                    inputSecondaryFhirRecord.JsonPayload),
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload),
                         Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
