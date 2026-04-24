@@ -10,6 +10,7 @@ using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
 
@@ -29,6 +30,7 @@ namespace LondonFhirService.Api.Controllers.STU3
 
         [HttpPost("$getstructuredrecord")]
         [Authorize(Roles = "Patients.GetStructuredRecord")]
+        [RequestTimeout(milliseconds: 130_000)]
         public async Task<ActionResult<Bundle>> GetStructuredRecord(
             [FromBody] Parameters parameters,
             CancellationToken cancellationToken)
