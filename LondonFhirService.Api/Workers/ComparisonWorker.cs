@@ -42,7 +42,7 @@ namespace LondonFhirService.Api.Workers
                     var comparisonCoordinationService =
                         scope.ServiceProvider.GetRequiredService<IComparisonCoordinationService>();
 
-                    await comparisonCoordinationService.ProcessFhirRecords();
+                    await comparisonCoordinationService.ProcessFhirRecordsAsync();
                 }
                 catch (Exception exception)
                 {
