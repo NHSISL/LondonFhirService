@@ -24,6 +24,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             FhirRecord inputPrimaryFhirRecord = inputCompareQueueItem.PrimaryFhirRecord;
             FhirRecord inputSecondaryFhirRecord = inputCompareQueueItem.SecondaryFhirRecord;
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            Guid randomFhirRecordDifferenceId = Guid.NewGuid();
 
             ComparisonResult randomComparisonResult =
                 CreateRandomComparisonResult(inputPrimaryFhirRecord.CorrelationId);
@@ -32,6 +33,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             var expectedFhirRecordDifference = new FhirRecordDifference
             {
+                Id = randomFhirRecordDifferenceId,
                 PrimaryId = inputPrimaryFhirRecord.Id,
                 SecondaryId = inputSecondaryFhirRecord.Id,
                 CorrelationId = randomComparisonResult.CorrelationId,
@@ -51,6 +53,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     source1Json: inputPrimaryFhirRecord.JsonPayload,
                     source2Json: inputSecondaryFhirRecord.JsonPayload))
                         .ReturnsAsync(randomComparisonResult);
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(randomFhirRecordDifferenceId);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
@@ -75,10 +81,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.PersistFhirRecordDifferencesAsync(
                     It.Is<CompareQueueItem>(item =>
-                        item.FhirRecordDifference.PrimaryId == expectedFhirRecordDifference.PrimaryId
+                        item.FhirRecordDifference.Id == expectedFhirRecordDifference.Id
+                        && item.FhirRecordDifference.PrimaryId == expectedFhirRecordDifference.PrimaryId
                         && item.FhirRecordDifference.SecondaryId == expectedFhirRecordDifference.SecondaryId
                         && item.FhirRecordDifference.CorrelationId == expectedFhirRecordDifference.CorrelationId
                         && item.FhirRecordDifference.DiffJson == expectedFhirRecordDifference.DiffJson
@@ -101,6 +112,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -144,6 +156,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -157,6 +170,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             FhirRecord inputPrimaryFhirRecord = inputCompareQueueItem.PrimaryFhirRecord;
             FhirRecord inputSecondaryFhirRecord = inputCompareQueueItem.SecondaryFhirRecord;
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            Guid randomFhirRecordDifferenceId = Guid.NewGuid();
 
             ComparisonResult randomComparisonResult =
                 CreateRandomComparisonResult(inputPrimaryFhirRecord.CorrelationId);
@@ -165,6 +179,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             var expectedFhirRecordDifference = new FhirRecordDifference
             {
+                Id = randomFhirRecordDifferenceId,
                 PrimaryId = inputPrimaryFhirRecord.Id,
                 SecondaryId = inputSecondaryFhirRecord.Id,
                 CorrelationId = randomComparisonResult.CorrelationId,
@@ -184,6 +199,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     source1Json: inputPrimaryFhirRecord.JsonPayload,
                     source2Json: inputSecondaryFhirRecord.JsonPayload))
                         .ReturnsAsync(randomComparisonResult);
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(randomFhirRecordDifferenceId);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
@@ -208,10 +227,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.PersistFhirRecordDifferencesAsync(
                     It.Is<CompareQueueItem>(item =>
-                        item.FhirRecordDifference.PrimaryId == expectedFhirRecordDifference.PrimaryId
+                        item.FhirRecordDifference.Id == expectedFhirRecordDifference.Id
+                        && item.FhirRecordDifference.PrimaryId == expectedFhirRecordDifference.PrimaryId
                         && item.FhirRecordDifference.SecondaryId == expectedFhirRecordDifference.SecondaryId
                         && item.FhirRecordDifference.CorrelationId == expectedFhirRecordDifference.CorrelationId
                         && item.FhirRecordDifference.DiffJson == expectedFhirRecordDifference.DiffJson
@@ -228,12 +252,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.ChangeFhirRecordStatusAsync(
                     inputPrimaryFhirRecord.Id,
-                    It.IsAny<StatusType>()),
+                    StatusType.Completed),
                         Times.Never);
 
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }

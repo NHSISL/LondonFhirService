@@ -54,6 +54,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -96,6 +97,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -145,6 +147,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }

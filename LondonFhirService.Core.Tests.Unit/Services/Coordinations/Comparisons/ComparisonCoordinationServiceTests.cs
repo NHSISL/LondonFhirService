@@ -6,6 +6,7 @@ using System;
 using System.Linq.Expressions;
 using System.Text.Json;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -26,6 +27,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
         private readonly Mock<ICompareQueueOrchestrationService> compareQueueOrchestrationServiceMock;
         private readonly Mock<IComparisonOrchestrationService> comparisonOrchestrationServiceMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
+        private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly IComparisonCoordinationService comparisonCoordinationService;
 
@@ -34,12 +36,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock = new Mock<ICompareQueueOrchestrationService>();
             this.comparisonOrchestrationServiceMock = new Mock<IComparisonOrchestrationService>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
+            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.comparisonCoordinationService = new ComparisonCoordinationService(
                 compareQueueOrchestrationService: this.compareQueueOrchestrationServiceMock.Object,
                 comparisonOrchestrationService: this.comparisonOrchestrationServiceMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
+                identifierBroker: this.identifierBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object);
         }
 
