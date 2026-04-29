@@ -24,7 +24,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
         public override ValueTask<string> GetMatchKeyAsync(
             JsonElement resource,
             Dictionary<string, JsonElement> resourceIndex) =>
-            throw new System.NotImplementedException();
+            new ValueTask<string>(InternalGetMatchKey(resource));
 
         public override ValueTask<ResourceMatch> MatchAsync(
             List<JsonElement> source1Resources,
