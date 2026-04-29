@@ -2,12 +2,15 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointments;
 using Moq;
 using Tynamix.ObjectFiller;
+using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Appointments
 {
@@ -24,6 +27,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 new AppointmentMatcherService(
                     loggingBroker: this.loggingBrokerMock.Object);
         }
+
+        private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => actualException.SameExceptionAs(expectedException);
 
         private static Dictionary<string, JsonElement> CreateResourceIndex() =>
             new();
