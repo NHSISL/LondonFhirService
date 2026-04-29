@@ -33,5 +33,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualMatchKey.Should().Be(expectedMatchKey);
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldReturnNullOnGetMatchKeyWhenMedicationRequestHasNoIdentifierPropertyAsync()
+        {
+            // given
+            string randomId = GetRandomString();
+
+            JsonElement medicationRequestResource =
+                CreateMedicationRequestResourceWithoutIdentifierProperty(id: randomId);
+
+            Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
+
+            // when
+            string actualMatchKey =
+                await this.medicationRequestMatcherService.GetMatchKeyAsync(medicationRequestResource, resourceIndex);
+
+            // then
+            actualMatchKey.Should().BeNull();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
