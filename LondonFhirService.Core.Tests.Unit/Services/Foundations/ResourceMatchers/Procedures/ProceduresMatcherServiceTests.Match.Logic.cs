@@ -79,5 +79,37 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldAddToUnmatchedFromSource2WhenOnlySource2HasProcedureAsync()
+        {
+            // given
+            string inputDdsIdentifierValue = "PROC-1";
+
+            JsonElement source2Resource = CreateProcedureResource(
+                ddsIdentifierValue: inputDdsIdentifierValue,
+                id: "procedure-1");
+
+            var source1Resources = new List<JsonElement>();
+            var source2Resources = new List<JsonElement> { source2Resource };
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
+            var expectedResourceMatch = new ResourceMatch();
+
+            expectedResourceMatch.Unmatched.Add(
+                new UnmatchedResource(source2Resource, "Procedure", inputDdsIdentifierValue, false));
+
+            // when
+            ResourceMatch actualResourceMatch = await this.procedureMatcherService.MatchAsync(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
