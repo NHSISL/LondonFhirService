@@ -33,5 +33,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualMatchKey.Should().Be(expectedMatchKey);
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldReturnNullOnGetMatchKeyWhenObservationHasNoIdentifierPropertyAsync()
+        {
+            // given
+            string randomId = GetRandomString();
+
+            JsonElement observationResource =
+                CreateObservationResourceWithoutIdentifierProperty(id: randomId);
+
+            Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
+
+            // when
+            string actualMatchKey =
+                await this.observationMatcherService.GetMatchKeyAsync(observationResource, resourceIndex);
+
+            // then
+            actualMatchKey.Should().BeNull();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
