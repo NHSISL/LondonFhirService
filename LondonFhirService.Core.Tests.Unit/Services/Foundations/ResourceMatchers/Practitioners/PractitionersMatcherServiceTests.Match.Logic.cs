@@ -47,5 +47,37 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldAddToUnmatchedFromSource1WhenOnlySource1HasPractitionerAsync()
+        {
+            // given
+            string inputSdsUserId = "999999000123";
+
+            JsonElement source1Resource = CreatePractitionerResource(
+                sdsUserId: inputSdsUserId,
+                id: "practitioner-1");
+
+            var source1Resources = new List<JsonElement> { source1Resource };
+            var source2Resources = new List<JsonElement>();
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
+            var expectedResourceMatch = new ResourceMatch();
+
+            expectedResourceMatch.Unmatched.Add(
+                new UnmatchedResource(source1Resource, "Practitioner", inputSdsUserId, true));
+
+            // when
+            ResourceMatch actualResourceMatch = await this.practitionerMatcherService.MatchAsync(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
