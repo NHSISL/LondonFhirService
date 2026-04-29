@@ -51,6 +51,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
                     resourceMatch.Matched.Add(
                         new MatchedResource(source1ByKey[key], source2ByKey[key], key));
                 }
+                else
+                {
+                    resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(source1ByKey[key], ResourceType, key, true));
+                }
             }
 
             return new ValueTask<ResourceMatch>(resourceMatch);
