@@ -58,6 +58,15 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
                 }
             }
 
+            foreach (var key in source2ByKey.Keys)
+            {
+                if (!source1ByKey.ContainsKey(key))
+                {
+                    resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(source2ByKey[key], ResourceType, key, false));
+                }
+            }
+
             return new ValueTask<ResourceMatch>(resourceMatch);
         }
 
