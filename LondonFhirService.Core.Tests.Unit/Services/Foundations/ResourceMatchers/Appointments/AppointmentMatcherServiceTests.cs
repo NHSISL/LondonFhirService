@@ -65,6 +65,31 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
+        private static JsonElement CreateAppointmentWithMultipleIdentifiers(
+            string ddsIdentifierValue,
+            string id = "appointment-1")
+        {
+            string json = $$"""
+            {
+              "resourceType": "Appointment",
+              "id": "{{id}}",
+              "identifier": [
+                {
+                  "system": "https://fhir.nhs.uk/Id/appointment-id",
+                  "value": "{{ddsIdentifierValue}}"
+                },
+                {
+                  "system": "https://fhir.hl7.org.uk/Id/dds",
+                  "value": "{{ddsIdentifierValue}}"
+                }
+              ],
+              "status": "fulfilled"
+            }
+            """;
+
+            return ParseJsonElement(json);
+        }
+
         private static JsonElement ParseJsonElement(string json) =>
             JsonDocument.Parse(json).RootElement.Clone();
     }
