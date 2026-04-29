@@ -53,5 +53,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualMatchKey.Should().BeNull();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldReturnNullOnGetMatchKeyWhenPractitionerRoleHasNonSdsRoleProfileIdIdentifierAsync()
+        {
+            // given
+            string randomId = GetRandomString();
+            JsonElement practitionerRoleResource = CreateNonSdsPractitionerRoleResource(id: randomId);
+            Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
+
+            // when
+            string actualMatchKey =
+                await this.practitionerRoleMatcherService.GetMatchKeyAsync(practitionerRoleResource, resourceIndex);
+
+            // then
+            actualMatchKey.Should().BeNull();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
