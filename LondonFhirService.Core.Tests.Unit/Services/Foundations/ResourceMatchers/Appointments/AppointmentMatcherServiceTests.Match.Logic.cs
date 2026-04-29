@@ -153,5 +153,64 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatch.Unmatched.Should().BeEmpty();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldReturnMixedMatchedAndUnmatchedAppointmentsAsync()
+        {
+            // given
+            string sharedDdsIdentifierValue = GetRandomDdsIdentifierValue();
+            string source1OnlyDdsIdentifierValue = GetRandomDdsIdentifierValue();
+            string source2OnlyDdsIdentifierValue = GetRandomDdsIdentifierValue();
+
+            JsonElement source1MatchedAppointment =
+                CreateAppointmentWithDdsIdentifier(sharedDdsIdentifierValue, id: "appointment-1a");
+
+            JsonElement source1UnmatchedAppointment =
+                CreateAppointmentWithDdsIdentifier(source1OnlyDdsIdentifierValue, id: "appointment-1b");
+
+            JsonElement source2MatchedAppointment =
+                CreateAppointmentWithDdsIdentifier(sharedDdsIdentifierValue, id: "appointment-2a");
+
+            JsonElement source2UnmatchedAppointment =
+                CreateAppointmentWithDdsIdentifier(source2OnlyDdsIdentifierValue, id: "appointment-2b");
+
+            var source1Resources = new List<JsonElement>
+            {
+                source1MatchedAppointment,
+                source1UnmatchedAppointment
+            };
+
+            var source2Resources = new List<JsonElement>
+            {
+                source2MatchedAppointment,
+                source2UnmatchedAppointment
+            };
+
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
+            // when
+            ResourceMatch actualResourceMatch =
+                await this.appointmentMatcherService.MatchAsync(
+                    source1Resources,
+                    source2Resources,
+                    source1ResourceIndex,
+                    source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Matched.Should().HaveCount(1);
+            actualResourceMatch.Matched[0].MatchKey.Should().Be(sharedDdsIdentifierValue);
+            actualResourceMatch.Unmatched.Should().HaveCount(2);
+
+            actualResourceMatch.Unmatched.Should().Contain(unmatchedResource =>
+                unmatchedResource.Identifier == source1OnlyDdsIdentifierValue
+                && unmatchedResource.IsFromSource1 == true);
+
+            actualResourceMatch.Unmatched.Should().Contain(unmatchedResource =>
+                unmatchedResource.Identifier == source2OnlyDdsIdentifierValue
+                && unmatchedResource.IsFromSource1 == false);
+
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
