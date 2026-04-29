@@ -7,6 +7,7 @@ using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointments;
 using Moq;
+using Tynamix.ObjectFiller;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Appointments
 {
@@ -26,5 +27,32 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
         private static Dictionary<string, JsonElement> CreateResourceIndex() =>
             new();
+
+        private static string GetRandomDdsIdentifierValue() =>
+            $"APP-{new IntRange(min: 1000, max: 9999).GetValue()}";
+
+        private static JsonElement CreateAppointmentWithDdsIdentifier(
+            string ddsIdentifierValue,
+            string id = "appointment-1")
+        {
+            string json = $$"""
+            {
+              "resourceType": "Appointment",
+              "id": "{{id}}",
+              "identifier": [
+                {
+                  "system": "https://fhir.hl7.org.uk/Id/dds",
+                  "value": "{{ddsIdentifierValue}}"
+                }
+              ],
+              "status": "fulfilled"
+            }
+            """;
+
+            return ParseJsonElement(json);
+        }
+
+        private static JsonElement ParseJsonElement(string json) =>
+            JsonDocument.Parse(json).RootElement.Clone();
     }
 }
