@@ -128,5 +128,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatch.Unmatched[0].ResourceType.Should().Be("Appointment");
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldExcludeAppointmentWithoutDdsIdentifierFromMatchResultsAsync()
+        {
+            // given
+            JsonElement source1AppointmentResource = CreateAppointmentWithoutIdentifier(id: "appointment-1");
+            JsonElement source2AppointmentResource = CreateAppointmentWithoutIdentifier(id: "appointment-2");
+            var source1Resources = new List<JsonElement> { source1AppointmentResource };
+            var source2Resources = new List<JsonElement> { source2AppointmentResource };
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
+            // when
+            ResourceMatch actualResourceMatch =
+                await this.appointmentMatcherService.MatchAsync(
+                    source1Resources,
+                    source2Resources,
+                    source1ResourceIndex,
+                    source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Matched.Should().BeEmpty();
+            actualResourceMatch.Unmatched.Should().BeEmpty();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
