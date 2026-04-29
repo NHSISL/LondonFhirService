@@ -1,0 +1,2174 @@
+{
+  "resourceType": "Bundle",
+  "id": "careconnect-bundle-scenario-3-base",
+  "meta": {
+    "profile": [
+      "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Bundle-1"
+    ]
+  },
+  "type": "searchset",
+  "total": 20,
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:8b9c0d1e-2345-4bcd-aef0-123456789abc",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "8b9c0d1e-2345-4bcd-aef0-123456789abc",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Patient-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-EthnicCategory-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-EthnicCategory-1",
+                  "code": "H",
+                  "display": "Asian or Asian British, Indian"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-NHSCommunication-1",
+            "extension": [
+              {
+                "url": "language",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "urn:ietf:bcp:47",
+                      "code": "en",
+                      "display": "English"
+                    }
+                  ]
+                }
+              },
+              {
+                "url": "preferred",
+                "valueBoolean": true
+              }
+            ]
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-ResidentialStatus-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-ResidentialStatus-1",
+                  "code": "H",
+                  "display": "UK Resident"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-TreatmentCategory-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-TreatmentCategory-1",
+                  "code": "100",
+                  "display": "Free for non-UK residents"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-DeathNotificationStatus-1",
+            "extension": [
+              {
+                "url": "deathNotificationStatus",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-DeathNotificationStatus-1",
+                      "code": "1",
+                      "display": "Informal - awaiting notification"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-ReligiousAffiliation-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/v3/ReligiousAffiliation",
+                  "code": "1023",
+                  "display": "Hindu"
+                }
+              ]
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/birthPlace",
+            "valueAddress": {
+              "city": "London",
+              "country": "GB"
+            }
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-NominatedPharmacy-1",
+            "valueReference": {
+              "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+            }
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-RegistrationDetails-1",
+            "extension": [
+              {
+                "url": "registrationPeriod",
+                "valuePeriod": {
+                  "start": "2018-04-01",
+                  "end": null
+                }
+              },
+              {
+                "url": "registrationType",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-RegistrationType-1",
+                      "code": "R",
+                      "display": "Regular"
+                    }
+                  ]
+                }
+              },
+              {
+                "url": "preferredBranchSurgery",
+                "valueReference": {
+                  "reference": "Location/56ff9dee-c66d-6g5h-d73e-2cgf2af5d9f2"
+                }
+              }
+            ]
+          }
+        ],
+        "identifier": [
+          {
+            "extension": [
+              {
+                "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-NHSNumberVerificationStatus-1",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-NHSNumberVerificationStatus-1",
+                      "code": "01",
+                      "display": "Number present and verified"
+                    }
+                  ]
+                }
+              }
+            ],
+            "use": "official",
+            "system": "https://fhir.nhs.uk/Id/nhs-number",
+            "value": "9234567893"
+          },
+          {
+            "use": "usual",
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "236788"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "prefix": [
+              "Master"
+            ],
+            "given": [
+              "Oliver",
+              "Thomas"
+            ],
+            "family": "Patel",
+            "period": {
+              "start": "2015-06-10"
+            }
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "02078889999",
+            "use": "home",
+            "rank": 1
+          },
+          {
+            "system": "phone",
+            "value": "07700900271",
+            "use": "mobile",
+            "rank": 2
+          },
+          {
+            "system": "email",
+            "value": "parent.patel@example.com",
+            "use": "home",
+            "rank": 3
+          }
+        ],
+        "gender": "male",
+        "birthDate": "2015-06-10",
+        "address": [
+          {
+            "use": "home",
+            "type": "both",
+            "line": [
+              "88 Greenfield Lane"
+            ],
+            "city": "London",
+            "district": "Greater London",
+            "postalCode": "SW19 4DH",
+            "country": "GB"
+          }
+        ],
+        "maritalStatus": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/v3/MaritalStatus",
+              "code": "S",
+              "display": "Never Married"
+            }
+          ]
+        },
+        "multipleBirthBoolean": false,
+        "generalPractitioner": [
+          {
+            "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+          }
+        ],
+        "managingOrganization": {
+          "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ac99g838-4f34-6de1-d2c3-4g3798gd3e27",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "ac99g838-4f34-6de1-d2c3-4g3798gd3e27",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Practitioner-1"
+          ]
+        },
+        "identifier": [
+          {
+            "use": "official",
+            "system": "https://fhir.nhs.uk/Id/sds-user-id",
+            "value": "999999000789"
+          },
+          {
+            "use": "official",
+            "system": "https://fhir.hl7.org.uk/Id/gmc-number",
+            "value": "7000789"
+          },
+          {
+            "system": "https://fhir.nhs.uk/Id/dds",
+            "value": "PR-ac99g838"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "prefix": [
+              "Dr"
+            ],
+            "given": [
+              "Priya"
+            ],
+            "family": "Sharma"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "02078880101",
+            "use": "work",
+            "rank": 1
+          },
+          {
+            "system": "email",
+            "value": "priya.sharma@nhs.uk",
+            "use": "work",
+            "rank": 2
+          }
+        ],
+        "address": [
+          {
+            "use": "work",
+            "type": "both",
+            "line": [
+              "5 Children's Hospital Road"
+            ],
+            "city": "London",
+            "district": "Greater London",
+            "postalCode": "SW19 4XX",
+            "country": "GB"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1985-09-12"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:d34509a4-6743-6h5f-b234-6ecd34abf156",
+      "resource": {
+        "resourceType": "PractitionerRole",
+        "id": "d34509a4-6743-6h5f-b234-6ecd34abf156",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-PractitionerRole-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.nhs.uk/Id/sds-role-profile-id",
+            "value": "999999000789-A1"
+          }
+        ],
+        "active": true,
+        "period": {
+          "start": "2015-04-01"
+        },
+        "practitioner": {
+          "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+        },
+        "organization": {
+          "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+        },
+        "code": [
+          {
+            "coding": [
+              {
+                "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-SDSJobRoleName-1",
+                "code": "R0260",
+                "display": "General Medical Practitioner"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-PracticeSettingCode-1",
+                "code": "PAEDIATRICS",
+                "display": "Paediatrics"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "reference": "Location/56ff9dee-c66d-6g5h-d73e-2cgf2af5d9f2"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "02078880101",
+            "use": "work",
+            "rank": 1
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:78222511-ddf9-6fbc-cf86-e4fa8b4cg142",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "78222511-ddf9-6fbc-cf86-e4fa8b4cg142",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Organization-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+            "value": "C81455",
+            "assigner": {
+              "display": "NHS"
+            }
+          },
+          {
+            "system": "https://fhir.nhs.uk/Id/ods-site-code",
+            "value": "C81455-1"
+          }
+        ],
+        "active": true,
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/v3/OrganizationType",
+                "code": "prov",
+                "display": "Healthcare Provider"
+              }
+            ]
+          }
+        ],
+        "name": "Greenfield Children's Practice",
+        "alias": [
+          "Greenfield Children's Practice"
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "02078880000",
+            "use": "work",
+            "rank": 1
+          }
+        ],
+        "address": [
+          {
+            "use": "work",
+            "type": "both",
+            "line": [
+              "90 Greenfield Lane"
+            ],
+            "city": "London",
+            "district": "Greater London",
+            "postalCode": "SW19 4DJ",
+            "country": "GB"
+          }
+        ],
+        "partOf": null
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:56ff9dee-c66d-6g5h-d73e-2cgf2af5d9f2",
+      "resource": {
+        "resourceType": "Location",
+        "id": "56ff9dee-c66d-6g5h-d73e-2cgf2af5d9f2",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Location-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.nhs.uk/Id/ods-site-code",
+            "value": "C81455-1"
+          }
+        ],
+        "status": "active",
+        "name": "Greenfield Children's Practice \u2014 Consultation Room 2",
+        "alias": [
+          "Room 2"
+        ],
+        "description": "Consultation room on the ground floor.",
+        "mode": "instance",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "02078880101",
+            "use": "work",
+            "rank": 1
+          }
+        ],
+        "address": {
+          "use": "work",
+          "type": "physical",
+          "line": [
+            "90 Greenfield Lane"
+          ],
+          "city": "London",
+          "district": "Greater London",
+          "postalCode": "SW19 4DJ",
+          "country": "GB"
+        },
+        "physicalType": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/location-physical-type",
+              "code": "ro",
+              "display": "Room"
+            }
+          ]
+        },
+        "managingOrganization": {
+          "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+        },
+        "partOf": null,
+        "operationalStatus": {
+          "system": "http://hl7.org/fhir/v3/v2-0116",
+          "code": "O",
+          "display": "Occupied"
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:f2c7954d-5bg7-6gc8-aefc-d03f98045eff",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "f2c7954d-5bg7-6gc8-aefc-d03f98045eff",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Encounter-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-OutcomeOfAttendance-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-OutcomeOfAttendance-1",
+                  "code": "1",
+                  "display": "Appointment kept"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-EncounterTransport-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "100001000000100",
+                  "display": "Patient self-transport"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-AdmissionMethod-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-AdmissionMethod-1",
+                  "code": "11",
+                  "display": "Booked"
+                }
+              ]
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "ENC-3"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "system": "http://hl7.org/fhir/v3/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "185349003",
+                "display": "Encounter for check up"
+              }
+            ]
+          }
+        ],
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "episodeOfCare": [
+          {
+            "reference": "EpisodeOfCare/3456e73a-3aaa-6f33-aae7-cd4e6bc089aa"
+          }
+        ],
+        "incomingReferral": [
+          {
+            "reference": "ReferralRequest/a069f477-7faf-6f50-c6d3-faebb509a433"
+          }
+        ],
+        "participant": [
+          {
+            "individual": {
+              "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+            },
+            "period": {
+              "start": "2024-11-20T14:00:00+00:00",
+              "end": "2024-11-20T14:30:00+00:00"
+            }
+          }
+        ],
+        "appointment": {
+          "reference": "Appointment/4ef76d3b-3b15-6493-be74-9c5b37dd5546"
+        },
+        "period": {
+          "start": "2024-11-20T14:00:00+00:00",
+          "end": "2024-11-20T14:30:00+00:00"
+        },
+        "priority": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/v3/v3-ActPriority",
+              "code": "R",
+              "display": "routine"
+            }
+          ]
+        },
+        "reason": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "195967001",
+                "display": "Asthma (disorder)"
+              }
+            ]
+          }
+        ],
+        "location": [
+          {
+            "location": {
+              "reference": "Location/56ff9dee-c66d-6g5h-d73e-2cgf2af5d9f2"
+            }
+          }
+        ],
+        "serviceProvider": {
+          "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+        },
+        "hospitalization": {
+          "admitSource": {
+            "coding": [
+              {
+                "system": "https://fhir.nhs.uk/Id/admission-source",
+                "code": "99",
+                "display": "Other"
+              }
+            ]
+          },
+          "dischargeDisposition": {
+            "coding": [
+              {
+                "system": "https://fhir.nhs.uk/Id/discharge-disposition",
+                "code": "19",
+                "display": "Patient discharged to usual residence"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:e2cb3c9f-ac6b-6f42-b5d3-507c2f4be2c3",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "e2cb3c9f-ac6b-6f42-b5d3-507c2f4be2c3",
+        "meta": {
+          "profile": [
+            "https://fhir.nhs.uk/STU3/StructureDefinition/CareConnect-ProblemHeader-Condition-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-ProblemSignificance-1",
+            "valueCode": "major"
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-RelatedClinicalContent-1",
+            "valueReference": {
+              "reference": "Observation/d7gae6c2-g316-6d7f-be7f-ddb3c6f34567"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "COND-3"
+          }
+        ],
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-ConditionCategory-1",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ]
+          }
+        ],
+        "severity": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "6736007",
+              "display": "Moderate (severity modifier)"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "195967001",
+              "display": "Asthma (disorder)"
+            }
+          ]
+        },
+        "bodySite": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "38266002",
+                "display": "Entire body as a whole"
+              }
+            ]
+          }
+        ],
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "context": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "onsetDateTime": "2022-04-01",
+        "abatementDateTime": null,
+        "assertedDate": "2022-04-12",
+        "asserter": {
+          "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+        },
+        "note": [
+          {
+            "text": "Patient managing well with current medication and diet."
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:6h26036e-1c2b-6827-a476-cacfeeff6575",
+      "resource": {
+        "resourceType": "Medication",
+        "id": "6h26036e-1c2b-6827-a476-cacfeeff6575",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Medication-1"
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "321252002",
+              "display": "Salbutamol 100micrograms/dose inhaler"
+            }
+          ],
+          "text": "Salbutamol Inhaler 100mcg"
+        },
+        "status": "active",
+        "isBrand": false,
+        "isOverTheCounter": false,
+        "manufacturer": {
+          "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+        },
+        "form": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "420317006",
+              "display": "Pressurised inhalation"
+            }
+          ]
+        },
+        "ingredient": [
+          {
+            "itemCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "372897005",
+                  "display": "Salbutamol"
+                }
+              ]
+            },
+            "isActive": true,
+            "amount": {
+              "numerator": {
+                "value": 100,
+                "unit": "micrograms",
+                "system": "http://unitsofmeasure.org",
+                "code": "ug"
+              },
+              "denominator": {
+                "value": 1,
+                "unit": "dose",
+                "system": "http://snomed.info/sct",
+                "code": "732936001"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:2d31b742-2c36-61bd-ae25-fb134ac8f623",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "2d31b742-2c36-61bd-ae25-fb134ac8f623",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-MedicationRequest-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-PrescriptionType-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-PrescriptionType-1",
+                  "code": "repeat",
+                  "display": "Repeat"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.nhs.uk/STU3/StructureDefinition/Extension-CareConnect-GPC-MedicationRepeatInformation-1",
+            "extension": [
+              {
+                "url": "numberOfRepeatPrescriptionsAllowed",
+                "valueUnsignedInt": 3
+              },
+              {
+                "url": "numberOfRepeatPrescriptionsIssued",
+                "valueUnsignedInt": 1
+              },
+              {
+                "url": "authorisationExpiryDate",
+                "valueDateTime": "2027-04-27"
+              }
+            ]
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-MedicationStatusReason-1",
+            "extension": [
+              {
+                "url": "statusReason",
+                "valueCodeableConcept": {
+                  "coding": [
+                    {
+                      "system": "http://snomed.info/sct",
+                      "code": "182840001",
+                      "display": "Drug treatment stopped \u2014 medical advice"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "MR-3"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-MedicationRequestCategory-1",
+                "code": "community",
+                "display": "Community"
+              }
+            ]
+          }
+        ],
+        "medicationReference": {
+          "reference": "Medication/6h26036e-1c2b-6827-a476-cacfeeff6575"
+        },
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "context": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "authoredOn": "2024-11-20",
+        "requester": {
+          "agent": {
+            "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+          }
+        },
+        "priority": "routine",
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "195967001",
+                "display": "Asthma (disorder)"
+              }
+            ]
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/e2cb3c9f-ac6b-6f42-b5d3-507c2f4be2c3"
+          }
+        ],
+        "note": [
+          {
+            "text": "Continue at current dose."
+          }
+        ],
+        "dosageInstruction": [
+          {
+            "text": "Two puffs as required for symptoms",
+            "timing": {
+              "repeat": {
+                "frequency": 2,
+                "period": 1,
+                "periodUnit": "d"
+              }
+            },
+            "asNeededBoolean": true,
+            "route": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-MedicationDosageRoute-1",
+                  "code": "447694001",
+                  "display": "Respiratory tract route"
+                }
+              ]
+            },
+            "doseQuantity": {
+              "value": 1,
+              "unit": "puff",
+              "system": "http://snomed.info/sct",
+              "code": "732936001"
+            }
+          }
+        ],
+        "dispenseRequest": {
+          "validityPeriod": {
+            "start": "2024-11-20",
+            "end": "2027-04-27"
+          },
+          "numberOfRepeatsAllowed": 3,
+          "quantity": {
+            "value": 56,
+            "unit": "tablets",
+            "system": "http://snomed.info/sct",
+            "code": "428673006"
+          },
+          "expectedSupplyDuration": {
+            "value": 28,
+            "unit": "days",
+            "system": "http://unitsofmeasure.org",
+            "code": "d"
+          },
+          "performer": {
+            "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+          }
+        }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:7f654333-3ccc-6e0f-b345-a9cbe9ad4325",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "7f654333-3ccc-6e0f-b345-a9cbe9ad4325",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-MedicationStatement-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.nhs.uk/STU3/StructureDefinition/Extension-CareConnect-GPC-PrescribingAgency-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-PrescribingAgency-1",
+                  "code": "prescribed-at-gp",
+                  "display": "Prescribed at GP"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.nhs.uk/STU3/StructureDefinition/Extension-CareConnect-GPC-MedicationStatementLastIssueDate-1",
+            "valueDateTime": "2026-04-15"
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "MS-3"
+          }
+        ],
+        "basedOn": [
+          {
+            "reference": "MedicationRequest/2d31b742-2c36-61bd-ae25-fb134ac8f623"
+          }
+        ],
+        "status": "active",
+        "category": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/medication-statement-category",
+              "code": "community",
+              "display": "Community"
+            }
+          ]
+        },
+        "medicationReference": {
+          "reference": "Medication/6h26036e-1c2b-6827-a476-cacfeeff6575"
+        },
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "context": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "effectivePeriod": {
+          "start": "2022-04-12"
+        },
+        "dateAsserted": "2024-11-20",
+        "informationSource": {
+          "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+        },
+        "taken": "unk",
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "195967001",
+                "display": "Asthma (disorder)"
+              }
+            ]
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/e2cb3c9f-ac6b-6f42-b5d3-507c2f4be2c3"
+          }
+        ],
+        "note": [
+          {
+            "text": "Patient confirms taking medication regularly."
+          }
+        ],
+        "dosage": [
+          {
+            "text": "Two puffs as required",
+            "timing": {
+              "repeat": {
+                "frequency": 2,
+                "period": 1,
+                "periodUnit": "d"
+              }
+            },
+            "route": {
+              "coding": [
+                {
+                  "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-MedicationDosageRoute-1",
+                  "code": "447694001",
+                  "display": "Respiratory tract route"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:d7gae6c2-g316-6d7f-be7f-ddb3c6f34567",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "d7gae6c2-g316-6d7f-be7f-ddb3c6f34567",
+        "meta": {
+          "profile": [
+            "https://fhir.nhs.uk/STU3/StructureDefinition/CareConnect-GPC-Observation-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "OBS-3"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/observation-category",
+                "code": "vital-signs",
+                "display": "Vital Signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "75367002",
+              "display": "Blood pressure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "context": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "effectiveDateTime": "2024-11-20T14:00:00+00:00",
+        "issued": "2024-11-20T14:00:00+00:00",
+        "performer": [
+          {
+            "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+          }
+        ],
+        "method": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "37931006",
+              "display": "Auscultation"
+            }
+          ]
+        },
+        "bodySite": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "40983000",
+              "display": "Upper arm structure"
+            }
+          ]
+        },
+        "interpretation": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/v2/0078",
+              "code": "N",
+              "display": "Normal"
+            }
+          ]
+        },
+        "comment": "Recorded at routine check-up.",
+        "referenceRange": [
+          {
+            "low": {
+              "value": 90,
+              "unit": "mmHg"
+            },
+            "high": {
+              "value": 140,
+              "unit": "mmHg"
+            },
+            "type": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/referencerange-meaning",
+                  "code": "normal"
+                }
+              ]
+            }
+          }
+        ],
+        "component": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "271649006",
+                  "display": "Systolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 102,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "271650006",
+                  "display": "Diastolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 64,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:c3300000-0000-0000-0000-000000000003",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "c3300000-0000-0000-0000-000000000003",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-AllergyIntolerance-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-Evidence-1",
+            "valueReference": {
+              "reference": "DiagnosticReport/7gb3c29e-9eaf-6c38-b24c-dde9f5437790"
+            }
+          },
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-AllergyIntoleranceEnd-1",
+            "extension": [
+              {
+                "url": "endDate",
+                "valueDateTime": null
+              },
+              {
+                "url": "reasonEnded",
+                "valueString": null
+              }
+            ]
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "AI-3"
+          }
+        ],
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "type": "allergy",
+        "category": [
+          "food"
+        ],
+        "criticality": "high",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "91935009",
+              "display": "Allergy to peanuts"
+            }
+          ]
+        },
+        "patient": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "onsetDateTime": "2018-06-15",
+        "assertedDate": "2018-06-20",
+        "recorder": {
+          "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+        },
+        "asserter": {
+          "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+        },
+        "lastOccurrence": "2023-04-12",
+        "note": [
+          {
+            "text": "Reaction reported during hospital admission."
+          }
+        ],
+        "reaction": [
+          {
+            "substance": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "762952008",
+                  "display": "Peanut"
+                }
+              ]
+            },
+            "manifestation": [
+              {
+                "coding": [
+                  {
+                    "system": "http://snomed.info/sct",
+                    "code": "39579001",
+                    "display": "Anaphylaxis"
+                  }
+                ]
+              }
+            ],
+            "description": "Anaphylaxis after exposure to Peanut",
+            "onset": "2018-06-15T00:00:00+00:00",
+            "severity": "severe",
+            "exposureRoute": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ]
+            },
+            "note": [
+              {
+                "text": "Severe reaction observed in clinical setting."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:34344222-4146-6137-b523-7f2dbafc3422",
+      "resource": {
+        "resourceType": "Immunization",
+        "id": "34344222-4146-6137-b523-7f2dbafc3422",
+        "meta": {
+          "profile": [
+            "https://fhir.nhs.uk/STU3/StructureDefinition/CareConnect-GPC-Immunization-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.hl7.org.uk/STU3/StructureDefinition/Extension-CareConnect-VaccinationProcedure-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "822851000000102",
+                  "display": "Administration of vaccine"
+                }
+              ]
+            }
+          },
+          {
+            "url": "https://fhir.nhs.uk/STU3/StructureDefinition/Extension-CareConnect-GPC-ParentPresent-1",
+            "valueBoolean": true
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "IMM-3"
+          }
+        ],
+        "status": "completed",
+        "notGiven": false,
+        "vaccineCode": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "396432002",
+              "display": "MMR vaccine"
+            }
+          ]
+        },
+        "patient": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "encounter": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "date": "2024-11-20T14:00:00+00:00",
+        "primarySource": true,
+        "reportOrigin": null,
+        "location": {
+          "reference": "Location/56ff9dee-c66d-6g5h-d73e-2cgf2af5d9f2"
+        },
+        "manufacturer": {
+          "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+        },
+        "lotNumber": "LOT-C81455-2024-11",
+        "expirationDate": "2026-03-30",
+        "site": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "368208006",
+              "display": "Left upper arm structure (body structure)"
+            }
+          ]
+        },
+        "route": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "34206005",
+              "display": "Subcutaneous route"
+            }
+          ]
+        },
+        "doseQuantity": {
+          "value": 0.5,
+          "unit": "mL",
+          "system": "http://unitsofmeasure.org",
+          "code": "mL"
+        },
+        "practitioner": [
+          {
+            "role": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/v2/0443",
+                  "code": "AP",
+                  "display": "Administering Provider"
+                }
+              ]
+            },
+            "actor": {
+              "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+            }
+          }
+        ],
+        "note": [
+          {
+            "text": "Vaccine administered without complications."
+          }
+        ],
+        "explanation": {
+          "reason": [
+            {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "281657000",
+                  "display": "At risk for hepatitis B"
+                }
+              ]
+            }
+          ]
+        },
+        "reaction": [
+          {
+            "date": "2024-09-12",
+            "detail": {
+              "display": "Mild soreness at injection site, resolved within 24h."
+            },
+            "reported": true
+          }
+        ],
+        "vaccinationProtocol": [
+          {
+            "doseSequence": 1,
+            "description": "Primary course",
+            "authority": {
+              "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+            },
+            "series": "Primary",
+            "seriesDoses": 2,
+            "targetDisease": [
+              {
+                "coding": [
+                  {
+                    "system": "http://snomed.info/sct",
+                    "code": "38362002",
+                    "display": "Disease prevention"
+                  }
+                ]
+              }
+            ],
+            "doseStatus": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/vaccination-protocol-dose-status",
+                  "code": "count",
+                  "display": "Counts"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:23d95ebb-bba4-6ce3-b3a5-3f94a2f5bc66",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "23d95ebb-bba4-6ce3-b3a5-3f94a2f5bc66",
+        "meta": {
+          "profile": [
+            "https://fhir.nhs.uk/STU3/StructureDefinition/CareConnect-Procedure-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "PROC-3"
+          }
+        ],
+        "status": "completed",
+        "category": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "103693007",
+              "display": "Diagnostic procedure"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "386053000",
+              "display": "Evaluation procedure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "context": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "performedDateTime": "2024-11-20T14:00:00+00:00",
+        "performer": [
+          {
+            "actor": {
+              "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+            }
+          }
+        ],
+        "location": {
+          "reference": "Location/56ff9dee-c66d-6g5h-d73e-2cgf2af5d9f2"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "195967001",
+                "display": "Asthma (disorder)"
+              }
+            ]
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/e2cb3c9f-ac6b-6f42-b5d3-507c2f4be2c3"
+          }
+        ],
+        "bodySite": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "40983000",
+                "display": "Upper arm structure"
+              }
+            ]
+          }
+        ],
+        "outcome": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "385669000",
+              "display": "Successful"
+            }
+          ]
+        },
+        "complication": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "116223007",
+                "display": "Complication"
+              }
+            ]
+          }
+        ],
+        "followUp": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "170675008",
+                "display": "Follow-up appointment"
+              }
+            ]
+          }
+        ],
+        "note": [
+          {
+            "text": "Procedure completed without incident."
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:a2c3e95b-5bf7-6d6f-d143-3f4eaccca1a4",
+      "resource": {
+        "resourceType": "ProcedureRequest",
+        "id": "a2c3e95b-5bf7-6d6f-d143-3f4eaccca1a4",
+        "meta": {
+          "profile": [
+            "https://fhir.nhs.uk/STU3/StructureDefinition/CareConnect-ProcedureRequest-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "PRREQ-3"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "priority": "routine",
+        "doNotPerform": false,
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "167252002",
+              "display": "Complete blood count"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "context": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "occurrenceDateTime": "2024-11-20T14:00:00+00:00",
+        "asNeededBoolean": false,
+        "authoredOn": "2024-11-20",
+        "requester": {
+          "agent": {
+            "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+          },
+          "onBehalfOf": {
+            "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+          }
+        },
+        "performerType": {
+          "coding": [
+            {
+              "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-SDSJobRoleName-1",
+              "code": "R0260",
+              "display": "General Medical Practitioner"
+            }
+          ]
+        },
+        "performer": {
+          "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "195967001",
+                "display": "Asthma (disorder)"
+              }
+            ]
+          }
+        ],
+        "note": [
+          {
+            "text": "Routine bloods requested."
+          }
+        ],
+        "bodySite": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "40983000",
+                "display": "Upper arm structure"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:a069f477-7faf-6f50-c6d3-faebb509a433",
+      "resource": {
+        "resourceType": "ReferralRequest",
+        "id": "a069f477-7faf-6f50-c6d3-faebb509a433",
+        "meta": {
+          "profile": [
+            "https://fhir.nhs.uk/STU3/StructureDefinition/CareConnect-GPC-ReferralRequest-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.nhs.uk/STU3/StructureDefinition/Extension-CareConnect-GPC-SourceOfServiceRequest-1",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "183524004",
+                  "display": "Referral by GP"
+                }
+              ]
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "RR-3"
+          }
+        ],
+        "status": "active",
+        "intent": "order",
+        "type": {
+          "coding": [
+            {
+              "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-ReferralType-1",
+              "code": "GP",
+              "display": "GP Referral"
+            }
+          ]
+        },
+        "priority": "routine",
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "context": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "occurrencePeriod": {
+          "start": "2024-11-20"
+        },
+        "authoredOn": "2024-11-20",
+        "requester": {
+          "agent": {
+            "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+          },
+          "onBehalfOf": {
+            "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+          }
+        },
+        "specialty": {
+          "coding": [
+            {
+              "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-PracticeSettingCode-1",
+              "code": "PAEDIATRICS",
+              "display": "Paediatrics"
+            }
+          ]
+        },
+        "recipient": [
+          {
+            "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+          }
+        ],
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "195967001",
+                "display": "Asthma (disorder)"
+              }
+            ]
+          }
+        ],
+        "reasonReference": [
+          {
+            "reference": "Condition/e2cb3c9f-ac6b-6f42-b5d3-507c2f4be2c3"
+          }
+        ],
+        "description": "UBRN-000000003",
+        "note": [
+          {
+            "text": "Routine referral to Paediatrics."
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:4ef76d3b-3b15-6493-be74-9c5b37dd5546",
+      "resource": {
+        "resourceType": "Appointment",
+        "id": "4ef76d3b-3b15-6493-be74-9c5b37dd5546",
+        "meta": {
+          "profile": [
+            "https://fhir.nhs.uk/STU3/StructureDefinition/CareConnect-Appointment-1"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://fhir.nhs.uk/STU3/StructureDefinition/Extension-CareConnect-GPC-BookingOrganization-1",
+            "valueReference": {
+              "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "APP-3"
+          }
+        ],
+        "status": "fulfilled",
+        "serviceCategory": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "394814009",
+              "display": "General practice (specialty)"
+            }
+          ]
+        },
+        "serviceType": [
+          {
+            "coding": [
+              {
+                "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-AppointmentServiceType-1",
+                "code": "124",
+                "display": "GP Surgery Appointment"
+              }
+            ]
+          }
+        ],
+        "specialty": [
+          {
+            "coding": [
+              {
+                "system": "https://fhir.hl7.org.uk/STU3/CodeSystem/CareConnect-PracticeSettingCode-1",
+                "code": "PAEDIATRICS",
+                "display": "Paediatrics"
+              }
+            ]
+          }
+        ],
+        "appointmentType": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/v2/0276",
+              "code": "ROUTINE",
+              "display": "Routine appointment"
+            }
+          ]
+        },
+        "reason": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "195967001",
+                "display": "Asthma (disorder)"
+              }
+            ]
+          }
+        ],
+        "priority": 5,
+        "description": "Routine follow-up appointment",
+        "start": "2024-11-20T14:00:00+00:00",
+        "end": "2024-11-20T14:30:00+00:00",
+        "minutesDuration": 25,
+        "created": "2024-11-20",
+        "comment": "Patient confirmed attendance.",
+        "participant": [
+          {
+            "actor": {
+              "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+            },
+            "status": "accepted",
+            "required": "required"
+          },
+          {
+            "actor": {
+              "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+            },
+            "status": "accepted",
+            "required": "required",
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "code": "PPRF",
+                    "display": "primary performer"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "actor": {
+              "reference": "Location/56ff9dee-c66d-6g5h-d73e-2cgf2af5d9f2"
+            },
+            "status": "accepted",
+            "required": "information-only"
+          }
+        ],
+        "incomingReferral": [
+          {
+            "reference": "ReferralRequest/a069f477-7faf-6f50-c6d3-faebb509a433"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:3456e73a-3aaa-6f33-aae7-cd4e6bc089aa",
+      "resource": {
+        "resourceType": "EpisodeOfCare",
+        "id": "3456e73a-3aaa-6f33-aae7-cd4e6bc089aa",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-EpisodeOfCare-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "EOC-3"
+          }
+        ],
+        "status": "active",
+        "statusHistory": [
+          {
+            "status": "planned",
+            "period": {
+              "start": "2022-04-01",
+              "end": "2022-04-12"
+            }
+          },
+          {
+            "status": "active",
+            "period": {
+              "start": "2022-04-12"
+            }
+          }
+        ],
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/v3/episodeofcare-type",
+                "code": "hacc",
+                "display": "Home and Community Care"
+              }
+            ]
+          }
+        ],
+        "diagnosis": [
+          {
+            "condition": {
+              "reference": "Condition/e2cb3c9f-ac6b-6f42-b5d3-507c2f4be2c3"
+            },
+            "role": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/diagnosis-role",
+                  "code": "CC",
+                  "display": "Chief complaint"
+                }
+              ]
+            },
+            "rank": 1
+          }
+        ],
+        "patient": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "managingOrganization": {
+          "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+        },
+        "period": {
+          "start": "2022-04-12"
+        },
+        "referralRequest": [
+          {
+            "reference": "ReferralRequest/a069f477-7faf-6f50-c6d3-faebb509a433"
+          }
+        ],
+        "careManager": {
+          "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+        },
+        "team": [
+          {
+            "reference": "Organization/78222511-ddf9-6fbc-cf86-e4fa8b4cg142"
+          }
+        ],
+        "account": []
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:7gb3c29e-9eaf-6c38-b24c-dde9f5437790",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "7gb3c29e-9eaf-6c38-b24c-dde9f5437790",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-DiagnosticReport-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "DR-3"
+          }
+        ],
+        "basedOn": [
+          {
+            "reference": "ProcedureRequest/a2c3e95b-5bf7-6d6f-d143-3f4eaccca1a4"
+          }
+        ],
+        "status": "final",
+        "category": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/v2/0074",
+              "code": "LAB",
+              "display": "Laboratory"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "396550006",
+              "display": "Blood test (procedure)"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "context": {
+          "reference": "Encounter/f2c7954d-5bg7-6gc8-aefc-d03f98045eff"
+        },
+        "effectiveDateTime": "2024-11-20T14:00:00+00:00",
+        "issued": "2024-11-20T14:00:00+00:00",
+        "performer": [
+          {
+            "actor": {
+              "reference": "Practitioner/ac99g838-4f34-6de1-d2c3-4g3798gd3e27"
+            },
+            "role": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/v2/0912",
+                  "code": "PRF",
+                  "display": "Performer"
+                }
+              ]
+            }
+          }
+        ],
+        "specimen": [],
+        "result": [
+          {
+            "reference": "Observation/d7gae6c2-g316-6d7f-be7f-ddb3c6f34567"
+          }
+        ],
+        "codedDiagnosis": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "195967001",
+                "display": "Asthma (disorder)"
+              }
+            ]
+          }
+        ],
+        "conclusion": "Results within expected range."
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ba93e53c-3c48-6da7-dd34-9f4bff37c894",
+      "resource": {
+        "resourceType": "FamilyMemberHistory",
+        "id": "ba93e53c-3c48-6da7-dd34-9f4bff37c894",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-FamilyMemberHistory-1"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "FMH-3"
+          }
+        ],
+        "status": "completed",
+        "patient": {
+          "reference": "Patient/8b9c0d1e-2345-4bcd-aef0-123456789abc"
+        },
+        "date": "2024-11-20",
+        "name": "Patel (father)",
+        "relationship": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/v3/v3-RoleCode",
+              "code": "FTH",
+              "display": "father"
+            }
+          ]
+        },
+        "gender": "male",
+        "bornDate": "1948-05-04",
+        "deceasedBoolean": false,
+        "note": [
+          {
+            "text": "Family history collected at routine check."
+          }
+        ],
+        "condition": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "195967001",
+                  "display": "Asthma (disorder)"
+                }
+              ]
+            },
+            "outcome": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "162467007",
+                  "display": "Symptomatic"
+                }
+              ]
+            },
+            "onsetAge": {
+              "value": 65,
+              "unit": "years",
+              "system": "http://unitsofmeasure.org",
+              "code": "a"
+            },
+            "note": [
+              {
+                "text": "Diagnosed in his late sixties; managed with medication."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
