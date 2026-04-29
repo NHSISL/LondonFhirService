@@ -22,13 +22,12 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
         private const string DdsIdentifierSystem = "https://fhir.hl7.org.uk/Id/dds";
 
         public override ValueTask<string> GetMatchKeyAsync(
-            JsonElement resource,
-            Dictionary<string, JsonElement> resourceIndex) =>
+            JsonElement resource, Dictionary<string, JsonElement> resourceIndex) =>
         TryCatch(async () =>
         {
             ValidateOnGetMatchKeyArguments(resource, resourceIndex);
 
-            return InternalGetMatchKey(resource);
+            return InternalGetMatchKey(resource, resourceIndex);
         });
 
         public override ValueTask<ResourceMatch> MatchAsync(
@@ -38,64 +37,60 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
             Dictionary<string, JsonElement> source2ResourceIndex) =>
         TryCatch(async () =>
         {
-            ValidateOnMatchArguments(
-                source1Resources,
-                source2Resources,
-                source1ResourceIndex,
-                source2ResourceIndex);
-
+            ValidateOnMatchArguments(source1Resources, source2Resources, source1ResourceIndex, source2ResourceIndex);
             var resourceMatch = new ResourceMatch();
 
             var source1ByKey = source1Resources
-                .Select(r => new { Resource = r, Key = InternalGetMatchKey(r) })
+                .Select(r => new { Resource = r, Key = InternalGetMatchKey(r, source1ResourceIndex) })
                 .Where(x => x.Key != null)
                 .ToDictionary(x => x.Key!, x => x.Resource);
 
             var source2ByKey = source2Resources
-                .Select(r => new { Resource = r, Key = InternalGetMatchKey(r) })
+                .Select(r => new { Resource = r, Key = InternalGetMatchKey(r, source2ResourceIndex) })
                 .Where(x => x.Key != null)
                 .ToDictionary(x => x.Key!, x => x.Resource);
 
-            foreach (var key in source1ByKey.Keys)
-            {
-                if (source2ByKey.ContainsKey(key))
-                {
-                    resourceMatch.Matched.Add(
-                        new MatchedResource(source1ByKey[key], source2ByKey[key], key));
-                }
-                else
-                {
-                    resourceMatch.Unmatched.Add(
-                        new UnmatchedResource(source1ByKey[key], ResourceType, key, true));
-                }
-            }
+            var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
 
-            foreach (var key in source2ByKey.Keys)
+            foreach (var key in allKeys)
             {
-                if (!source1ByKey.ContainsKey(key))
+                var hasSource1 = source1ByKey.TryGetValue(key, out var source1Resource);
+                var hasSource2 = source2ByKey.TryGetValue(key, out var source2Resource);
+
+                if (hasSource1 && hasSource2)
                 {
-                    resourceMatch.Unmatched.Add(
-                        new UnmatchedResource(source2ByKey[key], ResourceType, key, false));
+                    resourceMatch.Matched.Add(new MatchedResource(source1Resource!, source2Resource!, key));
+                }
+                else if (hasSource1)
+                {
+                    resourceMatch.Unmatched.Add(new UnmatchedResource(source1Resource!, ResourceType, key, true));
+                }
+                else if (hasSource2)
+                {
+                    resourceMatch.Unmatched.Add(new UnmatchedResource(source2Resource!, ResourceType, key, false));
                 }
             }
 
             return resourceMatch;
         });
 
-        internal virtual string InternalGetMatchKey(JsonElement resource)
+        internal virtual string InternalGetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
         {
             if (!resource.TryGetProperty("identifier", out var identifiers))
                 return null;
 
-            foreach (var identifier in identifiers.EnumerateArray())
+            foreach (var identifierElement in identifiers.EnumerateArray())
             {
-                if (!identifier.TryGetProperty("system", out var system))
+                if (!identifierElement.TryGetProperty("system", out var system))
                     continue;
 
-                if (system.GetString() == DdsIdentifierSystem)
+                var systemValue = system.GetString();
+                if (systemValue == DdsIdentifierSystem)
                 {
-                    if (identifier.TryGetProperty("value", out var value))
+                    if (identifierElement.TryGetProperty("value", out var value))
+                    {
                         return value.GetString();
+                    }
                 }
             }
 
