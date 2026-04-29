@@ -46,6 +46,7 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCare
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medications;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationStatements;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Observations;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
@@ -305,6 +306,7 @@ public partial class Program
         services.AddTransient<IResourceMatcherService, ListMatcherService>();
         services.AddTransient<IResourceMatcherService, MedicationMatcherService>();
         services.AddTransient<IResourceMatcherService, MedicationStatementMatcherService>();
+        services.AddTransient<IResourceMatcherService, ObservationMatcherService>();
         services.AddTransient<IResourceMatcherService, PatientMatcherService>();
     }
 
