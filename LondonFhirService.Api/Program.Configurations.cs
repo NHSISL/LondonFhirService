@@ -41,6 +41,7 @@ using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointments;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
@@ -300,6 +301,7 @@ public partial class Program
         services.AddTransient<IProviderService, ProviderService>();
         services.AddSingleton<IJsonElementService, JsonElementService>();
         services.AddTransient<IResourceMatcherService, AllergyIntoleranceMatcherService>();
+        services.AddTransient<IResourceMatcherService, AppointmentMatcherService>();
         services.AddTransient<IResourceMatcherService, ConditionMatcherService>();
         services.AddTransient<IResourceMatcherService, EpisodeOfCareMatcherService>();
         services.AddTransient<IResourceMatcherService, ListMatcherService>();
