@@ -40,6 +40,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();
 
+        private static string GetRandomDdsIdentifierValue() =>
+            $"DR-{new IntRange(min: 1000, max: 9999).GetValue()}";
+
         private static JsonElement CreateDiagnosticReportResource(
             string ddsIdentifierValue,
             string id)
