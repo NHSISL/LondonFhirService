@@ -132,6 +132,45 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
+        public async Task ShouldMatchComprehensiveAllergyIntolerancesWithMultipleIdentifierSystemsAsync()
+        {
+            // given
+            string snomedCode = "91936005";
+            string onsetDateTime = "2018-06-15";
+            string expectedMatchKey = $"{snomedCode}|{onsetDateTime}";
+
+            JsonElement source1Resource = CreateComprehensiveAllergyIntoleranceResource(
+                snomedCode: snomedCode,
+                onsetDateTime: onsetDateTime);
+
+            JsonElement source2Resource = CreateComprehensiveAllergyIntoleranceResource(
+                snomedCode: snomedCode,
+                onsetDateTime: onsetDateTime);
+
+            var source1Resources = new List<JsonElement> { source1Resource };
+            var source2Resources = new List<JsonElement> { source2Resource };
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
+            var expectedResourceMatch = new ResourceMatch();
+
+            expectedResourceMatch.Matched.Add(
+                new MatchedResource(source1Resource, source2Resource, expectedMatchKey));
+
+            // when
+            ResourceMatch actualResourceMatch =
+                await this.allergyIntoleranceMatcherService.MatchAsync(
+                    source1Resources,
+                    source2Resources,
+                    source1ResourceIndex,
+                    source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
         public async Task ShouldSkipResourcesWithNoMatchKeyWhenMatchingAsync()
         {
             // given
