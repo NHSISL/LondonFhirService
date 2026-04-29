@@ -28,6 +28,6 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
             List<JsonElement> source2Resources,
             Dictionary<string, JsonElement> source1ResourceIndex,
             Dictionary<string, JsonElement> source2ResourceIndex) =>
-            throw new System.NotImplementedException();
+            new ValueTask<ResourceMatch>(new ResourceMatch());
     }
 }
