@@ -24,7 +24,12 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
         public override ValueTask<string> GetMatchKeyAsync(
             JsonElement resource,
             Dictionary<string, JsonElement> resourceIndex) =>
-            new ValueTask<string>(InternalGetMatchKey(resource));
+        TryCatch(async () =>
+        {
+            ValidateOnGetMatchKeyArguments(resource, resourceIndex);
+
+            return InternalGetMatchKey(resource);
+        });
 
         public override ValueTask<ResourceMatch> MatchAsync(
             List<JsonElement> source1Resources,
