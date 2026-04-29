@@ -90,6 +90,25 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
+        private static JsonElement CreateAppointmentWithNonDdsIdentifier(string id = "appointment-1")
+        {
+            string json = $$"""
+            {
+              "resourceType": "Appointment",
+              "id": "{{id}}",
+              "identifier": [
+                {
+                  "system": "http://example.org/system",
+                  "value": "12345"
+                }
+              ],
+              "status": "fulfilled"
+            }
+            """;
+
+            return ParseJsonElement(json);
+        }
+
         private static JsonElement ParseJsonElement(string json) =>
             JsonDocument.Parse(json).RootElement.Clone();
     }
