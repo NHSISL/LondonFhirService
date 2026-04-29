@@ -111,5 +111,29 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldExcludeObservationsWithNoDdsIdentifierFromMatchResultsAsync()
+        {
+            // given
+            JsonElement source1Resource = CreateNonDdsObservationResource(id: "observation-1");
+            JsonElement source2Resource = CreateNonDdsObservationResource(id: "observation-2");
+            var source1Resources = new List<JsonElement> { source1Resource };
+            var source2Resources = new List<JsonElement> { source2Resource };
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+            var expectedResourceMatch = new ResourceMatch();
+
+            // when
+            ResourceMatch actualResourceMatch = await this.observationMatcherService.MatchAsync(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
