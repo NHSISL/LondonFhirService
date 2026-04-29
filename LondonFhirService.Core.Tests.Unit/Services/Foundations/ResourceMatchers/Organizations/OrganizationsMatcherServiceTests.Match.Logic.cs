@@ -111,5 +111,29 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldExcludeOrganizationsWithNoOdsOrganizationCodeFromMatchResultsAsync()
+        {
+            // given
+            JsonElement source1Resource = CreateNonOdsOrganizationResource(id: "organization-1");
+            JsonElement source2Resource = CreateNonOdsOrganizationResource(id: "organization-2");
+            var source1Resources = new List<JsonElement> { source1Resource };
+            var source2Resources = new List<JsonElement> { source2Resource };
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+            var expectedResourceMatch = new ResourceMatch();
+
+            // when
+            ResourceMatch actualResourceMatch = await this.organizationMatcherService.MatchAsync(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
