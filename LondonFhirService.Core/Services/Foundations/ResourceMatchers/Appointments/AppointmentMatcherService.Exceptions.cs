@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using Xeptions;
@@ -22,6 +23,15 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
             {
                 throw await CreateAndLogValidationException(invalidArgumentResourceMatcherException);
             }
+            catch (Exception exception)
+            {
+                var failedResourceMatcherServiceException =
+                    new FailedResourceMatcherServiceException(
+                        message: "Failed appointment matcher service occurred, please contact support",
+                        innerException: exception);
+
+                throw await CreateAndLogServiceException(failedResourceMatcherServiceException);
+            }
         }
 
         private async ValueTask<ResourceMatcherServiceValidationException> CreateAndLogValidationException(
@@ -35,6 +45,19 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
             await this.loggingBroker.LogErrorAsync(resourceMatcherServiceValidationException);
 
             return resourceMatcherServiceValidationException;
+        }
+
+        private async ValueTask<ResourceMatcherServiceException> CreateAndLogServiceException(
+            Xeption exception)
+        {
+            var resourceMatcherServiceException =
+                new ResourceMatcherServiceException(
+                    message: "Appointment matcher service error occurred, contact support.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(resourceMatcherServiceException);
+
+            return resourceMatcherServiceException;
         }
     }
 }
