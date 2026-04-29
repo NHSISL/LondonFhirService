@@ -30,8 +30,15 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
             List<JsonElement> source1Resources,
             List<JsonElement> source2Resources,
             Dictionary<string, JsonElement> source1ResourceIndex,
-            Dictionary<string, JsonElement> source2ResourceIndex)
+            Dictionary<string, JsonElement> source2ResourceIndex) =>
+        TryCatch(async () =>
         {
+            ValidateOnMatchArguments(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
             var resourceMatch = new ResourceMatch();
 
             var source1ByKey = source1Resources
@@ -67,8 +74,8 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
                 }
             }
 
-            return new ValueTask<ResourceMatch>(resourceMatch);
-        }
+            return resourceMatch;
+        });
 
         internal virtual string InternalGetMatchKey(JsonElement resource)
         {
