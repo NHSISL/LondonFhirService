@@ -1,0 +1,144 @@
+{
+  "entry": [
+    {
+      "resource": {
+        "identifier": [
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "111079"
+          },
+          {
+            "system": "https://fhir.hl7.org.uk/Id/nhs-number",
+            "value": "9435797881"
+          }
+        ],
+        "address": [
+          {
+            "city": "Hayes",
+            "line": [
+              "14 Hall Lane,Harlington,null"
+            ],
+            "postalCode": "UB35LB"
+          }
+        ],
+        "managingOrganization": {
+          "reference": "Organization/4bab0176-7876-4e9b-b016-b5da2aeae555"
+        },
+        "gender": "female",
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Patient-1"
+          ]
+        },
+        "name": [
+          {
+            "given": [
+              "LNWHTESTSQ"
+            ],
+            "prefix": [
+              "Mrs"
+            ],
+            "family": "YYYTEST"
+          }
+        ],
+        "id": "1fbd01e0-bdd8-421e-9935-3cc3831b4684",
+        "birthDate": "1996-11-30",
+        "resourceType": "Patient"
+      }
+    },
+    {
+      "resource": {
+        "mode": "snapshot",
+        "date": "2026-04-27T09:34:29+00:00",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "933361000000108",
+              "display": "Medications and medical devices"
+            },
+            {
+              "system": "http://hl7.org/fhir/list-order",
+              "code": "event-date"
+            }
+          ]
+        },
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-List-1"
+          ]
+        },
+        "subject": {
+          "reference": "Patient/1fbd01e0-bdd8-421e-9935-3cc3831b4684"
+        },
+        "title": "Medication List",
+        "resourceType": "List",
+        "status": "current"
+      }
+    },
+    {
+      "resource": {
+        "identifier": [
+          {
+            "system": "https://fhir.nhs.uk/Id/ods-organization-code",
+            "value": "RAS"
+          },
+          {
+            "system": "https://fhir.hl7.org.uk/Id/dds",
+            "value": "8487"
+          }
+        ],
+        "address": [
+          {
+            "postalCode": "UB8 3NN"
+          }
+        ],
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Organization-1"
+          ]
+        },
+        "name": "THE HILLINGDON HOSPITALS NHS FOUNDATION TRUST",
+        "id": "4bab0176-7876-4e9b-b016-b5da2aeae555",
+        "resourceType": "Organization"
+      }
+    },
+    {
+      "resource": {
+        "mode": "snapshot",
+        "date": "2026-04-27T09:34:29+00:00",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "933361000000108",
+              "display": "Medications and medical devices"
+            },
+            {
+              "system": "http://hl7.org/fhir/list-order",
+              "code": "event-date"
+            }
+          ]
+        },
+        "meta": {
+          "profile": [
+            "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-List-1"
+          ]
+        },
+        "subject": {
+          "reference": "Patient/1fbd01e0-bdd8-421e-9935-3cc3831b4684"
+        },
+        "title": "Medication List",
+        "resourceType": "List",
+        "status": "current"
+      }
+    }
+  ],
+  "meta": {
+    "profile": [
+      "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-StructuredRecord-Bundle-1"
+    ]
+  },
+  "type": "collection",
+  "resourceType": "Bundle"
+}
