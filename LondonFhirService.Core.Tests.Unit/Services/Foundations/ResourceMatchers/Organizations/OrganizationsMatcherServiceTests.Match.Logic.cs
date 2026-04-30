@@ -34,7 +34,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, inputOdsOrganizationCode));
+                new MatchedResource(
+                    Source1: source1Resource,
+                    Source2: source2Resource,
+                    MatchKey: inputOdsOrganizationCode));
 
             // when
             ResourceMatch actualResourceMatch = await this.organizationMatcherService.MatchAsync(
@@ -66,7 +69,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Unmatched.Add(
-                new UnmatchedResource(source1Resource, "Organization", inputOdsOrganizationCode, true));
+                new UnmatchedResource(
+                    Resource: source1Resource,
+                    ResourceType: "Organization",
+                    Identifier: inputOdsOrganizationCode,
+                    IsFromSource1: true));
 
             // when
             ResourceMatch actualResourceMatch = await this.organizationMatcherService.MatchAsync(
@@ -98,7 +105,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Unmatched.Add(
-                new UnmatchedResource(source2Resource, "Organization", inputOdsOrganizationCode, false));
+                new UnmatchedResource(
+                    Resource: source2Resource,
+                    ResourceType: "Organization",
+                    Identifier: inputOdsOrganizationCode,
+                    IsFromSource1: false));
 
             // when
             ResourceMatch actualResourceMatch = await this.organizationMatcherService.MatchAsync(
@@ -134,7 +145,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, inputOdsOrganizationCode));
+                new MatchedResource(
+                    Source1: source1Resource,
+                    Source2: source2Resource,
+                    MatchKey: inputOdsOrganizationCode));
 
             // when
             ResourceMatch actualResourceMatch = await this.organizationMatcherService.MatchAsync(

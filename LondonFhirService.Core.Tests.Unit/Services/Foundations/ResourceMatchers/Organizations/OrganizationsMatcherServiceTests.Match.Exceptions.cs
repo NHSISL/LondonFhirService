@@ -20,8 +20,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldThrowServiceExceptionOnMatchIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            List<JsonElement> invalidSource1Resources = new();
-            List<JsonElement> invalidSource2Resources = new();
+            List<JsonElement> invalidSource1Resources = new List<JsonElement>();
+            List<JsonElement> invalidSource2Resources = new List<JsonElement>();
             Dictionary<string, JsonElement> invalidSource1ResourceIndex = CreateResourceIndex();
             Dictionary<string, JsonElement> invalidSource2ResourceIndex = CreateResourceIndex();
             var serviceException = new Exception();

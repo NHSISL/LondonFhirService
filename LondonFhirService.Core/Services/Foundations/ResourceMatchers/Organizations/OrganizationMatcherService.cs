@@ -40,14 +40,26 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Organizat
             var resourceMatch = new ResourceMatch();
 
             var source1ByKey = source1Resources
-                .Select(r => new { Resource = r, Key = InternalGetMatchKey(r, source1ResourceIndex) })
-                .Where(x => x.Key != null)
-                .ToDictionary(x => x.Key!, x => x.Resource);
+                .Select(resource => new
+                {
+                    Resource = resource,
+                    Key = InternalGetMatchKey(resource, source1ResourceIndex)
+                })
+                .Where(keyedResource => keyedResource.Key != null)
+                .ToDictionary(
+                    keyedResource => keyedResource.Key!,
+                    keyedResource => keyedResource.Resource);
 
             var source2ByKey = source2Resources
-                .Select(r => new { Resource = r, Key = InternalGetMatchKey(r, source2ResourceIndex) })
-                .Where(x => x.Key != null)
-                .ToDictionary(x => x.Key!, x => x.Resource);
+                .Select(resource => new
+                {
+                    Resource = resource,
+                    Key = InternalGetMatchKey(resource, source2ResourceIndex)
+                })
+                .Where(keyedResource => keyedResource.Key != null)
+                .ToDictionary(
+                    keyedResource => keyedResource.Key!,
+                    keyedResource => keyedResource.Resource);
 
             var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
 
@@ -58,15 +70,26 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Organizat
 
                 if (hasSource1 && hasSource2)
                 {
-                    resourceMatch.Matched.Add(new MatchedResource(source1Resource!, source2Resource!, key));
+                    resourceMatch.Matched.Add(new MatchedResource(
+                        Source1: source1Resource!,
+                        Source2: source2Resource!,
+                        MatchKey: key));
                 }
                 else if (hasSource1)
                 {
-                    resourceMatch.Unmatched.Add(new UnmatchedResource(source1Resource!, ResourceType, key, true));
+                    resourceMatch.Unmatched.Add(new UnmatchedResource(
+                        Resource: source1Resource!,
+                        ResourceType: ResourceType,
+                        Identifier: key,
+                        IsFromSource1: true));
                 }
                 else if (hasSource2)
                 {
-                    resourceMatch.Unmatched.Add(new UnmatchedResource(source2Resource!, ResourceType, key, false));
+                    resourceMatch.Unmatched.Add(new UnmatchedResource(
+                        Resource: source2Resource!,
+                        ResourceType: ResourceType,
+                        Identifier: key,
+                        IsFromSource1: false));
                 }
             }
 
