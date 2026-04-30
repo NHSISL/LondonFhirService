@@ -103,7 +103,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
-        public async Task ShouldMatchComprehensiveEpisodeOfCaresWithMultipleIdentifierSystemsAsync()
+        public async Task ShouldMatchComprehensiveEpisodeOfCaresWhenIdsDifferAndPeriodStartsMatchAsync()
         {
             // given
             var periodStart = "2022-04-12";
