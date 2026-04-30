@@ -88,7 +88,9 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.ReferralR
                 {
                     if (identifierElement.TryGetProperty("value", out var value))
                     {
-                        return value.GetString();
+                        var stringValue = value.GetString();
+
+                        return string.IsNullOrWhiteSpace(stringValue) ? null : stringValue;
                     }
                 }
             }
