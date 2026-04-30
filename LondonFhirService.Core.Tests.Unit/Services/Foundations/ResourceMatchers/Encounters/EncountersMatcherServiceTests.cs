@@ -185,7 +185,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
-        private static JsonElement ParseJsonElement(string json) =>
-            JsonDocument.Parse(json).RootElement.Clone();
+        private static JsonElement ParseJsonElement(string json)
+        {
+            using JsonDocument jsonDocument = JsonDocument.Parse(json);
+
+            return jsonDocument.RootElement.Clone();
+        }
     }
 }
