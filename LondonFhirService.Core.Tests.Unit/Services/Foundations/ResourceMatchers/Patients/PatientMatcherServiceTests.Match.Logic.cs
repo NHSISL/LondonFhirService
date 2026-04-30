@@ -213,7 +213,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var source2Resources = new List<JsonElement> { source2Resource };
             Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
             Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
-
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
