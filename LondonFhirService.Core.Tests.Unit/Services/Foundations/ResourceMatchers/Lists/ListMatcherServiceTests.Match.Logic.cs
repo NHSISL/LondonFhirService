@@ -13,7 +13,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
     public partial class ListMatcherServiceTests
     {
         [Fact]
-        public async Task ShouldMatchComprehensiveListsWithMultipleIdentifierSystemsAsync()
+        public async Task ShouldMatchComprehensiveListsByTitleWithMultipleIdentifiersAsync()
         {
             // given
             string title = "Active Problem List";
