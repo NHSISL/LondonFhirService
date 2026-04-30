@@ -132,7 +132,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
-        public async Task ShouldMatchComprehensiveAllergyIntolerancesWithMultipleIdentifierSystemsAsync()
+        public async Task ShouldMatchComprehensiveAllergyIntolerancesBySnomedCodeAndOnsetDateTimeAsync()
         {
             // given
             string snomedCode = "91936005";
