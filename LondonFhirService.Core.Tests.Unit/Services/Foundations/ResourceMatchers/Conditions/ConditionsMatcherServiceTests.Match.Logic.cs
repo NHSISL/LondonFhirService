@@ -120,17 +120,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldMatchComprehensiveConditionsWithMultipleIdentifierSystemsAsync()
         {
             // given
-            string snomedCode = "44054006";
-            string onsetDateTime = "2022-04-01";
+            string inputSnomedCode = "44054006";
+            string inputOnsetDateTime = "2022-04-01";
 
             JsonElement source1Resource = CreateComprehensiveConditionResource(
-                snomedCode: snomedCode,
-                onsetDateTime: onsetDateTime,
+                snomedCode: inputSnomedCode,
+                onsetDateTime: inputOnsetDateTime,
                 id: "condition-comprehensive-1");
 
             JsonElement source2Resource = CreateComprehensiveConditionResource(
-                snomedCode: snomedCode,
-                onsetDateTime: onsetDateTime,
+                snomedCode: inputSnomedCode,
+                onsetDateTime: inputOnsetDateTime,
                 id: "condition-comprehensive-2");
 
             var source1Resources = new List<JsonElement> { source1Resource };
@@ -141,7 +141,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, snomedCode));
+                new MatchedResource(source1Resource, source2Resource, inputSnomedCode));
 
             // when
             ResourceMatch actualResourceMatch = await this.conditionMatcherService.MatchAsync(
