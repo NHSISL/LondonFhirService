@@ -273,7 +273,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 },
                 "text": {
                   "status": "generated",
-                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Patient is currently taking Metformin 500mg MR twice daily.</p></div>"
+                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Metformin 500mg MR.</p></div>"
                 },
                 "identifier": [
                   {

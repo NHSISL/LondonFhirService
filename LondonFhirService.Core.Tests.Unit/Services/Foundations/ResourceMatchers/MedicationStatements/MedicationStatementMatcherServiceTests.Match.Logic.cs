@@ -311,15 +311,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var source1Resources = new List<JsonElement> { source1Resource };
             var source2Resources = new List<JsonElement> { source2Resource };
 
-            Dictionary<string, JsonElement> source1ResourceIndex = new()
-            {
-                { medicationReference, medicationResource }
-            };
+            Dictionary<string, JsonElement> source1ResourceIndex =
+                new Dictionary<string, JsonElement>()
+                {
+                    { medicationReference, medicationResource }
+                };
 
-            Dictionary<string, JsonElement> source2ResourceIndex = new()
-            {
-                { medicationReference, medicationResource }
-            };
+            Dictionary<string, JsonElement> source2ResourceIndex =
+                new Dictionary<string, JsonElement>()
+                {
+                    { medicationReference, medicationResource }
+                };
 
             // when
             ResourceMatch actualResourceMatch = await this.medicationStatementMatcherService.MatchAsync(
