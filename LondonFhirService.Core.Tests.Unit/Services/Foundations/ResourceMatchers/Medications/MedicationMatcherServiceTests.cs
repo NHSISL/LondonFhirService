@@ -145,6 +145,95 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
+        private static JsonElement CreateComprehensiveMedicationResource(
+            string snomedCode,
+            string medicationId)
+        {
+            string json = $$"""
+              {
+                "resourceType": "Medication",
+                "id": "{{medicationId}}",
+                "meta": {
+                  "versionId": "1",
+                  "lastUpdated": "2024-09-12T08:00:00+00:00",
+                  "profile": [
+                    "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-Medication-1"
+                  ]
+                },
+                "text": {
+                  "status": "generated",
+                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Metformin 500mg MR.</p></div>"
+                },
+                "code": {
+                  "coding": [
+                    {
+                      "system": "http://snomed.info/sct",
+                      "code": "{{snomedCode}}",
+                      "display": "Metformin 500mg modified-release tablets"
+                    }
+                  ],
+                  "text": "Metformin 500mg MR"
+                },
+                "status": "active",
+                "isBrand": false,
+                "isOverTheCounter": false,
+                "manufacturer": {
+                  "reference": "Organization/56000299-bbd7-4dfa-ad64-c2d8692ae20c"
+                },
+                "form": {
+                  "coding": [
+                    {
+                      "system": "http://snomed.info/sct",
+                      "code": "385055001",
+                      "display": "Tablet"
+                    }
+                  ]
+                },
+                "ingredient": [
+                  {
+                    "itemCodeableConcept": {
+                      "coding": [
+                        {
+                          "system": "http://snomed.info/sct",
+                          "code": "109081006",
+                          "display": "Metformin"
+                        }
+                      ]
+                    },
+                    "isActive": true,
+                    "amount": {
+                      "numerator": {
+                        "value": 500,
+                        "unit": "mg",
+                        "system": "http://unitsofmeasure.org",
+                        "code": "mg"
+                      },
+                      "denominator": {
+                        "value": 1,
+                        "unit": "tablet",
+                        "system": "http://unitsofmeasure.org",
+                        "code": "{tbl}"
+                      }
+                    }
+                  }
+                ],
+                "package": {
+                  "container": {
+                    "coding": [
+                      {
+                        "system": "http://snomed.info/sct",
+                        "code": "419672006",
+                        "display": "Bottle"
+                      }
+                    ]
+                  }
+                }
+              }
+              """;
+
+            return ParseJsonElement(json);
+        }
+
         private static JsonElement ParseJsonElement(string json) =>
             JsonDocument.Parse(json).RootElement.Clone();
     }
