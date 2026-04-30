@@ -113,7 +113,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 },
                 "text": {
                   "status": "generated",
-                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Family history of type 2 diabetes (father).</p></div>"
+                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Family history.</p></div>"
                 },
                 "identifier": [
                   {
