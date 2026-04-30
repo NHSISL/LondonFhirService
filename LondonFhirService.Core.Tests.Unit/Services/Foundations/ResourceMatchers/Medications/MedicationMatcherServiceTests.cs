@@ -147,12 +147,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
         private static JsonElement CreateComprehensiveMedicationResource(
             string snomedCode,
-            string id)
+            string medicationId)
         {
             string json = $$"""
               {
                 "resourceType": "Medication",
-                "id": "{{id}}",
+                "id": "{{medicationId}}",
                 "meta": {
                   "versionId": "1",
                   "lastUpdated": "2024-09-12T08:00:00+00:00",
@@ -162,7 +162,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 },
                 "text": {
                   "status": "generated",
-                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Metformin 500mg modified-release tablets.</p></div>"
+                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Metformin 500mg MR.</p></div>"
                 },
                 "code": {
                   "coding": [

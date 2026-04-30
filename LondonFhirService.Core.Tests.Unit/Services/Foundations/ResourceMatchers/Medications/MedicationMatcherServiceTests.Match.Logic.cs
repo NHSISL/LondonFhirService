@@ -109,18 +109,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
-        public async Task ShouldMatchComprehensiveMedicationsWithMultipleIdentifierSystemsAsync()
+        public async Task ShouldMatchComprehensiveMedicationsBySnomedCodeAsync()
         {
             // given
             string snomedCode = "376196007";
 
             JsonElement source1Resource = CreateComprehensiveMedicationResource(
                 snomedCode: snomedCode,
-                id: "medication-comprehensive-1");
+                medicationId: "medication-comprehensive-1");
 
             JsonElement source2Resource = CreateComprehensiveMedicationResource(
                 snomedCode: snomedCode,
-                id: "medication-comprehensive-2");
+                medicationId: "medication-comprehensive-2");
 
             var source1Resources = new List<JsonElement> { source1Resource };
             var source2Resources = new List<JsonElement> { source2Resource };
