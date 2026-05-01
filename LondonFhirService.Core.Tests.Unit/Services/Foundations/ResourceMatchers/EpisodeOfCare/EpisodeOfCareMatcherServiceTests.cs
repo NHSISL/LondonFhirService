@@ -31,17 +31,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualException => actualException.SameExceptionAs(expectedException);
 
         private static Dictionary<string, JsonElement> CreateResourceIndex() =>
-            new();
+            new Dictionary<string, JsonElement>();
 
         private static JsonElement CreateEpisodeOfCareResource(
             string snomedCode,
             string onsetDateTime,
-            string id = "allergy-1")
+            string episodeOfCareId = "episode-1")
         {
             string json = $$"""
           {
             "resourceType": "EpisodeOfCare",
-            "id": "{{id}}",
+            "id": "{{episodeOfCareId}}",
             "code": {
               "coding": [
                 {
@@ -62,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             string json = $$"""
           {
             "resourceType": "EpisodeOfCare",
-            "id": "allergy-1",
+            "id": "episode-1",
             "code": {
               "coding": [
                 {
@@ -83,7 +83,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             string json = $$"""
           {
             "resourceType": "EpisodeOfCare",
-            "id": "allergy-1",
+            "id": "episode-1",
             "code": {
               "coding": [
                 {
@@ -103,7 +103,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             string json = """
           {
             "resourceType": "EpisodeOfCare",
-            "id": "allergy-1",
+            "id": "episode-1",
             "code": {
               "coding": {
                 "system": "http://snomed.info/sct",
@@ -119,12 +119,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
         private static JsonElement CreateEpisodeOfCareResourceWithPeriodStart(
             string periodStart,
-            string id = "episode-1")
+            string episodeOfCareId = "episode-1")
         {
             string json = $$"""
           {
             "resourceType": "EpisodeOfCare",
-            "id": "{{id}}",
+            "id": "{{episodeOfCareId}}",
             "period": {
               "start": "{{periodStart}}"
             }
@@ -134,12 +134,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
-        private static JsonElement CreateEpisodeOfCareResourceWithPeriodButNoStart(string id = "episode-1")
+        private static JsonElement CreateEpisodeOfCareResourceWithPeriodButNoStart(
+            string episodeOfCareId = "episode-1")
         {
             string json = $$"""
           {
             "resourceType": "EpisodeOfCare",
-            "id": "{{id}}",
+            "id": "{{episodeOfCareId}}",
             "period": {
               "end": "2024-12-31"
             }
@@ -149,12 +150,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
-        private static JsonElement CreateEpisodeOfCareResourceWithNoPeriod(string id = "episode-1")
+        private static JsonElement CreateEpisodeOfCareResourceWithNoPeriod(string episodeOfCareId = "episode-1")
         {
             string json = $$"""
           {
             "resourceType": "EpisodeOfCare",
-            "id": "{{id}}"
+            "id": "{{episodeOfCareId}}"
           }
           """;
 
@@ -163,12 +164,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
         private static JsonElement CreateComprehensiveEpisodeOfCareResource(
             string periodStart,
-            string id)
+            string episodeOfCareId)
         {
             string json = $$"""
               {
                 "resourceType": "EpisodeOfCare",
-                "id": "{{id}}",
+                "id": "{{episodeOfCareId}}",
                 "meta": {
                   "versionId": "1",
                   "lastUpdated": "2024-09-12T09:25:00+01:00",
@@ -178,7 +179,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 },
                 "text": {
                   "status": "generated",
-                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Active episode of care for diabetes management.</p></div>"
+                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Active episode for diabetes.</p></div>"
                 },
                 "identifier": [
                   {

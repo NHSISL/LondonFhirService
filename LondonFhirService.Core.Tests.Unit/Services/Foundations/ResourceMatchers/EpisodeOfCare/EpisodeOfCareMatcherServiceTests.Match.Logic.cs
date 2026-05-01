@@ -110,11 +110,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             JsonElement source1Resource = CreateComprehensiveEpisodeOfCareResource(
                 periodStart: periodStart,
-                id: "episode-of-care-comprehensive-1");
+                episodeOfCareId: "episode-of-care-comprehensive-1");
 
             JsonElement source2Resource = CreateComprehensiveEpisodeOfCareResource(
                 periodStart: periodStart,
-                id: "episode-of-care-comprehensive-2");
+                episodeOfCareId: "episode-of-care-comprehensive-2");
 
             var source1Resources = new List<JsonElement> { source1Resource };
             var source2Resources = new List<JsonElement> { source2Resource };
