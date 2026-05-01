@@ -44,6 +44,7 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntole
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Locations;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medications;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationStatements;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
@@ -303,6 +304,7 @@ public partial class Program
         services.AddTransient<IResourceMatcherService, ConditionMatcherService>();
         services.AddTransient<IResourceMatcherService, EpisodeOfCareMatcherService>();
         services.AddTransient<IResourceMatcherService, ListMatcherService>();
+        services.AddTransient<IResourceMatcherService, LocationMatcherService>();
         services.AddTransient<IResourceMatcherService, MedicationMatcherService>();
         services.AddTransient<IResourceMatcherService, MedicationStatementMatcherService>();
         services.AddTransient<IResourceMatcherService, PatientMatcherService>();
