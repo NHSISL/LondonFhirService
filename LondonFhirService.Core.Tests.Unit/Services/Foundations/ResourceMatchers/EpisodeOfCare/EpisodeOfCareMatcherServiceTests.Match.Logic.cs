@@ -103,6 +103,42 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
+        public async Task ShouldMatchComprehensiveEpisodeOfCaresWhenIdsDifferAndPeriodStartsMatchAsync()
+        {
+            // given
+            var periodStart = "2022-04-12";
+
+            JsonElement source1Resource = CreateComprehensiveEpisodeOfCareResource(
+                periodStart: periodStart,
+                episodeOfCareId: "episode-of-care-comprehensive-1");
+
+            JsonElement source2Resource = CreateComprehensiveEpisodeOfCareResource(
+                periodStart: periodStart,
+                episodeOfCareId: "episode-of-care-comprehensive-2");
+
+            var source1Resources = new List<JsonElement> { source1Resource };
+            var source2Resources = new List<JsonElement> { source2Resource };
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
+            var expectedResourceMatch = new ResourceMatch();
+
+            expectedResourceMatch.Matched.Add(
+                new MatchedResource(source1Resource, source2Resource, MatchKey: periodStart));
+
+            // when
+            ResourceMatch actualResourceMatch = await this.episodeOfCareMatcherService.MatchAsync(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
         public async Task ShouldExcludeEpisodeOfCareResourcesWithNoPeriodFromMatchingAsync()
         {
             // given
