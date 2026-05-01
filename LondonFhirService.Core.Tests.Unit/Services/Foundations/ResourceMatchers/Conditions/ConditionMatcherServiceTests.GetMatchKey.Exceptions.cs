@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
 using Moq;
@@ -17,13 +16,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
     public partial class ConditionMatcherServiceTests
     {
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnMatchIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnGetMatchKeysIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            List<JsonElement> invalidSource1Resources = new();
-            List<JsonElement> invalidSource2Resources = new();
-            Dictionary<string, JsonElement> invalidSource1ResourceIndex = CreateResourceIndex();
-            Dictionary<string, JsonElement> invalidSource2ResourceIndex = CreateResourceIndex();
+            JsonElement resource = default(JsonElement);
+            Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
             var failedResourceMatcherServiceException =
@@ -40,20 +37,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 { CallBase = true };
 
             conditionMatcherServiceMock.Setup(service =>
-                service.ValidateOnMatchArguments(
-                    invalidSource1Resources,
-                    invalidSource2Resources,
-                    invalidSource1ResourceIndex,
-                    invalidSource2ResourceIndex))
+                service.ValidateOnGetMatchKeyArguments(
+                    resource,
+                    resourceIndex))
                         .Throws(serviceException);
 
             // when
-            ValueTask<ResourceMatch> matchTask =
-                conditionMatcherServiceMock.Object.MatchAsync(
-                    invalidSource1Resources,
-                    invalidSource2Resources,
-                    invalidSource1ResourceIndex,
-                    invalidSource2ResourceIndex);
+            ValueTask<string> matchTask =
+                conditionMatcherServiceMock.Object.GetMatchKeyAsync(
+                    resource,
+                    resourceIndex);
 
             ResourceMatcherServiceException actualResourceMatcherServiceException =
                 await Assert.ThrowsAsync<ResourceMatcherServiceException>(
@@ -64,19 +57,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 .BeEquivalentTo(expectedResourceMatcherServiceException);
 
             conditionMatcherServiceMock.Verify(service =>
-                service.ValidateOnMatchArguments(
-                    invalidSource1Resources,
-                    invalidSource2Resources,
-                    invalidSource1ResourceIndex,
-                    invalidSource2ResourceIndex),
+                service.ValidateOnGetMatchKeyArguments(
+                    resource,
+                    resourceIndex),
                         Times.Once);
 
             conditionMatcherServiceMock.Verify(service =>
-                service.MatchAsync(
-                    invalidSource1Resources,
-                    invalidSource2Resources,
-                    invalidSource1ResourceIndex,
-                    invalidSource2ResourceIndex),
+                service.GetMatchKeyAsync(
+                    resource,
+                    resourceIndex),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -88,4 +77,4 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             conditionMatcherServiceMock.VerifyNoOtherCalls();
         }
     }
-}
+}    

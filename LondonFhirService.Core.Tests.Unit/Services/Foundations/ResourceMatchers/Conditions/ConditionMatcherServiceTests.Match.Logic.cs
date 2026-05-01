@@ -117,7 +117,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
-        public async Task ShouldMatchComprehensiveConditionsWithMultipleIdentifierSystemsAsync()
+        public async Task ShouldMatchComprehensiveConditionsBySnomedCodeAsync()
         {
             // given
             string inputSnomedCode = "44054006";
