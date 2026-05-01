@@ -32,7 +32,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualException => actualException.SameExceptionAs(expectedException);
 
         private static Dictionary<string, JsonElement> CreateResourceIndex() =>
-            new();
+            new Dictionary<string, JsonElement>();
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();
