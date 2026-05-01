@@ -42,6 +42,7 @@ using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Encounters;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medications;
@@ -301,6 +302,7 @@ public partial class Program
         services.AddSingleton<IJsonElementService, JsonElementService>();
         services.AddTransient<IResourceMatcherService, AllergyIntoleranceMatcherService>();
         services.AddTransient<IResourceMatcherService, ConditionMatcherService>();
+        services.AddTransient<IResourceMatcherService, EncounterMatcherService>();
         services.AddTransient<IResourceMatcherService, EpisodeOfCareMatcherService>();
         services.AddTransient<IResourceMatcherService, ListMatcherService>();
         services.AddTransient<IResourceMatcherService, MedicationMatcherService>();
