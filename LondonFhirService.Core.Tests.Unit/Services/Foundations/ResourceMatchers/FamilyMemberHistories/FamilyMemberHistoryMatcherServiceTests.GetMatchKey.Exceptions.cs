@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.FamilyMemberHistories;
 using Moq;
@@ -17,13 +16,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
     public partial class FamilyMemberHistoryMatcherServiceTests
     {
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnMatchIfServiceErrorOccursAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnGetMatchKeyIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            List<JsonElement> invalidSource1Resources = new();
-            List<JsonElement> invalidSource2Resources = new();
-            Dictionary<string, JsonElement> invalidSource1ResourceIndex = CreateResourceIndex();
-            Dictionary<string, JsonElement> invalidSource2ResourceIndex = CreateResourceIndex();
+            JsonElement resource = default(JsonElement);
+            Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
             var failedResourceMatcherServiceException =
@@ -36,24 +33,23 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     message: "Family member history matcher service error occurred, contact support.",
                     innerException: failedResourceMatcherServiceException);
 
-            var familyMemberHistoryMatcherServiceMock = new Mock<FamilyMemberHistoryMatcherService>(loggingBrokerMock.Object)
-                { CallBase = true };
+            var familyMemberHistoryMatcherServiceMock =
+                new Mock<FamilyMemberHistoryMatcherService>(loggingBrokerMock.Object)
+                {
+                    CallBase = true
+                };
 
             familyMemberHistoryMatcherServiceMock.Setup(service =>
-                service.ValidateOnMatchArguments(
-                    invalidSource1Resources,
-                    invalidSource2Resources,
-                    invalidSource1ResourceIndex,
-                    invalidSource2ResourceIndex))
+                service.ValidateOnGetMatchKeyArguments(
+                    resource,
+                    resourceIndex))
                         .Throws(serviceException);
 
             // when
-            ValueTask<ResourceMatch> matchTask =
-                familyMemberHistoryMatcherServiceMock.Object.MatchAsync(
-                    invalidSource1Resources,
-                    invalidSource2Resources,
-                    invalidSource1ResourceIndex,
-                    invalidSource2ResourceIndex);
+            ValueTask<string> matchTask =
+                familyMemberHistoryMatcherServiceMock.Object.GetMatchKeyAsync(
+                    resource,
+                    resourceIndex);
 
             ResourceMatcherServiceException actualResourceMatcherServiceException =
                 await Assert.ThrowsAsync<ResourceMatcherServiceException>(
@@ -64,19 +60,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 .BeEquivalentTo(expectedResourceMatcherServiceException);
 
             familyMemberHistoryMatcherServiceMock.Verify(service =>
-                service.ValidateOnMatchArguments(
-                    invalidSource1Resources,
-                    invalidSource2Resources,
-                    invalidSource1ResourceIndex,
-                    invalidSource2ResourceIndex),
+                service.ValidateOnGetMatchKeyArguments(
+                    resource,
+                    resourceIndex),
                         Times.Once);
 
             familyMemberHistoryMatcherServiceMock.Verify(service =>
-                service.MatchAsync(
-                    invalidSource1Resources,
-                    invalidSource2Resources,
-                    invalidSource1ResourceIndex,
-                    invalidSource2ResourceIndex),
+                service.GetMatchKeyAsync(
+                    resource,
+                    resourceIndex),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>

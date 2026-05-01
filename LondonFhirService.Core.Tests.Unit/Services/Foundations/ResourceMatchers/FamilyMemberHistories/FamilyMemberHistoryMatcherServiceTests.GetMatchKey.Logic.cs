@@ -27,7 +27,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             // when
             string actualMatchKey =
-                await this.familyMemberHistoryMatcherService.GetMatchKeyAsync(familyMemberHistoryResource, resourceIndex);
+                await this.familyMemberHistoryMatcherService.GetMatchKeyAsync(
+                    familyMemberHistoryResource,
+                    resourceIndex);
 
             // then
             actualMatchKey.Should().Be(expectedMatchKey);
@@ -47,7 +49,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             // when
             string actualMatchKey =
-                await this.familyMemberHistoryMatcherService.GetMatchKeyAsync(familyMemberHistoryResource, resourceIndex);
+                await this.familyMemberHistoryMatcherService.GetMatchKeyAsync(
+                    familyMemberHistoryResource,
+                    resourceIndex);
 
             // then
             actualMatchKey.Should().BeNull();
@@ -64,7 +68,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             // when
             string actualMatchKey =
-                await this.familyMemberHistoryMatcherService.GetMatchKeyAsync(familyMemberHistoryResource, resourceIndex);
+                await this.familyMemberHistoryMatcherService.GetMatchKeyAsync(
+                    familyMemberHistoryResource,
+                    resourceIndex);
 
             // then
             actualMatchKey.Should().BeNull();
