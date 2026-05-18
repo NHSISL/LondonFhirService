@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
-using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Immunizations;
 using Moq;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Conditions
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Immunizations
 {
-    public partial class ConditionMatcherServiceTests
+    public partial class ImmunizationMatcherServiceTests
     {
         [Fact]
         public async Task ShouldThrowServiceExceptionOnMatchIfServiceErrorOccursAndLogItAsync()
@@ -28,18 +28,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             var failedResourceMatcherServiceException =
                 new FailedResourceMatcherServiceException(
-                    message: "Failed condition matcher service occurred, please contact support",
+                    message: "Failed immunization matcher service occurred, please contact support",
                     innerException: serviceException);
 
             var expectedResourceMatcherServiceException =
                 new ResourceMatcherServiceException(
-                    message: "Condition matcher service error occurred, contact support.",
+                    message: "Immunization matcher service error occurred, contact support.",
                     innerException: failedResourceMatcherServiceException);
 
-            var conditionMatcherServiceMock = new Mock<ConditionMatcherService>(loggingBrokerMock.Object)
+            var immunizationMatcherServiceMock = new Mock<ImmunizationMatcherService>(loggingBrokerMock.Object)
                 { CallBase = true };
 
-            conditionMatcherServiceMock.Setup(service =>
+            immunizationMatcherServiceMock.Setup(service =>
                 service.ValidateOnMatchArguments(
                     invalidSource1Resources,
                     invalidSource2Resources,
@@ -49,7 +49,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             // when
             ValueTask<ResourceMatch> matchTask =
-                conditionMatcherServiceMock.Object.MatchAsync(
+                immunizationMatcherServiceMock.Object.MatchAsync(
                     invalidSource1Resources,
                     invalidSource2Resources,
                     invalidSource1ResourceIndex,
@@ -63,7 +63,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatcherServiceException.Should()
                 .BeEquivalentTo(expectedResourceMatcherServiceException);
 
-            conditionMatcherServiceMock.Verify(service =>
+            immunizationMatcherServiceMock.Verify(service =>
                 service.ValidateOnMatchArguments(
                     invalidSource1Resources,
                     invalidSource2Resources,
@@ -71,7 +71,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     invalidSource2ResourceIndex),
                         Times.Once);
 
-            conditionMatcherServiceMock.Verify(service =>
+            immunizationMatcherServiceMock.Verify(service =>
                 service.MatchAsync(
                     invalidSource1Resources,
                     invalidSource2Resources,
@@ -85,7 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            conditionMatcherServiceMock.VerifyNoOtherCalls();
+            immunizationMatcherServiceMock.VerifyNoOtherCalls();
         }
     }
 }
