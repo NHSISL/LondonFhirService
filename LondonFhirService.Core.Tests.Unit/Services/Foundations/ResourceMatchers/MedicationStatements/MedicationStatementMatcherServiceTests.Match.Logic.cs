@@ -284,5 +284,57 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public async Task ShouldMatchComprehensiveMedicationStatementsWithMultipleIdentifierSystemsAsync()
+        {
+            // given
+            string snomedCode = "376196007";
+            string dateAsserted = "2024-09-12";
+            string medicationReference = "Medication/4f04814c-9a09-4605-8254-a8adecbd4353";
+            string expectedMatchKey = $"{snomedCode}|{dateAsserted}";
+
+            JsonElement medicationResource = CreateMedicationForIndex(
+                snomedCode: snomedCode,
+                id: "4f04814c-9a09-4605-8254-a8adecbd4353");
+
+            JsonElement source1Resource = CreateComprehensiveMedicationStatementResource(
+                medicationReference: medicationReference,
+                dateAsserted: dateAsserted,
+                id: "medication-statement-comprehensive-1");
+
+            JsonElement source2Resource = CreateComprehensiveMedicationStatementResource(
+                medicationReference: medicationReference,
+                dateAsserted: dateAsserted,
+                id: "medication-statement-comprehensive-2");
+
+            var source1Resources = new List<JsonElement> { source1Resource };
+            var source2Resources = new List<JsonElement> { source2Resource };
+
+            Dictionary<string, JsonElement> source1ResourceIndex =
+                new Dictionary<string, JsonElement>()
+                {
+                    { medicationReference, medicationResource }
+                };
+
+            Dictionary<string, JsonElement> source2ResourceIndex =
+                new Dictionary<string, JsonElement>()
+                {
+                    { medicationReference, medicationResource }
+                };
+
+            // when
+            ResourceMatch actualResourceMatch = await this.medicationStatementMatcherService.MatchAsync(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Matched.Should().HaveCount(1);
+            actualResourceMatch.Unmatched.Should().BeEmpty();
+            actualResourceMatch.Matched[0].MatchKey.Should().Be(expectedMatchKey);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
