@@ -8,113 +8,23 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.EpisodesOfCare
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.DiagnosticReports
 {
-    public partial class EpisodeOfCareMatcherServiceTests
+    public partial class DiagnosticReportMatcherServiceTests
     {
         [Fact]
-        public async Task ShouldMatchEpisodeOfCareResourcesFromBothSourcesAsync()
+        public async Task ShouldMatchDiagnosticReportsWhenBothSourcesHaveResourcesWithSameKeyAsync()
         {
             // given
-            var periodStart = "2024-01-01";
-            JsonElement source1Resource = CreateEpisodeOfCareResourceWithPeriodStart(periodStart);
-            JsonElement source2Resource = CreateEpisodeOfCareResourceWithPeriodStart(periodStart);
-            var source1Resources = new List<JsonElement> { source1Resource };
-            var source2Resources = new List<JsonElement> { source2Resource };
-            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
-            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
-            var expectedResourceMatch = new ResourceMatch();
+            string inputDdsIdentifierValue = "DR-1";
 
-            expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, MatchKey: periodStart));
+            JsonElement source1Resource = CreateDiagnosticReportResource(
+                ddsIdentifierValue: inputDdsIdentifierValue,
+                id: "diagnostic-report-1");
 
-            // when
-            ResourceMatch actualResourceMatch = await this.episodeOfCareMatcherService.MatchAsync(
-                source1Resources,
-                source2Resources,
-                source1ResourceIndex,
-                source2ResourceIndex);
-
-            // then
-            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
-            this.loggingBrokerMock.VerifyNoOtherCalls();
-        }
-
-        [Fact]
-        public async Task ShouldReturnUnmatchedForSource1EpisodeOfCareNotInSource2Async()
-        {
-            // given
-            var periodStart = "2024-01-01";
-            JsonElement source1Resource = CreateEpisodeOfCareResourceWithPeriodStart(periodStart);
-            var source1Resources = new List<JsonElement> { source1Resource };
-            var source2Resources = new List<JsonElement>();
-            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
-            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
-            var expectedResourceMatch = new ResourceMatch();
-
-            expectedResourceMatch.Unmatched.Add(
-                new UnmatchedResource(
-                    Resource: source1Resource,
-                    ResourceType: "EpisodeOfCare",
-                    Identifier: periodStart,
-                    IsFromSource1: true));
-
-            // when
-            ResourceMatch actualResourceMatch = await this.episodeOfCareMatcherService.MatchAsync(
-                source1Resources,
-                source2Resources,
-                source1ResourceIndex,
-                source2ResourceIndex);
-
-            // then
-            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
-            this.loggingBrokerMock.VerifyNoOtherCalls();
-        }
-
-        [Fact]
-        public async Task ShouldReturnUnmatchedForSource2EpisodeOfCareNotInSource1Async()
-        {
-            // given
-            var periodStart = "2024-01-01";
-            JsonElement source2Resource = CreateEpisodeOfCareResourceWithPeriodStart(periodStart);
-            var source1Resources = new List<JsonElement>();
-            var source2Resources = new List<JsonElement> { source2Resource };
-            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
-            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
-            var expectedResourceMatch = new ResourceMatch();
-
-            expectedResourceMatch.Unmatched.Add(
-                new UnmatchedResource(
-                    Resource: source2Resource,
-                    ResourceType: "EpisodeOfCare",
-                    Identifier: periodStart,
-                    IsFromSource1: false));
-
-            // when
-            ResourceMatch actualResourceMatch = await this.episodeOfCareMatcherService.MatchAsync(
-                source1Resources,
-                source2Resources,
-                source1ResourceIndex,
-                source2ResourceIndex);
-
-            // then
-            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
-            this.loggingBrokerMock.VerifyNoOtherCalls();
-        }
-
-        [Fact]
-        public async Task ShouldMatchComprehensiveEpisodeOfCaresWhenIdsDifferAndPeriodStartsMatchAsync()
-        {
-            // given
-            var periodStart = "2022-04-12";
-
-            JsonElement source1Resource = CreateComprehensiveEpisodeOfCareResource(
-                periodStart: periodStart,
-                episodeOfCareId: "episode-of-care-comprehensive-1");
-
-            JsonElement source2Resource = CreateComprehensiveEpisodeOfCareResource(
-                periodStart: periodStart,
-                episodeOfCareId: "episode-of-care-comprehensive-2");
+            JsonElement source2Resource = CreateDiagnosticReportResource(
+                ddsIdentifierValue: inputDdsIdentifierValue,
+                id: "diagnostic-report-2");
 
             var source1Resources = new List<JsonElement> { source1Resource };
             var source2Resources = new List<JsonElement> { source2Resource };
@@ -124,10 +34,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, MatchKey: periodStart));
+                new MatchedResource(source1Resource, source2Resource, inputDdsIdentifierValue));
 
             // when
-            ResourceMatch actualResourceMatch = await this.episodeOfCareMatcherService.MatchAsync(
+            ResourceMatch actualResourceMatch = await this.diagnosticReportMatcherService.MatchAsync(
                 source1Resources,
                 source2Resources,
                 source1ResourceIndex,
@@ -139,18 +49,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
-        public async Task ShouldExcludeEpisodeOfCareResourcesWithNoPeriodFromMatchingAsync()
+        public async Task ShouldAddToUnmatchedFromSource1WhenOnlySource1HasDiagnosticReportAsync()
         {
             // given
-            JsonElement resourceWithNoPeriod = CreateEpisodeOfCareResourceWithNoPeriod();
-            var source1Resources = new List<JsonElement> { resourceWithNoPeriod };
+            string inputDdsIdentifierValue = "DR-1";
+
+            JsonElement source1Resource = CreateDiagnosticReportResource(
+                ddsIdentifierValue: inputDdsIdentifierValue,
+                id: "diagnostic-report-1");
+
+            var source1Resources = new List<JsonElement> { source1Resource };
             var source2Resources = new List<JsonElement>();
             Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
             Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
             var expectedResourceMatch = new ResourceMatch();
 
+            expectedResourceMatch.Unmatched.Add(
+                new UnmatchedResource(source1Resource, "DiagnosticReport", inputDdsIdentifierValue, true));
+
             // when
-            ResourceMatch actualResourceMatch = await this.episodeOfCareMatcherService.MatchAsync(
+            ResourceMatch actualResourceMatch = await this.diagnosticReportMatcherService.MatchAsync(
                 source1Resources,
                 source2Resources,
                 source1ResourceIndex,
@@ -162,17 +81,87 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         }
 
         [Fact]
-        public async Task ShouldReturnEmptyMatchWhenBothEpisodeOfCareSourcesAreEmptyAsync()
+        public async Task ShouldAddToUnmatchedFromSource2WhenOnlySource2HasDiagnosticReportAsync()
         {
             // given
+            string inputDdsIdentifierValue = "DR-1";
+
+            JsonElement source2Resource = CreateDiagnosticReportResource(
+                ddsIdentifierValue: inputDdsIdentifierValue,
+                id: "diagnostic-report-1");
+
             var source1Resources = new List<JsonElement>();
-            var source2Resources = new List<JsonElement>();
+            var source2Resources = new List<JsonElement> { source2Resource };
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
+            var expectedResourceMatch = new ResourceMatch();
+
+            expectedResourceMatch.Unmatched.Add(
+                new UnmatchedResource(source2Resource, "DiagnosticReport", inputDdsIdentifierValue, false));
+
+            // when
+            ResourceMatch actualResourceMatch = await this.diagnosticReportMatcherService.MatchAsync(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldMatchComprehensiveDiagnosticReportsWithMultipleIdentifierSystemsAsync()
+        {
+            // given
+            string inputDdsIdentifierValue = "DR-comprehensive-1";
+
+            JsonElement source1Resource = CreateComprehensiveDiagnosticReportResource(
+                ddsIdentifierValue: inputDdsIdentifierValue,
+                id: "diagnostic-report-comprehensive-1");
+
+            JsonElement source2Resource = CreateComprehensiveDiagnosticReportResource(
+                ddsIdentifierValue: inputDdsIdentifierValue,
+                id: "diagnostic-report-comprehensive-2");
+
+            var source1Resources = new List<JsonElement> { source1Resource };
+            var source2Resources = new List<JsonElement> { source2Resource };
+            Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
+            Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
+
+            var expectedResourceMatch = new ResourceMatch();
+
+            expectedResourceMatch.Matched.Add(
+                new MatchedResource(source1Resource, source2Resource, inputDdsIdentifierValue));
+
+            // when
+            ResourceMatch actualResourceMatch = await this.diagnosticReportMatcherService.MatchAsync(
+                source1Resources,
+                source2Resources,
+                source1ResourceIndex,
+                source2ResourceIndex);
+
+            // then
+            actualResourceMatch.Should().BeEquivalentTo(expectedResourceMatch);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldExcludeDiagnosticReportsWithNoDdsIdentifierFromMatchResultsAsync()
+        {
+            // given
+            JsonElement source1Resource = CreateNonDdsDiagnosticReportResource(id: "diagnostic-report-1");
+            JsonElement source2Resource = CreateNonDdsDiagnosticReportResource(id: "diagnostic-report-2");
+            var source1Resources = new List<JsonElement> { source1Resource };
+            var source2Resources = new List<JsonElement> { source2Resource };
             Dictionary<string, JsonElement> source1ResourceIndex = CreateResourceIndex();
             Dictionary<string, JsonElement> source2ResourceIndex = CreateResourceIndex();
             var expectedResourceMatch = new ResourceMatch();
 
             // when
-            ResourceMatch actualResourceMatch = await this.episodeOfCareMatcherService.MatchAsync(
+            ResourceMatch actualResourceMatch = await this.diagnosticReportMatcherService.MatchAsync(
                 source1Resources,
                 source2Resources,
                 source1ResourceIndex,

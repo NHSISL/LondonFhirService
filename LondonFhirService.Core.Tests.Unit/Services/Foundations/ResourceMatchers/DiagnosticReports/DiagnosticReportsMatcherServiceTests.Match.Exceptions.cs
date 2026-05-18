@@ -9,37 +9,37 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
-using LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.DiagnosticReports;
 using Moq;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.EpisodesOfCare
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.DiagnosticReports
 {
-    public partial class EpisodeOfCareMatcherServiceTests
+    public partial class DiagnosticReportMatcherServiceTests
     {
         [Fact]
         public async Task ShouldThrowServiceExceptionOnMatchIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            List<JsonElement> invalidSource1Resources = new List<JsonElement>();
-            List<JsonElement> invalidSource2Resources = new List<JsonElement>();
+            List<JsonElement> invalidSource1Resources = new();
+            List<JsonElement> invalidSource2Resources = new();
             Dictionary<string, JsonElement> invalidSource1ResourceIndex = CreateResourceIndex();
             Dictionary<string, JsonElement> invalidSource2ResourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
             var failedResourceMatcherServiceException =
                 new FailedResourceMatcherServiceException(
-                    message: "Failed episode of care matcher service occurred, please contact support",
+                    message: "Failed diagnostic report matcher service occurred, please contact support",
                     innerException: serviceException);
 
             var expectedResourceMatcherServiceException =
                 new ResourceMatcherServiceException(
-                    message: "Episode of care matcher service error occurred, contact support.",
+                    message: "Diagnostic report matcher service error occurred, contact support.",
                     innerException: failedResourceMatcherServiceException);
 
-            var episodeOfCareMatcherServiceMock = 
-                new Mock<EpisodeOfCareMatcherService>(loggingBrokerMock.Object) { CallBase = true };
+            var diagnosticReportMatcherServiceMock = new Mock<DiagnosticReportMatcherService>(loggingBrokerMock.Object)
+                { CallBase = true };
 
-            episodeOfCareMatcherServiceMock.Setup(service =>
+            diagnosticReportMatcherServiceMock.Setup(service =>
                 service.ValidateOnMatchArguments(
                     invalidSource1Resources,
                     invalidSource2Resources,
@@ -49,7 +49,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             // when
             ValueTask<ResourceMatch> matchTask =
-                episodeOfCareMatcherServiceMock.Object.MatchAsync(
+                diagnosticReportMatcherServiceMock.Object.MatchAsync(
                     invalidSource1Resources,
                     invalidSource2Resources,
                     invalidSource1ResourceIndex,
@@ -63,7 +63,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatcherServiceException.Should()
                 .BeEquivalentTo(expectedResourceMatcherServiceException);
 
-            episodeOfCareMatcherServiceMock.Verify(service =>
+            diagnosticReportMatcherServiceMock.Verify(service =>
                 service.ValidateOnMatchArguments(
                     invalidSource1Resources,
                     invalidSource2Resources,
@@ -71,7 +71,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     invalidSource2ResourceIndex),
                         Times.Once);
 
-            episodeOfCareMatcherServiceMock.Verify(service =>
+            diagnosticReportMatcherServiceMock.Verify(service =>
                 service.MatchAsync(
                     invalidSource1Resources,
                     invalidSource2Resources,
@@ -85,7 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            episodeOfCareMatcherServiceMock.VerifyNoOtherCalls();
+            diagnosticReportMatcherServiceMock.VerifyNoOtherCalls();
         }
     }
 }
