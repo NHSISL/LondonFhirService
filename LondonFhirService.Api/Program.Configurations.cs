@@ -53,6 +53,7 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Locations;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medications;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationRequests;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationStatements;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Observations;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Organizations;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Practitioners;
@@ -321,6 +322,7 @@ public partial class Program
         services.AddTransient<IResourceMatcherService, MedicationMatcherService>();
         services.AddTransient<IResourceMatcherService, MedicationRequestMatcherService>();
         services.AddTransient<IResourceMatcherService, MedicationStatementMatcherService>();
+        services.AddTransient<IResourceMatcherService, ObservationMatcherService>();
         services.AddTransient<IResourceMatcherService, OrganizationMatcherService>();
         services.AddTransient<IResourceMatcherService, PatientMatcherService>();
         services.AddTransient<IResourceMatcherService, PractitionerMatcherService>();
