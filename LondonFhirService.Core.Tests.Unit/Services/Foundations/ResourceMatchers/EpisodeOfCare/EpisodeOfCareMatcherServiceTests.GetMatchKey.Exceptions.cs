@@ -19,7 +19,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         public async Task ShouldThrowServiceExceptionOnGetMatchKeyIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            JsonElement resource = new();
+            JsonElement resource = default(JsonElement);
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
