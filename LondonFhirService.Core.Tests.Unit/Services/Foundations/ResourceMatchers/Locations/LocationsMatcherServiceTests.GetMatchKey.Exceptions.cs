@@ -8,36 +8,35 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
-using LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Locations;
 using Moq;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.EpisodesOfCare
+namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatchers.Locations
 {
-    public partial class EpisodeOfCareMatcherServiceTests
+    public partial class LocationMatcherServiceTests
     {
         [Fact]
         public async Task ShouldThrowServiceExceptionOnGetMatchKeyIfServiceErrorOccursAndLogItAsync()
         {
             // given
-            JsonElement resource = default(JsonElement);
+            JsonElement resource = new();
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
             var serviceException = new Exception();
 
             var failedResourceMatcherServiceException =
                 new FailedResourceMatcherServiceException(
-                    message: "Failed episode of care matcher service occurred, please contact support",
+                    message: "Failed location matcher service occurred, please contact support",
                     innerException: serviceException);
 
             var expectedResourceMatcherServiceException =
                 new ResourceMatcherServiceException(
-                    message: "Episode of care matcher service error occurred, contact support.",
+                    message: "Location matcher service error occurred, contact support.",
                     innerException: failedResourceMatcherServiceException);
 
-            var episodeOfCareMatcherServiceMock = 
-                new Mock<EpisodeOfCareMatcherService>(loggingBrokerMock.Object)
+            var locationMatcherServiceMock = new Mock<LocationMatcherService>(loggingBrokerMock.Object)
                 { CallBase = true };
 
-            episodeOfCareMatcherServiceMock.Setup(service =>
+            locationMatcherServiceMock.Setup(service =>
                 service.ValidateOnGetMatchKeyArguments(
                     resource,
                     resourceIndex))
@@ -45,7 +44,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             // when
             ValueTask<string> matchTask =
-                episodeOfCareMatcherServiceMock.Object.GetMatchKeyAsync(
+                locationMatcherServiceMock.Object.GetMatchKeyAsync(
                     resource,
                     resourceIndex);
 
@@ -57,13 +56,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             actualResourceMatcherServiceException.Should()
                 .BeEquivalentTo(expectedResourceMatcherServiceException);
 
-            episodeOfCareMatcherServiceMock.Verify(service =>
+            locationMatcherServiceMock.Verify(service =>
                 service.ValidateOnGetMatchKeyArguments(
                     resource,
                     resourceIndex),
                         Times.Once);
 
-            episodeOfCareMatcherServiceMock.Verify(service =>
+            locationMatcherServiceMock.Verify(service =>
                 service.GetMatchKeyAsync(
                     resource,
                     resourceIndex),
@@ -75,7 +74,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            episodeOfCareMatcherServiceMock.VerifyNoOtherCalls();
+            locationMatcherServiceMock.VerifyNoOtherCalls();
         }
     }
 }

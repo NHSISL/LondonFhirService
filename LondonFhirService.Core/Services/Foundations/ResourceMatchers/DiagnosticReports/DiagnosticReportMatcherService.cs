@@ -9,15 +9,16 @@ using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
-namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares
+namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.DiagnosticReports
 {
-    public partial class EpisodeOfCareMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    public partial class DiagnosticReportMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
-        public EpisodeOfCareMatcherService(ILoggingBroker loggingBroker)
+        public DiagnosticReportMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
         { }
 
-        public override string ResourceType => "EpisodeOfCare";
+        public override string ResourceType => "DiagnosticReport";
+        private const string DdsIdentifierSystem = "https://fhir.hl7.org.uk/Id/dds";
 
         public override ValueTask<string> GetMatchKeyAsync(
             JsonElement resource, Dictionary<string, JsonElement> resourceIndex) =>
@@ -86,13 +87,25 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOf
 
         internal virtual string InternalGetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
         {
-            if (!resource.TryGetProperty("period", out var period))
+            if (!resource.TryGetProperty("identifier", out var identifiers))
                 return null;
 
-            if (!period.TryGetProperty("start", out var start))
-                return null;
+            foreach (var identifierElement in identifiers.EnumerateArray())
+            {
+                if (!identifierElement.TryGetProperty("system", out var system))
+                    continue;
 
-            return start.GetString();
+                var systemValue = system.GetString();
+                if (systemValue == DdsIdentifierSystem)
+                {
+                    if (identifierElement.TryGetProperty("value", out var value))
+                    {
+                        return value.GetString();
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }
