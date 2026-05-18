@@ -49,4 +49,8 @@
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="DELETEME\" />
+	</ItemGroup>
+
 </Project>
