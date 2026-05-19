@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Pin transitive OpenTelemetry.* packages to non-vulnerable versions to
+    address NU1902 (OpenTelemetry.Api 1.15.1 -> moderate severity advisory
+    GHSA-g94r-2vxg-569j). Pulled in transitively via
+    Microsoft.ApplicationInsights.AspNetCore -> Azure.Monitor.OpenTelemetry.Exporter.
+  -->
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Api" Version="1.15.3" />
+  </ItemGroup>
+</Project>
