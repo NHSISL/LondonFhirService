@@ -13,7 +13,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="FluentAssertions" Version="7.2.0" />
+		<PackageReference Include="FluentAssertions" Version="[7.2.2]" />
 		<PackageReference Include="ISL.Providers.ReIdentification.Abstractions" Version="0.0.0.5" />
 		<PackageReference Include="ISL.Providers.ReIdentification.DemoData" Version="0.0.0.5" />
 		<PackageReference Include="ISL.Providers.ReIdentification.Necs" Version="0.0.0.5" />
