@@ -2,6 +2,7 @@
   <PropertyGroup>
     <StartupCommand>npm run dev</StartupCommand>
     <JavaScriptTestRoot>src\</JavaScriptTestRoot>
+    <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <!--<JavaScriptTestFramework>Jest</JavaScriptTestFramework>-->
     <!-- Allows the build (or compile) script located on package.json to run on Build -->
     <ShouldRunBuildScript>false</ShouldRunBuildScript>
