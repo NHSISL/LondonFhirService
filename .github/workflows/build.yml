@@ -19,9 +19,9 @@ jobs:
     - name: Enable long paths for Git
       run: git config --system core.longpaths true
     - name: Check out
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
     - name: Setup .Net
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
     - name: Restore
@@ -68,7 +68,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'RELEASES')
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
       with:
         token: ${{ secrets.PAT_FOR_TAGGING }}
     - name: Configure Git
