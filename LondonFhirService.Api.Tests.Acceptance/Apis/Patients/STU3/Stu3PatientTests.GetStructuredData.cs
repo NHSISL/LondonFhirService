@@ -5,10 +5,6 @@
 using System;
 using FluentAssertions;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Models.Foundations.Consumers;
-using LondonFhirService.Core.Models.Foundations.OdsDatas;
-using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Patient = Hl7.Fhir.Model.Patient;
 using Task = System.Threading.Tasks.Task;
@@ -20,10 +16,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
         [Fact]
         public async Task ShouldGetStructuredDataAsync()
         {
-            PdsData pdsData = null;
-            OdsData odsData = null;
-            Consumer consumer = null;
-            ConsumerAccess consumerAccess = null;
             Provider provider = null;
 
             try
@@ -34,9 +26,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 DateTime? dateOfBirth = null;
                 bool? demographicsOnly = false;
                 bool? includeInactivePatients = false;
-                string orgCode = GetRandomStringWithLengthOf(15);
                 DateTimeOffset now = DateTimeOffset.UtcNow;
-                string userId = TestAuthHandler.TestUserId;
                 DateTimeOffset randomInputStart = now.AddDays(-1);
                 string randomInputTypeFilter = GetRandomString();
                 string inputTypeFilter = randomInputTypeFilter;
@@ -50,24 +40,11 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 string providerFullyQualifiedName =
                     "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
 
-                bool useHashedNhsNumber = accessConfigurations.UseHashedNhsNumber;
-
                 Parameters inputParameters = CreateRandomParametersGetStructuredData(
                     nhsNumber,
                     dateOfBirth,
                     demographicsOnly,
                     includeInactivePatients);
-
-                consumer = await CreateRandomConsumer(now, userId);
-                odsData = await CreateRandomOdsData(orgCode, now);
-
-                consumerAccess = await CreateRandomConsumerAccess(
-                    consumer.Id,
-                    orgCode,
-                    now,
-                    userId);
-
-                pdsData = await CreateRandomPdsData(nhsNumber, orgCode, now, useHashedNhsNumber);
 
                 provider = await CreateRandomActiveProviderIfNoneExist(
                     providerFriendlyName,
@@ -92,11 +69,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
             }
             finally
             {
-                await CleanupPdsDataAsync(pdsData);
-                await CleanupOdsDataAsync(odsData);
-                await CleanupConsumerAccessAsync(consumerAccess);
-                await CleanupConsumerAsync(consumer);
-
                 if (provider is not null)
                 {
                     await CleanupProviderAsync(provider);

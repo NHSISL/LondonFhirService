@@ -6,9 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Attrify.InvisibleApi.Models;
+using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -20,12 +23,12 @@ using FhirStu3Abstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
-    // Non-generic – we always host Program
+    // Non-generic ï¿½ we always host Program
     public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         static TestWebApplicationFactory()
         {
-            // Configure configuration *before* the app’s builder is used
+            // Configure configuration *before* the appï¿½s builder is used
             Program.TestConfigurationOverrides = builder =>
             {
                 var testProjectPath =
@@ -59,6 +62,7 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 OverrideSecurityForTesting(services);
                 OverrideFhirProvidersForTesting(services);
                 MockExternalClientsForTesting(services);
+                OverrideConsumerAccessForTesting(services);
             });
         }
 
@@ -160,6 +164,33 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
             var mockAuditClient = new Mock<IAuditClient>();
             services.AddTransient<IAuditClient>(_ => mockAuditClient.Object);
+        }
+
+        private static void OverrideConsumerAccessForTesting(IServiceCollection services)
+        {
+            var consumerAccessBrokerDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(IConsumerAccessBroker));
+
+            if (consumerAccessBrokerDescriptor != null)
+            {
+                services.Remove(consumerAccessBrokerDescriptor);
+            }
+
+            var mockConsumerAccessBroker = new Mock<IConsumerAccessBroker>();
+
+            mockConsumerAccessBroker
+                .Setup(broker => broker.CheckConsumerAccessAsync(
+                    It.IsAny<ValidateAccessRequest>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((ValidateAccessRequest request, CancellationToken _) => new ConsumerAccess
+                {
+                    NhsNumber = request.NhsNumber,
+                    ConsumerId = request.ConsumerUserId,
+                    IsAccessAllowed = true,
+                    CorrelationId = request.CorrelationId
+                });
+
+            services.AddTransient<IConsumerAccessBroker>(_ => mockConsumerAccessBroker.Object);
         }
     }
 }

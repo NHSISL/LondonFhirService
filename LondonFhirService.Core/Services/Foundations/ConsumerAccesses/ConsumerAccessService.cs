@@ -50,7 +50,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             };
 
             ConsumerAccess consumerAccess =
-                await this.consumerAccessBroker.CheckConsumerAccessAsync(validateAccessRequest);
+                await this.consumerAccessBroker.CheckConsumerAccessAsync(validateAccessRequest, cancellationToken);
 
             ValidateConsumerAccessIsNotNull(consumerAccess);
 

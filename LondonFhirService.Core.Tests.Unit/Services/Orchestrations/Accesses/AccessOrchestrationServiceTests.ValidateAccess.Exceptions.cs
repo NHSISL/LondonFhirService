@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -20,8 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         {
             // given
             string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
-            Guid correlationId = Guid.NewGuid();
+            Guid randomCorrelationId = GetRandomGuid();
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
@@ -34,33 +33,33 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     innerException: dependencyException.InnerException as Xeption);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+            ValueTask validateAccessTask =
+                this.accessOrchestrationService.ValidateAccess(randomNhsNumber, randomCorrelationId);
 
             AccessOrchestrationDependencyValidationException actualAccessOrchestrationDependencyValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationDependencyValidationException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualAccessOrchestrationDependencyValidationException
-                .Should().BeEquivalentTo(expectedAccessOrchestrationDependencyValidationException);
+            actualAccessOrchestrationDependencyValidationException.Should()
+                .BeEquivalentTo(expectedAccessOrchestrationDependencyValidationException);
 
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-               broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedAccessOrchestrationDependencyValidationException))),
-                       Times.Once);
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedAccessOrchestrationDependencyValidationException))),
+                        Times.Once);
 
-            this.consumerServiceMock.VerifyNoOtherCalls();
-            this.consumerAccessServiceMock.VerifyNoOtherCalls();
-            this.pdsDataServiceMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -70,8 +69,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         {
             // given
             string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
-            Guid correlationId = Guid.NewGuid();
+            Guid randomCorrelationId = GetRandomGuid();
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
@@ -84,33 +82,33 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     innerException: dependencyException.InnerException as Xeption);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+            ValueTask validateAccessTask =
+                this.accessOrchestrationService.ValidateAccess(randomNhsNumber, randomCorrelationId);
 
             AccessOrchestrationDependencyException actualAccessOrchestrationDependencyException =
                 await Assert.ThrowsAsync<AccessOrchestrationDependencyException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualAccessOrchestrationDependencyException
-                .Should().BeEquivalentTo(expectedAccessOrchestrationDependencyException);
+            actualAccessOrchestrationDependencyException.Should()
+                .BeEquivalentTo(expectedAccessOrchestrationDependencyException);
 
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-               broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedAccessOrchestrationDependencyException))),
-                       Times.Once);
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedAccessOrchestrationDependencyException))),
+                        Times.Once);
 
-            this.consumerServiceMock.VerifyNoOtherCalls();
-            this.consumerAccessServiceMock.VerifyNoOtherCalls();
-            this.pdsDataServiceMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -119,8 +117,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             // given
             var serviceException = new Exception();
             string randomNhsNumber = GetRandomString();
-            string inputNhsNumber = randomNhsNumber;
-            Guid correlationId = Guid.NewGuid();
+            Guid randomCorrelationId = GetRandomGuid();
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
@@ -138,33 +135,33 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     innerException: failedServiceAccessOrchestrationException);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+            ValueTask validateAccessTask =
+                this.accessOrchestrationService.ValidateAccess(randomNhsNumber, randomCorrelationId);
 
             AccessOrchestrationServiceException actualAccessOrchestrationServiceException =
                 await Assert.ThrowsAsync<AccessOrchestrationServiceException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualAccessOrchestrationServiceException
-                .Should().BeEquivalentTo(expectedAccessOrchestrationServiceException);
+            actualAccessOrchestrationServiceException.Should()
+                .BeEquivalentTo(expectedAccessOrchestrationServiceException);
 
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-               broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedAccessOrchestrationServiceException))),
-                       Times.Once);
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedAccessOrchestrationServiceException))),
+                        Times.Once);
 
-            this.consumerServiceMock.VerifyNoOtherCalls();
-            this.consumerAccessServiceMock.VerifyNoOtherCalls();
-            this.pdsDataServiceMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

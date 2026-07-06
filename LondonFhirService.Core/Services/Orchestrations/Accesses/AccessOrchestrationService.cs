@@ -3,9 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -16,20 +14,16 @@ using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
-using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Services.Foundations.PdsDatas;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Accesses
 {
     public partial class AccessOrchestrationService : IAccessOrchestrationService
     {
-        private readonly IConsumerService consumerService;
         private readonly IConsumerAccessService consumerAccessService;
-        private readonly IPdsDataService pdsDataService;
         private readonly IAuditBroker auditBroker;
         private readonly ISecurityBroker securityBroker;
         private readonly IDateTimeBroker dateTimeBroker;
@@ -39,9 +33,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
         private readonly AccessConfigurations accessConfigurations;
 
         public AccessOrchestrationService(
-            IConsumerService consumerService,
             IConsumerAccessService consumerAccessService,
-            IPdsDataService pdsDataService,
             IAuditBroker auditBroker,
             ISecurityBroker securityBroker,
             IDateTimeBroker dateTimeBroker,
@@ -50,9 +42,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             IHashBroker hashBroker,
             AccessConfigurations accessConfigurations)
         {
-            this.consumerService = consumerService;
             this.consumerAccessService = consumerAccessService;
-            this.pdsDataService = pdsDataService;
             this.auditBroker = auditBroker;
             this.securityBroker = securityBroker;
             this.dateTimeBroker = dateTimeBroker;
@@ -68,6 +58,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                 var stopwatch = Stopwatch.StartNew();
                 ValidateNhsNumber(nhsNumber, correlationId);
                 User currentUser = await securityBroker.GetCurrentUserAsync();
+
+                if (currentUser is null)
+                {
+                    throw new UnauthorizedAccessOrchestrationException($"Current consumer is not a valid consumer.");
+                }
+
                 string currentUserId = currentUser.UserId;
 
                 JsonSerializerOptions options = new()
@@ -87,118 +83,58 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                if (currentUser is null)
-                {
-                    throw new UnauthorizedAccessOrchestrationException($"Current consumer is not a valid consumer.");
-                }
-
-                IQueryable<Consumer> consumers = await consumerService.RetrieveAllConsumersAsync();
-                Consumer matchingConsumer = consumers.FirstOrDefault(consumer => consumer.UserId == currentUserId);
-
-                if (matchingConsumer is null)
-                {
-                    throw new UnauthorizedAccessOrchestrationException($"Current consumer with id `{currentUserId}` is not a valid consumer.");
-                }
-
-                DateTimeOffset now = await dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-                bool isActive =
-                    matchingConsumer.ActiveFrom <= now
-                        && (!matchingConsumer.ActiveTo.HasValue || matchingConsumer.ActiveTo >= now);
-
-                if (!isActive)
-                {
-                    await this.auditBroker.LogInformationAsync(
-                            auditType: "Access",
-                            title: "Access Forbidden",
-
-                            message:
-                                $"Access was forbidden as consumer with id {matchingConsumer.Id} " +
-                                $"is not active / does not have valid access window " +
-                                $"(ActiveFrom: {matchingConsumer.ActiveFrom}, ActiveTo: {matchingConsumer.ActiveTo})  " +
-                                $"CorrelationId: {correlationId.ToString()}",
-
-                            fileName: null,
-                            correlationId: correlationId.ToString());
-
-                    throw new ForbiddenAccessOrchestrationException(
-                        "Current consumer is not active or does not have a valid access window.  " +
-                        $"CorrelationId: {correlationId.ToString()}");
-                }
-
-                List<string> consumerActiveOrgs =
-                    await consumerAccessService.RetrieveAllActiveOrganisationsUserHasAccessToAsync(matchingConsumer.Id);
-
-                if (consumerActiveOrgs.Count == 0)
-                {
-                    await this.auditBroker.LogInformationAsync(
-                            auditType: "Access",
-                            title: "Access Forbidden",
-                            message:
-                                $"Access was forbidden as consumer with id {matchingConsumer.Id} does not have access to any organisations.  " +
-                                $"CorrelationId: {correlationId.ToString()}",
-                            fileName: null,
-                            correlationId: correlationId.ToString());
-
-                    throw new ForbiddenAccessOrchestrationException(
-                        "Current consumer does not have access to any organisations.  " +
-                        $"CorrelationId: {correlationId.ToString()}");
-                }
-
-                string patientIdentifier = nhsNumber;
-
-                if (accessConfigurations.UseHashedNhsNumber == true)
-                {
-                    patientIdentifier =
-                        await hashBroker.GenerateSha256HashAsync(nhsNumber, accessConfigurations.HashPepper);
-                }
-
-                bool organisationsHaveAccessToPatient = await pdsDataService.OrganisationsHaveAccessToThisPatient(
-                    patientIdentifier: patientIdentifier,
-                    nhsNumber: nhsNumber,
-                    organisationCodes: consumerActiveOrgs,
-                    correlationId: correlationId);
+                ConsumerAccess consumerAccess = await consumerAccessService.CheckConsumerAccessAsync(
+                    nhsNumber,
+                    correlationId,
+                    cancellationToken: default);
 
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-                if (!organisationsHaveAccessToPatient)
+                if (consumerAccess is null)
                 {
-                    await this.auditBroker.LogInformationAsync(
-                        auditType: "Access",
-                        title: "Access Forbidden",
-
-                        message:
-                            $"Access was denied as none of the organisations the consumer with id " +
-                            $"{matchingConsumer.Id} has access to are permitted to access patient with " +
-                            $"NHS number {nhsNumber} and patient identifier " +
-                            $"'{patientIdentifier.Substring(0, 5)}..." +
-                            $"{patientIdentifier.Substring(patientIdentifier.Length - 5)}' and " +
-                            $"pepper '{accessConfigurations.HashPepper.Substring(0, 15)}..." +
-                            $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 15)}'  " +
-                            $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
-
-                        fileName: null,
-                        correlationId: correlationId.ToString());
-
-                    throw new ForbiddenAccessOrchestrationException(
-                        "None of the organisations the consumer has access to are permitted to access this patient.  " +
-                        $"CorrelationId: {correlationId.ToString()}");
+                    throw new UnauthorizedAccessOrchestrationException(
+                        $"Current consumer with id `{currentUserId}` is not a valid consumer.");
                 }
-                else
+
+                if (consumerAccess.IsAccessAllowed == false)
                 {
-                    await this.auditBroker.LogInformationAsync(
-                        auditType: "Access",
-                        title: "Access Allowed",
+                    UnauthorizedAccessOrchestrationException unauthorizedAccessOrchestrationException =
+                        new UnauthorizedAccessOrchestrationException(
+                            $"Current consumer with id `{currentUserId}` is not allowed access.");
 
-                        message:
-                            $"{matchingConsumer.Id} is allowed to access patient with " +
-                            $"NHS number {nhsNumber} via org codes: {string.Join(", ", consumerActiveOrgs)}  " +
-                            $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
+                    foreach (AccessReason reason in consumerAccess.Reasons)
+                    {
+                        unauthorizedAccessOrchestrationException.Data.Add(
+                            key: reason.Code,
+                            value: reason.Message);
+                    }
 
-                        fileName: null,
-                        correlationId: correlationId.ToString());
+                    throw unauthorizedAccessOrchestrationException;
                 }
+
+                string consumerAccessJson = JsonSerializer.Serialize(consumerAccess, options);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType: "Access",
+                    title: "Access Allowed",
+
+                    message:
+                        $"{currentUserId} is allowed to access patient with " +
+                        $"NHS number {nhsNumber} via " + Environment.NewLine +
+
+                        $"Subscriber Aggreement(s): " +
+                            $"{string.Join(", ", consumerAccess.AllowedViaInformationSharingAgreements)}, " +
+                                Environment.NewLine +
+
+                        $"Org Codes: {string.Join(", ", consumerAccess.AllowedViaOrganisations)},  " +
+                            Environment.NewLine +
+
+                        $"Consumer Access: " + Environment.NewLine + $"{consumerAccessJson}, " + Environment.NewLine +
+                        $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
+
+                    fileName: null,
+                    correlationId: correlationId.ToString());
             });
     }
 }

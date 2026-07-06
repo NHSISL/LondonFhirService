@@ -1,17 +1,15 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Force.DeepCloner;
 using ISL.Security.Client.Models.Foundations.Users;
-using LondonFhirService.Core.Models.Foundations.Consumers;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using Moq;
 
@@ -23,10 +21,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public async Task ShouldThrowValidationExceptionOnValidateAccess(string invalidText)
+        public async Task ShouldThrowValidationExceptionOnValidateAccessIfNhsNumberIsInvalidAndLogItAsync(
+            string invalidNhsNumber)
         {
             // given
-            Guid correlationId = Guid.Empty;
+            Guid randomCorrelationId = GetRandomGuid();
 
             var invalidArgumentAccessOrchestrationException =
                 new InvalidArgumentAccessOrchestrationException(
@@ -36,379 +35,179 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 key: "nhsNumber",
                 values: "Text is invalid");
 
+            var expectedAccessOrchestrationValidationException =
+                new AccessOrchestrationValidationException(
+                    message: "Access orchestration validation error occurred, fix the errors and try again.",
+                    innerException: invalidArgumentAccessOrchestrationException);
+
+            // when
+            ValueTask validateAccessTask =
+                this.accessOrchestrationService.ValidateAccess(invalidNhsNumber, randomCorrelationId);
+
+            AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
+                await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
+                    testCode: validateAccessTask.AsTask);
+
+            // then
+            actualAccessOrchestrationValidationException.Should()
+                .BeEquivalentTo(expectedAccessOrchestrationValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedAccessOrchestrationValidationException))),
+                        Times.Once);
+
+            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnValidateAccessIfCorrelationIdIsInvalidAndLogItAsync()
+        {
+            // given
+            string randomNhsNumber = GetRandomString();
+            Guid invalidCorrelationId = Guid.Empty;
+
+            var invalidArgumentAccessOrchestrationException =
+                new InvalidArgumentAccessOrchestrationException(
+                    message: "Invalid argument(s), please correct the errors and try again.");
+
             invalidArgumentAccessOrchestrationException.AddData(
                 key: "correlationId",
                 values: "Id is invalid");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
-                    message: "Access orchestration validation error occurred, " +
-                        "fix the errors and try again.",
+                    message: "Access orchestration validation error occurred, fix the errors and try again.",
                     innerException: invalidArgumentAccessOrchestrationException);
 
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ThrowsAsync(invalidArgumentAccessOrchestrationException);
-
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(invalidText, correlationId);
+            ValueTask validateAccessTask =
+                this.accessOrchestrationService.ValidateAccess(randomNhsNumber, invalidCorrelationId);
 
             AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualAccessOrchestrationValidationException
-                .Should().BeEquivalentTo(expectedAccessOrchestrationValidationException);
+            actualAccessOrchestrationValidationException.Should()
+                .BeEquivalentTo(expectedAccessOrchestrationValidationException);
 
             this.loggingBrokerMock.Verify(broker =>
-               broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedAccessOrchestrationValidationException))),
-                       Times.Once);
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedAccessOrchestrationValidationException))),
+                        Times.Once);
 
-            this.consumerServiceMock.VerifyNoOtherCalls();
-            this.consumerAccessServiceMock.VerifyNoOtherCalls();
-            this.pdsDataServiceMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldThrowUnauthorisedExceptionOnValidateAccessWhenNoMatchingConsumer()
+        public async Task ShouldThrowValidationExceptionOnValidateAccessIfCurrentUserIsNullAndLogItAsync()
         {
             // given
-            string userId = GetRandomString();
-            User randomUser = CreateRandomUser(userId);
-            User outputUser = randomUser;
-            Consumer randomConsumer = CreateRandomConsumer();
-            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
-            DateTimeOffset validActiveFromDate = randomDateTimeOffset.AddDays(-2);
-            DateTimeOffset validActiveToDate = randomDateTimeOffset.AddDays(2);
-            randomConsumer.ActiveFrom = validActiveFromDate;
-            randomConsumer.ActiveTo = validActiveToDate;
-            Consumer inputConsumer = randomConsumer.DeepClone();
-            Guid correlationId = Guid.NewGuid();
-
-            JsonSerializerOptions options = new()
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles
-            };
-
-            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
-
-            IQueryable<Consumer> storageConsumers =
-                new List<Consumer> { inputConsumer }.AsQueryable();
-
-            Guid randomGuid = Guid.NewGuid();
-            string randomNhsNumber = GetRandomStringWithLength(5);
-            string inputNhsNumber = randomNhsNumber;
+            string randomNhsNumber = GetRandomString();
+            Guid randomCorrelationId = GetRandomGuid();
+            User nullUser = null;
 
             var unauthorizedAccessOrchestrationException =
-                new UnauthorizedAccessOrchestrationException($"Current consumer with id `{outputUser.UserId}` is not a valid consumer.");
+                new UnauthorizedAccessOrchestrationException("Current consumer is not a valid consumer.");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
-                    message: "Access orchestration validation error occurred, " +
-                        "fix the errors and try again.",
+                    message: "Access orchestration validation error occurred, fix the errors and try again.",
                     innerException: unauthorizedAccessOrchestrationException);
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
-                    .ReturnsAsync(outputUser);
-
-            this.consumerServiceMock.Setup(service =>
-                service.RetrieveAllConsumersAsync())
-                    .ReturnsAsync(storageConsumers);
+                    .ReturnsAsync(nullUser);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+            ValueTask validateAccessTask =
+                this.accessOrchestrationService.ValidateAccess(randomNhsNumber, randomCorrelationId);
 
             AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualAccessOrchestrationValidationException
-                .Should().BeEquivalentTo(expectedAccessOrchestrationValidationException);
+            actualAccessOrchestrationValidationException.Should()
+                .BeEquivalentTo(expectedAccessOrchestrationValidationException);
 
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
                     Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(
-                    "Access",
-                    "Check Access Permissons",
-                    currentUserJson,
-                    null,
-                    correlationId.ToString()),
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedAccessOrchestrationValidationException))),
                         Times.Once);
 
-            this.consumerServiceMock.Verify(service =>
-                service.RetrieveAllConsumersAsync(),
-                    Times.Once);
-
-            this.loggingBrokerMock.Verify(broker =>
-               broker.LogErrorAsync(It.Is(SameExceptionAs(
-                   expectedAccessOrchestrationValidationException))),
-                       Times.Once);
-
-            this.consumerServiceMock.VerifyNoOtherCalls();
-            this.consumerAccessServiceMock.VerifyNoOtherCalls();
-            this.pdsDataServiceMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldThrowForbiddenExceptionOnValidateAccessWhenInactiveConsumer()
+        public async Task ShouldThrowValidationExceptionOnValidateAccessIfConsumerAccessIsNullAndLogItAsync()
         {
             // given
-            string userId = GetRandomString();
-            User randomUser = CreateRandomUser(userId);
-            User outputUser = randomUser;
-            Consumer randomConsumer = CreateRandomConsumer(userId);
-            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
-            DateTimeOffset validActiveFromDate = randomDateTimeOffset.AddDays(-2);
-            DateTimeOffset invalidActiveToDate = randomDateTimeOffset.AddDays(-2);
-            randomConsumer.ActiveFrom = validActiveFromDate;
-            randomConsumer.ActiveTo = invalidActiveToDate;
-            Consumer inputConsumer = randomConsumer.DeepClone();
-            Guid correlationId = Guid.NewGuid();
+            string randomUserId = GetRandomString();
+            User randomUser = CreateRandomUser(randomUserId);
+            string randomNhsNumber = GetRandomString();
+            Guid randomCorrelationId = GetRandomGuid();
+            ConsumerAccess nullConsumerAccess = null;
+            JsonSerializerOptions options = CreateJsonSerializerOptions();
+            string currentUserJson = JsonSerializer.Serialize(randomUser, options);
 
-            JsonSerializerOptions options = new()
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles
-            };
-
-            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
-
-            IQueryable<Consumer> storageConsumers =
-                new List<Consumer> { inputConsumer }.AsQueryable();
-
-            Guid randomGuid = Guid.NewGuid();
-            string randomNhsNumber = GetRandomStringWithLength(5);
-            string inputNhsNumber = randomNhsNumber;
-            string inputPatientIdentifier = randomNhsNumber;
-
-            var forbiddenAccessOrchestrationException =
-                new ForbiddenAccessOrchestrationException(
-                   "Current consumer is not active or does not have a valid access window.  " +
-                        $"CorrelationId: {correlationId.ToString()}");
+            var unauthorizedAccessOrchestrationException =
+                new UnauthorizedAccessOrchestrationException(
+                    $"Current consumer with id `{randomUserId}` is not a valid consumer.");
 
             var expectedAccessOrchestrationValidationException =
                 new AccessOrchestrationValidationException(
-                    message: "Access orchestration validation error occurred, " +
-                        "fix the errors and try again.",
-                    innerException: forbiddenAccessOrchestrationException);
+                    message: "Access orchestration validation error occurred, fix the errors and try again.",
+                    innerException: unauthorizedAccessOrchestrationException);
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
-                    .ReturnsAsync(outputUser);
-
-            this.consumerServiceMock.Setup(service =>
-                service.RetrieveAllConsumersAsync())
-                    .ReturnsAsync(storageConsumers);
-
-            this.dateTimeBrokerMock.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
-                    .ReturnsAsync(randomDateTimeOffset);
-
-            // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
-
-            AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
-                await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
-                    testCode: validateAccessTask.AsTask);
-
-            // then
-            actualAccessOrchestrationValidationException
-                .Should().BeEquivalentTo(expectedAccessOrchestrationValidationException);
-
-            this.securityBrokerMock.Verify(broker =>
-                broker.GetCurrentUserAsync(),
-                    Times.Once);
-
-            this.consumerServiceMock.Verify(service =>
-                service.RetrieveAllConsumersAsync(),
-                    Times.Once);
-
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
-
-            this.auditBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(
-                    "Access",
-                    "Check Access Permissons",
-                    currentUserJson,
-                    null,
-                    correlationId.ToString()),
-                        Times.Once);
-
-            this.auditBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(
-                    "Access",
-                    "Access Forbidden",
-
-                    $"Access was forbidden as consumer with id {inputConsumer.Id} " +
-                        $"is not active / does not have valid access window " +
-                            $"(ActiveFrom: {inputConsumer.ActiveFrom}, ActiveTo: {inputConsumer.ActiveTo})  " +
-                                $"CorrelationId: {correlationId.ToString()}",
-                    null,
-                    correlationId.ToString()),
-                        Times.Once);
-
-            this.loggingBrokerMock.Verify(broker =>
-              broker.LogErrorAsync(It.Is(SameExceptionAs(
-                  expectedAccessOrchestrationValidationException))),
-                      Times.Once);
-
-            this.consumerAccessServiceMock.Verify(service =>
-                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id),
-                    Times.Never);
-
-            this.pdsDataServiceMock.Verify(service =>
-                service.OrganisationsHaveAccessToThisPatient(
-                    inputPatientIdentifier,
-                    inputNhsNumber,
-                    It.IsAny<List<string>>(),
-                    correlationId),
-                    Times.Never);
-
-            this.consumerServiceMock.VerifyNoOtherCalls();
-            this.consumerAccessServiceMock.VerifyNoOtherCalls();
-            this.pdsDataServiceMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
-            this.securityBrokerMock.VerifyNoOtherCalls();
-            this.dateTimeBrokerMock.VerifyNoOtherCalls();
-            this.identifierBrokerMock.VerifyNoOtherCalls();
-            this.loggingBrokerMock.VerifyNoOtherCalls();
-        }
-
-        [Fact]
-        public async Task ShouldThrowForbiddenExceptionOnValidateAccessWhenOrganisationsNoAccessToPatient()
-        {
-            // given
-            string userId = GetRandomString();
-            User randomUser = CreateRandomUser(userId);
-            User outputUser = randomUser;
-            Consumer randomConsumer = CreateRandomConsumer(userId);
-            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
-            DateTimeOffset validActiveFromDate = randomDateTimeOffset.AddDays(-2);
-            DateTimeOffset validActiveToDate = randomDateTimeOffset.AddDays(2);
-            randomConsumer.ActiveFrom = validActiveFromDate;
-            randomConsumer.ActiveTo = validActiveToDate;
-            Consumer inputConsumer = randomConsumer.DeepClone();
-            Guid correlationId = Guid.NewGuid();
-
-            JsonSerializerOptions options = new()
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = false,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles
-            };
-
-            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
-
-            IQueryable<Consumer> storageConsumers =
-                new List<Consumer> { inputConsumer }.AsQueryable();
-
-            Guid randomGuid = Guid.NewGuid();
-            string randomNhsNumber = GetRandomStringWithLength(10);
-            string inputNhsNumber = randomNhsNumber;
-            string inputPatientIdentifier = randomNhsNumber;
-
-            string userOrganisation = GetRandomStringWithLength(5);
-
-            List<string> userOrganisations =
-                new List<string> { userOrganisation };
-
-            var forbiddenAccessOrchestrationException =
-                new ForbiddenAccessOrchestrationException(
-                   "None of the organisations the consumer has access to are permitted to access this patient.  " +
-                   $"CorrelationId: {correlationId.ToString()}");
-
-            var expectedAccessOrchestrationValidationException =
-                new AccessOrchestrationValidationException(
-                    message: "Access orchestration validation error occurred, " +
-                        "fix the errors and try again.",
-                    innerException: forbiddenAccessOrchestrationException);
-
-            this.securityBrokerMock.Setup(broker =>
-                broker.GetCurrentUserAsync())
-                    .ReturnsAsync(outputUser);
-
-            this.consumerServiceMock.Setup(service =>
-                service.RetrieveAllConsumersAsync())
-                    .ReturnsAsync(storageConsumers);
-
-            this.hashBrokerMock.Setup(broker =>
-                broker.GenerateSha256HashAsync(inputNhsNumber, accessConfigurations.HashPepper))
-                    .ReturnsAsync(inputNhsNumber);
-
-            this.dateTimeBrokerMock.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
-                    .ReturnsAsync(randomDateTimeOffset);
+                    .ReturnsAsync(randomUser);
 
             this.consumerAccessServiceMock.Setup(service =>
-                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id))
-                    .ReturnsAsync(userOrganisations);
-
-            this.pdsDataServiceMock.Setup(service =>
-                service.OrganisationsHaveAccessToThisPatient(
-                    inputPatientIdentifier,
-                    inputNhsNumber,
-                    userOrganisations,
-                    correlationId))
-                    .ReturnsAsync(false);
+                service.CheckConsumerAccessAsync(
+                    randomNhsNumber,
+                    randomCorrelationId,
+                    CancellationToken.None))
+                        .ReturnsAsync(nullConsumerAccess);
 
             // when
-            ValueTask validateAccessTask = accessOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+            ValueTask validateAccessTask =
+                this.accessOrchestrationService.ValidateAccess(randomNhsNumber, randomCorrelationId);
 
             AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
                 await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
                     testCode: validateAccessTask.AsTask);
 
             // then
-            actualAccessOrchestrationValidationException
-                .Should().BeEquivalentTo(expectedAccessOrchestrationValidationException);
+            actualAccessOrchestrationValidationException.Should()
+                .BeEquivalentTo(expectedAccessOrchestrationValidationException);
 
             this.securityBrokerMock.Verify(broker =>
                 broker.GetCurrentUserAsync(),
-                    Times.Once);
-
-            this.consumerServiceMock.Verify(service =>
-                service.RetrieveAllConsumersAsync(),
-                    Times.Once);
-
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
-
-            this.consumerAccessServiceMock.Verify(service =>
-                service.RetrieveAllActiveOrganisationsUserHasAccessToAsync(inputConsumer.Id),
-                    Times.Once);
-
-            this.pdsDataServiceMock.Verify(service =>
-                service.OrganisationsHaveAccessToThisPatient(
-                    inputPatientIdentifier,
-                    inputNhsNumber,
-                    userOrganisations,
-                    correlationId),
                     Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
@@ -417,40 +216,121 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                     "Check Access Permissons",
                     currentUserJson,
                     null,
-                    correlationId.ToString()),
+                    randomCorrelationId.ToString()),
                         Times.Once);
+
+            this.consumerAccessServiceMock.Verify(service =>
+                service.CheckConsumerAccessAsync(
+                    randomNhsNumber,
+                    randomCorrelationId,
+                    CancellationToken.None),
+                        Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedAccessOrchestrationValidationException))),
+                        Times.Once);
+
+            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnValidateAccessIfAccessIsNotAllowedAndLogItAsync()
+        {
+            // given
+            string randomUserId = GetRandomString();
+            User randomUser = CreateRandomUser(randomUserId);
+            string randomNhsNumber = GetRandomString();
+            Guid randomCorrelationId = GetRandomGuid();
+            JsonSerializerOptions options = CreateJsonSerializerOptions();
+            string currentUserJson = JsonSerializer.Serialize(randomUser, options);
+
+            var reasons = new List<AccessReason>
+            {
+                new AccessReason { Code = GetRandomString(), Message = GetRandomString() },
+                new AccessReason { Code = GetRandomString(), Message = GetRandomString() }
+            };
+
+            ConsumerAccess notAllowedConsumerAccess = CreateRandomConsumerAccess(isAccessAllowed: false);
+            notAllowedConsumerAccess.Reasons = reasons;
+
+            var unauthorizedAccessOrchestrationException =
+                new UnauthorizedAccessOrchestrationException(
+                    $"Current consumer with id `{randomUserId}` is not allowed access.");
+
+            foreach (AccessReason reason in reasons)
+            {
+                unauthorizedAccessOrchestrationException.Data.Add(
+                    key: reason.Code,
+                    value: reason.Message);
+            }
+
+            var expectedAccessOrchestrationValidationException =
+                new AccessOrchestrationValidationException(
+                    message: "Access orchestration validation error occurred, fix the errors and try again.",
+                    innerException: unauthorizedAccessOrchestrationException);
+
+            this.securityBrokerMock.Setup(broker =>
+                broker.GetCurrentUserAsync())
+                    .ReturnsAsync(randomUser);
+
+            this.consumerAccessServiceMock.Setup(service =>
+                service.CheckConsumerAccessAsync(
+                    randomNhsNumber,
+                    randomCorrelationId,
+                    CancellationToken.None))
+                        .ReturnsAsync(notAllowedConsumerAccess);
+
+            // when
+            ValueTask validateAccessTask =
+                this.accessOrchestrationService.ValidateAccess(randomNhsNumber, randomCorrelationId);
+
+            AccessOrchestrationValidationException actualAccessOrchestrationValidationException =
+                await Assert.ThrowsAsync<AccessOrchestrationValidationException>(
+                    testCode: validateAccessTask.AsTask);
+
+            // then
+            actualAccessOrchestrationValidationException.Should()
+                .BeEquivalentTo(expectedAccessOrchestrationValidationException);
+
+            this.securityBrokerMock.Verify(broker =>
+                broker.GetCurrentUserAsync(),
+                    Times.Once);
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     "Access",
-                    "Access Forbidden",
-
-                    It.Is<string>(s => s.StartsWith($"Access was denied as none of the organisations the consumer with id " +
-                        $"{inputConsumer.Id} has access to are permitted to access patient with " +
-                        $"NHS number {inputNhsNumber} and patient identifier " +
-                        $"'{inputNhsNumber.Substring(0, 5)}..." +
-                        $"{inputNhsNumber.Substring(inputNhsNumber.Length - 5)}' and " +
-                        $"pepper '{accessConfigurations.HashPepper.Substring(0, 15)}..." +
-                        $"{accessConfigurations.HashPepper.Substring(accessConfigurations.HashPepper.Length - 15)}'  " +
-                        $"CorrelationId: {correlationId.ToString()}")),
-
+                    "Check Access Permissons",
+                    currentUserJson,
                     null,
-                    correlationId.ToString()),
+                    randomCorrelationId.ToString()),
+                        Times.Once);
+
+            this.consumerAccessServiceMock.Verify(service =>
+                service.CheckConsumerAccessAsync(
+                    randomNhsNumber,
+                    randomCorrelationId,
+                    CancellationToken.None),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-              broker.LogErrorAsync(It.Is(SameExceptionAs(
-                  expectedAccessOrchestrationValidationException))),
-                      Times.Once);
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedAccessOrchestrationValidationException))),
+                        Times.Once);
 
-            this.consumerServiceMock.VerifyNoOtherCalls();
-            this.consumerAccessServiceMock.VerifyNoOtherCalls();
-            this.pdsDataServiceMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+            this.hashBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
