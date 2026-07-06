@@ -69,6 +69,8 @@ using LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Services.Processings.ResourceMatchings;
 using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Models.Brokers.DdsHttp;
 using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers;
+using LondonFhirService.Providers.FHIR.STU3.LondonDataService.Models.Brokers.LdsHttp;
+using LondonFhirService.Providers.FHIR.STU3.LondonDataService.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -238,12 +240,19 @@ public partial class Program
             .GetSection("DdsConfigurations")
             .Get<DdsConfigurations>();
 
+        LdsConfigurations ldsConfig = configuration
+            .GetSection("LdsConfigurations")
+            .Get<LdsConfigurations>()
+            ?? throw new InvalidOperationException(
+                "LdsConfigurations is missing or invalid. Please check appsettings.json.");
+
         AccessConfigurations accessConfig = configuration
             .GetSection("AccessConfigurations")
             .Get<AccessConfigurations>();
 
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);
+        services.AddSingleton(ldsConfig);
         services.AddSingleton(accessConfig);
 
         services.AddSingleton<STU3FhirAbstractions.IFhirAbstractionProvider>(sp =>
@@ -251,10 +260,14 @@ public partial class Program
             var config = sp.GetRequiredService<DdsConfigurations>();
             ILogger<DdsStu3Provider> logger = sp.GetRequiredService<ILogger<DdsStu3Provider>>();
 
+            var ldsConfigurations = sp.GetRequiredService<LdsConfigurations>();
+            ILogger<LdsStu3Provider> ldsLogger = sp.GetRequiredService<ILogger<LdsStu3Provider>>();
+            IHttpContextAccessor httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
             var stu3Providers = new List<STU3FhirAbstractions.IFhirProvider>
             {
                 new DdsStu3Provider(config, logger),
-                //new LdsStu3Provider(config, logger, httpContextAccessor)
+                new LdsStu3Provider(ldsConfigurations, httpContextAccessor, ldsLogger),
             };
 
             return new STU3FhirAbstractions.FhirAbstractionProvider(stu3Providers);
