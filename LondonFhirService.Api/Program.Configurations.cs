@@ -242,7 +242,9 @@ public partial class Program
 
         LdsConfigurations ldsConfig = configuration
             .GetSection("LdsConfigurations")
-            .Get<LdsConfigurations>();
+            .Get<LdsConfigurations>()
+            ?? throw new InvalidOperationException(
+                "LdsConfigurations is missing or invalid. Please check appsettings.json.");
 
         AccessConfigurations accessConfig = configuration
             .GetSection("AccessConfigurations")
