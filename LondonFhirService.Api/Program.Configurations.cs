@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Attrify.InvisibleApi.Models;
-using Azure.Core;
-using Azure.Identity;
 using Hl7.Fhir.Serialization;
 using ISL.Providers.Captcha.Abstractions;
 using ISL.Providers.Captcha.FakeCaptcha.Providers.FakeCaptcha;
@@ -16,7 +14,6 @@ using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Api.Workers;
 using LondonFhirService.Core.Brokers.Audits;
-using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Hashing;
@@ -26,7 +23,6 @@ using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
 using LondonFhirService.Core.Models.Bases;
-using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -315,16 +311,7 @@ public partial class Program
             DeletedWhenPropertyType = typeof(DateTimeOffset)
         };
 
-        ConsumerAccessConfiguration consumerAccessConfiguration = configuration
-            .GetSection("ConsumerAccessConfiguration")
-            .Get<ConsumerAccessConfiguration>()
-                ?? throw new InvalidOperationException(
-                    "ConsumerAccessConfiguration is missing or invalid. Please check appsettings.json.");
-
         services.AddSingleton(securityConfigurations);
-        services.AddSingleton(consumerAccessConfiguration);
-        services.AddSingleton<TokenCredential>(new DefaultAzureCredential());
-        services.AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>();
         services.AddTransient<IAuditBroker, AuditBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
