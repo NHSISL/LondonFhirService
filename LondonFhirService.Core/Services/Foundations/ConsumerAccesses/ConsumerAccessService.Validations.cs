@@ -4,7 +4,7 @@
 
 using System;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
 using Xeptions;
 
@@ -12,154 +12,20 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
 {
     public partial class ConsumerAccessService
     {
-        private async ValueTask ValidateConsumerAccessOnAddAsync(ConsumerAccess consumerAccess)
+        private async ValueTask ValidateOnCheckConsumerAccessAsync(
+            string consumerUserId,
+            string nhsNumber,
+            Guid correlationId)
         {
-            ValidateConsumerAccessIsNotNull(consumerAccess);
             string userId = await this.securityAuditBroker.GetUserIdAsync();
 
             Validate(
                 createException: () => new InvalidConsumerAccessServiceException(
                     message: "Invalid consumer access. Please correct the errors and try again."),
 
-                (Rule: IsInvalid(consumerAccess.Id), Parameter: nameof(ConsumerAccess.Id)),
-                (Rule: IsInvalid(consumerAccess.ConsumerId), Parameter: nameof(ConsumerAccess.ConsumerId)),
-                (Rule: IsInvalid(consumerAccess.OrgCode), Parameter: nameof(ConsumerAccess.OrgCode)),
-                (Rule: IsInvalid(consumerAccess.CreatedBy), Parameter: nameof(ConsumerAccess.CreatedBy)),
-                (Rule: IsInvalid(consumerAccess.UpdatedBy), Parameter: nameof(ConsumerAccess.UpdatedBy)),
-                (Rule: IsInvalid(consumerAccess.CreatedDate), Parameter: nameof(ConsumerAccess.CreatedDate)),
-                (Rule: IsInvalid(consumerAccess.UpdatedDate), Parameter: nameof(ConsumerAccess.UpdatedDate)),
-                (Rule: IsInvalidLength(consumerAccess.CreatedBy, 255), Parameter: nameof(ConsumerAccess.CreatedBy)),
-                (Rule: IsInvalidLength(consumerAccess.UpdatedBy, 255), Parameter: nameof(ConsumerAccess.UpdatedBy)),
-                (Rule: IsInvalidLength(consumerAccess.OrgCode, 15), Parameter: nameof(ConsumerAccess.OrgCode)),
-
-                (Rule: IsNotSame(
-                    first: consumerAccess.UpdatedBy,
-                    second: consumerAccess.CreatedBy,
-                    secondName: nameof(ConsumerAccess.CreatedBy)),
-                Parameter: nameof(ConsumerAccess.UpdatedBy)),
-
-                (Rule: IsNotSame(
-                    first: userId,
-                    second: consumerAccess.CreatedBy),
-                Parameter: nameof(ConsumerAccess.CreatedBy)),
-
-                (Rule: IsNotSame(
-                    first: consumerAccess.CreatedDate,
-                    second: consumerAccess.UpdatedDate,
-                    secondName: nameof(ConsumerAccess.CreatedDate)),
-                Parameter: nameof(ConsumerAccess.UpdatedDate)),
-
-                (Rule: await IsNotRecentAsync(consumerAccess.CreatedDate),
-                Parameter: nameof(ConsumerAccess.CreatedDate)));
-        }
-
-        private static void ValidateConsumerAccessOnRetrieveById(Guid consumerAccessId)
-        {
-            Validate(
-                createException: () => new InvalidConsumerAccessServiceException(
-                    message: "Invalid consumer access. Please correct the errors and try again."),
-
-                (Rule: IsInvalid(consumerAccessId), Parameter: nameof(ConsumerAccess.Id)));
-        }
-
-        private async ValueTask ValidateConsumerAccessOnModifyAsync(ConsumerAccess consumerAccess)
-        {
-            ValidateConsumerAccessIsNotNull(consumerAccess);
-            string userId = await this.securityAuditBroker.GetUserIdAsync();
-
-            Validate(
-                createException: () => new InvalidConsumerAccessServiceException(
-                    message: "Invalid consumer access. Please correct the errors and try again."),
-
-                (Rule: IsInvalid(consumerAccess.Id), Parameter: nameof(ConsumerAccess.Id)),
-                (Rule: IsInvalid(consumerAccess.ConsumerId), Parameter: nameof(ConsumerAccess.ConsumerId)),
-                (Rule: IsInvalid(consumerAccess.OrgCode), Parameter: nameof(ConsumerAccess.OrgCode)),
-                (Rule: IsInvalid(consumerAccess.CreatedBy), Parameter: nameof(ConsumerAccess.CreatedBy)),
-                (Rule: IsInvalid(consumerAccess.UpdatedBy), Parameter: nameof(ConsumerAccess.UpdatedBy)),
-                (Rule: IsInvalid(consumerAccess.CreatedDate), Parameter: nameof(ConsumerAccess.CreatedDate)),
-                (Rule: IsInvalid(consumerAccess.UpdatedDate), Parameter: nameof(ConsumerAccess.UpdatedDate)),
-                (Rule: IsInvalidLength(consumerAccess.CreatedBy, 255), Parameter: nameof(ConsumerAccess.CreatedBy)),
-                (Rule: IsInvalidLength(consumerAccess.UpdatedBy, 255), Parameter: nameof(ConsumerAccess.UpdatedBy)),
-                (Rule: IsInvalidLength(consumerAccess.OrgCode, 15), Parameter: nameof(ConsumerAccess.OrgCode)),
-
-                (Rule: IsNotSame(
-                    first: userId,
-                    second: consumerAccess.UpdatedBy),
-                Parameter: nameof(ConsumerAccess.UpdatedBy)),
-
-                (Rule: IsSameAs(
-                    createdDate: consumerAccess.CreatedDate,
-                    updatedDate: consumerAccess.UpdatedDate,
-                    createdDateName: nameof(ConsumerAccess.CreatedDate)),
-                Parameter: nameof(ConsumerAccess.UpdatedDate)),
-
-                (Rule: await IsNotRecentAsync(consumerAccess.UpdatedDate),
-                Parameter: nameof(ConsumerAccess.UpdatedDate)));
-        }
-
-        private static void ValidateConsumerAccessOnRemoveById(Guid consumerAccessId) =>
-            Validate(
-                createException: () => new InvalidConsumerAccessServiceException(
-                    message: "Invalid consumer access. Please correct the errors and try again."),
-
-                (Rule: IsInvalid(consumerAccessId), Parameter: nameof(ConsumerAccess.Id)));
-
-        private static void ValidateOnRetrieveAllOrganisationUserHasAccessTo(Guid consumerId) =>
-            Validate(
-                createException: () => new InvalidConsumerAccessServiceException(
-                    message: "Invalid consumer access. Please correct the errors and try again."),
-
-                (Rule: IsInvalid(consumerId), Parameter: nameof(ConsumerAccess.ConsumerId)));
-
-        private static void ValidateStorageConsumerAccess(ConsumerAccess maybeConsumerAccess, Guid maybeId)
-        {
-            if (maybeConsumerAccess is null)
-            {
-                throw new NotFoundConsumerAccessServiceException($"Consumer access not found with Id: {maybeId}");
-            }
-        }
-
-        private async ValueTask ValidateAgainstStorageConsumerAccessOnModifyAsync(
-            ConsumerAccess consumerAccess,
-            ConsumerAccess maybeConsumerAccess)
-        {
-            Validate(
-                createException: () => new InvalidConsumerAccessServiceException(
-                    message: "Invalid consumer access. Please correct the errors and try again."),
-
-                (Rule: IsNotSame(
-                    consumerAccess.CreatedDate,
-                    maybeConsumerAccess.CreatedDate,
-                    nameof(maybeConsumerAccess.CreatedDate)),
-                Parameter: nameof(ConsumerAccess.CreatedDate)),
-
-                (Rule: IsSameAs(
-                    consumerAccess.UpdatedDate,
-                    maybeConsumerAccess.UpdatedDate,
-                    nameof(maybeConsumerAccess.UpdatedDate)),
-                Parameter: nameof(ConsumerAccess.UpdatedDate)));
-        }
-
-        private async ValueTask ValidateAgainstStorageConsumerAccessOnDeleteAsync(
-            ConsumerAccess consumerAccess,
-            ConsumerAccess maybeConsumerAccess)
-        {
-            DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-            Validate(
-                createException: () => new InvalidConsumerAccessServiceException(
-                    message: "Invalid consumer access. Please correct the errors and try again."),
-
-                (Rule: IsNotSame(
-                    consumerAccess.CreatedDate,
-                    maybeConsumerAccess.CreatedDate,
-                    nameof(maybeConsumerAccess.CreatedDate)),
-                Parameter: nameof(ConsumerAccess.CreatedDate)),
-
-                (Rule: IsNotSame(
-                    first: maybeConsumerAccess.UpdatedDate,
-                    second: consumerAccess.UpdatedDate),
-                Parameter: nameof(ConsumerAccess.UpdatedDate)));
+                (Rule: IsInvalid(consumerUserId), Parameter: nameof(ValidateAccessRequest.ConsumerUserId)),
+                (Rule: IsInvalid(nhsNumber), Parameter: nameof(ValidateAccessRequest.NhsNumber)),
+                (Rule: IsInvalid(correlationId), Parameter: nameof(ValidateAccessRequest.CorrelationId)));
         }
 
         private static void ValidateConsumerAccessIsNotNull(ConsumerAccess consumerAccess)

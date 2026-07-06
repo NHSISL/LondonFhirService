@@ -35,7 +35,6 @@ using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Services.Foundations.Consumers;
 using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
@@ -344,7 +343,6 @@ public partial class Program
     {
         services.AddTransient<IAuditService, AuditService>();
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
-        services.AddTransient<IConsumerService, ConsumerService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
         services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
