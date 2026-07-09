@@ -14,18 +14,21 @@
 
 	<ItemGroup>
 		<PackageReference Include="Attrify" Version="0.0.0.2" />
-		<PackageReference Include="FluentAssertions" Version="7.2.0" />
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.1.1" />
-		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.0" />
+		<PackageReference Include="Azure.Identity" Version="1.21.0" />
+		<PackageReference Include="FluentAssertions" Version="[7.2.2]" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.2.1" />
+		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService" Version="0.11.0" />
+		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.LondonDataService" Version="0.1.0" />
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.2" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-			<Version>10.0.7</Version>
+			<Version>10.0.9</Version>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Identity.Web" Version="4.8.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.7" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="4.12.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.9" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -45,6 +48,10 @@
 		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Acceptance" />
 		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Integration" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Update="OpenTelemetry.Api" Version="1.16.0" />
 	</ItemGroup>
 
 </Project>

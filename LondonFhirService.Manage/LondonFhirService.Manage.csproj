@@ -17,18 +17,27 @@
 
 	<ItemGroup>
 		<PackageReference Include="Attrify" Version="0.0.0.2" />
-		<PackageReference Include="FluentAssertions" Version="7.2.0" />
-		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.0" />
+		<PackageReference Include="Azure.Identity" Version="1.21.0" />
+		<PackageReference Include="FluentAssertions" Version="[7.2.2]" />
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.2" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.4.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+		<!--
+			Pin Microsoft.OpenApi to the latest 2.x. Do NOT move to 3.x: the
+			.NET 10 Microsoft.AspNetCore.OpenApi source generator is built against
+			the OpenApi 2.x API (3.x makes IOpenApiMediaType.Example read-only,
+			breaking the generated XML-comment support). 2.7.5 also clears NU1903
+			(high severity advisory GHSA-v5pm-xwqc-g5wc) on the transitive 2.4.1.
+		-->
+		<PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy">
-			<Version>10.0.7</Version>
+			<Version>10.0.9</Version>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Identity.Web" Version="4.8.0" />
-		<PackageReference Include="NHSISL.CsvHelperClient" Version="1.1.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.7" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="4.12.0" />
+		<PackageReference Include="NHSISL.CsvHelperClient" Version="3.1.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.9" />
 	</ItemGroup>
 
 	<ItemGroup>
