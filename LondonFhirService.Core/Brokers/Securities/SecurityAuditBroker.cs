@@ -117,7 +117,7 @@ namespace LondonFhirService.Core.Brokers.Securities
             T entity,
             T storageEntity) =>
                 await securityClient.Audits
-                    .EnsureAddAuditValuesRemainsUnchangedOnModifyAsync(entity, storageEntity, securityConfigurations);
+                    .EnsureOtherAuditValuesRemainsUnchangedOnModifyAsync(entity, storageEntity, securityConfigurations);
 
 
         /// <summary>

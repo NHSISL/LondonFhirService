@@ -17,6 +17,7 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Models.Bases;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -182,7 +183,22 @@ public partial class Program
 
     private static void AddBrokers(IServiceCollection services, IConfiguration configuration)
     {
-        SecurityConfigurations securityConfigurations = new();
+        SecurityConfigurations securityConfigurations = new()
+        {
+            CreatedByPropertyName = nameof(IAudit.CreatedBy),
+            CreatedByPropertyType = typeof(string),
+            CreatedWhenPropertyName = nameof(IAudit.CreatedDate),
+            CreatedWhenPropertyType = typeof(DateTimeOffset),
+            UpdatedByPropertyName = nameof(IAudit.UpdatedBy),
+            UpdatedByPropertyType = typeof(string),
+            UpdatedWhenPropertyName = nameof(IAudit.UpdatedDate),
+            UpdatedWhenPropertyType = typeof(DateTimeOffset),
+            DeletedByPropertyName = "DeletedBy",
+            DeletedByPropertyType = typeof(string),
+            DeletedWhenPropertyName = "DeletedDate",
+            DeletedWhenPropertyType = typeof(DateTimeOffset)
+        };
+
         services.AddSingleton(securityConfigurations);
         services.AddTransient<IAuditBroker, AuditBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
