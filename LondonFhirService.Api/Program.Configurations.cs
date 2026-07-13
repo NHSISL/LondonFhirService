@@ -63,6 +63,7 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Organizations
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.PractitionerRoles;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Practitioners;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ProcedureRequests;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Procedures;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
@@ -372,6 +373,7 @@ public partial class Program
         services.AddTransient<IResourceMatcherService, PractitionerMatcherService>();
         services.AddTransient<IResourceMatcherService, PractitionerRoleMatcherService>();
         services.AddTransient<IResourceMatcherService, ProcedureMatcherService>();
+        services.AddTransient<IResourceMatcherService, ProcedureRequestMatcherService>();
     }
 
     private static void AddProcessingServices(IServiceCollection services)
