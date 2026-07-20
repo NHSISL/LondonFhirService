@@ -63,6 +63,7 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Organizations
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.PractitionerRoles;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Practitioners;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ProcedureRequests;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Procedures;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ReferralRequests;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
