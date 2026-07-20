@@ -374,6 +374,7 @@ public partial class Program
         services.AddTransient<IResourceMatcherService, PractitionerMatcherService>();
         services.AddTransient<IResourceMatcherService, PractitionerRoleMatcherService>();
         services.AddTransient<IResourceMatcherService, ProcedureMatcherService>();
+        services.AddTransient<IResourceMatcherService, ProcedureRequestMatcherService>();
         services.AddTransient<IResourceMatcherService, ReferralRequestMatcherService>();
     }
 
