@@ -324,11 +324,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 };
 
             // when
-            ResourceMatch actualResourceMatch = await this.medicationStatementMatcherService.MatchAsync(
-                source1Resources,
-                source2Resources,
-                source1ResourceIndex,
-                source2ResourceIndex);
+            ResourceMatch actualResourceMatch =
+                await this.medicationStatementMatcherService.MatchAsync(
+                    source1Resources,
+                    source2Resources,
+                    source1ResourceIndex,
+                    source2ResourceIndex);
 
             // then
             actualResourceMatch.Matched.Should().HaveCount(1);
