@@ -255,6 +255,114 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             return ParseJsonElement(json);
         }
 
+        private static JsonElement CreateComprehensiveMedicationStatementResource(
+            string medicationReference,
+            string dateAsserted,
+            string id)
+        {
+            string json = $$"""
+              {
+                "resourceType": "MedicationStatement",
+                "id": "{{id}}",
+                "meta": {
+                  "versionId": "1",
+                  "lastUpdated": "2024-09-12T09:25:00+01:00",
+                  "profile": [
+                    "https://fhir.hl7.org.uk/STU3/StructureDefinition/CareConnect-MedicationStatement-1"
+                  ]
+                },
+                "text": {
+                  "status": "generated",
+                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Metformin 500mg MR.</p></div>"
+                },
+                "identifier": [
+                  {
+                    "use": "official",
+                    "system": "https://fhir.nhs.uk/Id/medication-statement-id",
+                    "value": "MS-5d432111"
+                  },
+                  {
+                    "use": "usual",
+                    "system": "https://fhir.hl7.org.uk/Id/dds",
+                    "value": "MS-5d432111"
+                  }
+                ],
+                "basedOn": [
+                  {
+                    "reference": "MedicationRequest/0b1f9520-fa14-499b-8c03-e9f128a6d401"
+                  }
+                ],
+                "context": {
+                  "reference": "Encounter/d9a5732b-3af5-4fa6-8cda-b91e76823cdd"
+                },
+                "status": "active",
+                "category": {
+                  "coding": [
+                    {
+                      "system": "http://hl7.org/fhir/medication-statement-category",
+                      "code": "community",
+                      "display": "Community"
+                    }
+                  ]
+                },
+                "medicationReference": {
+                  "reference": "{{medicationReference}}"
+                },
+                "effectivePeriod": {
+                  "start": "2022-04-12"
+                },
+                "dateAsserted": "{{dateAsserted}}",
+                "informationSource": {
+                  "reference": "Practitioner/8a77e616-2d12-4bc9-b0a1-2f1576ec1c05"
+                },
+                "subject": {
+                  "reference": "Patient/6e6c53cb-fca3-4e34-9cbc-476c32f1eb3c"
+                },
+                "taken": "y",
+                "reasonCode": [
+                  {
+                    "coding": [
+                      {
+                        "system": "http://snomed.info/sct",
+                        "code": "44054006",
+                        "display": "Type 2 diabetes mellitus (disorder)"
+                      }
+                    ]
+                  }
+                ],
+                "note": [
+                  {
+                    "text": "Patient confirms taking medication regularly."
+                  }
+                ],
+                "dosage": [
+                  {
+                    "sequence": 1,
+                    "text": "One tablet twice daily with food",
+                    "timing": {
+                      "repeat": {
+                        "frequency": 2,
+                        "period": 1,
+                        "periodUnit": "d"
+                      }
+                    },
+                    "route": {
+                      "coding": [
+                        {
+                          "system": "http://snomed.info/sct",
+                          "code": "26643006",
+                          "display": "Oral route (qualifier value)"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+              """;
+
+            return ParseJsonElement(json);
+        }
+
         private static JsonElement ParseJsonElement(string json) =>
             JsonDocument.Parse(json).RootElement.Clone();
     }
