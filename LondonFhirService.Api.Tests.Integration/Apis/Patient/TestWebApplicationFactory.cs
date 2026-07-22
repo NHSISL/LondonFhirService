@@ -6,12 +6,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Attrify.InvisibleApi.Models;
+using LondonFhirService.Core.Brokers.ConsumerAccesses;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 
 namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
 {
@@ -19,7 +23,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
     {
         static TestWebApplicationFactory()
         {
-            // Configure configuration *before* the app’s builder is used
+            // Configure configuration *before* the appï¿½s builder is used
             Program.TestConfigurationOverrides = builder =>
             {
                 var testProjectPath =
@@ -45,6 +49,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             builder.ConfigureServices((context, services) =>
             {
                 OverrideSecurityForTesting(services);
+                OverrideConsumerAccessForTesting(services);
             });
         }
 
@@ -84,6 +89,33 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
             {
                 options.AddPolicy("TestPolicy", policy => policy.RequireAssertion(_ => true));
             });
+        }
+
+        private static void OverrideConsumerAccessForTesting(IServiceCollection services)
+        {
+            var consumerAccessBrokerDescriptor = services
+                .FirstOrDefault(d => d.ServiceType == typeof(IConsumerAccessBroker));
+
+            if (consumerAccessBrokerDescriptor != null)
+            {
+                services.Remove(consumerAccessBrokerDescriptor);
+            }
+
+            var mockConsumerAccessBroker = new Mock<IConsumerAccessBroker>();
+
+            mockConsumerAccessBroker
+                .Setup(broker => broker.CheckConsumerAccessAsync(
+                    It.IsAny<ValidateAccessRequest>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((ValidateAccessRequest request, CancellationToken _) => new ConsumerAccess
+                {
+                    NhsNumber = request.NhsNumber,
+                    ConsumerId = request.ConsumerUserId,
+                    IsAccessAllowed = true,
+                    CorrelationId = request.CorrelationId
+                });
+
+            services.AddTransient<IConsumerAccessBroker>(_ => mockConsumerAccessBroker.Object);
         }
     }
 }

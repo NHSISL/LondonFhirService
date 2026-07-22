@@ -5,8 +5,6 @@
 using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
-using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
-using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
 using Xeptions;
 
@@ -34,26 +32,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             {
                 throw await CreateAndLogValidationExceptionAsync(forbiddenAccessOrchestrationException);
             }
-            catch (ConsumerServiceValidationException consumerValidationException)
-            {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    consumerValidationException);
-            }
-            catch (ConsumerServiceException consumerServiceException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(
-                    consumerServiceException);
-            }
-            catch (ConsumerServiceDependencyException consumerServiceDependencyException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(
-                    consumerServiceDependencyException);
-            }
-            catch (ConsumerServiceDependencyValidationException consumerDependencyValidationException)
-            {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    consumerDependencyValidationException);
-            }
             catch (ConsumerAccessServiceValidationException consumerAccessValidationException)
             {
                 throw await CreateAndLogDependencyValidationExceptionAsync(
@@ -73,21 +51,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Accesses
             {
                 throw await CreateAndLogDependencyValidationExceptionAsync(
                     consumerAccessDependencyValidationException);
-            }
-            catch (PdsDataServiceValidationException pdsDataServiceValidationException)
-            {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    pdsDataServiceValidationException);
-            }
-            catch (PdsDataServiceException pdsDataServiceException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(
-                    pdsDataServiceException);
-            }
-            catch (PdsDataServiceDependencyException pdsDataServiceDependencyException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(
-                    pdsDataServiceDependencyException);
             }
             catch (Exception exception)
             {

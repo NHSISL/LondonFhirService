@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.DateTimes;
@@ -14,14 +16,10 @@ using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
-using LondonFhirService.Core.Models.Foundations.Consumers;
-using LondonFhirService.Core.Models.Foundations.Consumers.Exceptions;
-using LondonFhirService.Core.Models.Foundations.PdsDatas.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using Moq;
 using Tynamix.ObjectFiller;
@@ -31,9 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 {
     public partial class AccessOrchestrationServiceTests
     {
-        private readonly Mock<IConsumerService> consumerServiceMock;
         private readonly Mock<IConsumerAccessService> consumerAccessServiceMock;
-        private readonly Mock<IPdsDataService> pdsDataServiceMock;
         private readonly Mock<IAuditBroker> auditBrokerMock;
         private readonly Mock<ISecurityBroker> securityBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
@@ -45,9 +41,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
         public AccessOrchestrationServiceTests()
         {
-            this.consumerServiceMock = new Mock<IConsumerService>();
             this.consumerAccessServiceMock = new Mock<IConsumerAccessService>();
-            this.pdsDataServiceMock = new Mock<IPdsDataService>();
             this.auditBrokerMock = new Mock<IAuditBroker>();
             this.securityBrokerMock = new Mock<ISecurityBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
@@ -63,9 +57,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             };
 
             this.accessOrchestrationService = new AccessOrchestrationService(
-                consumerService: this.consumerServiceMock.Object,
                 consumerAccessService: this.consumerAccessServiceMock.Object,
-                pdsDataService: this.pdsDataServiceMock.Object,
                 auditBroker: this.auditBrokerMock.Object,
                 securityBroker: this.securityBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
@@ -74,15 +66,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
                 hashBroker: this.hashBrokerMock.Object,
                 accessConfigurations: this.accessConfigurations);
         }
-
-        private static DateTimeOffset GetRandomDateTimeOffset() =>
-            new DateTimeRange(earliestDate: new DateTime()).GetValue();
-
-        private static int GetRandomNumber() =>
-            new IntRange(max: 15, min: 2).GetValue();
-
-        private static int GetRandomNegativeNumber() =>
-            -1 * new IntRange(min: 2, max: 10).GetValue();
 
         private static string GetRandomString() =>
             new MnemonicString().GetValue();
@@ -94,10 +77,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
             return result.Length > length ? result.Substring(0, length) : result;
         }
 
+        private static Guid GetRandomGuid() =>
+            Guid.NewGuid();
+
         private static User CreateRandomUser(string userId)
         {
             string randomString = GetRandomString();
-            Guid randomGuid = Guid.NewGuid();
 
             User user = new User(
                 userId: userId,
@@ -116,29 +101,31 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
         {
             string randomString = GetRandomString();
 
-            return Enumerable.Range(start: 1, count: GetRandomNumber())
+            return Enumerable.Range(start: 1, count: 2)
                 .Select(_ => new Claim(type: randomString, value: randomString)).ToList();
         }
 
-        private static Consumer CreateRandomConsumer(string userId = "") =>
-            CreateConsumerFiller(GetRandomDateTimeOffset(), userId).Create();
+        private static ConsumerAccess CreateRandomConsumerAccess(bool isAccessAllowed) =>
+            CreateConsumerAccessFiller(isAccessAllowed).Create();
 
-        private static Filler<Consumer> CreateConsumerFiller(DateTimeOffset dateTimeOffset, string userId = "")
+        private static Filler<ConsumerAccess> CreateConsumerAccessFiller(bool isAccessAllowed)
         {
-            userId = string.IsNullOrEmpty(userId) ? Guid.NewGuid().ToString() : userId;
-            var filler = new Filler<Consumer>();
+            var filler = new Filler<ConsumerAccess>();
 
             filler.Setup()
-                .OnType<DateTimeOffset>().Use(dateTimeOffset)
-                .OnType<DateTimeOffset?>().Use(dateTimeOffset)
-                .OnProperty(consumer => consumer.UserId).Use(userId)
-                .OnProperty(consumer => consumer.Name).Use(GetRandomStringWithLength(255))
-                .OnProperty(consumer => consumer.CreatedBy).Use(userId)
-                .OnProperty(consumer => consumer.UpdatedBy).Use(userId)
-                .OnProperty(consumer => consumer.ConsumerAccesses).IgnoreIt();
+                .OnProperty(consumerAccess => consumerAccess.IsAccessAllowed).Use(isAccessAllowed);
 
             return filler;
         }
+
+        private static JsonSerializerOptions CreateJsonSerializerOptions() =>
+            new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            };
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(
             Xeption expectedException)
@@ -155,24 +142,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             return new TheoryData<Xeption>
             {
-                new ConsumerServiceValidationException(
-                    message: "Consumer validation errors occurred, please try again",
-                    innerException),
-
-                new ConsumerServiceValidationException(
-                    message: "Consumer dependency validation occurred, please try again.",
-                    innerException),
-
                 new ConsumerAccessServiceValidationException(
                     message: "Consumer access validation errors occurred, please try again",
                     innerException),
 
-                new ConsumerAccessServiceValidationException(
+                new ConsumerAccessServiceDependencyValidationException(
                     message: "Consumer access dependency validation occurred, please try again.",
-                    innerException),
-
-                new PdsDataServiceValidationException(
-                    message: "Pds data validation errors occurred, please try again.",
                     innerException)
             };
         }
@@ -185,29 +160,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Accesses
 
             return new TheoryData<Xeption>
             {
-                new ConsumerServiceDependencyException(
-                    message: "Consumer dependency error occurred, please contact support.",
-                    innerException),
-
-                new ConsumerServiceException(
-                    message: "Consumer service error occurred, please contact support.",
-                    innerException),
-
                 new ConsumerAccessServiceDependencyException(
                     message: "Consumer access dependency error occurred, please contact support.",
                     innerException),
 
                 new ConsumerAccessServiceException(
                     message: "Consumer access service error occurred, please contact support.",
-                    innerException),
-
-                new PdsDataServiceDependencyException(
-                    message: "Pds data dependency error occurred, please contact support.",
-                    innerException),
-
-                new PdsDataServiceException(
-                    message: "Pds data service error occurred, please contact support.",
-                    innerException),
+                    innerException)
             };
         }
     }

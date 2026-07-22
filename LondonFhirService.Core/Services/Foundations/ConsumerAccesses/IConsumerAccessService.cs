@@ -3,20 +3,17 @@
 // ---------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 
 namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
 {
     public interface IConsumerAccessService
     {
-        ValueTask<ConsumerAccess> AddConsumerAccessAsync(ConsumerAccess consumerAccess);
-        ValueTask<IQueryable<ConsumerAccess>> RetrieveAllConsumerAccessesAsync();
-        ValueTask<ConsumerAccess> RetrieveConsumerAccessByIdAsync(Guid consumerAccessId);
-        ValueTask<ConsumerAccess> ModifyConsumerAccessAsync(ConsumerAccess consumerAccess);
-        ValueTask<ConsumerAccess> RemoveConsumerAccessByIdAsync(Guid consumerAccessId);
-        ValueTask<List<string>> RetrieveAllActiveOrganisationsUserHasAccessToAsync(Guid consumerId);
+        ValueTask<ConsumerAccess> CheckConsumerAccessAsync(
+            string NhsNumber,
+            Guid CorrelationId,
+            CancellationToken cancellationToken = default);
     }
 }

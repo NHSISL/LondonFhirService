@@ -7,12 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using EFxceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Models.Foundations.Consumers;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
-using LondonFhirService.Core.Models.Foundations.OdsDatas;
-using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -50,10 +46,6 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
         private static void AddConfigurations(ModelBuilder modelBuilder)
         {
             AddAuditConfigurations(modelBuilder.Entity<Audit>());
-            AddConsumerConfigurations(modelBuilder.Entity<Consumer>());
-            AddConsumerAccessConfigurations(modelBuilder.Entity<ConsumerAccess>());
-            AddPdsDataConfigurations(modelBuilder.Entity<PdsData>());
-            AddOdsDataConfigurations(modelBuilder.Entity<OdsData>());
             AddProviderConfigurations(modelBuilder.Entity<Provider>());
             AddFhirRecordConfigurations(modelBuilder.Entity<FhirRecord>());
             AddFhirRecordDifferenceConfigurations(modelBuilder.Entity<FhirRecordDifference>());
