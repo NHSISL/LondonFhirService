@@ -17,7 +17,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@tanstack/react-query": "5.59.13",
     "@tanstack/react-query-devtools": "^5.54.1",
-    "axios": "^1.7.7",
+    "axios": "^1.16.0",
     "bootstrap": "^5.3.3",
     "guid-typescript": "file:dependencies/guid-typescript",
     "lodash": "^4.17.21",
@@ -55,6 +55,6 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.11.0",
     "vite": "^5.4.1",
-    "vitest": "^2.1.3"
+    "vitest": "^3.2.6"
   }
 }

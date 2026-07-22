@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using Attrify.InvisibleApi.Models;
+using Azure.Core;
+using Azure.Identity;
 using Hl7.Fhir.Serialization;
 using ISL.Providers.Captcha.Abstractions;
 using ISL.Providers.Captcha.FakeCaptcha.Providers.FakeCaptcha;
@@ -14,6 +16,7 @@ using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Api.Workers;
 using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Hashing;
@@ -22,6 +25,8 @@ using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -50,15 +55,17 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers.FamilyMemberH
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Immunizations;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Locations;
-using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medications;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationRequests;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medications;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationStatements;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Observations;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Organizations;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Patients;
-using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Practitioners;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.PractitionerRoles;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Practitioners;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ProcedureRequests;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Procedures;
+using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ReferralRequests;
 using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
 using LondonFhirService.Core.Services.Orchestrations.Comparisons;
@@ -68,6 +75,8 @@ using LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 using LondonFhirService.Core.Services.Processings.ResourceMatchings;
 using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Models.Brokers.DdsHttp;
 using LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers;
+using LondonFhirService.Providers.FHIR.STU3.LondonDataService.Models.Brokers.LdsHttp;
+using LondonFhirService.Providers.FHIR.STU3.LondonDataService.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -237,12 +246,19 @@ public partial class Program
             .GetSection("DdsConfigurations")
             .Get<DdsConfigurations>();
 
+        LdsConfigurations ldsConfig = configuration
+            .GetSection("LdsConfigurations")
+            .Get<LdsConfigurations>()
+            ?? throw new InvalidOperationException(
+                "LdsConfigurations is missing or invalid. Please check appsettings.json.");
+
         AccessConfigurations accessConfig = configuration
             .GetSection("AccessConfigurations")
             .Get<AccessConfigurations>();
 
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);
+        services.AddSingleton(ldsConfig);
         services.AddSingleton(accessConfig);
 
         services.AddSingleton<STU3FhirAbstractions.IFhirAbstractionProvider>(sp =>
@@ -250,10 +266,14 @@ public partial class Program
             var config = sp.GetRequiredService<DdsConfigurations>();
             ILogger<DdsStu3Provider> logger = sp.GetRequiredService<ILogger<DdsStu3Provider>>();
 
+            var ldsConfigurations = sp.GetRequiredService<LdsConfigurations>();
+            ILogger<LdsStu3Provider> ldsLogger = sp.GetRequiredService<ILogger<LdsStu3Provider>>();
+            IHttpContextAccessor httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
+
             var stu3Providers = new List<STU3FhirAbstractions.IFhirProvider>
             {
                 new DdsStu3Provider(config, logger),
-                //new LdsStu3Provider(config, logger, httpContextAccessor)
+                new LdsStu3Provider(ldsConfigurations, httpContextAccessor, ldsLogger),
             };
 
             return new STU3FhirAbstractions.FhirAbstractionProvider(stu3Providers);
@@ -281,8 +301,32 @@ public partial class Program
 
     private static void AddBrokers(IServiceCollection services, IConfiguration configuration)
     {
-        SecurityConfigurations securityConfigurations = new();
+        SecurityConfigurations securityConfigurations = new()
+        {
+            CreatedByPropertyName = nameof(IAudit.CreatedBy),
+            CreatedByPropertyType = typeof(string),
+            CreatedWhenPropertyName = nameof(IAudit.CreatedDate),
+            CreatedWhenPropertyType = typeof(DateTimeOffset),
+            UpdatedByPropertyName = nameof(IAudit.UpdatedBy),
+            UpdatedByPropertyType = typeof(string),
+            UpdatedWhenPropertyName = nameof(IAudit.UpdatedDate),
+            UpdatedWhenPropertyType = typeof(DateTimeOffset),
+            DeletedByPropertyName = "DeletedBy",
+            DeletedByPropertyType = typeof(string),
+            DeletedWhenPropertyName = "DeletedDate",
+            DeletedWhenPropertyType = typeof(DateTimeOffset)
+        };
+
+        ConsumerAccessConfiguration consumerAccessConfiguration = configuration
+            .GetSection("ConsumerAccessConfiguration")
+            .Get<ConsumerAccessConfiguration>()
+                ?? throw new InvalidOperationException(
+                    "ConsumerAccessConfiguration is missing or invalid. Please check appsettings.json.");
+
         services.AddSingleton(securityConfigurations);
+        services.AddSingleton(consumerAccessConfiguration);
+        services.AddSingleton<TokenCredential>(new DefaultAzureCredential());
+        services.AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>();
         services.AddTransient<IAuditBroker, AuditBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
@@ -330,6 +374,8 @@ public partial class Program
         services.AddTransient<IResourceMatcherService, PractitionerMatcherService>();
         services.AddTransient<IResourceMatcherService, PractitionerRoleMatcherService>();
         services.AddTransient<IResourceMatcherService, ProcedureMatcherService>();
+        services.AddTransient<IResourceMatcherService, ProcedureRequestMatcherService>();
+        services.AddTransient<IResourceMatcherService, ReferralRequestMatcherService>();
     }
 
     private static void AddProcessingServices(IServiceCollection services)
