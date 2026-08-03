@@ -1,0 +1,24 @@
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "CONFIG"
+    labels:
+      - "dependencies"
+    ignore:
+        - dependency-name: "FluentAssertions"
+          versions: ["8.x", "9.x", "10.x", "*"]
+        - dependency-name: "Microsoft.OpenApi"
+          versions: ["3.x", "4.x"]
+  - package-ecosystem: "npm"
+    directory: "/LondonFhirService.Manage.Client"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "CONFIG"
+    labels:
+      - "dependencies"
+      - "npm"
