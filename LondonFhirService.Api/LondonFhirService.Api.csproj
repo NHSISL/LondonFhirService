@@ -49,7 +49,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Update="OpenTelemetry.Api" Version="1.16.0" />
+	  <PackageReference Update="OpenTelemetry.Api" Version="1.17.0" />
 	</ItemGroup>
 
 </Project>
