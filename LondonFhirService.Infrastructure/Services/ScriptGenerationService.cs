@@ -7,7 +7,7 @@ using System.IO;
 using ADotNet.Clients;
 using ADotNet.Models.Pipelines.GithubPipelines.DotNets;
 using ADotNet.Models.Pipelines.GithubPipelines.DotNets.Tasks;
-using ADotNet.Models.Pipelines.GithubPipelines.DotNets.Tasks.SetupDotNetTaskV3s;
+using ADotNet.Models.Pipelines.GithubPipelines.DotNets.Tasks.SetupDotNetTaskV5s;
 
 namespace LondonFhirService.Infrastructure.Services
 {
@@ -30,8 +30,7 @@ namespace LondonFhirService.Infrastructure.Services
 
                     PullRequest = new PullRequestEvent
                     {
-                        Types = ["opened", "synchronize", "reopened", "closed"],
-                        Branches = [branchName]
+                        Types = ["opened", "synchronize", "reopened", "closed"]
                     }
                 },
 
@@ -46,7 +45,10 @@ namespace LondonFhirService.Infrastructure.Services
 
                             EnvironmentVariables = new Dictionary<string, string>
                             {
-                                { "NOTIFICATIONCONFIGURATIONS__APIKEY", "${{ secrets.NOTIFICATIONCONFIGURATIONS__APIKEY }}" }
+                                {
+                                    "NOTIFICATIONCONFIGURATIONS__APIKEY",
+                                    "${{ secrets.NOTIFICATIONCONFIGURATIONS__APIKEY }}"
+                                }
                             },
 
                             Steps = new List<GithubTask>
@@ -57,16 +59,16 @@ namespace LondonFhirService.Infrastructure.Services
                                     Run = "git config --system core.longpaths true"
                                 },
 
-                                new CheckoutTaskV3
+                                new CheckoutTaskV5
                                 {
                                     Name = "Check out"
                                 },
 
-                                new SetupDotNetTaskV3
+                                new SetupDotNetTaskV5
                                 {
                                     Name = "Setup .Net",
 
-                                    With = new TargetDotNetVersionV3
+                                    With = new TargetDotNetVersionV5
                                     {
                                         DotNetVersion = dotNetVersion
                                     }
@@ -91,7 +93,8 @@ namespace LondonFhirService.Infrastructure.Services
                                 new GithubTask
                                 {
                                     Name = "Deploy Database",
-                                    Run = $"dotnet ef database update --project {projectName}/{projectName}.csproj --startup-project {projectName}/{projectName}.csproj"
+                                    Run = $"dotnet ef database update --project {projectName}/{projectName}.csproj " +
+                                        $"--startup-project {projectName}/{projectName}.csproj"
                                 },
 
                                 new TestTask
@@ -125,7 +128,7 @@ namespace LondonFhirService.Infrastructure.Services
                     },
                     {
                         "add_tag",
-                        new TagJob(
+                        new TagJobV2(
                             runsOn: BuildMachines.UbuntuLatest,
                             dependsOn: "build",
                             projectRelativePath: $"{projectName}/{projectName}.csproj",
@@ -170,22 +173,23 @@ namespace LondonFhirService.Infrastructure.Services
                 {
                     {
                         "label",
-                        new LabelJobV2(runsOn: BuildMachines.UbuntuLatest)
+                        new LabelJobV3(runsOn: BuildMachines.UbuntuLatest)
                         {
-                            Name = "Label",
-                            Permissions = new Dictionary<string, string>
-                            {
-                                { "contents", "read" },
-                                { "pull-requests", "write" },
-                                { "issues", "write" }
-                            }
+                            Name = "Label"
                         }
                     },
                     {
                         "requireIssueOrTask",
-                        new RequireIssueOrTaskJob()
+                        new RequireIssueOrTaskJobV2(excludedAuthors: "dependabot[bot]")
                         {
                             Name = "Require Issue Or Task Association",
+                        }
+                    },
+                    {
+                        "setAuthorAsPrAssignee",
+                        new SetAuthorAsPrAssigneeJobV2(runsOn: BuildMachines.UbuntuLatest)
+                        {
+                            Name = "Set Author As PR Assignee",
                         }
                     },
                 }
