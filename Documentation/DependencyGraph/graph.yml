@@ -1,0 +1,152 @@
+# London FHIR Service — dependency graph manifest
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+#
+# Column map (components' col in the project files):
+#   0 Manage.Client entry points   1 Manage.Client view services
+#   2 Manage.Client brokers        3 host exposers (controllers/worker)
+#   4 Core coordinations           5 Core orchestrations
+#   6 Core processings             7 Core foundations
+#   8 Core brokers                 9 Core clients
+#   10 library exposers            11 library internals
+#   12 far externals
+# `projects` order controls layout bands; `roots` order controls the
+# per-consumer view's tree order. A component flagged shared in its
+# project file must appear in roots or its inbound edges are dropped.
+
+solution: London FHIR Service
+eventBroker: null
+projects:
+  - id: manage-client
+    name: LondonFhirService.Manage.Client
+    kind: internal
+    file: projects/londonfhirservice-manage-client.yml
+  - id: manage
+    name: LondonFhirService.Manage
+    kind: internal
+    file: projects/londonfhirservice-manage.yml
+  - id: api
+    name: LondonFhirService.Api
+    kind: internal
+    file: projects/londonfhirservice-api.yml
+  - id: core
+    name: LondonFhirService.Core
+    kind: internal
+    file: projects/londonfhirservice-core.yml
+  - id: pkg-security
+    name: ISL.Security.Client
+    kind: library
+    file: projects/isl-security-client.yml
+  - id: pkg-efcore
+    name: STX.EFCore.Client
+    kind: library
+    file: projects/stx-efcore-client.yml
+  - id: pkg-fhir
+    name: LondonFhirService.Providers.FHIR.STU3
+    kind: library
+    file: projects/londonfhirservice-providers-fhir-stu3.yml
+  - id: ext-efcore
+    name: EF Core / SQL Server
+    kind: external
+    file: projects/ef-core-sql-server.yml
+  - id: ext-logging
+    name: Microsoft.Extensions.Logging
+    kind: external
+    file: projects/microsoft-extensions-logging.yml
+  - id: ext-azure
+    name: Azure.Identity
+    kind: external
+    file: projects/azure-identity.yml
+  - id: ext-http
+    name: System.Net.Http
+    kind: external
+    file: projects/system-net-http.yml
+  - id: ext-crypto
+    name: System.Security.Cryptography
+    kind: external
+    file: projects/system-security-cryptography.yml
+  - id: ext-fhir-src
+    name: Upstream STU3 FHIR services
+    kind: external
+    file: projects/upstream-stu3-fhir-services.yml
+roots:
+  - MC.Bootstrap
+  - MC.FeatureSwitch
+  - API.Patient
+  - API.ComparisonWorker
+  - API.Audits
+  - API.FhirRecords
+  - API.FhirRecordDifferences
+  - API.Features
+  - API.FrontendConfigurations
+  - MG.FhirRecords
+  - MG.FhirRecordDifferences
+  - CO.Stu3Patient
+  - CO.Comparison
+  - OR.Access
+  - OR.Stu3Patient
+  - OR.CompareQueue
+  - OR.Comparison
+  - PR.ResourceMatcher
+  - PR.ListEntryComparison
+  - PR.Rule.ArrayOrder
+  - PR.Rule.Guid
+  - PR.Rule.Id
+  - PR.Rule.Meta
+  - FS.Audit
+  - FS.Consumer
+  - FS.ConsumerAccess
+  - FS.FhirRecord
+  - FS.FhirRecordDifference
+  - FS.OdsData
+  - FS.PdsData
+  - FS.Provider
+  - FS.Stu3Patient
+  - FS.Stu3FhirReconciliation
+  - FS.JsonElement
+  - FS.Matcher.AllergyIntolerance
+  - FS.Matcher.Appointment
+  - FS.Matcher.Condition
+  - FS.Matcher.DiagnosticReport
+  - FS.Matcher.Encounter
+  - FS.Matcher.EpisodeOfCare
+  - FS.Matcher.FamilyMemberHistory
+  - FS.Matcher.Immunization
+  - FS.Matcher.List
+  - FS.Matcher.Location
+  - FS.Matcher.Medication
+  - FS.Matcher.MedicationRequest
+  - FS.Matcher.MedicationStatement
+  - FS.Matcher.Observation
+  - FS.Matcher.Organization
+  - FS.Matcher.Patient
+  - FS.Matcher.Practitioner
+  - FS.Matcher.PractitionerRole
+  - FS.Matcher.Procedure
+  - FS.Matcher.ProcedureRequest
+  - FS.Matcher.ReferralRequest
+  - AuditClient
+  - AuditBroker
+  - SecurityBroker
+  - SecurityAuditBroker
+  - StorageBroker
+  - StorageBrokerFactory
+  - Stu3FhirBroker
+  - HashBroker
+  - ConsumerAccessBroker
+  - DateTimeBroker
+  - IdentifierBroker
+  - LoggingBroker
+  - LIB.SecurityClient
+  - LIB.EFCoreClient
+  - LIB.FhirAbstractionProvider
+  - LIB.FhirProvider
+  - EXT.EFCore
+  - EXT.ILogger
+  - EXT.TokenCredential
+  - EXT.HttpClient
+  - EXT.Crypto
+  - EXT.DdsStu3
+  - EXT.LdsStu3
+events: []

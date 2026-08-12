@@ -1,0 +1,15 @@
+# System.Security.Cryptography — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-crypto
+components:
+  - id: EXT.Crypto
+    name: SHA256 / MD5
+    layer: external
+    col: 12
+    shared: true
+    deriveMethods: true
+    description: System.Security.Cryptography. HashBroker hashes the NHS number (with a configured pepper) before the PDS access check.
+    methods: []

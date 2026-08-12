@@ -1,0 +1,15 @@
+# System.Net.Http — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-http
+components:
+  - id: EXT.HttpClient
+    name: HttpClient
+    layer: external
+    col: 12
+    shared: true
+    deriveMethods: true
+    description: "Typed HttpClient registered via AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>()."
+    methods: []
