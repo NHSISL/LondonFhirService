@@ -22,7 +22,7 @@
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.2" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.5.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
 		<!--
 			Pin Microsoft.OpenApi to the latest 2.x. Do NOT move to 3.x: the
 			.NET 10 Microsoft.AspNetCore.OpenApi source generator is built against
