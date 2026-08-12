@@ -21,7 +21,7 @@
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.LondonDataService" Version="0.2.0" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.2" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.5.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.11" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
 		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.10" />
 		<PackageReference Include="Microsoft.Identity.Web" Version="4.14.2" />
