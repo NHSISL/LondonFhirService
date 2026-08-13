@@ -7,41 +7,97 @@ on:
     - synchronize
     - reopened
     - closed
-    branches:
-    - main
 jobs:
   label:
-    name: Label
+    name: Add Label(s)
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
     - name: Apply Label
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: >-
           const prefixes = [
             'INFRA:',
+            'MINOR INFRA:',
+            'MEDIUM INFRA:',
+            'MAJOR INFRA:',
             'PROVISIONS:',
             'RELEASES:',
             'DATA:',
+            'MINOR DATA:',
+            'MEDIUM DATA:',
+            'MAJOR DATA:',
             'BROKERS:',
+            'MINOR BROKERS:',
+            'MEDIUM BROKERS:',
+            'MAJOR BROKERS:',
             'FOUNDATIONS:',
+            'MINOR FOUNDATIONS:',
+            'MEDIUM FOUNDATIONS:',
+            'MAJOR FOUNDATIONS:',
             'PROCESSINGS:',
+            'MINOR PROCESSINGS:',
+            'MEDIUM PROCESSINGS:',
+            'MAJOR PROCESSINGS:',
             'ORCHESTRATIONS:',
+            'MINOR ORCHESTRATIONS:',
+            'MEDIUM ORCHESTRATIONS:',
+            'MAJOR ORCHESTRATIONS:',
             'COORDINATIONS:',
+            'MINOR COORDINATIONS:',
+            'MEDIUM COORDINATIONS:',
+            'MAJOR COORDINATIONS:',
             'MANAGEMENTS:',
+            'MINOR MANAGEMENTS:',
+            'MEDIUM MANAGEMENTS:',
+            'MAJOR MANAGEMENTS:',
             'AGGREGATIONS:',
+            'MINOR AGGREGATIONS:',
+            'MEDIUM AGGREGATIONS:',
+            'MAJOR AGGREGATIONS:',
             'CONTROLLERS:',
+            'MINOR CONTROLLERS:',
+            'MEDIUM CONTROLLERS:',
+            'MAJOR CONTROLLERS:',
             'CLIENTS:',
+            'MINOR CLIENTS:',
+            'MEDIUM CLIENTS:',
+            'MAJOR CLIENTS:',
             'EXPOSERS:',
+            'MINOR EXPOSERS:',
+            'MEDIUM EXPOSERS:',
+            'MAJOR EXPOSERS:',
             'PROVIDERS:',
             'BASE:',
+            'MINOR BASE:',
+            'MEDIUM BASE:',
+            'MAJOR BASE:',
             'COMPONENTS:',
+            'MINOR COMPONENTS:',
+            'MEDIUM COMPONENTS:',
+            'MAJOR COMPONENTS:',
             'VIEWS:',
+            'MINOR VIEWS:',
+            'MEDIUM VIEWS:',
+            'MAJOR VIEWS:',
             'PAGES:',
+            'MINOR PAGES:',
+            'MEDIUM PAGES:',
+            'MAJOR PAGES:',
             'ACCEPTANCE:',
+            'MINOR ACCEPTANCE:',
+            'MEDIUM ACCEPTANCE:',
+            'MAJOR ACCEPTANCE:',
             'INTEGRATIONS:',
+            'MINOR INTEGRATIONS:',
+            'MEDIUM INTEGRATIONS:',
+            'MAJOR INTEGRATIONS:',
             'CODE RUB:',
+            'MINOR CODE RUB:',
+            'MEDIUM CODE RUB:',
+            'MAJOR CODE RUB:',
             'MINOR FIX:',
             'MEDIUM FIX:',
             'MAJOR FIX:',
@@ -49,7 +105,23 @@ jobs:
             'CONFIG:',
             'STANDARD:',
             'DESIGN:',
-            'BUSINESS:'
+            'MINOR DESIGN:',
+            'MEDIUM DESIGN:',
+            'MAJOR DESIGN:',
+            'BUSINESS:',
+            'MIGRATIONS:',
+            'PLANNING:',
+            'MINOR PLANNING:',
+            'MAJOR PLANNING:',
+            'MENTORSHIP:',
+            'MINOR MENTORSHIP:',
+            'MAJOR MENTORSHIP:',
+            'DISCUSSION:',
+            'MINOR DISCUSSION:',
+            'MAJOR DISCUSSION:',
+            'IMPORTS:',
+            'REVIEWS:',
+            'STATUS:'
           ];
 
 
@@ -84,17 +156,17 @@ jobs:
           }
     permissions:
       contents: read
-      pull-requests: write
       issues: write
+      pull-requests: write
   requireIssueOrTask:
     name: Require Issue Or Task Association
     runs-on: ubuntu-latest
     steps:
     - name: Check out
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
     - name: Get PR Information
       id: get_pr_info
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       with:
         script: >2-
               const pr = await github.rest.pulls.get({
@@ -111,7 +183,7 @@ jobs:
               console.log(`PR Body: ${prBody}`);
     - name: Check For Associated Issues Or Tasks
       id: check_for_issues_or_tasks
-      if: ${{ steps.get_pr_info.outputs.prOwner != 'dependabot[bot]' }}
+      if: ${{ !contains(',dependabot[bot],', format(',{0},', steps.get_pr_info.outputs.prOwner)) }}
       env:
         PR_BODY: ${{ steps.get_pr_info.outputs.description }}
       run: >2-
@@ -132,3 +204,46 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
+  setAuthorAsPrAssignee:
+    name: Set Author As PR Assignee
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+    - name: Set Author As PR Assignee
+      uses: actions/github-script@v8
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: >
+          const pr = context.payload.pull_request;
+
+          if (!pr) {
+            console.log('No pull request context available.');
+            return;
+          }
+
+
+          const author = pr.user.login;
+
+          if (author.endsWith('[bot]')) {
+            console.log(`Skipping bot author: ${author}`);
+            return;
+          }
+
+
+          console.log(`Assigning PR to author: ${author}`);
+
+
+          try {
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              assignees: [author]
+            });
+          } catch (error) {
+            console.log(`Unable to assign ${author} as PR assignee: ${error.message}`);
+          }
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
