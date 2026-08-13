@@ -9,10 +9,10 @@ updates:
     labels:
       - "dependencies"
     ignore:
-        - dependency-name: "FluentAssertions"
-          update-types: ["version-update:semver-major"]
-        - dependency-name: "Microsoft.OpenApi"
-          versions: ["3.x", "4.x"]
+      - dependency-name: "FluentAssertions"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.OpenApi"
+        versions: ["3.x", "4.x"]
   - package-ecosystem: "npm"
     directory: "/LondonFhirService.Manage.Client"
     schedule:
