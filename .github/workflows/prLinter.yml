@@ -7,11 +7,9 @@ on:
     - synchronize
     - reopened
     - closed
-    branches:
-    - main
 jobs:
   label:
-    name: Label
+    name: Add Label(s)
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     steps:

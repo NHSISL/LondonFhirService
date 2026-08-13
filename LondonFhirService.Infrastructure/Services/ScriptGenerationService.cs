@@ -164,8 +164,7 @@ namespace LondonFhirService.Infrastructure.Services
                 {
                     PullRequest = new PullRequestEvent
                     {
-                        Types = ["opened", "edited", "synchronize", "reopened", "closed"],
-                        Branches = [branchName]
+                        Types = ["opened", "edited", "synchronize", "reopened", "closed"]
                     }
                 },
 
@@ -175,7 +174,7 @@ namespace LondonFhirService.Infrastructure.Services
                         "label",
                         new LabelJobV3(runsOn: BuildMachines.UbuntuLatest)
                         {
-                            Name = "Label"
+                            Name = "Add Label(s)"
                         }
                     },
                     {
