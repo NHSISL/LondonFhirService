@@ -19,7 +19,6 @@ using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
-using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
@@ -335,7 +334,6 @@ public partial class Program
             serviceProvider => serviceProvider.GetRequiredService<StorageBroker>());
 
         services.AddScoped<IStorageBrokerFactory, StorageBrokerFactory>();
-        services.AddTransient<IHashBroker, HashBroker>();
     }
 
     private static void AddFoundationServices(IServiceCollection services)

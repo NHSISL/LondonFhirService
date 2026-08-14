@@ -42,7 +42,6 @@
     { id: "ext-logging", name: "Microsoft.Extensions.Logging", kind: "external" },
     { id: "ext-azure", name: "Azure.Identity", kind: "external" },
     { id: "ext-http", name: "System.Net.Http", kind: "external" },
-    { id: "ext-crypto", name: "System.Security.Cryptography", kind: "external" },
     { id: "ext-fhir-src", name: "Upstream STU3 FHIR services", kind: "external" },
   ];
 
@@ -80,8 +79,6 @@
       description: "Azure.Identity. Registered as a singleton in the API host and used by ConsumerAccessBroker to mint a bearer token for the remote consumer-access endpoint." });
   C({ id: "EXT.HttpClient", name: "HttpClient", project: "ext-http", layer: "external", col: 12, shared: true, methods: [],
       description: "Typed HttpClient registered via AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>()." });
-  C({ id: "EXT.Crypto", name: "SHA256 / MD5", project: "ext-crypto", layer: "external", col: 12, shared: true, methods: [],
-      description: "System.Security.Cryptography. Reached only through HashBroker, which no service consumes today." });
   C({ id: "EXT.DdsStu3", name: "DdsStu3Provider → Discovery Data Service", project: "ext-fhir-src", layer: "external", col: 12, shared: true, methods: [],
       description: "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService. One of the two IFhirProvider implementations registered in Program.Configurations.AddProviders." });
   C({ id: "EXT.LdsStu3", name: "LdsStu3Provider → London Data Service", project: "ext-fhir-src", layer: "external", col: 12, shared: true, methods: [],
@@ -154,12 +151,6 @@
   for (const m of ["LogAsync", "LogInformationAsync", "LogWarningAsync", "LogErrorAsync", "LogCriticalAsync"])
     D(["AuditBroker", m], ["AuditClient", "LogAuditAsync"]);
   D(["AuditBroker", "BulkLogAsync"], ["AuditClient", "BulkLogAuditsAsync"]);
-
-  C({ id: "HashBroker", name: "HashBroker", project: "core", layer: "broker", col: 8,
-      methods: ["GenerateSha256HashAsync", "GenerateMd5HashAsync"],
-      description: "Registered in both hosts but no longer consumed by any service. It hashed the NHS number for the in-process PDS access check; that check moved to the remote consumer-access API, which does its own hashing. It shows on the graph as a root with no inbound flows." });
-  D(["HashBroker", "GenerateSha256HashAsync"], ["EXT.Crypto", "SHA256.HashData"]);
-  D(["HashBroker", "GenerateMd5HashAsync"], ["EXT.Crypto", "MD5.ComputeHash"]);
 
   C({ id: "ConsumerAccessBroker", name: "ConsumerAccessBroker", project: "core", layer: "broker", col: 8,
       methods: ["CheckConsumerAccessAsync"],
@@ -580,12 +571,12 @@
     ...MATCHERS.map(([resource]) => "FS.Matcher." + resource),
     "AuditClient",
     "AuditBroker", "SecurityBroker", "SecurityAuditBroker", "StorageBroker", "StorageBrokerFactory",
-    "Stu3FhirBroker", "HashBroker", "ConsumerAccessBroker",
+    "Stu3FhirBroker", "ConsumerAccessBroker",
     "DateTimeBroker", "IdentifierBroker", "LoggingBroker",
     // client libraries (single shared copies)
     "LIB.SecurityClient", "LIB.EFCoreClient", "LIB.FhirAbstractionProvider", "LIB.FhirProvider",
     // externals
-    "EXT.EFCore", "EXT.ILogger", "EXT.TokenCredential", "EXT.HttpClient", "EXT.Crypto",
+    "EXT.EFCore", "EXT.ILogger", "EXT.TokenCredential", "EXT.HttpClient",
     "EXT.DdsStu3", "EXT.LdsStu3",
   );
 
@@ -595,7 +586,7 @@
      the arrows can never drift apart.
      ------------------------------------------------------------------ */
   for (const extId of ["EXT.EFCore", "EXT.ILogger", "EXT.TokenCredential", "EXT.HttpClient",
-                       "EXT.Crypto", "EXT.DdsStu3", "EXT.LdsStu3", "LIB.FhirAbstractionProvider"]) {
+                       "EXT.DdsStu3", "EXT.LdsStu3", "LIB.FhirAbstractionProvider"]) {
     const comp = components.find(c => c.id === extId);
     const called = [];
     for (const e of edges) {

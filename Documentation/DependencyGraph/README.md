@@ -51,9 +51,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 80 declared components and 343 declared edges draw as
-**77 components · 318 flows** in the single-copy view and **265 nodes ·
-811 flows** per consumer (325 · 896 with utility brokers on).
+At the last scan, 78 declared components and 341 declared edges draw as
+**75 components · 316 flows** in the single-copy view and **263 nodes ·
+809 flows** per consumer (323 · 894 with utility brokers on).
 
 `.github/workflows/pages.yml` publishes this folder to GitHub Pages on every
 push to `main` that touches it — `index.html` is the site root. Nothing is
@@ -101,10 +101,6 @@ enabled once in the repository's Settings → Pages (source: GitHub Actions).
   `PdsData` entities, their foundation services and their `StorageBroker`
   partials are gone, along with the local `ConsumerAccess` table. `IStorageBroker`
   now covers `Audit`, `FhirRecord`, `FhirRecordDifference` and `Provider` only.
-- **`HashBroker` is registered but never consumed.** Both hosts wire
-  `IHashBroker`, but the SHA-256 hash of the NHS number existed only for the
-  in-process PDS check; the remote consumer-access API does its own hashing.
-  It shows on the graph as a root with no inbound flows.
 - **`Stu3FhirBroker` exposes 103 members and the solution consumes one.**
   Only the `FhirProviders` collection is read (by `Stu3PatientService`); the
   102 typed STU3 resource accessors are forwarded to
@@ -119,6 +115,12 @@ enabled once in the repository's Settings → Pages (source: GitHub Actions).
   background worker). `LondonFhirService.Manage` registers brokers, clients
   four foundation services and the reconciliation orchestration only — its
   `AddProcessingServices` and `AddCoordinationServices` are empty methods.
+- **`HashBroker` and the NHS-number hashing config are gone.** The SHA-256 hash
+  existed only to build the patient identifier for the in-process PDS check;
+  the remote consumer-access API does its own hashing, so `IHashBroker`,
+  `System.Security.Cryptography` and `AccessConfigurations.UseHashedNhsNumber` /
+  `HashPepper` were all removed. `CheckAccessPermissions` is the only setting
+  left on `AccessConfigurations`.
 - **`LondonFhirService.Manage.Client` is a thin SPA.** It reaches only two
   Manage endpoints: `GET /api/FrontendConfigurations` (anonymous, called
   before MSAL exists) and `GET /api/Features`.

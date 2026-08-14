@@ -9,10 +9,8 @@ using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Tests.Integration.Brokers;
 using LondonFhirService.Api.Tests.Integration.Brokers.Authentications;
-using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Providers;
-using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
@@ -26,8 +24,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Authentication.Patient.ST
         private readonly AuthApiBroker authApiBroker;
         private readonly ITestOutputHelper output;
         private readonly IConfiguration configuration;
-        private readonly AccessConfigurations accessConfigurations;
-        private static IHashBroker hashBroker = new HashBroker();
 
         public Stu3PatientTests(AuthApiBroker authApiBroker, ITestOutputHelper output)
         {

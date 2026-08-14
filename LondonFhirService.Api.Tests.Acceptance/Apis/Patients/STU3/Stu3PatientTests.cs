@@ -10,8 +10,6 @@ using Hl7.Fhir.Model;
 using LondonFhirService.Api.Tests.Acceptance.Brokers;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Providers;
-using LondonFhirService.Core.Models.Orchestrations.Accesses;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tynamix.ObjectFiller;
 
@@ -21,15 +19,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
     public partial class Stu3PatientTests
     {
         private readonly ApiBroker apiBroker;
-        private readonly AccessConfigurations accessConfigurations;
 
         public Stu3PatientTests(ApiBroker apiBroker)
         {
             this.apiBroker = apiBroker;
-
-            this.accessConfigurations = apiBroker.configuration
-                .GetSection("AccessConfigurations")
-                .Get<AccessConfigurations>();
         }
 
         private static int GetRandomNumber() =>

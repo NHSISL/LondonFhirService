@@ -8,10 +8,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Tests.Integration.Brokers;
-using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Providers;
-using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,8 +25,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
         private readonly ITestOutputHelper output;
         private readonly IConfiguration configuration;
         private readonly DdsConfigurations ddsConfigurations;
-        private readonly AccessConfigurations accessConfigurations;
-        private static IHashBroker hashBroker = new HashBroker();
 
         public Stu3PatientTests(ApiBroker apiBroker, ITestOutputHelper output)
         {
@@ -47,13 +43,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                     .Get<DdsConfigurations>()
                         ?? throw new InvalidOperationException(
                             "DdsConfigurations configuration section is missing or invalid.");
-
-            accessConfigurations =
-                configuration
-                    .GetSection("AccessConfigurations")
-                    .Get<AccessConfigurations>()
-                        ?? throw new InvalidOperationException(
-                            "AccessConfigurations configuration section is missing or invalid.");
 
             this.apiBroker = apiBroker;
             this.output = output;
