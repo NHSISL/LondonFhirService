@@ -2,42 +2,39 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Threading;
+using System;
 using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Orchestrations.Accesses;
-using LondonFhirService.Core.Services.Orchestrations.Accesses;
+using LondonFhirService.Core.Models.Orchestrations.Patients;
+using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
     public partial class Stu3PatientCoordinationService : IStu3PatientCoordinationService
     {
-        private readonly IAccessOrchestrationService accessOrchestrationService;
         private readonly IStu3PatientOrchestrationService patientOrchestrationService;
+        private readonly IStu3FhirReconciliationService fhirReconciliationService;
         private readonly ILoggingBroker loggingBroker;
         private readonly IAuditBroker auditBroker;
         private readonly IIdentifierBroker identifierBroker;
-        private readonly AccessConfigurations accessConfigurations;
 
         public Stu3PatientCoordinationService(
-            IAccessOrchestrationService accessOrchestrationService,
             IStu3PatientOrchestrationService patientOrchestrationService,
+            IStu3FhirReconciliationService fhirReconciliationService,
             ILoggingBroker loggingBroker,
             IAuditBroker auditBroker,
-            IIdentifierBroker identifierBroker,
-            AccessConfigurations accessConfigurations)
+            IIdentifierBroker identifierBroker)
         {
-            this.accessOrchestrationService = accessOrchestrationService;
             this.patientOrchestrationService = patientOrchestrationService;
+            this.fhirReconciliationService = fhirReconciliationService;
             this.loggingBroker = loggingBroker;
             this.auditBroker = auditBroker;
             this.identifierBroker = identifierBroker;
-            this.accessConfigurations = accessConfigurations;
         }
 
         public ValueTask<string> GetStructuredRecordSerialisedAsync(
@@ -65,27 +62,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            if (this.accessConfigurations.CheckAccessPermissions)
-            {
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Check Access Permissions",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
-
-                await this.accessOrchestrationService.ValidateAccess(nhsNumber, correlationId);
-            }
-            else
-            {
-                await this.auditBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Access permission check skipped due to configuration (CheckAccessPermissions = false)",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
-            }
-
             await this.auditBroker.LogInformationAsync(
                 auditType,
                 title: $"Requesting Patient Info",
@@ -93,13 +69,27 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            string bundle = await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
-                correlationId,
-                nhsNumber,
-                dateOfBirth,
-                demographicsOnly,
-                includeInactivePatients,
-                cancellationToken);
+            StructuredRecordsResponse structuredRecordsResponse =
+                await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    nhsNumber,
+                    dateOfBirth,
+                    demographicsOnly,
+                    includeInactivePatients,
+                    cancellationToken);
+
+            await this.auditBroker.LogInformationAsync(
+                auditType,
+                title: $"Reconcile bundles",
+                message,
+                fileName: null,
+                correlationId: correlationId.ToString());
+
+            string bundle = await this.fhirReconciliationService.ReconcileSerialisedAsync(
+                bundles: structuredRecordsResponse.Bundles,
+                nhsNumber: nhsNumber,
+                primaryProvider: structuredRecordsResponse.PrimaryProvider,
+                correlationId: correlationId);
 
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;

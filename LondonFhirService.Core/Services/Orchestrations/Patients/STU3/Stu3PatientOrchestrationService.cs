@@ -6,14 +6,20 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using Hl7.Fhir.Model;
+using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Brokers.Audits;
-using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Securities;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Providers;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
+using LondonFhirService.Core.Models.Orchestrations.Patients;
+using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
+using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Providers;
 
@@ -23,28 +29,31 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
     {
         private readonly IProviderService providerService;
         private readonly IStu3PatientService patientService;
-        private readonly IStu3FhirReconciliationService fhirReconciliationService;
+        private readonly IConsumerAccessService consumerAccessService;
         private readonly IAuditBroker auditBroker;
-        private readonly IIdentifierBroker identifierBroker;
+        private readonly ISecurityBroker securityBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly AccessConfigurations accessConfigurations;
 
         public Stu3PatientOrchestrationService(
             IProviderService providerService,
             IStu3PatientService patientService,
-            IStu3FhirReconciliationService fhirReconciliationService,
+            IConsumerAccessService consumerAccessService,
             IAuditBroker auditBroker,
-            IIdentifierBroker identifierBroker,
-            ILoggingBroker loggingBroker)
+            ISecurityBroker securityBroker,
+            ILoggingBroker loggingBroker,
+            AccessConfigurations accessConfigurations)
         {
             this.providerService = providerService;
             this.patientService = patientService;
-            this.fhirReconciliationService = fhirReconciliationService;
+            this.consumerAccessService = consumerAccessService;
             this.auditBroker = auditBroker;
-            this.identifierBroker = identifierBroker;
+            this.securityBroker = securityBroker;
             this.loggingBroker = loggingBroker;
+            this.accessConfigurations = accessConfigurations;
         }
 
-        public ValueTask<string> GetStructuredRecordSerialisedAsync(
+        public ValueTask<StructuredRecordsResponse> GetStructuredRecordSerialisedAsync(
             Guid correlationId,
             string nhsNumber,
             string dateOfBirth = null,
@@ -69,6 +78,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
+            await CheckAccessPermissionsAsync(nhsNumber, correlationId);
+
             await this.auditBroker.LogInformationAsync(
                 auditType,
                 title: $"Retrieve active providers and execute request",
@@ -89,20 +100,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 includeInactivePatients,
                 cancellationToken);
 
-            await this.auditBroker.LogInformationAsync(
-                auditType,
-                title: $"Reconcile bundles",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            string reconciledBundle =
-                await this.fhirReconciliationService.ReconcileSerialisedAsync(
-                    bundles: bundles,
-                    nhsNumber: nhsNumber,
-                    primaryProvider: primaryProvider,
-                    correlationId: correlationId);
-
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;
 
@@ -113,8 +110,121 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            return reconciledBundle;
+            return new StructuredRecordsResponse
+            {
+                PrimaryProvider = primaryProvider,
+                Bundles = bundles
+            };
         });
+
+        public ValueTask ValidateAccess(string nhsNumber, Guid correlationId) =>
+        TryCatch(async () => await CheckAccessPermissionsAsync(nhsNumber, correlationId));
+
+        /// <summary>
+        /// The access decision itself. Kept separate from the public ValidateAccess so
+        /// GetStructuredRecordSerialisedAsync can await it inside its own TryCatch — calling the
+        /// public method would localise the same exception twice.
+        /// </summary>
+        private async ValueTask CheckAccessPermissionsAsync(string nhsNumber, Guid correlationId)
+        {
+            ValidateArgsOnValidateAccess(nhsNumber, correlationId);
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
+            string message = $"Parameters:  {{ nhsNumber = \"{nhsNumber}\" }}";
+
+            if (this.accessConfigurations.CheckAccessPermissions)
+            {
+                var stopwatch = Stopwatch.StartNew();
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Check Access Permissions",
+                    message,
+                    fileName: null,
+                    correlationId: correlationId.ToString());
+
+                User currentUser = await this.securityBroker.GetCurrentUserAsync();
+
+                JsonSerializerOptions options = new()
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = false,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                };
+
+                string currentUserJson = JsonSerializer.Serialize(currentUser, options);
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType: "Access",
+                    title: "Check Access Permissons",
+                    message: currentUserJson,
+                    fileName: null,
+                    correlationId: correlationId.ToString());
+
+                if (currentUser is null)
+                {
+                    throw new UnauthorizedPatientOrchestrationException(
+                        $"Current consumer is not a valid consumer.");
+                }
+
+                ValidateAccessRequest validateAccessRequest = new ValidateAccessRequest
+                {
+                    ConsumerUserId = currentUser.UserId,
+                    NhsNumber = nhsNumber,
+                    CorrelationId = correlationId
+                };
+
+                ConsumerAccess consumerAccess =
+                    await this.consumerAccessService.CheckConsumerAccessAsync(validateAccessRequest);
+
+                stopwatch.Stop();
+                long elapsedTime = stopwatch.ElapsedMilliseconds;
+
+                if (consumerAccess.IsAccessAllowed is false)
+                {
+                    string reasons = string.Join(", ", consumerAccess.Reasons
+                        .Select(reason => $"{reason.Code}: {reason.Message}"));
+
+                    await this.auditBroker.LogInformationAsync(
+                        auditType: "Access",
+                        title: "Access Forbidden",
+
+                        message:
+                            $"Access was denied as consumer with id {currentUser.UserId} is not permitted " +
+                            $"to access patient with NHS number {nhsNumber}. Reasons: {reasons}  " +
+                            $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
+
+                        fileName: null,
+                        correlationId: correlationId.ToString());
+
+                    throw new ForbiddenPatientOrchestrationException(
+                        "Current consumer is not permitted to access this patient.  " +
+                        $"CorrelationId: {correlationId.ToString()}");
+                }
+
+                await this.auditBroker.LogInformationAsync(
+                    auditType: "Access",
+                    title: "Access Allowed",
+
+                    message:
+                        $"{currentUser.UserId} is allowed to access patient with " +
+                        $"NHS number {nhsNumber} via org codes: " +
+                        $"{string.Join(", ", consumerAccess.AllowedViaOrganisations)}  " +
+                        $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
+
+                    fileName: null,
+                    correlationId: correlationId.ToString());
+            }
+            else
+            {
+                await this.auditBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Access permission check skipped due to configuration (CheckAccessPermissions = false)",
+                    message,
+                    fileName: null,
+                    correlationId: correlationId.ToString());
+            }
+        }
 
         private async ValueTask<(Provider primaryProvider, List<Provider> activeProvider)> GetProviderInfo()
         {

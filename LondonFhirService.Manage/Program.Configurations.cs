@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -22,13 +22,9 @@ using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.Audits;
-using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
-using LondonFhirService.Core.Services.Foundations.OdsDatas;
-using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -217,11 +213,6 @@ public partial class Program
     private static void AddFoundationServices(IServiceCollection services)
     {
         services.AddTransient<IAuditService, AuditService>();
-        services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
-        services.AddTransient<IConsumerService, ConsumerService>();
-        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
-        services.AddTransient<IOdsDataService, OdsDataService>();
-        services.AddTransient<IPdsDataService, PdsDataService>();
         services.AddTransient<IProviderService, ProviderService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
@@ -233,6 +224,7 @@ public partial class Program
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
     }
 
     private static void AddCoordinationServices(IServiceCollection services, IConfiguration configuration)

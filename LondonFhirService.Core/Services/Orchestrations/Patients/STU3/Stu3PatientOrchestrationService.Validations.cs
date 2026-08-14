@@ -33,6 +33,16 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 (Rule: IsInvalid(correlationId), Parameter: "CorrelationId"));
         }
 
+        private static void ValidateArgsOnValidateAccess(string nhsNumber, Guid correlationId)
+        {
+            Validate(
+                createException: () => new InvalidArgumentPatientOrchestrationException(
+                    message: "Invalid argument(s), please correct the errors and try again."),
+
+                (Rule: IsInvalid(nhsNumber), Parameter: "NhsNumber"),
+                (Rule: IsInvalid(correlationId), Parameter: "CorrelationId"));
+        }
+
         private static void ValidatePrimaryProviders(List<Provider> primaryProviders)
         {
             if (primaryProviders.Count != 1)

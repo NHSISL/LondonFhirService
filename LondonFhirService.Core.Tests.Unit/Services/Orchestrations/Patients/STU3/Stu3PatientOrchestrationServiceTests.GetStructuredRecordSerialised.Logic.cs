@@ -5,11 +5,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using FluentAssertions;
-using Force.DeepCloner;
-using Hl7.Fhir.Model;
+using ISL.Security.Client.Models.Foundations.Users;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Providers;
+using LondonFhirService.Core.Models.Orchestrations.Patients;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
@@ -28,18 +31,34 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
             List<(string Provider, string Json)> randomBundles = CreateRandomBundles();
-            Bundle randomBundle = CreateRandomBundle();
-            string expectedBundle = SerializeBundle(randomBundle.DeepClone());
+            List<(string Provider, string Json)> expectedBundles = randomBundles;
             Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
             Provider randomInactiveProvider = CreateRandomInactiveProvider();
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
+            string userId = GetRandomString();
+            User randomUser = CreateRandomUser(userId);
+            User outputUser = randomUser;
+            ConsumerAccess randomConsumerAccess = CreateRandomConsumerAccess(isAccessAllowed: true);
+            ConsumerAccess returnedConsumerAccess = randomConsumerAccess;
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
                 $"demographicsOnly = \"{inputDemographicsOnly}\", " +
                 $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
+
+            string accessMessage = $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\" }}";
+
+            JsonSerializerOptions options = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            };
+
+            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
 
             IQueryable<Provider> allProviders = new List<Provider>
             {
@@ -47,6 +66,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 randomActiveProvider,
                 randomPrimaryProvider
             }.AsQueryable();
+
+            this.securityBrokerMock.Setup(broker =>
+                broker.GetCurrentUserAsync())
+                    .ReturnsAsync(outputUser);
+
+            this.consumerAccessServiceMock.Setup(service =>
+                service.CheckConsumerAccessAsync(
+                    It.Is(SameValidateAccessRequestAs(userId, inputNhsNumber, correlationId)),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(returnedConsumerAccess);
 
             this.providerServiceMock.Setup(service =>
                 service.RetrieveAllProvidersAsync())
@@ -69,25 +98,29 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     cancellationToken))
                     .ReturnsAsync(randomBundles);
 
-            this.fhirReconciliationServiceMock.Setup(service =>
-                service.ReconcileSerialisedAsync(
-                    randomBundles,
-                    inputNhsNumber,
-                    randomPrimaryProvider,
-                    correlationId))
-                    .ReturnsAsync(expectedBundle);
-
             // when
-            string actualJson = await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
-                correlationId,
-                inputNhsNumber,
-                inputDateOfBirth,
-                inputDemographicsOnly,
-                inputActivePatientsOnly,
-                cancellationToken);
+            StructuredRecordsResponse actualResponse =
+                await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    inputNhsNumber,
+                    inputDateOfBirth,
+                    inputDemographicsOnly,
+                    inputActivePatientsOnly,
+                    cancellationToken);
 
             // then
-            actualJson.Should().BeEquivalentTo(expectedBundle);
+            actualResponse.PrimaryProvider.Should().BeEquivalentTo(randomPrimaryProvider);
+            actualResponse.Bundles.Should().BeEquivalentTo(expectedBundles);
+
+            this.securityBrokerMock.Verify(broker =>
+                broker.GetCurrentUserAsync(),
+                    Times.Once);
+
+            this.consumerAccessServiceMock.Verify(service =>
+                service.CheckConsumerAccessAsync(
+                    It.Is(SameValidateAccessRequestAs(userId, inputNhsNumber, correlationId)),
+                    default),
+                        Times.Once);
 
             this.providerServiceMock.Verify(service =>
                 service.RetrieveAllProvidersAsync(),
@@ -104,19 +137,44 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     cancellationToken),
                     Times.Once);
 
-            this.fhirReconciliationServiceMock.Verify(service =>
-                service.ReconcileSerialisedAsync(
-                    randomBundles,
-                    inputNhsNumber,
-                    randomPrimaryProvider,
-                    correlationId),
-                    Times.Once);
-
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Orchestration Service Request Submitted",
                     message,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Check Access Permissions",
+                    accessMessage,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "Check Access Permissons",
+                    currentUserJson,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "Access Allowed",
+
+                    It.Is<string>(auditMessage => auditMessage.StartsWith(
+                        $"{userId} is allowed to access patient with " +
+                        $"NHS number {inputNhsNumber} via org codes: " +
+                        $"{string.Join(", ", returnedConsumerAccess.AllowedViaOrganisations)}  " +
+                        $"CorrelationId: {correlationId.ToString()}")),
+
                     null,
                     correlationId.ToString()),
                         Times.Once);
@@ -133,16 +191,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    It.Is<string>(s => s.StartsWith("Reconcile bundles")),
-                    message,
-                    null,
-                    correlationId.ToString()),
-                        Times.Once);
-
-            this.auditBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(
-                    auditType,
-                    It.Is<string>(s => s.StartsWith("Orchestration Service Request Completed")),
+                    It.Is<string>(title => title.StartsWith("Orchestration Service Request Completed")),
                     message,
                     null,
                     correlationId.ToString()),
@@ -150,10 +199,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
-            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.securityBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
-            this.identifierBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
