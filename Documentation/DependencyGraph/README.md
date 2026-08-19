@@ -10,7 +10,7 @@ control in the header:
 
 - **single copy** *(default)* — every component appears exactly once with its
   full method surface, and all consumers' flows converge on it (the one
-  StorageBroker shows all 41 per-entity method rows). Best for "who touches
+  StorageBroker shows all 21 per-entity method rows). Best for "who touches
   this?".
 - **per consumer** — dependencies are duplicated once per consumer, each copy
   showing only the method rows that consumer uses. Best for "what does this
@@ -51,16 +51,16 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 84 declared components and 421 declared edges draw as
-**81 components · 388 flows** in the single-copy view and **334 nodes ·
-995 flows** per consumer (420 · 1110 with utility brokers on).
+At the last scan, 78 declared components and 341 declared edges draw as
+**75 components · 316 flows** in the single-copy view and **263 nodes ·
+809 flows** per consumer (323 · 894 with utility brokers on).
 
 `.github/workflows/pages.yml` publishes this folder to GitHub Pages on every
 push to `main` that touches it — `index.html` is the site root. Nothing is
 compiled; `index.html` and `graph-data.js` are copied as-is. Pages has to be
 enabled once in the repository's Settings → Pages (source: GitHub Actions).
 
-## Current truths captured in the data (scanned 2026-08-11)
+## Current truths captured in the data (scanned 2026-08-14)
 
 - **`LondonFhirService.Core` has no event bus.** Every flow is a direct call.
   The comparison half of the solution is driven by polling, not messaging:
@@ -76,27 +76,51 @@ enabled once in the repository's Settings → Pages (source: GitHub Actions).
   provider calls and from background work where the request-scoped context is
   unsafe. Only `RetrieveAllAuditsAsync` uses the injected scoped broker.
   `Stu3PatientService` uses the factory for the same reason.
-- **The access decision is made in-process** by `AccessOrchestrationService`:
-  caller → matching `Consumer` → active window → organisations expanded down
-  the ODS hierarchy → optional SHA-256 hash of the NHS number →
-  `PdsDataService.OrganisationsHaveAccessToThisPatient`. Every allow and
-  every denial is written to the audit trail.
-- **`ConsumerAccessBroker` is registered but never consumed.** The API host
-  wires `AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>()` and it
-  would post a `ValidateAccessRequest` to a remote endpoint with a
-  `DefaultAzureCredential` token — but no service calls it today. It shows on
-  the graph as a root with no inbound flows.
+- **The access decision is now delegated to a remote service, and lives with
+  the patient orchestration.** `Stu3PatientOrchestrationService.ValidateAccess`
+  resolves the caller, builds a `ValidateAccessRequest` (consumer user id +
+  NHS number + correlation id) and hands it to `ConsumerAccessService`, a
+  single-method passthrough over `ConsumerAccessBroker`. The returned
+  `ConsumerAccess` decides the outcome: `IsAccessAllowed == false` audits
+  "Access Forbidden" with the returned reason codes and throws; allowed audits
+  "Access Allowed" naming the organisations that granted it. Every allow and
+  every denial is still written to the audit trail. There is no
+  `AccessOrchestrationService` any more — with one service dependency it was
+  no longer an orchestration.
+- **`AccessConfigurations.CheckAccessPermissions` gates the check inside
+  `ValidateAccess`,** not at the coordination layer: off, it audits the skip
+  and returns. `GetStructuredRecordSerialisedAsync` runs the same check first
+  via the private helper `ValidateAccess` wraps, so a forbidden caller is
+  localised once rather than twice.
+- **Reconciliation moved up to `Stu3PatientCoordinationService`.** The
+  orchestration returns a `StructuredRecordsResponse` (primary provider +
+  per-provider bundles); the coordination service hands them to
+  `Stu3FhirReconciliationService` — itself an orchestration — and returns the
+  single serialised bundle the API hands back.
+- **Consumer access is no longer held locally.** The `Consumer`, `OdsData` and
+  `PdsData` entities, their foundation services and their `StorageBroker`
+  partials are gone, along with the local `ConsumerAccess` table. `IStorageBroker`
+  now covers `Audit`, `FhirRecord`, `FhirRecordDifference` and `Provider` only.
 - **`Stu3FhirBroker` exposes 103 members and the solution consumes one.**
   Only the `FhirProviders` collection is read (by `Stu3PatientService`); the
   102 typed STU3 resource accessors are forwarded to
   `IFhirAbstractionProvider` but never called.
 - **`Stu3FhirReconciliationService` does not reconcile yet.** It returns the
-  first non-empty bundle and throws when every provider came back empty.
+  first non-empty bundle and throws when every provider came back empty. It is
+  modelled — and now lives — as an orchestration: it sits alongside
+  `Stu3PatientOrchestrationService` under the coordination service, and its
+  exceptions are the `FhirReconciliationOrchestration*` family.
 - **The two hosts are not equivalent.** `LondonFhirService.Api` registers the
   whole stack (providers, orchestrations, processings, coordinations,
   background worker). `LondonFhirService.Manage` registers brokers, clients
-  and nine foundation services only — its `AddOrchestrationServices`,
+  four foundation services and the reconciliation orchestration only — its
   `AddProcessingServices` and `AddCoordinationServices` are empty methods.
+- **`HashBroker` and the NHS-number hashing config are gone.** The SHA-256 hash
+  existed only to build the patient identifier for the in-process PDS check;
+  the remote consumer-access API does its own hashing, so `IHashBroker`,
+  `System.Security.Cryptography` and `AccessConfigurations.UseHashedNhsNumber` /
+  `HashPepper` were all removed. `CheckAccessPermissions` is the only setting
+  left on `AccessConfigurations`.
 - **`LondonFhirService.Manage.Client` is a thin SPA.** It reaches only two
   Manage endpoints: `GET /api/FrontendConfigurations` (anonymous, called
   before MSAL exists) and `GET /api/Features`.
@@ -138,7 +162,7 @@ For small changes you can also edit by hand: all data lives in
 (`buildSingleCopyInstances` / `layoutBands` and `buildDuplicatedInstances` /
 `layoutTrees`, dispatched on `state.view`) and should rarely need changes.
 
-- The seven uniform CRUD foundation services are generated from the
+- The three uniform CRUD foundation services are generated from the
   `CRUD_ENTITIES` config (entity name + read/write variant A/B/C). A new one
   is usually one added line, and it extends the `StorageBroker` surface
   automatically.

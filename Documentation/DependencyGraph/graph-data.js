@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
    London FHIR Service solution dependency data — consumed by index.html
    (both the single-copy and the per-consumer view).
 
@@ -42,7 +42,6 @@
     { id: "ext-logging", name: "Microsoft.Extensions.Logging", kind: "external" },
     { id: "ext-azure", name: "Azure.Identity", kind: "external" },
     { id: "ext-http", name: "System.Net.Http", kind: "external" },
-    { id: "ext-crypto", name: "System.Security.Cryptography", kind: "external" },
     { id: "ext-fhir-src", name: "Upstream STU3 FHIR services", kind: "external" },
   ];
 
@@ -73,15 +72,13 @@
      can never drift apart.
      ================================================================== */
   C({ id: "EXT.EFCore", name: "DbContext (EF Core / SQL Server)", project: "ext-efcore", layer: "external", col: 12, shared: true, methods: [],
-      description: "The DbContext handed to STX.EFCore.Client's EFCoreClient. In this solution that is Core's StorageBroker itself — it derives from EFxceptionsContext (EF Core DbContext) and passes `this` into `new EFCoreClient(this)`. SQL Server with HierarchyId enabled (OdsData.OdsHierarchy)." });
+      description: "The DbContext handed to STX.EFCore.Client's EFCoreClient. In this solution that is Core's StorageBroker itself — it derives from EFxceptionsContext (EF Core DbContext) and passes `this` into `new EFCoreClient(this)`. SQL Server with HierarchyId enabled." });
   C({ id: "EXT.ILogger", name: "ILogger<LoggingBroker>", project: "ext-logging", layer: "external", col: 12, shared: true, methods: [],
       description: "Microsoft.Extensions.Logging. The only sink LoggingBroker writes to; Application Insights is wired at host level." });
   C({ id: "EXT.TokenCredential", name: "TokenCredential (DefaultAzureCredential)", project: "ext-azure", layer: "external", col: 12, shared: true, methods: [],
       description: "Azure.Identity. Registered as a singleton in the API host and used by ConsumerAccessBroker to mint a bearer token for the remote consumer-access endpoint." });
   C({ id: "EXT.HttpClient", name: "HttpClient", project: "ext-http", layer: "external", col: 12, shared: true, methods: [],
       description: "Typed HttpClient registered via AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>()." });
-  C({ id: "EXT.Crypto", name: "SHA256 / MD5", project: "ext-crypto", layer: "external", col: 12, shared: true, methods: [],
-      description: "System.Security.Cryptography. HashBroker hashes the NHS number (with a configured pepper) before the PDS access check." });
   C({ id: "EXT.DdsStu3", name: "DdsStu3Provider → Discovery Data Service", project: "ext-fhir-src", layer: "external", col: 12, shared: true, methods: [],
       description: "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService. One of the two IFhirProvider implementations registered in Program.Configurations.AddProviders." });
   C({ id: "EXT.LdsStu3", name: "LdsStu3Provider → London Data Service", project: "ext-fhir-src", layer: "external", col: 12, shared: true, methods: [],
@@ -142,7 +139,7 @@
 
   C({ id: "SecurityBroker", name: "SecurityBroker", project: "core", layer: "broker", col: 8,
       methods: ["GetCurrentUserAsync", "IsCurrentUserAuthenticatedAsync", "IsInRoleAsync", "HasClaimAsync", "ValidateCaptchaAsync", "GetIpAddressAsync"],
-      description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today (by AccessOrchestrationService). ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called." });
+      description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today (by Stu3PatientOrchestrationService, to build the ValidateAccessRequest). ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called." });
   D(["SecurityBroker", "GetCurrentUserAsync"], ["LIB.SecurityClient", "Users.GetUserAsync"]);
   D(["SecurityBroker", "IsCurrentUserAuthenticatedAsync"], ["LIB.SecurityClient", "Users.IsUserAuthenticatedAsync"]);
   D(["SecurityBroker", "IsInRoleAsync"], ["LIB.SecurityClient", "Users.IsUserInRoleAsync"]);
@@ -155,15 +152,9 @@
     D(["AuditBroker", m], ["AuditClient", "LogAuditAsync"]);
   D(["AuditBroker", "BulkLogAsync"], ["AuditClient", "BulkLogAuditsAsync"]);
 
-  C({ id: "HashBroker", name: "HashBroker", project: "core", layer: "broker", col: 8,
-      methods: ["GenerateSha256HashAsync", "GenerateMd5HashAsync"],
-      description: "Only GenerateSha256HashAsync(string, pepper) is consumed — AccessOrchestrationService hashes the NHS number before asking PdsDataService whether the consumer's organisations may see that patient (when AccessConfigurations.UseHashedNhsNumber is on)." });
-  D(["HashBroker", "GenerateSha256HashAsync"], ["EXT.Crypto", "SHA256.HashData"]);
-  D(["HashBroker", "GenerateMd5HashAsync"], ["EXT.Crypto", "MD5.ComputeHash"]);
-
   C({ id: "ConsumerAccessBroker", name: "ConsumerAccessBroker", project: "core", layer: "broker", col: 8,
       methods: ["CheckConsumerAccessAsync"],
-      description: "Posts a ValidateAccessRequest to a remote consumer-access endpoint with a DefaultAzureCredential bearer token. Registered in the API host (AddHttpClient) but NOT consumed by any service today — the access decision is currently made in-process by AccessOrchestrationService." });
+      description: "Posts a ValidateAccessRequest to a remote consumer-access endpoint with a DefaultAzureCredential bearer token and reads back a ConsumerAccess verdict. Registered in the API host (AddHttpClient) and consumed by ConsumerAccessService — this is now the whole access decision." });
   D(["ConsumerAccessBroker", "CheckConsumerAccessAsync"], ["EXT.TokenCredential", "GetTokenAsync"]);
   D(["ConsumerAccessBroker", "CheckConsumerAccessAsync"], ["EXT.HttpClient", "SendAsync"]);
 
@@ -235,15 +226,8 @@
        C plain CRUD  — no security-audit broker at all
      ================================================================== */
   const CRUD_ENTITIES = [
-    { e: "Consumer", plural: "Consumers", variant: "A" },
-    { e: "ConsumerAccess", plural: "ConsumerAccesses", variant: "B",
-      extras: ["RetrieveAllActiveOrganisationsUserHasAccessToAsync"] },
     { e: "FhirRecord", plural: "FhirRecords", variant: "A" },
     { e: "FhirRecordDifference", plural: "FhirRecordDifferences", variant: "A" },
-    { e: "OdsData", plural: "OdsDatas", variant: "C",
-      extras: ["RetrieveChildrenByParentId", "RetrieveAllDescendantsByParentId", "RetrieveAllAncestorsByChildId"] },
-    { e: "PdsData", plural: "PdsDatas", variant: "C",
-      extras: ["OrganisationsHaveAccessToThisPatient"] },
     { e: "Provider", plural: "Providers", variant: "A" },
   ];
 
@@ -307,17 +291,12 @@
     st(remove, `Delete${e}Async`);
   }
 
-  /* -- entity-specific read paths that sit outside the CRUD template -- */
-  D(["FS.ConsumerAccess", "RetrieveAllActiveOrganisationsUserHasAccessToAsync"], ["StorageBroker", "SelectAllConsumerAccessesAsync"]);
-  D(["FS.ConsumerAccess", "RetrieveAllActiveOrganisationsUserHasAccessToAsync"], ["StorageBroker", "SelectAllOdsDatasAsync"]);
-  D(["FS.ConsumerAccess", "RetrieveAllActiveOrganisationsUserHasAccessToAsync"], ["DateTimeBroker", "GetCurrentDateTimeOffsetAsync"]);
-  for (const m of ["RetrieveChildrenByParentId", "RetrieveAllDescendantsByParentId", "RetrieveAllAncestorsByChildId"]) {
-    D(["FS.OdsData", m], ["StorageBroker", "SelectOdsDataByIdAsync"]);
-    D(["FS.OdsData", m], ["StorageBroker", "SelectAllOdsDatasAsync"]);
-  }
-  D(["FS.PdsData", "OrganisationsHaveAccessToThisPatient"], ["StorageBroker", "SelectAllPdsDatasAsync"]);
-  D(["FS.PdsData", "OrganisationsHaveAccessToThisPatient"], ["DateTimeBroker", "GetCurrentDateTimeOffsetAsync"]);
-  D(["FS.PdsData", "OrganisationsHaveAccessToThisPatient"], ["AuditBroker", "LogInformationAsync"]);
+  /* -- ConsumerAccessService: a pure passthrough over the remote
+        consumer-access API, so it owns no storage surface at all -- */
+  C({ id: "FS.ConsumerAccess", name: "ConsumerAccessService", project: "core", layer: "foundation", col: 7,
+      methods: ["CheckConsumerAccessAsync"],
+      description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService.ValidateAccess. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and timeout / cancellation onto TimedOut- and CancelledConsumerAccessServiceException. It takes no storage broker — consumer access is no longer held locally." });
+  D(["FS.ConsumerAccess", "CheckConsumerAccessAsync"], ["ConsumerAccessBroker", "CheckConsumerAccessAsync"]);
 
   /* -- AuditService: the one CRUD service that deviates structurally -- */
   const AUDIT_ADD_ARGS = "AddAuditAsync(auditType, title, message, …)";
@@ -366,10 +345,6 @@
   D(["FS.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["StorageBrokerFactory", "CreateStorageBrokerAsync"]);
   D(["FS.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["StorageBroker", "InsertFhirRecordAsync"]);
   D(["FS.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["LoggingBroker", "LogInformationAsync"]);
-
-  C({ id: "FS.Stu3FhirReconciliation", name: "Stu3FhirReconciliationService", project: "core", layer: "foundation", col: 7,
-      methods: ["ReconcileSerialisedAsync"],
-      description: "Placeholder reconciliation: returns the first non-empty bundle and throws ResourceNotFoundException when every provider came back empty. It takes only ILoggingBroker — no real merge across providers yet." });
 
   C({ id: "FS.JsonElement", name: "JsonElementService", project: "core", layer: "foundation", col: 7,
       methods: ["CreateStringElement", "CreateArrayElement", "CreateObjectElement"],
@@ -426,24 +401,21 @@
   /* ==================================================================
      LondonFhirService.Core — orchestrations.
      ================================================================== */
-  C({ id: "OR.Access", name: "AccessOrchestrationService", project: "core", layer: "orchestration", col: 5,
-      methods: ["ValidateAccess"],
-      description: "The access decision, made in-process. Resolves the caller, matches them to a Consumer by UserId, checks the ActiveFrom/ActiveTo window, expands their organisations down the ODS hierarchy, optionally hashes the NHS number (AccessConfigurations.UseHashedNhsNumber + HashPepper), then asks PdsDataService whether any of those organisations may see that patient. Every allow and every denial is written to the audit trail." });
-  D(["OR.Access", "ValidateAccess"], ["SecurityBroker", "GetCurrentUserAsync"]);
-  D(["OR.Access", "ValidateAccess"], ["AuditBroker", "LogInformationAsync"]);
-  D(["OR.Access", "ValidateAccess"], ["FS.Consumer", "RetrieveAllConsumersAsync"]);
-  D(["OR.Access", "ValidateAccess"], ["DateTimeBroker", "GetCurrentDateTimeOffsetAsync"]);
-  D(["OR.Access", "ValidateAccess"], ["FS.ConsumerAccess", "RetrieveAllActiveOrganisationsUserHasAccessToAsync"]);
-  D(["OR.Access", "ValidateAccess"], ["HashBroker", "GenerateSha256HashAsync"]);
-  D(["OR.Access", "ValidateAccess"], ["FS.PdsData", "OrganisationsHaveAccessToThisPatient"]);
+  C({ id: "OR.Stu3FhirReconciliation", name: "Stu3FhirReconciliationService", project: "core", layer: "orchestration", col: 5,
+      methods: ["ReconcileSerialisedAsync"],
+      description: "Placeholder reconciliation: returns the first non-empty bundle and throws NotFoundFhirReconciliationOrchestrationException when every provider came back empty. It takes only ILoggingBroker — no real merge across providers yet. Modelled as an orchestration: it sits alongside Stu3PatientOrchestrationService under the coordination service, and its exceptions are the FhirReconciliationOrchestration* family." });
 
   C({ id: "OR.Stu3Patient", name: "Stu3PatientOrchestrationService", project: "core", layer: "orchestration", col: 5,
-      methods: ["GetStructuredRecordSerialisedAsync"],
-      description: "Reads the STU3 providers, keeps the active ones (IsActive plus the ActiveFrom/ActiveTo window) with the primary first, validates that exactly one primary exists, fans the request out through Stu3PatientService and hands the bundles to reconciliation." });
+      methods: ["GetStructuredRecordSerialisedAsync", "ValidateAccess"],
+      description: "Gates the request on access, then fans it out. GetStructuredRecordSerialisedAsync runs the access check first (through the same private helper ValidateAccess wraps, so the exception is localised once), reads the STU3 providers, keeps the active ones (IsActive plus the ActiveFrom/ActiveTo window) with the primary first, validates that exactly one primary exists, and returns a StructuredRecordsResponse (primary provider + per-provider bundles) for the coordination service to reconcile. ValidateAccess honours AccessConfigurations.CheckAccessPermissions: off, it audits the skip and returns; on, it resolves the caller, builds a ValidateAccessRequest and asks ConsumerAccessService — not allowed writes an Access Forbidden audit carrying the returned reason codes and throws ForbiddenPatientOrchestrationException, allowed writes an Access Allowed audit naming the organisations that granted it." });
   D(["OR.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["AuditBroker", "LogInformationAsync"]);
+  D(["OR.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["SecurityBroker", "GetCurrentUserAsync"]);
+  D(["OR.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["FS.ConsumerAccess", "CheckConsumerAccessAsync"]);
   D(["OR.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["FS.Provider", "RetrieveAllProvidersAsync"]);
   D(["OR.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["FS.Stu3Patient", "GetStructuredRecordSerialisedAsync"]);
-  D(["OR.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["FS.Stu3FhirReconciliation", "ReconcileSerialisedAsync"]);
+  D(["OR.Stu3Patient", "ValidateAccess"], ["AuditBroker", "LogInformationAsync"]);
+  D(["OR.Stu3Patient", "ValidateAccess"], ["SecurityBroker", "GetCurrentUserAsync"]);
+  D(["OR.Stu3Patient", "ValidateAccess"], ["FS.ConsumerAccess", "CheckConsumerAccessAsync"]);
 
   C({ id: "OR.CompareQueue", name: "CompareQueueOrchestrationService", project: "core", layer: "orchestration", col: 5,
       methods: ["GetUnprocessedRecordAsync", "ChangeFhirRecordStatusAsync", "PersistFhirRecordDifferencesAsync"],
@@ -472,11 +444,11 @@
      ================================================================== */
   C({ id: "CO.Stu3Patient", name: "Stu3PatientCoordinationService", project: "core", layer: "coordination", col: 4,
       methods: ["GetStructuredRecordSerialisedAsync"],
-      description: "Mints the correlation id for the whole request, audits each stage, runs the access check when AccessConfigurations.CheckAccessPermissions is on (and audits the skip when it is off), then delegates to the patient orchestration." });
+      description: "Mints the correlation id for the whole request, audits each stage, delegates to the patient orchestration for the access-gated fan-out, then hands the per-provider bundles to the reconciliation orchestration, which returns the single serialised bundle the API hands back." });
   D(["CO.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["IdentifierBroker", "GetIdentifierAsync"]);
   D(["CO.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["AuditBroker", "LogInformationAsync"]);
-  D(["CO.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["OR.Access", "ValidateAccess"]);
   D(["CO.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["OR.Stu3Patient", "GetStructuredRecordSerialisedAsync"]);
+  D(["CO.Stu3Patient", "GetStructuredRecordSerialisedAsync"], ["OR.Stu3FhirReconciliation", "ReconcileSerialisedAsync"]);
 
   C({ id: "CO.Comparison", name: "ComparisonCoordinationService", project: "core", layer: "coordination", col: 4,
       methods: ["ProcessFhirRecordsAsync"],
@@ -591,20 +563,20 @@
     "MG.FhirRecords", "MG.FhirRecordDifferences",
     // LondonFhirService.Core — every service gets a full-surface tree of its own
     "CO.Stu3Patient", "CO.Comparison",
-    "OR.Access", "OR.Stu3Patient", "OR.CompareQueue", "OR.Comparison",
+    "OR.Stu3Patient", "OR.Stu3FhirReconciliation", "OR.CompareQueue", "OR.Comparison",
     "PR.ResourceMatcher", "PR.ListEntryComparison",
     ...IGNORE_RULES.map(([name]) => "PR.Rule." + name),
-    "FS.Audit", ...CRUD_ENTITIES.map(c => "FS." + c.e),
-    "FS.Stu3Patient", "FS.Stu3FhirReconciliation", "FS.JsonElement",
+    "FS.Audit", "FS.ConsumerAccess", ...CRUD_ENTITIES.map(c => "FS." + c.e),
+    "FS.Stu3Patient", "FS.JsonElement",
     ...MATCHERS.map(([resource]) => "FS.Matcher." + resource),
     "AuditClient",
     "AuditBroker", "SecurityBroker", "SecurityAuditBroker", "StorageBroker", "StorageBrokerFactory",
-    "Stu3FhirBroker", "HashBroker", "ConsumerAccessBroker",
+    "Stu3FhirBroker", "ConsumerAccessBroker",
     "DateTimeBroker", "IdentifierBroker", "LoggingBroker",
     // client libraries (single shared copies)
     "LIB.SecurityClient", "LIB.EFCoreClient", "LIB.FhirAbstractionProvider", "LIB.FhirProvider",
     // externals
-    "EXT.EFCore", "EXT.ILogger", "EXT.TokenCredential", "EXT.HttpClient", "EXT.Crypto",
+    "EXT.EFCore", "EXT.ILogger", "EXT.TokenCredential", "EXT.HttpClient",
     "EXT.DdsStu3", "EXT.LdsStu3",
   );
 
@@ -614,7 +586,7 @@
      the arrows can never drift apart.
      ------------------------------------------------------------------ */
   for (const extId of ["EXT.EFCore", "EXT.ILogger", "EXT.TokenCredential", "EXT.HttpClient",
-                       "EXT.Crypto", "EXT.DdsStu3", "EXT.LdsStu3", "LIB.FhirAbstractionProvider"]) {
+                       "EXT.DdsStu3", "EXT.LdsStu3", "LIB.FhirAbstractionProvider"]) {
     const comp = components.find(c => c.id === extId);
     const called = [];
     for (const e of edges) {

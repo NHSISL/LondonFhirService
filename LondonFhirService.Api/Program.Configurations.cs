@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -19,7 +19,6 @@ using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
-using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
@@ -35,14 +34,11 @@ using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
-using LondonFhirService.Core.Services.Foundations.OdsDatas;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
-using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
@@ -66,7 +62,6 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Practitioners
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ProcedureRequests;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Procedures;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ReferralRequests;
-using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
 using LondonFhirService.Core.Services.Orchestrations.Comparisons;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
@@ -339,20 +334,15 @@ public partial class Program
             serviceProvider => serviceProvider.GetRequiredService<StorageBroker>());
 
         services.AddScoped<IStorageBrokerFactory, StorageBrokerFactory>();
-        services.AddTransient<IHashBroker, HashBroker>();
     }
 
     private static void AddFoundationServices(IServiceCollection services)
     {
         services.AddTransient<IAuditService, AuditService>();
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
-        services.AddTransient<IConsumerService, ConsumerService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
-        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
-        services.AddTransient<IOdsDataService, OdsDataService>();
         services.AddTransient<IStu3PatientService, Stu3PatientService>();
-        services.AddTransient<IPdsDataService, PdsDataService>();
         services.AddTransient<IProviderService, ProviderService>();
         services.AddSingleton<IJsonElementService, JsonElementService>();
         services.AddTransient<IResourceMatcherService, AllergyIntoleranceMatcherService>();
@@ -390,8 +380,8 @@ public partial class Program
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IAccessOrchestrationService, AccessOrchestrationService>();
         services.AddTransient<IStu3PatientOrchestrationService, Stu3PatientOrchestrationService>();
+        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
         services.AddTransient<ICompareQueueOrchestrationService, CompareQueueOrchestrationService>();
         services.AddTransient<IComparisonOrchestrationService, ComparisonOrchestrationService>();
     }

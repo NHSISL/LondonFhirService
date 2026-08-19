@@ -3,12 +3,13 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Models.Orchestrations.Accesses;
-using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
+using LondonFhirService.Core.Models.Foundations.Providers;
+using LondonFhirService.Core.Models.Orchestrations.Patients;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
@@ -16,10 +17,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 {
     public partial class Stu3PatientCoordinationServiceTests
     {
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task ShouldCallGetStructuredRecordAsync(bool checkAccessPermissions)
+        [Fact]
+        public async Task ShouldCallGetStructuredRecordAsync()
         {
             // given
             string inputNhsNumber = GetRandomString();
@@ -31,6 +30,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             string expectedBundle = SerializeBundle(randomBundle.DeepClone());
             Guid correlationId = Guid.NewGuid();
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
+            List<(string Provider, string Json)> randomBundles = CreateRandomBundles();
+            Provider randomPrimaryProvider = CreateRandomProvider();
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\", dateOfBirth = \"{inputDateOfBirth}\", " +
@@ -49,28 +50,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
                     cancellationToken))
+                        .ReturnsAsync(new StructuredRecordsResponse
+                        {
+                            PrimaryProvider = randomPrimaryProvider,
+                            Bundles = randomBundles
+                        });
+
+            this.fhirReconciliationServiceMock.Setup(service =>
+                service.ReconcileSerialisedAsync(
+                    randomBundles,
+                    inputNhsNumber,
+                    randomPrimaryProvider,
+                    correlationId))
                         .ReturnsAsync(expectedBundle);
 
-            var accessConfig = new AccessConfigurations
-            {
-                UseHashedNhsNumber = true,
-                HashPepper = GetRandomStringWithLength(100),
-                CheckAccessPermissions = checkAccessPermissions
-            };
-
-            var patientCoordinationServiceMock = new Mock<Stu3PatientCoordinationService>(
-                accessOrchestrationServiceMock.Object,
-                patientOrchestrationServiceMock.Object,
-                loggingBrokerMock.Object,
-                auditBrokerMock.Object,
-                identifierBrokerMock.Object,
-                accessConfig)
-            {
-                CallBase = true
-            };
-
             // when
-            string actualJson = await patientCoordinationServiceMock.Object.GetStructuredRecordSerialisedAsync(
+            string actualJson = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
                 inputNhsNumber,
                 inputDateOfBirth,
                 inputDemographicsOnly,
@@ -94,6 +89,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     cancellationToken),
                         Times.Once);
 
+            this.fhirReconciliationServiceMock.Verify(service =>
+                service.ReconcileSerialisedAsync(
+                    randomBundles,
+                    inputNhsNumber,
+                    randomPrimaryProvider,
+                    correlationId),
+                        Times.Once);
+
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
@@ -102,46 +105,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     null,
                     correlationId.ToString()),
                         Times.Once);
-
-            if (checkAccessPermissions)
-            {
-                this.accessOrchestrationServiceMock.Verify(service =>
-                    service.ValidateAccess(inputNhsNumber, correlationId),
-                        Times.Once);
-
-                this.auditBrokerMock.Verify(broker =>
-                    broker.LogInformationAsync(
-                        auditType,
-                        "Check Access Permissions",
-                        message,
-                        null,
-                        correlationId.ToString()),
-                            Times.Once);
-            }
-            else
-            {
-                this.accessOrchestrationServiceMock.Verify(service =>
-                    service.ValidateAccess(inputNhsNumber, correlationId),
-                        Times.Never);
-
-                this.auditBrokerMock.Verify(broker =>
-                    broker.LogInformationAsync(
-                        auditType,
-                        "Check Access Permissions",
-                        message,
-                        null,
-                        correlationId.ToString()),
-                            Times.Never);
-
-                this.auditBrokerMock.Verify(broker =>
-                    broker.LogInformationAsync(
-                        auditType,
-                        $"Access permission check skipped due to configuration (CheckAccessPermissions = false)",
-                        message,
-                        null,
-                        correlationId.ToString()),
-                            Times.Once);
-            }
 
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
@@ -155,14 +118,23 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.auditBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
-                    It.Is<string>(s => s.StartsWith("Coordination Service Request Completed")),
+                    "Reconcile bundles",
                     message,
                     null,
                     correlationId.ToString()),
                         Times.Once);
 
-            this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    It.Is<string>(title => title.StartsWith("Coordination Service Request Completed")),
+                    message,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.auditBrokerMock.VerifyNoOtherCalls();
