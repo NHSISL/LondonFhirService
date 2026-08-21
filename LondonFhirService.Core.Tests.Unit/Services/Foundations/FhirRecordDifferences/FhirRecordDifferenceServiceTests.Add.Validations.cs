@@ -192,15 +192,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             invalidFhirRecordDifferenceException.AddData(
                 key: nameof(FhirRecordDifference.CorrelationId),
-                values: $"Text exceed max length of {invalidFhirRecordDifference.CorrelationId.Length - 1} characters");
+                values: $"Text exceeds max length of {invalidFhirRecordDifference.CorrelationId.Length - 1} characters");
 
             invalidFhirRecordDifferenceException.AddData(
                 key: nameof(FhirRecordDifference.CreatedBy),
-                values: $"Text exceed max length of {invalidFhirRecordDifference.CreatedBy.Length - 1} characters");
+                values: $"Text exceeds max length of {invalidFhirRecordDifference.CreatedBy.Length - 1} characters");
 
             invalidFhirRecordDifferenceException.AddData(
                 key: nameof(FhirRecordDifference.UpdatedBy),
-                values: $"Text exceed max length of {invalidFhirRecordDifference.UpdatedBy.Length - 1} characters");
+                values: $"Text exceeds max length of {invalidFhirRecordDifference.UpdatedBy.Length - 1} characters");
 
             var expectedFhirRecordDifferenceValidationException =
                 new FhirRecordDifferenceValidationException(

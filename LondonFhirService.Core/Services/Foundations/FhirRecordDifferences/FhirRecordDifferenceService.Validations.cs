@@ -156,7 +156,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
         private static dynamic IsGreaterThan(string text, int maxLength) => new
         {
             Condition = IsExceedingLength(text, maxLength),
-            Message = $"Text exceed max length of {maxLength} characters"
+            Message = $"Text exceeds max length of {maxLength} characters"
         };
 
         private static bool IsExceedingLength(string text, int maxLength) =>

@@ -316,23 +316,23 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
 
             invalidMetricException.AddData(
                 key: nameof(Metric.Method),
-                values: "Text exceed max length of 255 characters");
+                values: "Text exceeds max length of 255 characters");
 
             invalidMetricException.AddData(
                 key: nameof(Metric.Name),
-                values: "Text exceed max length of 255 characters");
+                values: "Text exceeds max length of 255 characters");
 
             invalidMetricException.AddData(
                 key: nameof(Metric.Target),
-                values: "Text exceed max length of 255 characters");
+                values: "Text exceeds max length of 255 characters");
 
             invalidMetricException.AddData(
                 key: nameof(Metric.ErrorCode),
-                values: "Text exceed max length of 100 characters");
+                values: "Text exceeds max length of 100 characters");
 
             invalidMetricException.AddData(
                 key: nameof(Metric.Consumer),
-                values: "Text exceed max length of 255 characters");
+                values: "Text exceeds max length of 255 characters");
 
             var expectedMetricValidationException =
                 new MetricValidationException(
