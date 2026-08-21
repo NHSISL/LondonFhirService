@@ -2,7 +2,9 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Clients.AuditClient.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
@@ -25,12 +27,21 @@ namespace LondonFhirService.Core.Clients.Audits
             string message,
             string fileName,
             string correlationId,
-            string logLevel = "Information")
+            string logLevel = "Information",
+            CancellationToken cancellationToken = default)
         {
             try
             {
-                return await auditService
-                    .AddAuditAsync(auditType, title, message, fileName, correlationId, logLevel);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await auditService.AddAuditAsync(
+                    auditType, title, message, fileName, correlationId, logLevel, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Deliberately not translated. A cancelled caller gets the cancellation it
+                // asked for rather than a client exception wrapping it.
+                throw;
             }
             catch (AuditServiceValidationException auditValidationException)
             {
@@ -58,11 +69,19 @@ namespace LondonFhirService.Core.Clients.Audits
             }
         }
 
-        public async ValueTask BulkLogAuditsAsync(List<Audit> audits)
+        public async ValueTask BulkLogAuditsAsync(
+            List<Audit> audits,
+            CancellationToken cancellationToken = default)
         {
             try
             {
-                await auditService.BulkAddAuditsAsync(audits);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                await auditService.BulkAddAuditsAsync(audits, cancellationToken: cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (AuditServiceValidationException auditValidationException)
             {

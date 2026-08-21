@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Audits;
 
@@ -16,8 +17,9 @@ namespace LondonFhirService.Core.Clients.Audits
             string message,
             string fileName,
             string correlationId,
-            string logLevel = "Information");
+            string logLevel = "Information",
+            CancellationToken cancellationToken = default);
 
-        ValueTask BulkLogAuditsAsync(List<Audit> audits);
+        ValueTask BulkLogAuditsAsync(List<Audit> audits, CancellationToken cancellationToken = default);
     }
 }

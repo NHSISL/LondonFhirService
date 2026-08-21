@@ -25,6 +25,7 @@ using LondonFhirService.Core.Brokers.Metrics;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Clients.Metrics;
 using LondonFhirService.Core.Models.Bases;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Audits;
@@ -407,6 +408,7 @@ public partial class Program
     private static void AddClients(IServiceCollection services)
     {
         services.AddTransient<IAuditClient, AuditClient>();
+        services.AddTransient<IMetricClient, MetricClient>();
     }
 
     private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)
