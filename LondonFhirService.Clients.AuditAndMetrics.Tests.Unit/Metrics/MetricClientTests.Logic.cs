@@ -20,23 +20,24 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldAddMetricAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             IMetric randomMetric = CreateRandomMetric();
             IMetric serviceMetric = randomMetric;
             IMetric expectedMetric = serviceMetric;
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricAsync(randomMetric, It.IsAny<CancellationToken>()))
+                service.AddMetricAsync(randomMetric, cancellationToken))
                     .ReturnsAsync(serviceMetric);
 
             // when
             IMetric actualMetric =
-                await this.metricClient.AddMetricAsync(randomMetric, TestContext.Current.CancellationToken);
+                await this.metricClient.AddMetricAsync(randomMetric, cancellationToken);
 
             // then
             actualMetric.Should().BeSameAs(expectedMetric);
 
             this.metricServiceMock.Verify(service =>
-                service.AddMetricAsync(randomMetric, It.IsAny<CancellationToken>()),
+                service.AddMetricAsync(randomMetric, cancellationToken),
                     Times.Once);
 
             this.metricServiceMock.VerifyNoOtherCalls();
@@ -46,14 +47,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldAddMetricsAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             List<IMetric> randomMetrics = CreateRandomMetrics();
 
             // when
-            await this.metricClient.AddMetricsAsync(randomMetrics, TestContext.Current.CancellationToken);
+            await this.metricClient.AddMetricsAsync(randomMetrics, cancellationToken);
 
             // then
             this.metricServiceMock.Verify(service =>
-                service.AddMetricsAsync(randomMetrics, It.IsAny<CancellationToken>()),
+                service.AddMetricsAsync(randomMetrics, cancellationToken),
                     Times.Once);
 
             this.metricServiceMock.VerifyNoOtherCalls();
@@ -63,22 +65,23 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldRetrieveAllMetricsAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             IQueryable<IMetric> randomMetrics = CreateRandomMetricsQueryable();
             IQueryable<IMetric> expectedMetrics = randomMetrics;
 
             this.metricServiceMock.Setup(service =>
-                service.RetrieveAllMetricsAsync(It.IsAny<CancellationToken>()))
+                service.RetrieveAllMetricsAsync(cancellationToken))
                     .ReturnsAsync(randomMetrics);
 
             // when
             IQueryable<IMetric> actualMetrics =
-                await this.metricClient.RetrieveAllMetricsAsync(TestContext.Current.CancellationToken);
+                await this.metricClient.RetrieveAllMetricsAsync(cancellationToken);
 
             // then
             actualMetrics.Should().BeSameAs(expectedMetrics);
 
             this.metricServiceMock.Verify(service =>
-                service.RetrieveAllMetricsAsync(It.IsAny<CancellationToken>()),
+                service.RetrieveAllMetricsAsync(cancellationToken),
                     Times.Once);
 
             this.metricServiceMock.VerifyNoOtherCalls();
@@ -88,22 +91,23 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldRetrieveMetricByIdAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             IMetric randomMetric = CreateRandomMetric();
             Guid inputMetricId = randomMetric.Id;
 
             this.metricServiceMock.Setup(service =>
-                service.RetrieveMetricByIdAsync(inputMetricId, It.IsAny<CancellationToken>()))
+                service.RetrieveMetricByIdAsync(inputMetricId, cancellationToken))
                     .ReturnsAsync(randomMetric);
 
             // when
             IMetric actualMetric =
-                await this.metricClient.RetrieveMetricByIdAsync(inputMetricId, TestContext.Current.CancellationToken);
+                await this.metricClient.RetrieveMetricByIdAsync(inputMetricId, cancellationToken);
 
             // then
             actualMetric.Should().BeSameAs(randomMetric);
 
             this.metricServiceMock.Verify(service =>
-                service.RetrieveMetricByIdAsync(inputMetricId, It.IsAny<CancellationToken>()),
+                service.RetrieveMetricByIdAsync(inputMetricId, cancellationToken),
                     Times.Once);
 
             this.metricServiceMock.VerifyNoOtherCalls();
@@ -113,22 +117,23 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldRemoveMetricByIdAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             IMetric randomMetric = CreateRandomMetric();
             Guid inputMetricId = randomMetric.Id;
 
             this.metricServiceMock.Setup(service =>
-                service.RemoveMetricByIdAsync(inputMetricId, It.IsAny<CancellationToken>()))
+                service.RemoveMetricByIdAsync(inputMetricId, cancellationToken))
                     .ReturnsAsync(randomMetric);
 
             // when
             IMetric actualMetric =
-                await this.metricClient.RemoveMetricByIdAsync(inputMetricId, TestContext.Current.CancellationToken);
+                await this.metricClient.RemoveMetricByIdAsync(inputMetricId, cancellationToken);
 
             // then
             actualMetric.Should().BeSameAs(randomMetric);
 
             this.metricServiceMock.Verify(service =>
-                service.RemoveMetricByIdAsync(inputMetricId, It.IsAny<CancellationToken>()),
+                service.RemoveMetricByIdAsync(inputMetricId, cancellationToken),
                     Times.Once);
 
             this.metricServiceMock.VerifyNoOtherCalls();
@@ -138,22 +143,23 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldPurgeMetricsOlderThanRetentionPeriodAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             int randomPurgedCount = GetRandomNumber();
 
             this.metricServiceMock.Setup(service =>
-                service.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()))
+                service.PurgeMetricsOlderThanRetentionPeriodAsync(cancellationToken))
                     .ReturnsAsync(randomPurgedCount);
 
             // when
             int actualPurgedCount =
                 await this.metricClient.PurgeMetricsOlderThanRetentionPeriodAsync(
-                    TestContext.Current.CancellationToken);
+                    cancellationToken);
 
             // then
             actualPurgedCount.Should().Be(randomPurgedCount);
 
             this.metricServiceMock.Verify(service =>
-                service.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()),
+                service.PurgeMetricsOlderThanRetentionPeriodAsync(cancellationToken),
                     Times.Once);
 
             this.metricServiceMock.VerifyNoOtherCalls();
@@ -168,7 +174,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
             IMetric randomMetric = CreateRandomMetric();
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
+                service.AddMetricAsync(randomMetric, cancellationToken))
                     .ReturnsAsync(randomMetric);
 
             // when

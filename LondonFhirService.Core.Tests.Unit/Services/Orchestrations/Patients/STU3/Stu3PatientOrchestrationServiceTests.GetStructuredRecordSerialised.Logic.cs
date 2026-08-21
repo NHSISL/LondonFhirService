@@ -161,7 +161,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     "Access",
-                    "Check Access Permissons",
+                    "Check Access Permissions",
                     currentUserJson,
                     null,
                     correlationId.ToString()),

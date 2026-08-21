@@ -55,16 +55,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldNotWrapAnOperationCanceledExceptionRaisedByTheServiceAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             IMetric randomMetric = CreateRandomMetric();
             var operationCanceledException = new OperationCanceledException();
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
+                service.AddMetricAsync(randomMetric, cancellationToken))
                     .ThrowsAsync(operationCanceledException);
 
             // when
             Func<Task> addMetric = async () =>
-                await this.metricClient.AddMetricAsync(randomMetric, TestContext.Current.CancellationToken);
+                await this.metricClient.AddMetricAsync(randomMetric, cancellationToken);
 
             // then
             // Surfaces as cancellation, not as a client exception the caller would have to unwrap.
@@ -72,7 +73,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
                 .Which.Should().BeSameAs(operationCanceledException);
 
             this.metricServiceMock.Verify(service =>
-                service.AddMetricAsync(randomMetric, It.IsAny<CancellationToken>()),
+                service.AddMetricAsync(randomMetric, cancellationToken),
                     Times.Once);
 
             this.metricServiceMock.VerifyNoOtherCalls();
@@ -82,16 +83,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldNotWrapATaskCanceledExceptionRaisedByTheServiceAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             IMetric randomMetric = CreateRandomMetric();
             var taskCanceledException = new TaskCanceledException();
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
+                service.AddMetricAsync(randomMetric, cancellationToken))
                     .ThrowsAsync(taskCanceledException);
 
             // when
             Func<Task> addMetric = async () =>
-                await this.metricClient.AddMetricAsync(randomMetric, TestContext.Current.CancellationToken);
+                await this.metricClient.AddMetricAsync(randomMetric, cancellationToken);
 
             // then
             // TaskCanceledException derives from OperationCanceledException, so it takes the same
@@ -100,7 +102,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
                 .Which.Should().BeSameAs(taskCanceledException);
 
             this.metricServiceMock.Verify(service =>
-                service.AddMetricAsync(randomMetric, It.IsAny<CancellationToken>()),
+                service.AddMetricAsync(randomMetric, cancellationToken),
                     Times.Once);
 
             this.metricServiceMock.VerifyNoOtherCalls();

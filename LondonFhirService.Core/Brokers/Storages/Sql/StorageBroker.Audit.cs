@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
         public virtual async ValueTask BulkInsertAuditsAsync(
             List<IAudit> audits,
             CancellationToken cancellationToken = default) =>
-            await BulkInsertAsync(audits.Cast<Audit>().ToList(), cancellationToken);
+            await BulkInsertAsync(audits.Cast<Audit>(), cancellationToken);
 
         public virtual async ValueTask<IAudit> InsertAuditAsync(
             IAudit audit,

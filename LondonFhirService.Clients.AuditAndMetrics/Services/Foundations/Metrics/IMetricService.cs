@@ -11,8 +11,6 @@ using LondonFhirService.Core.Abstractions.Models.Metrics;
 
 using LondonFhirService.Core.Abstractions.Brokers;
 
-using LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions;
-
 namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 {
     internal interface IMetricService

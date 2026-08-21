@@ -67,28 +67,36 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
         public async Task ShouldNotWrapAnOperationCanceledExceptionRaisedByTheServiceAsync()
         {
             // given
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+            string randomAuditType = GetRandomString();
+            string randomTitle = GetRandomString();
+            string randomMessage = GetRandomString();
+            string randomFileName = GetRandomString();
+            string randomCorrelationId = GetRandomString();
+            string randomLogLevel = "Information";
             var operationCanceledException = new OperationCanceledException();
 
             this.auditServiceMock.Setup(service =>
                 service.LogAuditAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()))
+                    randomAuditType,
+                    randomTitle,
+                    randomMessage,
+                    randomFileName,
+                    randomCorrelationId,
+                    randomLogLevel,
+                    cancellationToken))
                         .ThrowsAsync(operationCanceledException);
 
             // when
             Func<Task> logAudit = async () =>
                 await this.auditClient.LogAuditAsync(
-                    auditType: GetRandomString(),
-                    title: GetRandomString(),
-                    message: GetRandomString(),
-                    fileName: GetRandomString(),
-                    correlationId: GetRandomString(),
-                    cancellationToken: TestContext.Current.CancellationToken);
+                    auditType: randomAuditType,
+                    title: randomTitle,
+                    message: randomMessage,
+                    fileName: randomFileName,
+                    correlationId: randomCorrelationId,
+                    logLevel: randomLogLevel,
+                    cancellationToken: cancellationToken);
 
             // then
             (await logAudit.Should().ThrowAsync<OperationCanceledException>())
@@ -96,13 +104,13 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
 
             this.auditServiceMock.Verify(service =>
                 service.LogAuditAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()),
+                    randomAuditType,
+                    randomTitle,
+                    randomMessage,
+                    randomFileName,
+                    randomCorrelationId,
+                    randomLogLevel,
+                    cancellationToken),
                         Times.Once);
 
             this.auditServiceMock.VerifyNoOtherCalls();
@@ -115,15 +123,19 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
             using var cancellationTokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             List<IAudit> randomAudits = CreateRandomAudits();
+            int inputBatchSize = GetRandomNumber();
 
             // when
-            await this.auditClient.BulkLogAuditsAsync(randomAudits, cancellationToken: cancellationToken);
+            await this.auditClient.BulkLogAuditsAsync(
+                randomAudits,
+                inputBatchSize,
+                cancellationToken);
 
             // then
             // The exact token, so the client cannot quietly call the service with
             // CancellationToken.None and leave the write uncancellable.
             this.auditServiceMock.Verify(service =>
-                service.BulkAddAuditsAsync(randomAudits, It.IsAny<int>(), cancellationToken),
+                service.BulkAddAuditsAsync(randomAudits, inputBatchSize, cancellationToken),
                     Times.Once);
 
             this.auditServiceMock.VerifyNoOtherCalls();

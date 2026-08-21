@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
         public virtual async ValueTask BulkInsertMetricsAsync(
             List<IMetric> metrics,
             CancellationToken cancellationToken = default) =>
-            await BulkInsertAsync(metrics.Cast<Metric>().ToList(), cancellationToken);
+            await BulkInsertAsync(metrics.Cast<Metric>(), cancellationToken);
 
         public virtual async ValueTask<IMetric> InsertMetricAsync(
             IMetric metric,

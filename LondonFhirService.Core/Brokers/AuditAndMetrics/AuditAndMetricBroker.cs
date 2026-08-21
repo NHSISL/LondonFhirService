@@ -126,6 +126,12 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
                 {
                     await work();
                 }
+                catch (OperationCanceledException)
+                {
+                    // Expected, not a failure. A request that is cancelled or a host that is
+                    // shutting down cancels the token these writes carry, and logging that as an
+                    // error would fill the log with noise every time a client disconnects.
+                }
                 catch (Exception exception)
                 {
                     await this.loggingBroker.LogErrorAsync(exception);

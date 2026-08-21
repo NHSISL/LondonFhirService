@@ -256,7 +256,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 
                 await this.auditAndMetricBroker.LogInformationAsync(
                     auditType: "Access",
-                    title: "Check Access Permissons",
+                    title: "Check Access Permissions",
                     message: currentUserJson,
                     fileName: null,
                     correlationId: correlationId.ToString());
