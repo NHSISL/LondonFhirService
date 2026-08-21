@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
@@ -80,29 +81,46 @@ namespace LondonFhirService.Api.Workers
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// The span to telemetry mapping, separated from the sending so it can be asserted on.
+        /// Version 3 of the Application Insights SDK is a thin wrapper over OpenTelemetry with no
+        /// stubbable channel, so what TrackDependency does with an item cannot be observed in a
+        /// unit test - but what is handed to it can.
+        /// </summary>
+        internal static DependencyTelemetry CreateDependencyTelemetry(Activity activity)
+        {
+            var dependencyTelemetry = new DependencyTelemetry
+            {
+                Name = activity.DisplayName,
+                Type = activity.GetTagItem("metric.type")?.ToString() ?? "Metric",
+                Target = activity.GetTagItem("metric.target")?.ToString(),
+                Duration = activity.Duration,
+                Timestamp = activity.StartTimeUtc,
+                Success = activity.Status != ActivityStatusCode.Error,
+                ResultCode = activity.GetTagItem("metric.errorCode")?.ToString(),
+                Id = activity.SpanId.ToHexString(),
+            };
+
+            // TagObjects rather than Tags: Tags is the string-typed projection over the same data
+            // and silently skips every tag whose value is not a string, which loses
+            // metric.durationMs and metric.payloadBytes - the two a dashboard most wants.
+            foreach (KeyValuePair<string, object> tag in activity.TagObjects)
+            {
+                if (tag.Value is not null)
+                {
+                    dependencyTelemetry.Properties[tag.Key] =
+                        Convert.ToString(tag.Value, CultureInfo.InvariantCulture);
+                }
+            }
+
+            return dependencyTelemetry;
+        }
+
         private void PublishActivity(Activity activity)
         {
             try
             {
-                var dependencyTelemetry = new DependencyTelemetry
-                {
-                    Name = activity.DisplayName,
-                    Type = activity.GetTagItem("metric.type")?.ToString() ?? "Metric",
-                    Target = activity.GetTagItem("metric.target")?.ToString(),
-                    Duration = activity.Duration,
-                    Timestamp = activity.StartTimeUtc,
-                    Success = activity.Status != ActivityStatusCode.Error,
-                    ResultCode = activity.GetTagItem("metric.errorCode")?.ToString(),
-                    Id = activity.SpanId.ToHexString(),
-                };
-
-                foreach (KeyValuePair<string, string> tag in activity.Tags)
-                {
-                    if (tag.Value is not null)
-                    {
-                        dependencyTelemetry.Properties[tag.Key] = tag.Value;
-                    }
-                }
+                DependencyTelemetry dependencyTelemetry = CreateDependencyTelemetry(activity);
 
                 // Correlation comes from Activity.Current, not from the telemetry item: version 3
                 // of the SDK removed OperationContext.Id in favour of the W3C trace context its

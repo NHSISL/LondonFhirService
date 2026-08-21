@@ -160,17 +160,20 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     Description = $"Reconciled {structuredRecordsResponse.Bundles.Count} provider bundle(s)."
                 });
 
-                await RecordRequestSpanAsync(
-                    MetricStatus.Succeeded,
-                    errorCode: null,
-                    payloadBytes: bundle?.Length);
-
                 await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Coordination Service Request Completed in {stopwatch.ElapsedMilliseconds}ms",
                     message,
                     fileName: null,
                     correlationId: correlationId.ToString());
+
+                // Last statement in the try on purpose. Anything that throws after the success
+                // span is written sends the catch down the same path, and the span id is
+                // inserted a second time with a contradictory status.
+                await RecordRequestSpanAsync(
+                    MetricStatus.Succeeded,
+                    errorCode: null,
+                    payloadBytes: bundle?.Length);
 
                 return bundle;
             }

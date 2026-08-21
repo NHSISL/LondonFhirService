@@ -77,7 +77,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
         {
             // given
             IMetric metric = CreateMetric();
-            metric.Started = DateTimeOffset.UtcNow.AddSeconds(-42);
+
+            // Started is now, not 42 seconds ago. Backdating it would let Activity.Stop()'s own
+            // wall-clock fallback produce the same 42 seconds the assertion expects, and the test
+            // would pass with SetEndTime removed - pinning nothing.
+            metric.Started = DateTimeOffset.UtcNow;
             metric.DurationMs = 42_000;
             metric.Completed = metric.Started.AddMilliseconds(metric.DurationMs);
 
