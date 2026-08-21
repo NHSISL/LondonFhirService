@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
 using EFxceptions;
@@ -53,28 +54,37 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             AddMetricConfigurations(modelBuilder.Entity<Metric>());
         }
 
-        private async ValueTask<T> InsertAsync<T>(T @object) where T : class =>
-            await efCoreClient.InsertAsync(@object);
+        private async ValueTask<T> InsertAsync<T>(T @object, CancellationToken cancellationToken = default)
+            where T : class =>
+            await efCoreClient.InsertAsync(@object, cancellationToken);
 
-        private async ValueTask<IQueryable<T>> SelectAllAsync<T>() where T : class =>
-            await efCoreClient.SelectAllAsync<T>();
+        private async ValueTask<IQueryable<T>> SelectAllAsync<T>(CancellationToken cancellationToken = default)
+            where T : class =>
+            await efCoreClient.SelectAllAsync<T>(cancellationToken);
 
         private async ValueTask<T> SelectAsync<T>(params object[] @objectIds) where T : class =>
             await efCoreClient.SelectAsync<T>(@objectIds);
 
+        private async ValueTask<T> SelectAsync<T>(CancellationToken cancellationToken, params object[] @objectIds)
+            where T : class =>
+            await efCoreClient.SelectAsync<T>(@objectIds, cancellationToken);
+
         private async ValueTask<T> UpdateAsync<T>(T @object) where T : class =>
             await efCoreClient.UpdateAsync(@object);
 
-        private async ValueTask<T> DeleteAsync<T>(T @object) where T : class =>
-            await efCoreClient.DeleteAsync(@object);
+        private async ValueTask<T> DeleteAsync<T>(T @object, CancellationToken cancellationToken = default)
+            where T : class =>
+            await efCoreClient.DeleteAsync(@object, cancellationToken);
 
-        private async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects) where T : class =>
-            await efCoreClient.BulkInsertAsync(objects);
+        private async ValueTask BulkInsertAsync<T>(IEnumerable<T> objects,
+            CancellationToken cancellationToken = default) where T : class =>
+            await efCoreClient.BulkInsertAsync(objects, cancellationToken: cancellationToken);
 
         private async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
             await efCoreClient.BulkUpdateAsync(objects);
 
-        private async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects) where T : class =>
-            await efCoreClient.BulkDeleteAsync(objects);
+        private async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects,
+            CancellationToken cancellationToken = default) where T : class =>
+            await efCoreClient.BulkDeleteAsync(objects, cancellationToken: cancellationToken);
     }
 }

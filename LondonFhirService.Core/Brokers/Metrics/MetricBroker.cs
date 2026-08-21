@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 
@@ -17,16 +18,20 @@ namespace LondonFhirService.Core.Brokers.Metrics
         private static readonly ActivitySource activitySource =
             new ActivitySource(ActivitySourceName);
 
-        public async ValueTask RecordAsync(List<Metric> metrics)
+        public async ValueTask RecordAsync(List<Metric> metrics, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             foreach (Metric metric in metrics)
             {
-                await RecordAsync(metric);
+                await RecordAsync(metric, cancellationToken);
             }
         }
 
-        public async ValueTask RecordAsync(Metric metric)
+        public async ValueTask RecordAsync(Metric metric, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Positional rather than named: the name-first and name-last overloads are both
             // applicable once the arguments are named, and the call becomes ambiguous.
             Activity activity = activitySource.StartActivity(
