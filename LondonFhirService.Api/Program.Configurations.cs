@@ -16,6 +16,8 @@ using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Api.Workers;
 using LondonFhirService.Clients.AuditAndMetrics.Clients;
+using Microsoft.ApplicationInsights;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Services.Foundations.AuditAndMetrics;
@@ -417,5 +419,27 @@ public partial class Program
     {
         services.Configure<ComparisonWorkerSettings>(configuration.GetSection("ComparisonWorkerSettings"));
         services.AddHostedService<ComparisonWorker>();
+
+        // The retention sweep had no caller, so the metrics table only ever grew - and it takes a
+        // row per span rather than per request. Whether anything is deleted is still decided by
+        // IsPurgingAllowed and RetentionPeriodInDays.
+        services.Configure<MetricPurgeWorkerSettings>(
+            configuration.GetSection("MetricPurgeWorkerSettings"));
+
+        services.AddHostedService<MetricPurgeWorker>();
+
+        // Nothing was subscribed to the metric library's ActivitySource, so every span it
+        // published was dropped before it reached Application Insights.
+        AuditAndMetricsConfigurations auditAndMetricsConfigurations =
+            configuration
+                .GetSection(AuditAndMetricsClient.ConfigurationSectionName)
+                .Get<AuditAndMetricsConfigurations>()
+                    ?? new AuditAndMetricsConfigurations();
+
+        services.AddHostedService(serviceProvider =>
+            new MetricTelemetryPublisher(
+                serviceProvider.GetService<TelemetryClient>(),
+                serviceProvider.GetRequiredService<ILogger<MetricTelemetryPublisher>>(),
+                auditAndMetricsConfigurations.ActivitySourceName));
     }
 }
