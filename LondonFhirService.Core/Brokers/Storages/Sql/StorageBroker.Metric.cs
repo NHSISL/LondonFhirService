@@ -34,7 +34,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
         public virtual async ValueTask<IMetric> SelectMetricByIdAsync(
             Guid metricId,
             CancellationToken cancellationToken = default) =>
-            await SelectAsync<Metric>(cancellationToken, metricId);
+            await SelectAsync<Metric>(new object[] { metricId }, cancellationToken);
 
         public virtual async ValueTask<IMetric> DeleteMetricAsync(
             IMetric metric,

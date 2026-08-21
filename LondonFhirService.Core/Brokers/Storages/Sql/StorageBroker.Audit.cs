@@ -42,7 +42,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
         public virtual async ValueTask<IAudit> SelectAuditByIdAsync(
             Guid auditId,
             CancellationToken cancellationToken = default) =>
-            await SelectAsync<Audit>(cancellationToken, auditId);
+            await SelectAsync<Audit>(new object[] { auditId }, cancellationToken);
 
         public virtual async ValueTask<IAudit> UpdateAuditAsync(
             IAudit audit,
