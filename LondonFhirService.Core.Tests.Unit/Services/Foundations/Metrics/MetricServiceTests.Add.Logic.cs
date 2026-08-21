@@ -69,7 +69,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.InsertMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
             // when
@@ -82,10 +82,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
+            // The exact metric, so a service that persisted a different instance could not
+            // pass on the timestamp predicate alone.
             this.storageBrokerMock.Verify(broker =>
-                broker.InsertMetricAsync(It.Is<Metric>(metric =>
-                    metric.CreatedDate == currentDateTimeOffset), It.IsAny<CancellationToken>()),
-                        Times.Once);
+                broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()),
+                    Times.Once);
 
             this.metricBrokerMock.Verify(broker =>
                 broker.RecordAsync(storageMetric, It.IsAny<CancellationToken>()),

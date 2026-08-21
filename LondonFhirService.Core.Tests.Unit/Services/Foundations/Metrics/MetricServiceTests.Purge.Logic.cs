@@ -67,9 +67,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-this.loggingBrokerMock.Verify(broker =>
-    broker.LogInformationAsync($"Purged {expiredMetrics.Count} metric(s) created before {cutOffDate}."),
-        Times.Once);
+            // The operational message reports the real count and cut off, so a wrong one
+            // cannot pass unnoticed. Exactly one of the three metrics is past the cut off.
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogInformationAsync($"Purged 1 metric(s) created before {cutOffDate}."),
+                    Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();
         }
@@ -228,7 +230,7 @@ this.loggingBrokerMock.Verify(broker =>
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(It.IsAny<string>()),
+                broker.LogInformationAsync($"Purged {expiredCount} metric(s) created before {cutOffDate}."),
                     Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();

@@ -8,8 +8,13 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
     {
         /// <summary>
         /// The kill switch. When false, recording is skipped without touching either broker, so
-        /// metrics can be turned off in an incident without a deployment. Reads are unaffected -
-        /// existing rows stay queryable.
+        /// metrics can be turned off without a code change. Reads are unaffected - existing rows
+        /// stay queryable.
+        ///
+        /// This is bound once at startup and registered as a singleton, in line with every other
+        /// configuration object here, so a change takes effect when the process restarts rather
+        /// than immediately. If it ever needs to be flipped mid-incident without a restart, this
+        /// has to move to IOptionsMonitor and be read per call.
         /// </summary>
         public bool IsEnabled { get; set; }
 

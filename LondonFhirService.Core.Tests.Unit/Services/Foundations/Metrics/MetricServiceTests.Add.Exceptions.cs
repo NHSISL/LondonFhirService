@@ -28,7 +28,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var failedStorageMetricException =
                 new FailedStorageMetricException(
                     message: "Failed metric storage error occurred, contact support.",
-                    innerException: sqlException);
+                    innerException: sqlException,
+                    data: sqlException.Data);
 
             var expectedMetricDependencyException =
                 new MetricDependencyException(
@@ -199,7 +200,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var alreadyExistsMetricException =
                 new AlreadyExistsMetricException(
                     message: "Metric with the same Id already exists.",
-                    innerException: duplicateKeyException);
+                    innerException: duplicateKeyException,
+                    data: duplicateKeyException.Data);
 
             var expectedMetricDependencyValidationException =
                 new MetricDependencyValidationException(
@@ -259,7 +261,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var invalidReferenceMetricException =
                 new InvalidReferenceMetricException(
                     message: "Invalid metric reference error occurred.",
-                    innerException: foreignKeyConstraintConflictException);
+                    innerException: foreignKeyConstraintConflictException,
+                    data: foreignKeyConstraintConflictException.Data);
 
             var expectedMetricDependencyValidationException =
                 new MetricDependencyValidationException(
@@ -316,7 +319,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var lockedMetricException =
                 new LockedMetricException(
                     message: "Locked metric record exception, please try again later.",
-                    innerException: dbUpdateConcurrencyException);
+                    innerException: dbUpdateConcurrencyException,
+                    data: dbUpdateConcurrencyException.Data);
 
             var expectedMetricDependencyValidationException =
                 new MetricDependencyValidationException(
@@ -373,7 +377,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var failedStorageMetricException =
                 new FailedStorageMetricException(
                     message: "Failed metric storage error occurred, contact support.",
-                    innerException: dbUpdateException);
+                    innerException: dbUpdateException,
+                    data: dbUpdateException.Data);
 
             var expectedMetricDependencyException =
                 new MetricDependencyException(
@@ -419,6 +424,66 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
         }
 
         [Fact]
+        public async Task ShouldPreserveTheSourceExceptionDataOnAddWhenStorageFailsAsync()
+        {
+            // given
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            Metric randomMetric = CreateRandomMetric(randomDateTimeOffset);
+            string randomKey = GetRandomString();
+            string randomValue = GetRandomString();
+            var dbUpdateException = new DbUpdateException();
+            dbUpdateException.Data[randomKey] = randomValue;
+
+            var failedStorageMetricException =
+                new FailedStorageMetricException(
+                    message: "Failed metric storage error occurred, contact support.",
+                    innerException: dbUpdateException,
+                    data: dbUpdateException.Data);
+
+            var expectedMetricDependencyException =
+                new MetricDependencyException(
+                    message: "Metric dependency error occurred, contact support.",
+                    innerException: failedStorageMetricException);
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
+
+            this.storageBrokerMock.Setup(broker =>
+                broker.InsertMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(dbUpdateException);
+
+            // when
+            ValueTask<Metric> addMetricTask =
+                this.metricService.AddMetricAsync(randomMetric, TestContext.Current.CancellationToken);
+
+            MetricDependencyException actualMetricDependencyException =
+                await Assert.ThrowsAsync<MetricDependencyException>(addMetricTask.AsTask);
+
+            // then
+            actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
+
+            // The storage constraint metadata survives being wrapped, rather than being dropped
+            // on the way to the log.
+            actualMetricDependencyException.InnerException.Data[randomKey].Should().Be(randomValue);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedMetricDependencyException))),
+                        Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            VerifyNoOtherCallsOnAllBrokers();
+        }
+
+        [Fact]
         public async Task ShouldThrowServiceExceptionOnAddIfServiceErrorOccursAndLogItAsync()
         {
             // given
@@ -429,7 +494,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var failedMetricServiceException =
                 new FailedMetricServiceException(
                     message: "Failed metric service occurred, please contact support.",
-                    innerException: serviceException);
+                    innerException: serviceException,
+                    data: serviceException.Data);
 
             var expectedMetricServiceException =
                 new MetricServiceException(
@@ -486,7 +552,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var failedMetricServiceException =
                 new FailedMetricServiceException(
                     message: "Failed metric service occurred, please contact support.",
-                    innerException: serviceException);
+                    innerException: serviceException,
+                    data: serviceException.Data);
 
             var expectedMetricServiceException =
                 new MetricServiceException(

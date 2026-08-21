@@ -26,7 +26,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var failedStorageMetricException =
                 new FailedStorageMetricException(
                     message: "Failed metric storage error occurred, contact support.",
-                    innerException: sqlException);
+                    innerException: sqlException,
+                    data: sqlException.Data);
 
             var expectedMetricDependencyException =
                 new MetricDependencyException(
@@ -158,7 +159,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var lockedMetricException =
                 new LockedMetricException(
                     message: "Locked metric record exception, please try again later.",
-                    innerException: dbUpdateConcurrencyException);
+                    innerException: dbUpdateConcurrencyException,
+                    data: dbUpdateConcurrencyException.Data);
 
             var expectedMetricDependencyValidationException =
                 new MetricDependencyValidationException(
@@ -210,7 +212,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             var failedMetricServiceException =
                 new FailedMetricServiceException(
                     message: "Failed metric service occurred, please contact support.",
-                    innerException: serviceException);
+                    innerException: serviceException,
+                    data: serviceException.Data);
 
             var expectedMetricServiceException =
                 new MetricServiceException(

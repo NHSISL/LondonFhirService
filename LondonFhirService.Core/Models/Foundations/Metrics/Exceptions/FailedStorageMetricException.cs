@@ -3,14 +3,15 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections;
 using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Metrics.Exceptions
 {
     public class FailedStorageMetricException : Xeption
     {
-        public FailedStorageMetricException(string message, Exception innerException)
-            : base(message, innerException)
+        public FailedStorageMetricException(string message, Exception innerException, IDictionary data)
+            : base(message, innerException, data)
         { }
     }
 }

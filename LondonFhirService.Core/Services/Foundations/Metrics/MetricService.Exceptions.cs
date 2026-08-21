@@ -44,7 +44,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedStorageMetricException =
                     new FailedStorageMetricException(
                         message: "Failed metric storage error occurred, contact support.",
-                        innerException: sqlException);
+                        innerException: sqlException,
+                        data: sqlException.Data);
 
                 throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageMetricException);
             }
@@ -84,7 +85,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var alreadyExistsMetricException =
                     new AlreadyExistsMetricException(
                         message: "Metric with the same Id already exists.",
-                        innerException: duplicateKeyException);
+                        innerException: duplicateKeyException,
+                        data: duplicateKeyException.Data);
 
                 throw await CreateAndLogDependencyValidationExceptionAsync(alreadyExistsMetricException);
             }
@@ -93,7 +95,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var invalidReferenceMetricException =
                     new InvalidReferenceMetricException(
                         message: "Invalid metric reference error occurred.",
-                        innerException: foreignKeyConstraintConflictException);
+                        innerException: foreignKeyConstraintConflictException,
+                        data: foreignKeyConstraintConflictException.Data);
 
                 throw await CreateAndLogDependencyValidationExceptionAsync(invalidReferenceMetricException);
             }
@@ -102,7 +105,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var lockedMetricException =
                     new LockedMetricException(
                         message: "Locked metric record exception, please try again later.",
-                        innerException: dbUpdateConcurrencyException);
+                        innerException: dbUpdateConcurrencyException,
+                        data: dbUpdateConcurrencyException.Data);
 
                 throw await CreateAndLogDependencyValidationExceptionAsync(lockedMetricException);
             }
@@ -111,7 +115,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedStorageMetricException =
                     new FailedStorageMetricException(
                         message: "Failed metric storage error occurred, contact support.",
-                        innerException: databaseUpdateException);
+                        innerException: databaseUpdateException,
+                        data: databaseUpdateException.Data);
 
                 throw await CreateAndLogDependencyExceptionAsync(failedStorageMetricException);
             }
@@ -120,7 +125,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedMetricServiceException =
                     new FailedMetricServiceException(
                         message: "Failed metric service occurred, please contact support.",
-                        innerException: exception);
+                        innerException: exception,
+                        data: exception.Data);
 
                 throw await CreateAndLogServiceExceptionAsync(failedMetricServiceException);
             }
@@ -145,7 +151,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedStorageMetricException =
                     new FailedStorageMetricException(
                         message: "Failed metric storage error occurred, contact support.",
-                        innerException: sqlException);
+                        innerException: sqlException,
+                        data: sqlException.Data);
 
                 throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageMetricException);
             }
@@ -185,7 +192,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var alreadyExistsMetricException =
                     new AlreadyExistsMetricException(
                         message: "Metric with the same Id already exists.",
-                        innerException: duplicateKeyException);
+                        innerException: duplicateKeyException,
+                        data: duplicateKeyException.Data);
 
                 throw await CreateAndLogDependencyValidationExceptionAsync(alreadyExistsMetricException);
             }
@@ -194,7 +202,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var lockedMetricException =
                     new LockedMetricException(
                         message: "Locked metric record exception, please try again later.",
-                        innerException: dbUpdateConcurrencyException);
+                        innerException: dbUpdateConcurrencyException,
+                        data: dbUpdateConcurrencyException.Data);
 
                 throw await CreateAndLogDependencyValidationExceptionAsync(lockedMetricException);
             }
@@ -203,7 +212,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedStorageMetricException =
                     new FailedStorageMetricException(
                         message: "Failed metric storage error occurred, contact support.",
-                        innerException: databaseUpdateException);
+                        innerException: databaseUpdateException,
+                        data: databaseUpdateException.Data);
 
                 throw await CreateAndLogDependencyExceptionAsync(failedStorageMetricException);
             }
@@ -212,7 +222,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedMetricServiceException =
                     new FailedMetricServiceException(
                         message: "Failed metric service occurred, please contact support.",
-                        innerException: exception);
+                        innerException: exception,
+                        data: exception.Data);
 
                 throw await CreateAndLogServiceExceptionAsync(failedMetricServiceException);
             }
@@ -229,7 +240,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedStorageMetricException =
                     new FailedStorageMetricException(
                         message: "Failed metric storage error occurred, contact support.",
-                        innerException: sqlException);
+                        innerException: sqlException,
+                        data: sqlException.Data);
 
                 throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageMetricException);
             }
@@ -269,7 +281,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedMetricServiceException =
                     new FailedMetricServiceException(
                         message: "Failed metric service occurred, please contact support.",
-                        innerException: exception);
+                        innerException: exception,
+                        data: exception.Data);
 
                 throw await CreateAndLogServiceExceptionAsync(failedMetricServiceException);
             }
@@ -290,7 +303,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedStorageMetricException =
                     new FailedStorageMetricException(
                         message: "Failed metric storage error occurred, contact support.",
-                        innerException: sqlException);
+                        innerException: sqlException,
+                        data: sqlException.Data);
 
                 throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageMetricException);
             }
@@ -330,7 +344,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var lockedMetricException =
                     new LockedMetricException(
                         message: "Locked metric record exception, please try again later.",
-                        innerException: dbUpdateConcurrencyException);
+                        innerException: dbUpdateConcurrencyException,
+                        data: dbUpdateConcurrencyException.Data);
 
                 throw await CreateAndLogDependencyValidationExceptionAsync(lockedMetricException);
             }
@@ -339,7 +354,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedStorageMetricException =
                     new FailedStorageMetricException(
                         message: "Failed metric storage error occurred, contact support.",
-                        innerException: databaseUpdateException);
+                        innerException: databaseUpdateException,
+                        data: databaseUpdateException.Data);
 
                 throw await CreateAndLogDependencyExceptionAsync(failedStorageMetricException);
             }
@@ -348,7 +364,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 var failedMetricServiceException =
                     new FailedMetricServiceException(
                         message: "Failed metric service occurred, please contact support.",
-                        innerException: exception);
+                        innerException: exception,
+                        data: exception.Data);
 
                 throw await CreateAndLogServiceExceptionAsync(failedMetricServiceException);
             }
