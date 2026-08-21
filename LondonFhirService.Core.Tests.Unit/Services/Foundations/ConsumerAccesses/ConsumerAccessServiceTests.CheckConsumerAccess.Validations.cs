@@ -31,7 +31,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
-                this.consumerAccessService.CheckConsumerAccessAsync(nullValidateAccessRequest);
+                this.consumerAccessService.CheckConsumerAccessAsync(
+                    nullValidateAccessRequest, TestContext.Current.CancellationToken);
 
             ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
                 await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
@@ -94,7 +95,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
-                this.consumerAccessService.CheckConsumerAccessAsync(invalidValidateAccessRequest);
+                this.consumerAccessService.CheckConsumerAccessAsync(
+                    invalidValidateAccessRequest, TestContext.Current.CancellationToken);
 
             ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
                 await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(

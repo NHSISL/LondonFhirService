@@ -42,7 +42,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
-                this.consumerAccessService.CheckConsumerAccessAsync(inputValidateAccessRequest);
+                this.consumerAccessService.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, TestContext.Current.CancellationToken);
 
             ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
                 await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
@@ -53,7 +54,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 .BeEquivalentTo(expectedConsumerAccessServiceDependencyException);
 
             this.consumerAccessBrokerMock.Verify(broker =>
-                broker.CheckConsumerAccessAsync(inputValidateAccessRequest, default),
+                broker.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -93,7 +95,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
-                this.consumerAccessService.CheckConsumerAccessAsync(inputValidateAccessRequest);
+                this.consumerAccessService.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, TestContext.Current.CancellationToken);
 
             ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
                 await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
@@ -104,7 +107,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 .BeEquivalentTo(expectedConsumerAccessServiceDependencyException);
 
             this.consumerAccessBrokerMock.Verify(broker =>
-                broker.CheckConsumerAccessAsync(inputValidateAccessRequest, default),
+                broker.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -144,7 +148,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
-                this.consumerAccessService.CheckConsumerAccessAsync(inputValidateAccessRequest);
+                this.consumerAccessService.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, TestContext.Current.CancellationToken);
 
             ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
                 await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
@@ -155,7 +160,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 .BeEquivalentTo(expectedConsumerAccessServiceDependencyException);
 
             this.consumerAccessBrokerMock.Verify(broker =>
-                broker.CheckConsumerAccessAsync(inputValidateAccessRequest, default),
+                broker.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -193,7 +199,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
-                this.consumerAccessService.CheckConsumerAccessAsync(inputValidateAccessRequest);
+                this.consumerAccessService.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, TestContext.Current.CancellationToken);
 
             ConsumerAccessServiceException actualConsumerAccessServiceException =
                 await Assert.ThrowsAsync<ConsumerAccessServiceException>(
@@ -204,7 +211,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 .BeEquivalentTo(expectedConsumerAccessServiceException);
 
             this.consumerAccessBrokerMock.Verify(broker =>
-                broker.CheckConsumerAccessAsync(inputValidateAccessRequest, default),
+                broker.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
