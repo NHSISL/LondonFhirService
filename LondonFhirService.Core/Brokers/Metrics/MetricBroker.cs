@@ -20,6 +20,8 @@ namespace LondonFhirService.Core.Brokers.Metrics
 
         public async ValueTask RecordAsync(List<Metric> metrics, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             foreach (Metric metric in metrics)
             {
                 await RecordAsync(metric, cancellationToken);
