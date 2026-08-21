@@ -18,6 +18,9 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
         public virtual async ValueTask BulkInsertMetricsAsync(List<Metric> metrics) =>
             await BulkInsertAsync(metrics);
 
+        public virtual async ValueTask BulkDeleteMetricsAsync(List<Metric> metrics) =>
+            await BulkDeleteAsync(metrics);
+
         public virtual async ValueTask<Metric> InsertMetricAsync(Metric metric) =>
             await InsertAsync(metric);
 

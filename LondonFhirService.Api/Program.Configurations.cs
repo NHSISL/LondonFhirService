@@ -30,6 +30,7 @@ using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
@@ -40,6 +41,7 @@ using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
+using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
@@ -252,10 +254,17 @@ public partial class Program
             .GetSection("AccessConfigurations")
             .Get<AccessConfigurations>();
 
+        MetricServiceConfigurations metricServiceConfigurations = configuration
+            .GetSection("MetricServiceConfigurations")
+            .Get<MetricServiceConfigurations>()
+            ?? throw new InvalidOperationException(
+                "MetricServiceConfigurations is missing or invalid. Please check appsettings.json.");
+
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);
         services.AddSingleton(ldsConfig);
         services.AddSingleton(accessConfig);
+        services.AddSingleton(metricServiceConfigurations);
 
         services.AddSingleton<STU3FhirAbstractions.IFhirAbstractionProvider>(sp =>
         {
@@ -344,6 +353,7 @@ public partial class Program
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
+        services.AddTransient<IMetricService, MetricService>();
         services.AddTransient<IStu3PatientService, Stu3PatientService>();
         services.AddTransient<IProviderService, ProviderService>();
         services.AddSingleton<IJsonElementService, JsonElementService>();
