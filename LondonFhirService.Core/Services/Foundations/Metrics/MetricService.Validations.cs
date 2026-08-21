@@ -66,6 +66,15 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                     Rule: IsNotPositive(retentionPeriodInDays),
                     Parameter: nameof(MetricServiceConfigurations.RetentionPeriodInDays)));
 
+        private static void ValidatePurgeBatchSize(int purgeBatchSize) =>
+            Validate(
+                createException: () => new InvalidMetricException(
+                    "Invalid metric. Please correct the errors and try again."),
+
+                validations: (
+                    Rule: IsNotPositive(purgeBatchSize),
+                    Parameter: nameof(MetricServiceConfigurations.PurgeBatchSize)));
+
         private static void ValidateStorageMetric(Metric maybeMetric, Guid metricId)
         {
             if (maybeMetric is null)

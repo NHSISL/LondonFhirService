@@ -44,7 +44,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             {
                 IsEnabled = true,
                 IsPurgingAllowed = true,
-                RetentionPeriodInDays = GetRandomNumber()
+                RetentionPeriodInDays = GetRandomNumber(),
+                PurgeBatchSize = GetRandomNumber()
             };
 
             this.metricService = new MetricService(

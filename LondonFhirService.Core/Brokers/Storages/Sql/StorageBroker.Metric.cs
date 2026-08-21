@@ -21,10 +21,15 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             CancellationToken cancellationToken = default) =>
             await BulkInsertAsync(metrics, cancellationToken);
 
-        public virtual async ValueTask BulkDeleteMetricsAsync(
-            List<Metric> metrics,
+        public virtual async ValueTask<int> DeleteMetricsOlderThanAsync(
+            DateTimeOffset cutOffDate,
+            int batchSize,
             CancellationToken cancellationToken = default) =>
-            await BulkDeleteAsync(metrics, cancellationToken);
+            await Metrics
+                .Where(metric => metric.CreatedDate < cutOffDate)
+                .OrderBy(metric => metric.CreatedDate)
+                .Take(batchSize)
+                .ExecuteDeleteAsync(cancellationToken);
 
         public virtual async ValueTask<Metric> InsertMetricAsync(
             Metric metric,

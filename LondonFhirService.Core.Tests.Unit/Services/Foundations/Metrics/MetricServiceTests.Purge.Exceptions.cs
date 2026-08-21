@@ -41,7 +41,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
                     .ThrowsAsync(sqlException);
 
             // when
@@ -55,8 +58,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
@@ -93,7 +99,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
                     .ThrowsAsync(timeoutException);
 
             // when
@@ -107,8 +116,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
@@ -146,7 +158,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
                     .ThrowsAsync(cancellationException);
 
             // when
@@ -160,8 +175,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
@@ -180,13 +198,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
         {
             // given
             DateTimeOffset currentDateTimeOffset = GetRandomRecentDateTimeOffset();
-            int retentionPeriodInDays = GetRandomNumber();
-            this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
-            DateTimeOffset cutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
-
-            Metric expiredMetric = CreateRandomMetric();
-            expiredMetric.CreatedDate = cutOffDate.AddDays(-1);
-            IQueryable<Metric> storageMetrics = new List<Metric> { expiredMetric }.AsQueryable();
             var dbUpdateConcurrencyException = new DbUpdateConcurrencyException();
 
             var lockedMetricException =
@@ -205,11 +216,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(storageMetrics);
-
-            this.storageBrokerMock.Setup(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()))
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
                     .ThrowsAsync(dbUpdateConcurrencyException);
 
             // when
@@ -224,12 +234,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                 .BeEquivalentTo(expectedMetricDependencyValidationException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
-                    Times.Once);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
@@ -248,13 +264,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
         {
             // given
             DateTimeOffset currentDateTimeOffset = GetRandomRecentDateTimeOffset();
-            int retentionPeriodInDays = GetRandomNumber();
-            this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
-            DateTimeOffset cutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
-
-            Metric expiredMetric = CreateRandomMetric();
-            expiredMetric.CreatedDate = cutOffDate.AddDays(-1);
-            IQueryable<Metric> storageMetrics = new List<Metric> { expiredMetric }.AsQueryable();
             var dbUpdateException = new DbUpdateException();
 
             var failedStorageMetricException =
@@ -273,11 +282,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(storageMetrics);
-
-            this.storageBrokerMock.Setup(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()))
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
                     .ThrowsAsync(dbUpdateException);
 
             // when
@@ -291,12 +299,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
-                    Times.Once);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
@@ -333,7 +347,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
                     .ThrowsAsync(serviceException);
 
             // when
@@ -347,8 +364,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricServiceException.Should().BeEquivalentTo(expectedMetricServiceException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),

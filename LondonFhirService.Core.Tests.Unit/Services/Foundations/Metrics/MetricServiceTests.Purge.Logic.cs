@@ -3,12 +3,9 @@
 // ---------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
@@ -16,33 +13,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
     public partial class MetricServiceTests
     {
         [Fact]
-        public async Task ShouldPurgeOnlyMetricsOlderThanTheRetentionPeriodAsync()
+        public async Task ShouldPurgeMetricsOlderThanTheRetentionPeriodAsync()
         {
             // given
             DateTimeOffset currentDateTimeOffset = GetRandomRecentDateTimeOffset();
             int retentionPeriodInDays = GetRandomNumber();
+            int batchSize = GetRandomNumber();
+            int deletedCount = batchSize - 1;
             this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
-            DateTimeOffset cutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
-
-            Metric expiredMetric = CreateRandomMetric();
-            expiredMetric.CreatedDate = cutOffDate.AddDays(-1);
-
-            Metric metricOnTheBoundary = CreateRandomMetric();
-            metricOnTheBoundary.CreatedDate = cutOffDate;
-
-            Metric retainedMetric = CreateRandomMetric();
-            retainedMetric.CreatedDate = cutOffDate.AddDays(1);
-
-            IQueryable<Metric> storageMetrics =
-                new List<Metric> { expiredMetric, metricOnTheBoundary, retainedMetric }.AsQueryable();
+            this.metricServiceConfigurations.PurgeBatchSize = batchSize;
+            DateTimeOffset expectedCutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(storageMetrics);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(deletedCount);
 
             // when
             int actualPurgedCount =
@@ -50,28 +41,86 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     TestContext.Current.CancellationToken);
 
             // then
-            actualPurgedCount.Should().Be(1);
+            actualPurgedCount.Should().Be(deletedCount);
 
-            // A metric created exactly on the cut off is retained, so the retention period is
-            // the number of days kept rather than the number of days minus a boundary case.
+            // The cut off is derived from the retention period, and the delete runs in the
+            // database rather than over a materialised candidate list.
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.Is<List<Metric>>(metrics =>
-                    metrics.Count == 1 && metrics[0].Id == expiredMetric.Id), It.IsAny<CancellationToken>()),
+                broker.DeleteMetricsOlderThanAsync(
+                    expectedCutOffDate,
+                    batchSize,
+                    It.IsAny<CancellationToken>()),
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
+                    Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            // The operational message reports the real count and cut off, so a wrong one
-            // cannot pass unnoticed. Exactly one of the three metrics is past the cut off.
             this.loggingBrokerMock.Verify(broker =>
-                broker.LogInformationAsync($"Purged 1 metric(s) created before {cutOffDate}."),
+                broker.LogInformationAsync(
+                    $"Purged {deletedCount} metric(s) created before {expectedCutOffDate}."),
+                        Times.Once);
+
+            VerifyNoOtherCallsOnAllBrokers();
+        }
+
+        [Fact]
+        public async Task ShouldKeepPurgingInBatchesUntilABatchComesBackShortAsync()
+        {
+            // given
+            DateTimeOffset currentDateTimeOffset = GetRandomRecentDateTimeOffset();
+            int retentionPeriodInDays = GetRandomNumber();
+            int batchSize = GetRandomNumber();
+            int lastBatchCount = batchSize - 1;
+            int expectedTotal = batchSize + batchSize + lastBatchCount;
+            this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
+            this.metricServiceConfigurations.PurgeBatchSize = batchSize;
+            DateTimeOffset expectedCutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(currentDateTimeOffset);
+
+            this.storageBrokerMock.SetupSequence(broker =>
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(batchSize)
+                        .ReturnsAsync(batchSize)
+                        .ReturnsAsync(lastBatchCount);
+
+            // when
+            int actualPurgedCount =
+                await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(
+                    TestContext.Current.CancellationToken);
+
+            // then
+            // A full batch means there may be more, so the loop continues; a short one means the
+            // window is exhausted. The total is the sum the database actually reported.
+            actualPurgedCount.Should().Be(expectedTotal);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.DeleteMetricsOlderThanAsync(
+                    expectedCutOffDate,
+                    batchSize,
+                    It.IsAny<CancellationToken>()),
+                        Times.Exactly(3));
+
+            // The clock is read once, so every batch uses the same cut off rather than letting it
+            // drift forward while the purge runs.
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    $"Purged {expectedTotal} metric(s) created before {expectedCutOffDate}."),
+                        Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();
         }
@@ -91,12 +140,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualPurgedCount.Should().Be(0);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Never);
-
-            this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
-                    Times.Never);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
@@ -128,25 +176,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
         }
 
         [Fact]
-        public async Task ShouldNotCallBulkDeleteIfNoMetricsAreExpiredAsync()
+        public async Task ShouldNotLogWhenNothingWasPurgedAsync()
         {
             // given
             DateTimeOffset currentDateTimeOffset = GetRandomRecentDateTimeOffset();
-            int retentionPeriodInDays = GetRandomNumber();
-            this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
-            DateTimeOffset cutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
-
-            Metric retainedMetric = CreateRandomMetric();
-            retainedMetric.CreatedDate = cutOffDate.AddDays(1);
-            IQueryable<Metric> storageMetrics = new List<Metric> { retainedMetric }.AsQueryable();
+            this.metricServiceConfigurations.PurgeBatchSize = GetRandomNumber();
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(storageMetrics);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(0);
 
             // when
             int actualPurgedCount =
@@ -157,81 +202,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualPurgedCount.Should().Be(0);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
-
-            this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
-                    Times.Never);
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
+            // A purge that removed nothing is not worth an operational log line.
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(It.IsAny<string>()),
                     Times.Never);
-
-            VerifyNoOtherCallsOnAllBrokers();
-        }
-
-        [Fact]
-        public async Task ShouldPurgeEveryExpiredMetricInOneCallAsync()
-        {
-            // given
-            DateTimeOffset currentDateTimeOffset = GetRandomRecentDateTimeOffset();
-            int retentionPeriodInDays = GetRandomNumber();
-            this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
-            DateTimeOffset cutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
-            int expiredCount = GetRandomNumber();
-            var expiredMetrics = new List<Metric>();
-
-            for (int index = 0; index < expiredCount; index++)
-            {
-                Metric expiredMetric = CreateRandomMetric();
-                expiredMetric.CreatedDate = cutOffDate.AddDays(-(index + 1));
-                expiredMetrics.Add(expiredMetric);
-            }
-
-            IQueryable<Metric> storageMetrics = expiredMetrics.AsQueryable();
-
-            this.dateTimeBrokerMock.Setup(broker =>
-                broker.GetCurrentDateTimeOffsetAsync())
-                    .ReturnsAsync(currentDateTimeOffset);
-
-            this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(storageMetrics);
-
-            // when
-            int actualPurgedCount =
-                await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(
-                    TestContext.Current.CancellationToken);
-
-            // then
-            actualPurgedCount.Should().Be(expiredCount);
-
-            // One bulk call rather than a delete per row, which matters on a table this large.
-            this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.Is<List<Metric>>(metrics =>
-                    metrics.Count == expiredCount), It.IsAny<CancellationToken>()),
-                        Times.Once);
-
-            this.storageBrokerMock.Verify(broker =>
-                broker.DeleteMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
-                    Times.Never);
-
-            this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
-                    Times.Once);
-
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
-
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogInformationAsync($"Purged {expiredCount} metric(s) created before {cutOffDate}."),
-                    Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();
         }

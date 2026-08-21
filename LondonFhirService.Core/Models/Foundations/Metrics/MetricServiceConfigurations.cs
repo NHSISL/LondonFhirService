@@ -31,5 +31,13 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
         /// is rejected rather than obeyed.
         /// </summary>
         public int RetentionPeriodInDays { get; set; }
+
+        /// <summary>
+        /// How many rows a single purge statement may delete. The purge loops until a batch comes
+        /// back short, so this bounds the transaction and the lock footprint of each statement
+        /// rather than the total amount deleted. Must be greater than zero - a batch size of zero
+        /// would loop forever without deleting anything.
+        /// </summary>
+        public int PurgeBatchSize { get; set; }
     }
 }

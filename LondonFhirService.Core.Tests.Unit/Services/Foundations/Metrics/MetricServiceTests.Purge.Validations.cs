@@ -60,8 +60,66 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
                     Times.Never);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Never);
+
+            VerifyNoOtherCallsOnAllBrokers();
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        [InlineData(int.MinValue)]
+        public async Task ShouldThrowValidationExceptionOnPurgeIfBatchSizeIsNotPositiveAndLogItAsync(
+            int invalidPurgeBatchSize)
+        {
+            // given
+            this.metricServiceConfigurations.PurgeBatchSize = invalidPurgeBatchSize;
+
+            var invalidMetricException =
+                new InvalidMetricException(
+                    message: "Invalid metric. Please correct the errors and try again.");
+
+            invalidMetricException.AddData(
+                key: nameof(MetricServiceConfigurations.PurgeBatchSize),
+                values: "Value is expected to be greater than zero");
+
+            var expectedMetricValidationException =
+                new MetricValidationException(
+                    message: "Metric validation errors occurred, please try again.",
+                    innerException: invalidMetricException);
+
+            // when
+            ValueTask<int> purgeMetricsTask =
+                this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(
+                    TestContext.Current.CancellationToken);
+
+            MetricValidationException actualMetricValidationException =
+                await Assert.ThrowsAsync<MetricValidationException>(purgeMetricsTask.AsTask);
+
+            // then
+            actualMetricValidationException.Should().BeEquivalentTo(expectedMetricValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedMetricValidationException))),
+                        Times.Once);
+
+            // A batch size of zero or less would loop without ever deleting anything, so the
+            // purge refuses rather than spinning.
+            this.storageBrokerMock.Verify(broker =>
+                broker.DeleteMetricsOlderThanAsync(
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),

@@ -134,29 +134,43 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             // Guarded rather than obeyed. A zero or negative retention period would make the
             // cut off date the present or the future and delete the entire table.
             ValidateRetentionPeriod(this.metricServiceConfigurations.RetentionPeriodInDays);
+            int batchSize = this.metricServiceConfigurations.PurgeBatchSize;
+            ValidatePurgeBatchSize(batchSize);
 
             DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
             DateTimeOffset cutOffDate =
                 currentDateTime.AddDays(-this.metricServiceConfigurations.RetentionPeriodInDays);
 
-            IQueryable<Metric> allMetrics = await this.storageBroker.SelectAllMetricsAsync(cancellationToken);
+            // Deleted in bounded batches, in the database. Selecting the expired rows into memory
+            // first would size the cost of a purge by the size of the retention window, which on
+            // this table is exactly the case that must not fall over - the first purge after a
+            // period of not purging at all.
+            int totalDeleted = 0;
+            int deletedInBatch;
 
-            List<Metric> expiredMetrics = allMetrics
-                .Where(metric => metric.CreatedDate < cutOffDate)
-                .ToList();
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            if (expiredMetrics.Count == 0)
+                deletedInBatch = await this.storageBroker.DeleteMetricsOlderThanAsync(
+                    cutOffDate,
+                    batchSize,
+                    cancellationToken);
+
+                totalDeleted += deletedInBatch;
+            }
+            while (deletedInBatch == batchSize);
+
+            if (totalDeleted == 0)
             {
                 return 0;
             }
 
-            await this.storageBroker.BulkDeleteMetricsAsync(expiredMetrics, cancellationToken);
-
             await this.loggingBroker.LogInformationAsync(
-                $"Purged {expiredMetrics.Count} metric(s) created before {cutOffDate}.");
+                $"Purged {totalDeleted} metric(s) created before {cutOffDate}.");
 
-            return expiredMetrics.Count;
+            return totalDeleted;
         });
     }
 }

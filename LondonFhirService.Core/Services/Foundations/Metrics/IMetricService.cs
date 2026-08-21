@@ -32,10 +32,10 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
 
         /// <summary>
         /// Deletes every metric older than the configured retention period and returns how many
-        /// were selected for deletion. That is a count of candidates, not of rows the database
-        /// confirmed it removed - the bulk delete reports no affected-row count, so if two purges
-        /// run at once the second can select rows the first has already taken. Returns zero
-        /// without deleting when purging is not allowed by configuration.
+        /// rows the database removed. The delete runs in SQL in bounded batches, so nothing is
+        /// materialised and the count is the real affected-row total rather than a count of
+        /// candidates. Returns zero without deleting when purging is not allowed by
+        /// configuration.
         /// </summary>
         ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(CancellationToken cancellationToken = default);
     }
