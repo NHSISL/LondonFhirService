@@ -4,6 +4,7 @@
 
 using System;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.DateTimes;
+using LondonFhirService.Clients.AuditAndMetrics.Brokers.Identifiers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
 using LondonFhirService.Core.Abstractions.Brokers;
@@ -67,6 +68,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
                 .AddSingleton(configurations)
                 .AddLogging()
                 .AddTransient<IDateTimeBroker, DateTimeBroker>()
+                .AddTransient<IIdentifierBroker, IdentifierBroker>()
                 .AddTransient<ILoggingBroker, LoggingBroker>()
                 .AddTransient<IMetricBroker, MetricBroker>()
                 .AddTransient<IAuditService, AuditService>()
@@ -77,7 +79,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             return serviceCollection.BuildServiceProvider();
         }
 
-        private static AuditAndMetricsConfigurations BindConfigurations(IConfiguration configuration)
+        internal static AuditAndMetricsConfigurations BindConfigurations(IConfiguration configuration)
         {
             AuditAndMetricsConfigurations configurations =
                 configuration

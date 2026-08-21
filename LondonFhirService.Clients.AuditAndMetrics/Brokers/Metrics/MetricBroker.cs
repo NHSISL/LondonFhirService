@@ -3,20 +3,33 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
 {
     internal class MetricBroker : IMetricBroker
     {
-        public const string ActivitySourceName = "LondonFhirService.Metrics";
+        /// <summary>
+        /// Cached by name and shared across every instance. An ActivitySource registers itself
+        /// with the diagnostics subsystem for its lifetime, and this broker is transient inside a
+        /// client that is scoped per request - creating one per instance would leak a listener
+        /// registration per request. There is one distinct name in practice, so the dictionary
+        /// holds one entry.
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, ActivitySource> ActivitySources = new();
 
-        private static readonly ActivitySource activitySource =
-            new ActivitySource(ActivitySourceName);
+        private readonly ActivitySource activitySource;
+
+        public MetricBroker(AuditAndMetricsConfigurations configurations) =>
+            this.activitySource = ActivitySources.GetOrAdd(
+                configurations.ActivitySourceName,
+                name => new ActivitySource(name));
 
         public async ValueTask RecordAsync(List<IMetric> metrics, CancellationToken cancellationToken = default)
         {
@@ -34,7 +47,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
 
             // Positional rather than named: the name-first and name-last overloads are both
             // applicable once the arguments are named, and the call becomes ambiguous.
-            Activity activity = activitySource.StartActivity(
+            Activity activity = this.activitySource.StartActivity(
                 $"{metric.Method}/{metric.Name}",
                 ToActivityKind(metric.Type),
                 CreateTraceContext(metric.CorrelationId),
