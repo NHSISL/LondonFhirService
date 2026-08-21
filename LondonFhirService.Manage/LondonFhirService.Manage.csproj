@@ -40,6 +40,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LondonFhirService.Core\LondonFhirService.Core.csproj" />
+		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

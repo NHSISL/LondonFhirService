@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 
-namespace LondonFhirService.Core.Clients.Metrics
+namespace LondonFhirService.Clients.AuditAndMetrics.Metrics
 {
     /// <summary>
     /// The outward facing surface over the metric foundation service. Service exceptions are

@@ -12,7 +12,7 @@ using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 using Xeptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Clients.Metrics
+namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
 {
     public partial class MetricClientTests
     {

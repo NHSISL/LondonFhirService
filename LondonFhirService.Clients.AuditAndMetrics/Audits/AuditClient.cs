@@ -6,13 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Models.Clients.AuditClient.Exceptions;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using Xeptions;
 
-namespace LondonFhirService.Core.Clients.Audits
+namespace LondonFhirService.Clients.AuditAndMetrics.Audits
 {
     public class AuditClient : IAuditClient
     {

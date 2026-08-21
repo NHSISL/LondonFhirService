@@ -10,6 +10,11 @@
     <File Path="README.md" />
     <Project Path="LondonFhirService.Infrastructure/LondonFhirService.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Clients/">
+    <Project Path="LondonFhirService.Clients.AuditAndMetrics/LondonFhirService.Clients.AuditAndMetrics.csproj" Id="bc50a4b1-e263-4589-a008-7047eb0d9abb" />
+    <Project Path="LondonFhirService.Clients.AuditAndMetrics.Tests.Acceptance/LondonFhirService.Clients.AuditAndMetrics.Tests.Acceptance.csproj" />
+    <Project Path="LondonFhirService.Clients.AuditAndMetrics.Tests.Unit/LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Core/">
     <Project Path="LondonFhirService.Core.Tests.Unit/LondonFhirService.Core.Tests.Unit.csproj" />
     <Project Path="LondonFhirService.Core/LondonFhirService.Core.csproj" />

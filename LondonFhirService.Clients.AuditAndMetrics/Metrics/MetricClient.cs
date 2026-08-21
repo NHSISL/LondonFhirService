@@ -7,13 +7,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Models.Clients.MetricClient.Exceptions;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Metrics;
 using Xeptions;
 
-namespace LondonFhirService.Core.Clients.Metrics
+namespace LondonFhirService.Clients.AuditAndMetrics.Metrics
 {
     public class MetricClient : IMetricClient
     {

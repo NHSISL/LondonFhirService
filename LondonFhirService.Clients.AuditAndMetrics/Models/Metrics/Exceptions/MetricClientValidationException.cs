@@ -4,11 +4,11 @@
 
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Clients.MetricClient.Exceptions
+namespace LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions
 {
-    public class MetricClientServiceException : Xeption
+    public class MetricClientValidationException : Xeption
     {
-        public MetricClientServiceException(string message, Xeption innerException)
+        public MetricClientValidationException(string message, Xeption innerException)
             : base(message, innerException)
         { }
     }

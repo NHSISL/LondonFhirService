@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
-using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Brokers.Audits;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -150,16 +150,19 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void MockExternalClientsForTesting(IServiceCollection services)
         {
-            var auditClientDescriptor = services
-               .FirstOrDefault(d => d.ServiceType == typeof(IAuditClient));
+            // Mocked at the broker rather than the client. AuditBroker now calls IAuditService
+            // directly, so replacing IAuditClient would intercept nothing and audit writes would
+            // reach the database during an acceptance run.
+            var auditBrokerDescriptor = services
+               .FirstOrDefault(d => d.ServiceType == typeof(IAuditBroker));
 
-            if (auditClientDescriptor != null)
+            if (auditBrokerDescriptor != null)
             {
-                services.Remove(auditClientDescriptor);
+                services.Remove(auditBrokerDescriptor);
             }
 
-            var mockAuditClient = new Mock<IAuditClient>();
-            services.AddTransient<IAuditClient>(_ => mockAuditClient.Object);
+            var mockAuditBroker = new Mock<IAuditBroker>();
+            services.AddTransient<IAuditBroker>(_ => mockAuditBroker.Object);
         }
     }
 }

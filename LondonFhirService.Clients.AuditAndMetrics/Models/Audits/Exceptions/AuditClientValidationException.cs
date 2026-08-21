@@ -4,7 +4,7 @@
 
 using Xeptions;
 
-namespace LondonFhirService.Core.Models.Clients.AuditClient.Exceptions
+namespace LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions
 {
     public class AuditClientValidationException : Xeption
     {

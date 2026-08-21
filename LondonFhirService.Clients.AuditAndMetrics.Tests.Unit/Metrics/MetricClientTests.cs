@@ -5,8 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LondonFhirService.Core.Clients.Metrics;
-using LondonFhirService.Core.Models.Clients.MetricClient.Exceptions;
+using LondonFhirService.Clients.AuditAndMetrics.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Metrics;
@@ -14,7 +14,7 @@ using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Clients.Metrics
+namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
 {
     public partial class MetricClientTests
     {

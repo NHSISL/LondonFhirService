@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Audits;
 
-namespace LondonFhirService.Core.Clients.Audits
+namespace LondonFhirService.Clients.AuditAndMetrics.Audits
 {
     public interface IAuditClient
     {

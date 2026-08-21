@@ -11,7 +11,7 @@ using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 
-namespace LondonFhirService.Core.Tests.Unit.Clients.Metrics
+namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
 {
     /// <summary>
     /// Cancellation is the one thing the client does not translate. A token already cancelled on

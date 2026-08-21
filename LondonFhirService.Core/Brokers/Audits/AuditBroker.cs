@@ -4,20 +4,24 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits;
 
 namespace LondonFhirService.Core.Brokers.Audits
 {
     public class AuditBroker : IAuditBroker
     {
-        private readonly IAuditClient auditClient;
+        // Calls the service directly rather than going through IAuditClient. The client now
+        // ships in LondonFhirService.Clients.AuditAndMetrics, which references Core, so Core
+        // cannot reference it back. Nothing was catching the client exceptions this hop used to
+        // produce, so what escapes here is now the service exception underneath them.
+        private readonly IAuditService auditService;
 
-        public AuditBroker(IAuditClient auditClient) =>
-            this.auditClient = auditClient;
+        public AuditBroker(IAuditService auditService) =>
+            this.auditService = auditService;
 
         public async ValueTask BulkLogAsync(List<Audit> audits) =>
-            await auditClient.BulkLogAuditsAsync(audits);
+            await auditService.BulkAddAuditsAsync(audits);
 
         public async ValueTask<Audit> LogAsync(
             string auditType,
@@ -27,7 +31,7 @@ namespace LondonFhirService.Core.Brokers.Audits
             string correlationId,
             string logLevel = "Information")
         {
-            return await auditClient.LogAuditAsync(auditType, title, message, fileName, correlationId, logLevel);
+            return await auditService.AddAuditAsync(auditType, title, message, fileName, correlationId, logLevel);
         }
 
         public async ValueTask<Audit> LogInformationAsync(
@@ -37,7 +41,7 @@ namespace LondonFhirService.Core.Brokers.Audits
             string fileName,
             string correlationId)
         {
-            return await auditClient.LogAuditAsync(auditType, title, message, fileName, correlationId, "Information");
+            return await auditService.AddAuditAsync(auditType, title, message, fileName, correlationId, "Information");
         }
 
         public async ValueTask<Audit> LogWarningAsync(
@@ -47,7 +51,7 @@ namespace LondonFhirService.Core.Brokers.Audits
             string fileName,
             string correlationId)
         {
-            return await auditClient.LogAuditAsync(auditType, title, message, fileName, correlationId, "Warning");
+            return await auditService.AddAuditAsync(auditType, title, message, fileName, correlationId, "Warning");
         }
 
         public async ValueTask<Audit> LogErrorAsync(
@@ -57,7 +61,7 @@ namespace LondonFhirService.Core.Brokers.Audits
             string fileName,
             string correlationId)
         {
-            return await auditClient.LogAuditAsync(auditType, title, message, fileName, correlationId, "Error");
+            return await auditService.AddAuditAsync(auditType, title, message, fileName, correlationId, "Error");
         }
 
         public async ValueTask<Audit> LogCriticalAsync(
@@ -67,7 +71,7 @@ namespace LondonFhirService.Core.Brokers.Audits
             string fileName,
             string correlationId)
         {
-            return await auditClient.LogAuditAsync(auditType, title, message, fileName, correlationId, "Critical");
+            return await auditService.AddAuditAsync(auditType, title, message, fileName, correlationId, "Critical");
         }
     }
 }

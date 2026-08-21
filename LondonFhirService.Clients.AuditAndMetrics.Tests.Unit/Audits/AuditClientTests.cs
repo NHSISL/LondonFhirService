@@ -5,8 +5,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LondonFhirService.Core.Clients.Audits;
-using LondonFhirService.Core.Models.Clients.AuditClient.Exceptions;
+using LondonFhirService.Clients.AuditAndMetrics.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Audits;
@@ -14,7 +14,7 @@ using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Clients.Audits
+namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
 {
     public partial class AuditClientTests
     {

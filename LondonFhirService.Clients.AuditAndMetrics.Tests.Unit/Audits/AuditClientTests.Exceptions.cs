@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.Audits;
 using Moq;
 using Xeptions;
 
-namespace LondonFhirService.Core.Tests.Unit.Clients.Audits
+namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
 {
     public partial class AuditClientTests
     {

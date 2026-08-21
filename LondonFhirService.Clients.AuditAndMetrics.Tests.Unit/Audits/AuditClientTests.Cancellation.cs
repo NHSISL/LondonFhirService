@@ -10,7 +10,7 @@ using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using Moq;
 
-namespace LondonFhirService.Core.Tests.Unit.Clients.Audits
+namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
 {
     /// <summary>
     /// Cancellation is not translated into a client exception. A token already cancelled on the

@@ -15,7 +15,7 @@ using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Audits;
 using LondonFhirService.Core.Models.Bases;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
