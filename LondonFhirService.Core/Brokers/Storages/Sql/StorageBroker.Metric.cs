@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using Microsoft.EntityFrameworkCore;
@@ -15,22 +16,33 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
     {
         public DbSet<Metric> Metrics { get; set; }
 
-        public virtual async ValueTask BulkInsertMetricsAsync(List<Metric> metrics) =>
-            await BulkInsertAsync(metrics);
+        public virtual async ValueTask BulkInsertMetricsAsync(
+            List<Metric> metrics,
+            CancellationToken cancellationToken = default) =>
+            await BulkInsertAsync(metrics, cancellationToken);
 
-        public virtual async ValueTask BulkDeleteMetricsAsync(List<Metric> metrics) =>
-            await BulkDeleteAsync(metrics);
+        public virtual async ValueTask BulkDeleteMetricsAsync(
+            List<Metric> metrics,
+            CancellationToken cancellationToken = default) =>
+            await BulkDeleteAsync(metrics, cancellationToken);
 
-        public virtual async ValueTask<Metric> InsertMetricAsync(Metric metric) =>
-            await InsertAsync(metric);
+        public virtual async ValueTask<Metric> InsertMetricAsync(
+            Metric metric,
+            CancellationToken cancellationToken = default) =>
+            await InsertAsync(metric, cancellationToken);
 
-        public virtual async ValueTask<IQueryable<Metric>> SelectAllMetricsAsync() =>
-            await SelectAllAsync<Metric>();
+        public virtual async ValueTask<IQueryable<Metric>> SelectAllMetricsAsync(
+            CancellationToken cancellationToken = default) =>
+            await SelectAllAsync<Metric>(cancellationToken);
 
-        public virtual async ValueTask<Metric> SelectMetricByIdAsync(Guid metricId) =>
-            await SelectAsync<Metric>(metricId);
+        public virtual async ValueTask<Metric> SelectMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
+            await SelectAsync<Metric>(cancellationToken, metricId);
 
-        public virtual async ValueTask<Metric> DeleteMetricAsync(Metric metric) =>
-            await DeleteAsync(metric);
+        public virtual async ValueTask<Metric> DeleteMetricAsync(
+            Metric metric,
+            CancellationToken cancellationToken = default) =>
+            await DeleteAsync(metric, cancellationToken);
     }
 }

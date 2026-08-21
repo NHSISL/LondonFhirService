@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -36,7 +37,7 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             this.metricServiceConfigurations = metricServiceConfigurations;
         }
 
-        public ValueTask<Metric> AddMetricAsync(Metric metric) =>
+        public ValueTask<Metric> AddMetricAsync(Metric metric, CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
             if (this.metricServiceConfigurations.IsEnabled is false)
@@ -44,16 +45,17 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 return metric;
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateMetricIsNotNull(metric);
             metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
             ValidateMetricOnAdd(metric);
-            Metric addedMetric = await this.storageBroker.InsertMetricAsync(metric);
-            await this.metricBroker.RecordAsync(addedMetric);
+            Metric addedMetric = await this.storageBroker.InsertMetricAsync(metric, cancellationToken);
+            await this.metricBroker.RecordAsync(addedMetric, cancellationToken);
 
             return addedMetric;
         });
 
-        public ValueTask AddMetricsAsync(List<Metric> metrics) =>
+        public ValueTask AddMetricsAsync(List<Metric> metrics, CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
             if (this.metricServiceConfigurations.IsEnabled is false)
@@ -61,6 +63,7 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 return;
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateMetricsIsNotNull(metrics);
 
             if (metrics.Count == 0)
@@ -77,34 +80,39 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 ValidateMetricOnAdd(metric);
             }
 
-            await this.storageBroker.BulkInsertMetricsAsync(metrics);
-            await this.metricBroker.RecordAsync(metrics);
+            await this.storageBroker.BulkInsertMetricsAsync(metrics, cancellationToken);
+            await this.metricBroker.RecordAsync(metrics, cancellationToken);
         });
 
-        public ValueTask<IQueryable<Metric>> RetrieveAllMetricsAsync() =>
-            TryCatch(async () => await this.storageBroker.SelectAllMetricsAsync());
+        public ValueTask<IQueryable<Metric>> RetrieveAllMetricsAsync(CancellationToken cancellationToken = default) =>
+            TryCatch(async () => await this.storageBroker.SelectAllMetricsAsync(cancellationToken));
 
-        public ValueTask<Metric> RetrieveMetricByIdAsync(Guid metricId) =>
+        public ValueTask<Metric> RetrieveMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
             ValidateMetricId(metricId);
-            Metric maybeMetric = await this.storageBroker.SelectMetricByIdAsync(metricId);
+            Metric maybeMetric = await this.storageBroker.SelectMetricByIdAsync(metricId, cancellationToken);
             ValidateStorageMetric(maybeMetric, metricId);
 
             return maybeMetric;
         });
 
-        public ValueTask<Metric> RemoveMetricByIdAsync(Guid metricId) =>
+        public ValueTask<Metric> RemoveMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
             ValidateMetricId(metricId);
-            Metric maybeMetric = await this.storageBroker.SelectMetricByIdAsync(metricId);
+            Metric maybeMetric = await this.storageBroker.SelectMetricByIdAsync(metricId, cancellationToken);
             ValidateStorageMetric(maybeMetric, metricId);
 
-            return await this.storageBroker.DeleteMetricAsync(maybeMetric);
+            return await this.storageBroker.DeleteMetricAsync(maybeMetric, cancellationToken);
         });
 
-        public ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync() =>
+        public ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(
+            CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
             if (this.metricServiceConfigurations.IsPurgingAllowed is false)
@@ -121,7 +129,7 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             DateTimeOffset cutOffDate =
                 currentDateTime.AddDays(-this.metricServiceConfigurations.RetentionPeriodInDays);
 
-            IQueryable<Metric> allMetrics = await this.storageBroker.SelectAllMetricsAsync();
+            IQueryable<Metric> allMetrics = await this.storageBroker.SelectAllMetricsAsync(cancellationToken);
 
             List<Metric> expiredMetrics = allMetrics
                 .Where(metric => metric.CreatedDate < cutOffDate)
@@ -132,7 +140,7 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
                 return 0;
             }
 
-            await this.storageBroker.BulkDeleteMetricsAsync(expiredMetrics);
+            await this.storageBroker.BulkDeleteMetricsAsync(expiredMetrics, cancellationToken);
 
             await this.loggingBroker.LogInformationAsync(
                 $"Purged {expiredMetrics.Count} metric(s) created before {cutOffDate}.");

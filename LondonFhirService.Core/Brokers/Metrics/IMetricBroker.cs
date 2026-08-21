@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 
@@ -16,7 +17,7 @@ namespace LondonFhirService.Core.Brokers.Metrics
     /// </summary>
     public interface IMetricBroker
     {
-        ValueTask RecordAsync(Metric metric);
-        ValueTask RecordAsync(List<Metric> metrics);
+        ValueTask RecordAsync(Metric metric, CancellationToken cancellationToken = default);
+        ValueTask RecordAsync(List<Metric> metrics, CancellationToken cancellationToken = default);
     }
 }
