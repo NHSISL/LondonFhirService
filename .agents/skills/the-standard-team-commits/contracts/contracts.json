@@ -1,0 +1,35 @@
+{
+  "skill": "the-standard-team-commits",
+  "version": "1.0.0",
+  "tdd_format": "[Test Name] -> FAIL | PASS",
+  "non_tdd_format": "[CATEGORY]: [Pascal Case Description]",
+  "tdd_categories": [
+    "FOUNDATIONS", "PROCESSINGS", "ORCHESTRATIONS", "COORDINATIONS",
+    "MANAGEMENTS", "AGGREGATIONS", "VIEWS", "COMPONENTS", "PAGES",
+    "ACCEPTANCE", "INTEGRATION"
+  ],
+  "non_tdd_categories": [
+    "DATA", "BROKERS", "CONTROLLERS", "INFRA", "CONFIG",
+    "DOCUMENTATION", "DESIGN", "IMPORT", "STATUS", "PROVISION", "RELEASE"
+  ],
+  "forbidden_descriptions": ["fix", "update", "changes", "wip", "misc", "stuff"],
+  "examples": {
+    "valid_tdd": [
+      "ShouldAddStudentAsync -> FAIL",
+      "ShouldAddStudentAsync -> PASS",
+      "ShouldThrowValidationExceptionOnAddIfStudentIsNullAsync -> FAIL"
+    ],
+    "valid_non_tdd": [
+      "BROKERS: Insert Student",
+      "DATA: Add Student Model",
+      "CONTROLLERS: POST Student",
+      "CONFIG: Add AppSettings For Storage"
+    ],
+    "invalid": [
+      "FOUNDATIONS: Add Student",
+      "foundations: add student",
+      "fix",
+      "update student"
+    ]
+  }
+}

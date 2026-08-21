@@ -11,7 +11,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
-    public partial class Stu3PatientCoordinationService
+    internal partial class Stu3PatientCoordinationService
     {
         private delegate ValueTask<string> ReturningStringFunction();
 

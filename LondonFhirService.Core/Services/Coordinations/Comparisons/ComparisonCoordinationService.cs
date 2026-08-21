@@ -16,7 +16,7 @@ using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
-    public partial class ComparisonCoordinationService : IComparisonCoordinationService
+    internal partial class ComparisonCoordinationService : IComparisonCoordinationService
     {
         private readonly ICompareQueueOrchestrationService compareQueueOrchestrationService;
         private readonly IComparisonOrchestrationService comparisonOrchestrationService;

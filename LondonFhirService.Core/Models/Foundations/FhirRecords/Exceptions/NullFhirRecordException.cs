@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions
 {
-    public class NullFhirRecordException : Xeption
+    internal class NullFhirRecordException : Xeption
     {
         public NullFhirRecordException(string message)
             : base(message)

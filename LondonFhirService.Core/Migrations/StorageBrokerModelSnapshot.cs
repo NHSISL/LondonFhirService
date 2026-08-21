@@ -222,6 +222,10 @@ namespace LondonFhirService.Core.Migrations
                     b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<double>("DurationMs")
                         .HasColumnType("float");
 

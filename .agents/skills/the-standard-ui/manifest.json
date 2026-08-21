@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-ui",
+  "version": "0.1.0",
+  "description": "Enforces component decomposition, view service dependency, and separation of rendering from logic for Blazor/Razor UI components.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["Razor component file (*.razor)", "C# component code-behind (*Base*.cs, *Component*.cs)"],
+  "outputs": ["Standard-compliant Blazor component code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core"],
+  "applies_to": ["*.razor", "*Component*.cs", "*Base*.cs", "*Page*.cs"]
+}

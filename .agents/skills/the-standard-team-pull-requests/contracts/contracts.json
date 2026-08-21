@@ -1,0 +1,34 @@
+{
+  "skill": "the-standard-team-pull-requests",
+  "version": "1.0.0",
+  "pr_title_format": "[CATEGORY]: [Description Of Work Completed]",
+  "category_case": "CAPS",
+  "description_case": "Pascal Case",
+  "approved_categories": [
+    "FOUNDATIONS", "PROCESSINGS", "ORCHESTRATIONS", "COORDINATIONS",
+    "MANAGEMENTS", "AGGREGATIONS", "VIEWS", "COMPONENTS", "PAGES",
+    "ACCEPTANCE", "INTEGRATION", "DATA", "BROKERS", "CONTROLLERS",
+    "INFRA", "CONFIG", "DOCUMENTATION", "DESIGN", "IMPORT",
+    "STATUS", "PROVISION", "RELEASE"
+  ],
+  "issue_linking": {
+    "auto_close_keyword": "Closes #[issue-number]",
+    "multi_close": "Closes #10, closes #123",
+    "link_only": "#[issue-number]"
+  },
+  "examples": {
+    "valid": [
+      "FOUNDATIONS: Add Student",
+      "BROKERS: Insert Student",
+      "CONTROLLERS: POST Student",
+      "DATA: Add Student Model"
+    ],
+    "invalid": [
+      "foundations: Add Student",
+      "Foundations: Add Student",
+      "fix",
+      "update student model",
+      "UNKNOWN: Do Stuff"
+    ]
+  }
+}

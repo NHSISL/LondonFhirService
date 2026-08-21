@@ -7,7 +7,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions
 {
-    public class AlreadyExistsFhirRecordDifferenceException : Xeption
+    internal class AlreadyExistsFhirRecordDifferenceException : Xeption
     {
         public AlreadyExistsFhirRecordDifferenceException(string message, Exception innerException)
             : base(message, innerException)

@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Orchestrations.FhirReconciliations.Exceptions
 {
-    public class FailedFhirReconciliationOrchestrationException : Xeption
+    internal class FailedFhirReconciliationOrchestrationException : Xeption
     {
         public FailedFhirReconciliationOrchestrationException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

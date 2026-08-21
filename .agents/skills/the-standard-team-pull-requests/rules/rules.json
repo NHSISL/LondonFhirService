@@ -1,0 +1,15 @@
+{
+  "skill": "the-standard-team-pull-requests",
+  "rules": [
+    { "id": "tst-pull-requests-001", "severity": "ERROR", "category": "PR Title Format", "rule": "PR title must follow the format: [CATEGORY]: [Description Of Work Completed]." },
+    { "id": "tst-pull-requests-002", "severity": "ERROR", "category": "PR Title Format", "rule": "[CATEGORY] must be in CAPS and taken from the approved category list." },
+    { "id": "tst-pull-requests-003", "severity": "ERROR", "category": "PR Title Format", "rule": "[Description Of Work Completed] must be in Pascal Case." },
+    { "id": "tst-pull-requests-004", "severity": "ERROR", "category": "Approved Categories", "rule": "Approved categories: FOUNDATIONS, PROCESSINGS, ORCHESTRATIONS, COORDINATIONS, MANAGEMENTS, AGGREGATIONS, VIEWS, COMPONENTS, PAGES, ACCEPTANCE, INTEGRATION, DATA, BROKERS, CONTROLLERS, INFRA, CONFIG, DOCUMENTATION, DESIGN, IMPORT, STATUS, PROVISION, RELEASE." },
+    { "id": "tst-pull-requests-005", "severity": "WARN", "category": "Issue Linking", "rule": "To auto-close an issue on merge, add Closes #[issue-number] anywhere in the PR description." },
+    { "id": "tst-pull-requests-006", "severity": "WARN", "category": "Issue Linking", "rule": "To close multiple issues, list each separately: Closes #10, closes #123." },
+    { "id": "tst-pull-requests-007", "severity": "WARN", "category": "Issue Linking", "rule": "To link an issue without auto-closing, use #[issue-number] without a keyword." },
+    { "id": "tst-pull-requests-008", "severity": "ERROR", "category": "PR Title Format", "rule": "PR title category must not be lowercase or mixed-case — foundations: and Foundations: are both wrong." },
+    { "id": "tst-pull-requests-009", "severity": "ERROR", "category": "PR Title Format", "rule": "PR title description must not be vague — fix, update, changes, wip without specifics are forbidden." },
+    { "id": "tst-pull-requests-010", "severity": "ERROR", "category": "PR Title Format", "rule": "PR title must not use a category not in the approved category list." }
+  ]
+}

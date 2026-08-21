@@ -1,0 +1,25 @@
+{
+  "skill": "the-standard-cancellation-patterns",
+  "version": "1.0.0",
+  "signatures": {
+    "cancellation_token_position": "last",
+    "cancellation_token_default": "default",
+    "cancellation_token_nullable": false,
+    "canonical_parameter_name": "cancellationToken",
+    "forbidden_names": ["token", "ct", "cancelToken"]
+  },
+  "trycatch": {
+    "timeout_catch_order": "OperationCanceledException when timeoutSource.IsCancellationRequested MUST precede plain OperationCanceledException",
+    "operation_cancelled_rethrow": "throw; — MUST never be wrapped",
+    "timeout_exception_treatment": "dependency failure — wrap in localized DependencyException or FailedServiceDependencyException",
+    "required_catch_when_token_present": "catch (OperationCanceledException) { throw; } MUST exist when CancellationToken parameter is present"
+  },
+  "propagation": {
+    "flow": "Controller → Coordination → Orchestration → Foundation → Broker → Dependency",
+    "never_drop": "token MUST be passed to all dependency calls",
+    "linked_token_pattern": "CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token)"
+  },
+  "validation": {
+    "throw_if_cancellation_requested": "MUST call cancellationToken.ThrowIfCancellationRequested() near method start"
+  }
+}

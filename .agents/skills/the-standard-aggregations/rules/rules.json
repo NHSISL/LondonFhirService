@@ -1,0 +1,10 @@
+{
+  "skill": "the-standard-aggregations",
+  "rules": [
+    { "id": "ts-aggregations-001", "severity": "ERROR", "category": "Dependency", "rule": "Aggregation services must depend only on orchestration services." },
+    { "id": "ts-aggregations-002", "severity": "ERROR", "category": "Fan-Out", "rule": "Aggregation services must expose a single operation that fans out to multiple orchestration services." },
+    { "id": "ts-aggregations-003", "severity": "ERROR", "category": "Exception Handling", "rule": "Aggregation services must wrap all downstream exceptions in aggregation-level exceptions." },
+    { "id": "ts-aggregations-004", "severity": "ERROR", "category": "Naming", "rule": "Aggregation service interfaces must follow I{Purpose}AggregationService." },
+    { "id": "ts-aggregations-005", "severity": "ERROR", "category": "Structure", "rule": "Aggregation services must be partial classes split by operation category." }
+  ]
+}

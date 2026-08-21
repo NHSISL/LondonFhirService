@@ -1,0 +1,18 @@
+{
+  "skill": "the-standard-csharp-methods",
+  "version": "1.0.0",
+  "naming": {
+    "must_contain_verb": true,
+    "async_suffix": "Async",
+    "parameter_naming": "entityProperty (e.g., studentId, studentName)"
+  },
+  "line_limit": 120,
+  "one_liner_syntax": "fat-arrow (=>)",
+  "multi_liner_syntax": "scoped block { }",
+  "return_blank_line": "one blank line before return in multi-liner methods",
+  "chaining": {
+    "style": "uglification",
+    "pattern": "firstCall.ChainedCall()\n\t.AnotherCall()\n\t\t.FinalCall()"
+  },
+  "parameter_break": "one parameter per line when declaration exceeds 120 characters"
+}

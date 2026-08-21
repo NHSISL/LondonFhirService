@@ -38,6 +38,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Referenced directly so the telemetry tests can stub ITelemetryChannel and assert on
+		     what actually reaches Application Insights. -->
+		<PackageReference Include="Microsoft.ApplicationInsights" Version="3.1.2" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\LondonFhirService.Api\LondonFhirService.Api.csproj" />
 	</ItemGroup>
 

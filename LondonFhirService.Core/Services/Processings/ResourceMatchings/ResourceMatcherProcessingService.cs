@@ -11,7 +11,7 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Processings.ResourceMatchings;
 
-public partial class ResourceMatcherProcessingService : IResourceMatcherProcessingService
+internal partial class ResourceMatcherProcessingService : IResourceMatcherProcessingService
 {
     private readonly Dictionary<string, IResourceMatcherService> matchers;
     private readonly ILoggingBroker loggingBroker;

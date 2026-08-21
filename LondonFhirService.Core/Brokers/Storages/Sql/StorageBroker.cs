@@ -62,15 +62,19 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             where T : class =>
             await efCoreClient.SelectAllAsync<T>(cancellationToken);
 
-        private async ValueTask<T> SelectAsync<T>(params object[] @objectIds) where T : class =>
-            await efCoreClient.SelectAsync<T>(@objectIds);
-
-        private async ValueTask<T> SelectAsync<T>(CancellationToken cancellationToken, params object[] @objectIds)
+        // An object array rather than params, so the cancellation token can stay last: the
+        // language requires a params array to be the final parameter, which forced the token
+        // ahead of it. The two overloads collapse into one because a caller with no token to
+        // pass is the same thing as a caller passing None.
+        private async ValueTask<T> SelectAsync<T>(
+            object[] @objectIds,
+            CancellationToken cancellationToken = default)
             where T : class =>
             await efCoreClient.SelectAsync<T>(@objectIds, cancellationToken);
 
-        private async ValueTask<T> UpdateAsync<T>(T @object) where T : class =>
-            await efCoreClient.UpdateAsync(@object);
+        private async ValueTask<T> UpdateAsync<T>(T @object, CancellationToken cancellationToken = default)
+            where T : class =>
+            await efCoreClient.UpdateAsync(@object, cancellationToken);
 
         private async ValueTask<T> DeleteAsync<T>(T @object, CancellationToken cancellationToken = default)
             where T : class =>
@@ -80,8 +84,9 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             CancellationToken cancellationToken = default) where T : class =>
             await efCoreClient.BulkInsertAsync(objects, cancellationToken: cancellationToken);
 
-        private async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects) where T : class =>
-            await efCoreClient.BulkUpdateAsync(objects);
+        private async ValueTask BulkUpdateAsync<T>(IEnumerable<T> objects,
+            CancellationToken cancellationToken = default) where T : class =>
+            await efCoreClient.BulkUpdateAsync(objects, cancellationToken: cancellationToken);
 
         private async ValueTask BulkDeleteAsync<T>(IEnumerable<T> objects,
             CancellationToken cancellationToken = default) where T : class =>

@@ -9,7 +9,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -17,6 +18,8 @@ using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Patients;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions.Extensions;
@@ -24,11 +27,12 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
-    public partial class Stu3PatientService : IStu3PatientService
+    internal partial class Stu3PatientService : IStu3PatientService
     {
         private readonly IStu3FhirBroker fhirBroker;
-        private readonly IAuditBroker auditBroker;
+        private readonly IAuditAndMetricBroker auditAndMetricBroker;
         private readonly IIdentifierBroker identifierBroker;
+        private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly ISecurityAuditBroker securityAuditBroker;
         private readonly IStorageBrokerFactory storageBrokerFactory;
@@ -36,16 +40,18 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         public Stu3PatientService(
             IStu3FhirBroker fhirBroker,
-            IAuditBroker auditBroker,
+            IAuditAndMetricBroker auditAndMetricBroker,
             IIdentifierBroker identifierBroker,
+            IDateTimeBroker dateTimeBroker,
             ISecurityAuditBroker securityAuditBroker,
             IStorageBrokerFactory storageBrokerFactory,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
             this.fhirBroker = fhirBroker;
-            this.auditBroker = auditBroker;
+            this.auditAndMetricBroker = auditAndMetricBroker;
             this.identifierBroker = identifierBroker;
+            this.dateTimeBroker = dateTimeBroker;
             this.securityAuditBroker = securityAuditBroker;
             this.storageBrokerFactory = storageBrokerFactory;
             this.loggingBroker = loggingBroker;
@@ -59,6 +65,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
+            Guid? parentId = null,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
@@ -72,7 +79,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     $"demographicsOnly = \"{demographicsOnly}\", " +
                     $"includeInactivePatients = \"{includeInactivePatients}\" }}";
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Foundation Service Request Submitted",
                     message,
@@ -82,32 +89,77 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 List<(string providerFriendlyName, bool isPrimaryProvider, IFhirProvider provider)> fhirProviders =
                     await GetFhirProviders(activeProviders);
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Parallel Provider Execution Started",
                     message,
                     fileName: null,
                     correlationId: correlationId.ToString());
 
-                var tasks = fhirProviders.Select(fhirProviders => ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
-                    fhirProviders.providerFriendlyName,
-                    fhirProviders.isPrimaryProvider,
-                    fhirProviders.provider,
-                    cancellationToken,
-                    correlationId,
-                    nhsNumber,
-                    dateOfBirth,
-                    demographicsOnly,
-                    includeInactivePatients)).ToArray();
+                // The fan out span is the parent of every provider task, so subtracting a
+                // Provider span from it gives the time that provider's result sat idle waiting
+                // for the slowest sibling.
+                Guid fanOutSpanId = await this.identifierBroker.GetIdentifierAsync();
 
+                // Both origins are taken here, before ToArray materialises the tasks. The wall
+                // clock and the stopwatch then measure from the same instant, and no child can
+                // start before the parent it hangs from.
+                DateTimeOffset fanOutStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
                 var stopwatchOutcomes = Stopwatch.StartNew();
-                var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
-                stopwatchOutcomes.Stop();
-                long elapsedTimeOutcomes = stopwatchOutcomes.ElapsedMilliseconds;
 
-                await this.auditBroker.LogInformationAsync(
+
+                // Recorded on both exits. Individual provider failures already have their own
+                // spans; this covers the barrier itself failing, which would orphan them.
+                async ValueTask RecordFanOutSpanAsync(MetricStatus status, string errorCode)
+                {
+                    stopwatchOutcomes.Stop();
+
+                    await this.auditAndMetricBroker.LogMetricAsync(new Metric
+                    {
+                        Id = fanOutSpanId,
+                        ParentId = parentId,
+                        CorrelationId = correlationId,
+                        Method = auditType,
+                        Type = MetricType.ProviderFanOut,
+                        Name = "Parallel provider execution",
+                        Started = fanOutStarted,
+                        Completed = fanOutStarted.AddMilliseconds(stopwatchOutcomes.Elapsed.TotalMilliseconds),
+                        DurationMs = stopwatchOutcomes.Elapsed.TotalMilliseconds,
+                        Status = status,
+                        ErrorCode = errorCode,
+                        Description = $"{fhirProviders.Count} provider task(s) awaited."
+                    });
+                }
+
+                (string Provider, string Json, Exception Exception)[] outcomes;
+
+                try
+                {
+                    var tasks = fhirProviders.Select(fhirProviders => ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                        fhirProviders.providerFriendlyName,
+                        fhirProviders.isPrimaryProvider,
+                        fhirProviders.provider,
+                        correlationId,
+                        nhsNumber,
+                        dateOfBirth,
+                        demographicsOnly,
+                        includeInactivePatients,
+                        fanOutSpanId,
+                        cancellationToken)).ToArray();
+
+                    outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
+                    await RecordFanOutSpanAsync(MetricStatus.Succeeded, errorCode: null);
+                }
+                catch (Exception exception)
+                {
+                    await RecordFanOutSpanAsync(MetricStatus.Failed, exception.GetType().Name);
+
+                    throw;
+                }
+
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
-                    title: $"Parallel Provider Execution Completed in {elapsedTimeOutcomes}ms",
+                    title: $"Parallel Provider Execution Completed in {stopwatchOutcomes.ElapsedMilliseconds}ms",
                     message,
                     fileName: null,
                     correlationId: correlationId.ToString());
@@ -139,7 +191,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Foundation Service Request Completed in {elapsedTime}ms",
                     message,
@@ -201,12 +253,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 string providerFriendlyName,
                 bool isPrimaryProvider,
                 IFhirProvider provider,
-                CancellationToken globalToken,
                 Guid correlationId,
                 string nhsNumber,
                 string dateOfBirth = null,
                 bool? demographicsOnly = null,
-                bool? includeInactivePatients = null)
+                bool? includeInactivePatients = null,
+                Guid? parentId = null,
+                CancellationToken globalToken = default)
         {
             if (globalToken.IsCancellationRequested)
             {
@@ -220,13 +273,16 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 $"demographicsOnly = \"{demographicsOnly}\", " +
                 $"includeInactivePatients = \"{includeInactivePatients}\" }}";
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"{provider.DisplayName} Provider Execution Started",
                 message,
                 fileName: null,
                 correlationId: correlationId.ToString());
 
+            Guid providerSpanId = await this.identifierBroker.GetIdentifierAsync();
+            DateTimeOffset providerStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            var providerStopwatch = Stopwatch.StartNew();
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
 
@@ -250,7 +306,23 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogMetricAsync(new Metric
+                {
+                    Id = await this.identifierBroker.GetIdentifierAsync(),
+                    ParentId = providerSpanId,
+                    CorrelationId = correlationId,
+                    Method = auditType,
+                    Type = MetricType.ProviderCall,
+                    Name = provider.DisplayName,
+                    Target = provider.ProviderName,
+                    Started = providerStarted,
+                    Completed = providerStarted.AddMilliseconds(stopwatch.Elapsed.TotalMilliseconds),
+                    DurationMs = stopwatch.Elapsed.TotalMilliseconds,
+                    Status = MetricStatus.Succeeded,
+                    PayloadBytes = json?.Length
+                });
+
+                await this.auditAndMetricBroker.LogInformationAsync(
                     $"{auditType}-DATA",
                     title: $"{provider.DisplayName} - DATA ({providerFriendlyName})",
                     json,
@@ -272,17 +344,55 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                 fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
 
+                DateTimeOffset persistStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+                var persistStopwatch = Stopwatch.StartNew();
+
                 await using IStorageBroker storageBroker =
                     await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
                 await storageBroker.InsertFhirRecordAsync(fhirRecord);
+                persistStopwatch.Stop();
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogMetricAsync(new Metric
+                {
+                    Id = await this.identifierBroker.GetIdentifierAsync(),
+                    ParentId = providerSpanId,
+                    CorrelationId = correlationId,
+                    Method = auditType,
+                    Type = MetricType.Persist,
+                    Name = provider.DisplayName,
+                    Target = provider.ProviderName,
+                    Started = persistStarted,
+                    Completed = persistStarted.AddMilliseconds(persistStopwatch.Elapsed.TotalMilliseconds),
+                    DurationMs = persistStopwatch.Elapsed.TotalMilliseconds,
+                    Status = MetricStatus.Succeeded,
+                    PayloadBytes = json?.Length
+                });
+
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"{provider.DisplayName} Provider Execution Completed in {elapsedTime}ms",
                     message,
                     fileName: null,
                     correlationId: correlationId.ToString());
+
+                providerStopwatch.Stop();
+
+                await this.auditAndMetricBroker.LogMetricAsync(new Metric
+                {
+                    Id = providerSpanId,
+                    ParentId = parentId,
+                    CorrelationId = correlationId,
+                    Method = auditType,
+                    Type = MetricType.Provider,
+                    Name = provider.DisplayName,
+                    Target = provider.ProviderName,
+                    Started = providerStarted,
+                    Completed = providerStarted.AddMilliseconds(providerStopwatch.Elapsed.TotalMilliseconds),
+                    DurationMs = providerStopwatch.Elapsed.TotalMilliseconds,
+                    Status = MetricStatus.Succeeded,
+                    PayloadBytes = json?.Length
+                });
 
                 return (providerFriendlyName, json, null);
             }
@@ -293,15 +403,25 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds.",
                         operationCancelledException);
 
+                // A provider that times out is the one worth measuring, so the span is recorded
+                // on the way out rather than only on the success path.
+                await RecordFailedProviderSpanAsync(
+                    providerSpanId, parentId, correlationId, provider, providerFriendlyName,
+                    providerStarted, providerStopwatch, MetricStatus.TimedOut, "ProviderTimeout");
+
                 return (providerFriendlyName, null, timeoutException);
             }
             catch (OperationCanceledException operationCancelledException)
             {
+                await RecordFailedProviderSpanAsync(
+                    providerSpanId, parentId, correlationId, provider, providerFriendlyName,
+                    providerStarted, providerStopwatch, MetricStatus.Cancelled, "ProviderCancelled");
+
                 return (providerFriendlyName, null, operationCancelledException);
             }
             catch (Exception exception)
             {
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Parallel Provider Execution - {provider.DisplayName} failed",
 
@@ -313,8 +433,47 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fileName: null,
                     correlationId: correlationId.ToString());
 
+                await RecordFailedProviderSpanAsync(
+                    providerSpanId, parentId, correlationId, provider, providerFriendlyName,
+                    providerStarted, providerStopwatch, MetricStatus.Failed, exception.GetType().Name);
+
                 return (providerFriendlyName, null, exception);
             }
+        }
+
+        /// <summary>
+        /// The failure exits all record the same span, differing only in how they failed. The
+        /// error code is the exception type rather than its message, which keeps patient
+        /// identifiable detail out of a table that is reported on and retained separately.
+        /// </summary>
+        private async ValueTask RecordFailedProviderSpanAsync(
+            Guid providerSpanId,
+            Guid? parentId,
+            Guid correlationId,
+            IFhirProvider provider,
+            string providerFriendlyName,
+            DateTimeOffset providerStarted,
+            Stopwatch providerStopwatch,
+            MetricStatus status,
+            string errorCode)
+        {
+            providerStopwatch.Stop();
+
+            await this.auditAndMetricBroker.LogMetricAsync(new Metric
+            {
+                Id = providerSpanId,
+                ParentId = parentId,
+                CorrelationId = correlationId,
+                Method = "STU3-Patient-GetStructuredRecordSerialised",
+                Type = MetricType.Provider,
+                Name = provider.DisplayName,
+                Target = provider.ProviderName,
+                Started = providerStarted,
+                Completed = providerStarted.AddMilliseconds(providerStopwatch.Elapsed.TotalMilliseconds),
+                DurationMs = providerStopwatch.Elapsed.TotalMilliseconds,
+                Status = status,
+                ErrorCode = errorCode
+            });
         }
     }
 }

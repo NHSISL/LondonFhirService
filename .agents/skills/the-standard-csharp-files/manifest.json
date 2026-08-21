@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-csharp-files",
+  "version": "0.1.0",
+  "description": "Enforces C# Coding Standard file naming conventions including PascalCase and partial class file naming.",
+  "csharp_standard_version": "v0.8",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# file name or path"],
+  "outputs": ["Compliant C# file name", "Review feedback citing rule IDs"],
+  "dependencies": [],
+  "applies_to": ["*.cs"]
+}

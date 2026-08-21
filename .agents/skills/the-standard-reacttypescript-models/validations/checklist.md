@@ -1,0 +1,16 @@
+# The Standard React TypeScript — Models — Checklist
+
+- [ ] Foundation models represent domain concepts (tsr-models-001)
+- [ ] View models are UI-ready transformations (tsr-models-002)
+- [ ] Component props describe rendering input only (tsr-models-003)
+- [ ] API models not reused as component props without transformation (tsr-models-004)
+- [ ] Models contain no behavior (tsr-models-005)
+- [ ] Models organized by layer (foundations, views, components, configurations) (tsr-models-006)
+- [ ] `type` keyword used for model definitions (tsr-models-007)
+- [ ] Model files follow naming pattern (tsr-models-008)
+- [ ] View models created by view services, not components (tsr-models-010)
+- [ ] Optional properties used correctly (tsr-models-011)
+- [ ] All properties have explicit types (tsr-models-012)
+- [ ] Union types used for fixed value sets (tsr-models-013)
+- [ ] Date/time values handled consistently (tsr-models-014)
+- [ ] Error models separated from domain models (tsr-models-016)

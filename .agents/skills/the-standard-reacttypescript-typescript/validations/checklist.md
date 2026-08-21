@@ -1,0 +1,16 @@
+# The Standard React TypeScript — TypeScript — Checklist
+
+- [ ] TypeScript strict mode is enabled in tsconfig.json (tsr-typescript-001)
+- [ ] Architectural boundaries have explicit types (tsr-typescript-002)
+- [ ] Data shapes use `type`, behavioral contracts use `interface` (tsr-typescript-003)
+- [ ] No `any` types exist (tsr-typescript-004)
+- [ ] Named exports are used for services, brokers, models, hooks (tsr-typescript-005)
+- [ ] `noImplicitAny: true` in tsconfig.json (tsr-typescript-006)
+- [ ] `strictNullChecks: true` in tsconfig.json (tsr-typescript-007)
+- [ ] `noUncheckedIndexedAccess: true` in tsconfig.json (tsr-typescript-008)
+- [ ] `exactOptionalPropertyTypes: true` in tsconfig.json (tsr-typescript-009)
+- [ ] No `@ts-ignore` or `@ts-expect-error` without justification (tsr-typescript-010)
+- [ ] Type assertions have validation or guards (tsr-typescript-011)
+- [ ] Barrel files don't hide dependency direction (tsr-typescript-012)
+- [ ] Function return types are explicit at boundaries (tsr-typescript-014)
+- [ ] No `Function` or `Object` generic types (tsr-typescript-016)

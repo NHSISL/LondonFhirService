@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.MedicationRequests
 {
-    public partial class MedicationRequestMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class MedicationRequestMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public MedicationRequestMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)

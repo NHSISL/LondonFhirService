@@ -3,11 +3,11 @@
 // ---------------------------------------------------------
 
 using System;
-using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Abstractions.Models;
 
 namespace LondonFhirService.Core.Models.Foundations.Providers
 {
-    public class Provider : IKey, IAudit
+    public class Provider : IKey, IAuditable
     {
         public Guid Id { get; set; }
         public string FriendlyName { get; set; } = string.Empty;

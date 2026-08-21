@@ -1,0 +1,38 @@
+{
+  "skill": "the-standard-reacttypescript-models",
+  "enforcement": [
+    {
+      "rule_id": "tsr-models-005",
+      "check": "Model files must not contain methods or function declarations",
+      "action": "block",
+      "pattern": "type.*=.*{[^}]*\\(.*\\).*:.*{",
+      "message": "Models must not contain behavior. Move methods to services."
+    },
+    {
+      "rule_id": "tsr-models-006",
+      "check": "Models must be in correct layer directory",
+      "action": "warn",
+      "paths": {
+        "foundations": "src/models/foundations/**/*",
+        "views": "src/models/views/**/*",
+        "components": "src/models/components/**/*",
+        "configurations": "src/models/configurations/**/*"
+      },
+      "message": "Model appears to be in wrong layer directory based on content."
+    },
+    {
+      "rule_id": "tsr-models-007",
+      "check": "Use type keyword for model definitions",
+      "action": "warn",
+      "pattern": "interface\\s+[A-Z].*(?!extends|implements)",
+      "message": "Prefer 'type' over 'interface' for data shapes. Use 'interface' only for behavioral contracts."
+    },
+    {
+      "rule_id": "tsr-models-012",
+      "check": "No any type in models",
+      "action": "block",
+      "pattern": ":\\s*any\\b",
+      "message": "Use explicit types instead of 'any'."
+    }
+  ]
+}

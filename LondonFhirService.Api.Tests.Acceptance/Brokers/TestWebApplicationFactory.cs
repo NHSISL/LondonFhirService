@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
-using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -150,16 +150,21 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void MockExternalClientsForTesting(IServiceCollection services)
         {
-            var auditClientDescriptor = services
-               .FirstOrDefault(d => d.ServiceType == typeof(IAuditClient));
+            // Decorated rather than replaced. This one broker now serves both the operational
+            // tracing every request emits and the data path behind the audits API, so swapping it
+            // for a bare mock would stub out the very endpoints AuditsApiTests exercise. The
+            // decorator drops the background writes and delegates everything else.
+            var auditAndMetricBrokerDescriptor = services
+               .FirstOrDefault(d => d.ServiceType == typeof(IAuditAndMetricBroker));
 
-            if (auditClientDescriptor != null)
+            if (auditAndMetricBrokerDescriptor != null)
             {
-                services.Remove(auditClientDescriptor);
+                services.Remove(auditAndMetricBrokerDescriptor);
             }
 
-            var mockAuditClient = new Mock<IAuditClient>();
-            services.AddTransient<IAuditClient>(_ => mockAuditClient.Object);
+            services.AddTransient<IAuditAndMetricBroker>(provider =>
+                new QuietAuditAndMetricBroker(
+                    ActivatorUtilities.CreateInstance<AuditAndMetricBroker>(provider)));
         }
     }
 }

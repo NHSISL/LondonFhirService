@@ -79,6 +79,13 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .Property(metric => metric.PayloadBytes)
                 .IsRequired(false);
 
+            // Bounded rather than max. This table takes a row per span, so an unbounded column
+            // here would size the table by whatever the noisiest caller decides to write.
+            model
+                .Property(metric => metric.Description)
+                .HasMaxLength(1000)
+                .IsRequired(false);
+
             model
                 .Property(metric => metric.Consumer)
                 .HasMaxLength(255)

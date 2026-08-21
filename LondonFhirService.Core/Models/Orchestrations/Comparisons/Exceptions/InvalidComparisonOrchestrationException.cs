@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Orchestrations.Comparisons.Exceptions
 {
-    public class InvalidComparisonOrchestrationException : Xeption
+    internal class InvalidComparisonOrchestrationException : Xeption
     {
         public InvalidComparisonOrchestrationException(string message)
             : base(message)

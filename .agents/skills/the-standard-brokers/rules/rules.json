@@ -1,0 +1,14 @@
+{
+  "skill": "the-standard-brokers",
+  "rules": [
+    { "id": "ts-brokers-001", "severity": "ERROR", "category": "Design", "rule": "Brokers must be thin wrappers over external resources and must contain no business logic." },
+    { "id": "ts-brokers-002", "severity": "ERROR", "category": "Naming", "rule": "Broker interfaces must be named generically — technology must not appear in the interface name." },
+    { "id": "ts-brokers-003", "severity": "ERROR", "category": "Storage Language", "rule": "Storage brokers must use: InsertAsync, SelectAsync, UpdateAsync, DeleteAsync." },
+    { "id": "ts-brokers-004", "severity": "ERROR", "category": "API Language", "rule": "API brokers must use: PostAsync, GetAsync, PutAsync, DeleteAsync." },
+    { "id": "ts-brokers-005", "severity": "ERROR", "category": "Queue Language", "rule": "Queue brokers must use: EnqueueAsync, DequeueAsync." },
+    { "id": "ts-brokers-006", "severity": "ERROR", "category": "Input", "rule": "Brokers must accept only primitive types or native models as input." },
+    { "id": "ts-brokers-007", "severity": "ERROR", "category": "Output", "rule": "Brokers must return only the raw external resource response without transformation." },
+    { "id": "ts-brokers-008", "severity": "ERROR", "category": "Configuration", "rule": "Brokers must retrieve configuration via IConfiguration injected in the constructor." },
+    { "id": "ts-brokers-009", "severity": "ERROR", "category": "Design", "rule": "Brokers must be partial classes when supporting multiple entities." }
+  ]
+}

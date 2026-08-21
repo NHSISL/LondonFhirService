@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-csharp-directives",
+  "version": "0.1.0",
+  "description": "Enforces C# using directive ordering, grouping, placement, and removal of unused directives.",
+  "the_standard_version": "v0.8",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# source file"],
+  "outputs": ["Standard-compliant using directive block"],
+  "dependencies": [],
+  "applies_to": ["*.cs"]
+}

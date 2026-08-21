@@ -1,0 +1,19 @@
+{
+  "name": "the-standard-reacttypescript-models",
+  "version": "0.1.0",
+  "description": "Governs model definitions, contracts between layers, and data shapes for React TypeScript projects",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": [
+    "Model definitions",
+    "Type definitions",
+    "Data contracts"
+  ],
+  "outputs": [
+    "Layer-separated model definitions",
+    "Type-safe contracts",
+    "Review feedback on model violations"
+  ],
+  "dependencies": ["the-standard-reacttypescript-typescript"],
+  "applies_to": ["src/models/**/*"]
+}

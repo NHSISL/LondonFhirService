@@ -1,0 +1,11 @@
+{
+  "skill": "the-standard-ui",
+  "rules": [
+    { "id": "ts-ui-001", "severity": "ERROR", "category": "View Service Dependency", "rule": "UI components must delegate all data access to a view service." },
+    { "id": "ts-ui-002", "severity": "ERROR", "category": "Single Concern", "rule": "UI components must have a single rendering concern." },
+    { "id": "ts-ui-003", "severity": "ERROR", "category": "View Service Mapping", "rule": "View services must map exceptions to view-friendly errors and expose only view models." },
+    { "id": "ts-ui-004", "severity": "ERROR", "category": "Code-Behind Separation", "rule": "Pages must use a base component class to separate logic from markup." },
+    { "id": "ts-ui-005", "severity": "ERROR", "category": "State Handling", "rule": "UI components must handle loading, error, and empty states explicitly." },
+    { "id": "ts-ui-006", "severity": "ERROR", "category": "Naming", "rule": "Component names must describe what they render, not how." }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "skill": "the-standard-csharp-files",
+  "rules": [
+    { "id": "tsc-csharp-files-001", "severity": "ERROR", "category": "File Naming", "rule": "File names must use PascalCase followed by the .cs extension." },
+    { "id": "tsc-csharp-files-002", "severity": "ERROR", "category": "File Naming", "rule": "File names must not use camelCase, all-lowercase, or underscore/hyphen-separated words." },
+    { "id": "tsc-csharp-files-003", "severity": "ERROR", "category": "Partial Class Files", "rule": "Partial class files must be named {RootClass}.{Aspect}.cs." },
+    { "id": "tsc-csharp-files-004", "severity": "ERROR", "category": "Partial Class Files", "rule": "Further nested partial files may use a third segment: {RootClass}.{Aspect}.{SubAspect}.cs." },
+    { "id": "tsc-csharp-files-005", "severity": "WARN",  "category": "Partial Class Files", "rule": "Common aspects are Validations and Exceptions — use consistent aspect names across the codebase." }
+  ]
+}

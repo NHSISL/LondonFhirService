@@ -14,7 +14,7 @@ using LondonFhirService.Core.Services.Foundations.FhirRecords;
 
 namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
 {
-    public partial class CompareQueueOrchestrationService : ICompareQueueOrchestrationService
+    internal partial class CompareQueueOrchestrationService : ICompareQueueOrchestrationService
     {
         private readonly IFhirRecordService fhirRecordService;
         private readonly IFhirRecordDifferenceService fhirRecordDifferenceService;

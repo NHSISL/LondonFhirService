@@ -1,0 +1,19 @@
+{
+  "skill": "the-standard-reacttypescript-components",
+  "enforcement": [
+    {
+      "rule_id": "tsr-comp-006",
+      "check": "Component must use named export",
+      "action": "block",
+      "pattern": "export default",
+      "message": "Use named exports for components, not default exports."
+    },
+    {
+      "rule_id": "tsr-comp-010",
+      "check": "No useEffect for data fetching",
+      "action": "block",
+      "pattern": "useEffect.*fetch|useEffect.*axios|useEffect.*\\w+Service",
+      "message": "Components must not fetch data. Use page hooks for data fetching."
+    }
+  ]
+}

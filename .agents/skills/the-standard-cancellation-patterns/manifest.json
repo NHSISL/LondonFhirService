@@ -1,0 +1,22 @@
+{
+  "name": "the-standard-cancellation-patterns",
+  "version": "0.1.0",
+  "description": "Governs CancellationToken method signatures, token propagation, TryCatch exception handling for OperationCanceledException and TimeoutException, parallel orchestration, and testing standards.",
+  "csharp_standard_version": "v0.8",
+  "skill_version": "v0.1.0",
+  "inputs": [
+    "C# source file with async methods accepting CancellationToken",
+    "C# source file with TryCatch exception handling",
+    "C# source file with timeout logic"
+  ],
+  "outputs": [
+    "Style-compliant C# code with correct cancellation and timeout patterns",
+    "Review feedback citing rule IDs",
+    "Validated exception handling for OperationCanceledException and TimeoutException"
+  ],
+  "dependencies": [
+    "the-standard-csharp-methods",
+    "the-standard-csharp-classes"
+  ],
+  "applies_to": ["*.cs"]
+}

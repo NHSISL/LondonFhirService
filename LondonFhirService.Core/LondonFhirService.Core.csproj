@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -13,6 +13,20 @@
 			Minor improvements and bug fixes to the London FHIR Service Core Library mainly related to timeout handling and logging.
 		</PackageReleaseNotes>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="DELETEME\**" />
+	  <EmbeddedResource Remove="DELETEME\**" />
+	  <None Remove="DELETEME\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LondonFhirService.Core.Abstractions\LondonFhirService.Core.Abstractions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Azure.Identity" Version="1.21.0" />
@@ -47,12 +61,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Service implementations and categorization exceptions are internal; the service
+		     interfaces and the localization exceptions are the public contract. The hosts still
+		     have to register the implementations and catch the categorized failures. -->
+		<InternalsVisibleTo Include="LondonFhirService.Api" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage" />
 		<InternalsVisibleTo Include="LondonFhirService.Core.Tests.Unit" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Unit" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Acceptance" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Integration" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Performance" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Unit" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Acceptance" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Integration" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="DELETEME\" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Orchestrations.FhirReconciliations.Exceptions
 {
-    public class NotFoundFhirReconciliationOrchestrationException : Xeption
+    internal class NotFoundFhirReconciliationOrchestrationException : Xeption
     {
         public NotFoundFhirReconciliationOrchestrationException(string message)
             : base(message)

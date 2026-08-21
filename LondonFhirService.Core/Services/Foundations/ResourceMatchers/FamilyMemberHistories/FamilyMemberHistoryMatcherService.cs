@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.FamilyMemberHistories
 {
-    public partial class FamilyMemberHistoryMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class FamilyMemberHistoryMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public FamilyMemberHistoryMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)

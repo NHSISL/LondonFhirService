@@ -1,0 +1,18 @@
+# The Standard React TypeScript — Files — Checklist
+
+- [ ] Each file contains one primary responsibility (tsr-files-001)
+- [ ] File names describe architectural role (tsr-files-002)
+- [ ] Component files use `.tsx` extension (tsr-files-003)
+- [ ] Non-rendering files use `.ts` extension (tsr-files-004)
+- [ ] Broker files follow `{domain}{Kind}Broker.ts` pattern (tsr-files-005)
+- [ ] Broker interfaces follow `i{domain}{Kind}Broker.ts` pattern (tsr-files-006)
+- [ ] Foundation services follow `{domain}Service.ts` pattern (tsr-files-007)
+- [ ] Service interfaces follow `i{domain}Service.ts` pattern (tsr-files-008)
+- [ ] View services follow `{domain}ViewService.ts` pattern (tsr-files-009)
+- [ ] Pages follow `{Domain}Page.tsx` pattern (tsr-files-010)
+- [ ] Components follow `{Domain}{Purpose}.tsx` pattern (tsr-files-011)
+- [ ] Hooks follow `use{Purpose}.ts` pattern (tsr-files-012)
+- [ ] Models follow `{Domain}.ts` or `{Domain}{Purpose}.ts` pattern (tsr-files-013)
+- [ ] No generic `utils`, `helpers`, or `common` files exist (tsr-files-014)
+- [ ] No vague file names exist (tsr-files-015)
+- [ ] Directory nesting does not exceed 4 levels without justification (tsr-files-016)

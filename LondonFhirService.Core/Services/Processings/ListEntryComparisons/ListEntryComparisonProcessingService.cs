@@ -10,7 +10,7 @@ using LondonFhirService.Core.Models.Processings.ListEntryComparisons;
 
 namespace LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 
-public partial class ListEntryComparisonProcessingService : IListEntryComparisonProcessingService
+internal partial class ListEntryComparisonProcessingService : IListEntryComparisonProcessingService
 {
     private readonly ILoggingBroker loggingBroker;
 

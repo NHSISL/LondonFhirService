@@ -1,0 +1,23 @@
+{
+  "skill": "the-standard-csharp-classes",
+  "version": "1.0.0",
+  "naming": {
+    "models": { "pattern": "{EntityName}", "example": "Student" },
+    "services": { "pattern": "{EntityName}Service", "singular": true, "example": "StudentService" },
+    "brokers": { "pattern": "{EntityName}Broker", "singular": true, "example": "StudentBroker" },
+    "controllers": { "pattern": "{EntityNames}Controller", "plural": true, "example": "StudentsController" },
+    "fields": { "case": "camelCase", "prefix": "none", "example": "studentName" }
+  },
+  "structure": {
+    "field_reference": "this.fieldName",
+    "instantiation_lhs": "var",
+    "constructor_param_order": "matches field declaration order",
+    "initializer_property_order": "matches class property declaration order"
+  },
+  "forbidden": {
+    "model_suffixes": ["Model"],
+    "service_suffixes": ["BusinessLogic", "BL"],
+    "field_prefixes": ["_"],
+    "field_casing": ["PascalCase"]
+  }
+}

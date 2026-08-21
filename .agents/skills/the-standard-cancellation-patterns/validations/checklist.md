@@ -1,0 +1,18 @@
+# The Standard C# — Cancellation Patterns — Checklist
+
+- [ ] CancellationToken is the last parameter (tsc-csharp-cp-001)
+- [ ] CancellationToken defaults to `default` (tsc-csharp-cp-002)
+- [ ] CancellationToken is not nullable (tsc-csharp-cp-003)
+- [ ] Parameter is named `cancellationToken` (tsc-csharp-cp-004)
+- [ ] Method calls `cancellationToken.ThrowIfCancellationRequested()` before dependency operations (tsc-csharp-cp-005)
+- [ ] Token is propagated through all layers — never silently dropped (tsc-csharp-cp-006, tsc-csharp-cp-007)
+- [ ] No new CancellationTokenSource created unnecessarily (tsc-csharp-cp-009)
+- [ ] When timeout exists: `CreateLinkedTokenSource` is used correctly (tsc-csharp-cp-008)
+- [ ] When timeout exists: timeout catch block precedes plain OperationCanceledException catch (tsc-csharp-cp-011)
+- [ ] OperationCanceledException is rethrown with `throw;` — never wrapped (tsc-csharp-cp-013)
+- [ ] TimeoutException is wrapped as a dependency failure (tsc-csharp-cp-012)
+- [ ] `catch (OperationCanceledException) { throw; }` block present when CancellationToken is used (tsc-csharp-cp-014)
+- [ ] Parallel tasks all receive the same token (tsc-csharp-cp-015)
+- [ ] CancellationToken not added to trivial in-memory operations (tsc-csharp-cp-017)
+- [ ] Unit tests include TimeoutException in Theory MemberData (tsc-csharp-cp-018)
+- [ ] Unit tests verify OperationCanceledException is never wrapped (tsc-csharp-cp-019)

@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
 {
-    public partial class ConsumerAccessService
+    internal partial class ConsumerAccessService
     {
         private static void ValidateOnCheckConsumerAccess(ValidateAccessRequest request)
         {

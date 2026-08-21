@@ -1,0 +1,30 @@
+{
+  "skill": "the-standard-reacttypescript-files",
+  "enforcement": [
+    {
+      "rule_id": "tsr-files-001",
+      "check": "Each file contains only one primary responsibility",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsr-files-003",
+      "check": "Component files use .tsx extension",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsr-files-004",
+      "check": "Non-rendering TypeScript files use .ts extension",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsr-files-014",
+      "check": "No generic utils.ts, helpers.ts, or common.ts files exist",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsr-files-015",
+      "check": "No vague file names (stuff, temp, misc) exist",
+      "action": "block"
+    }
+  ]
+}

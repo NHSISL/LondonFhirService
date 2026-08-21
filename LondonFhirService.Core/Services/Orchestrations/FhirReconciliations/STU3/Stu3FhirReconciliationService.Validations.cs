@@ -7,7 +7,7 @@ using LondonFhirService.Core.Models.Orchestrations.FhirReconciliations.Exception
 
 namespace LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3
 {
-    public partial class Stu3FhirReconciliationService : IStu3FhirReconciliationService
+    internal partial class Stu3FhirReconciliationService : IStu3FhirReconciliationService
     {
         private static void ValidateBundleIsFound(
             (string Provider, string Json) bundle,

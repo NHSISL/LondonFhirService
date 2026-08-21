@@ -1,0 +1,17 @@
+{
+  "skill": "the-standard-csharp-methods",
+  "rules": [
+    { "id": "tsc-csharp-methods-001", "severity": "ERROR", "category": "Naming", "rule": "Method names must contain a verb describing the action performed." },
+    { "id": "tsc-csharp-methods-002", "severity": "ERROR", "category": "Naming", "rule": "Async methods returning Task or ValueTask must be postfixed with Async." },
+    { "id": "tsc-csharp-methods-003", "severity": "ERROR", "category": "Naming", "rule": "Input parameter names must reflect the specific property — not generic names like text, name, or id without entity prefix." },
+    { "id": "tsc-csharp-methods-004", "severity": "ERROR", "category": "Naming", "rule": "Parameters representing an entity field must include the entity name (e.g., studentId, not id)." },
+    { "id": "tsc-csharp-methods-005", "severity": "ERROR", "category": "Naming", "rule": "Use named parameter aliases when the variable name does not fully match the parameter name. Never pass unnamed literal values." },
+    { "id": "tsc-csharp-methods-006", "severity": "ERROR", "category": "One-Liners", "rule": "Methods with exactly one line of logic must use fat-arrow (=>) syntax." },
+    { "id": "tsc-csharp-methods-007", "severity": "ERROR", "category": "One-Liners", "rule": "A fat-arrow one-liner exceeding 120 characters must break after => and indent continuation with one extra tab." },
+    { "id": "tsc-csharp-methods-008", "severity": "ERROR", "category": "Multi-Liners", "rule": "Methods with multiple lines of logic must use a scoped block { }. Must not use fat-arrow for multi-liner logic." },
+    { "id": "tsc-csharp-methods-009", "severity": "ERROR", "category": "Multi-Liners", "rule": "In multi-liner methods, the final return statement must be preceded by one blank line." },
+    { "id": "tsc-csharp-methods-010", "severity": "ERROR", "category": "Multi-Liners", "rule": "Two consecutive non-return calls under 120 chars may stack. A multi-line call must be separated from the next by a blank line." },
+    { "id": "tsc-csharp-methods-011", "severity": "ERROR", "category": "Declaration Length", "rule": "Method declarations exceeding 120 characters must break parameter list to next line with one parameter per line." },
+    { "id": "tsc-csharp-methods-012", "severity": "ERROR", "category": "Chaining", "rule": "Method chains must use uglification: first call on invocation line, each subsequent call indented one additional tab." }
+  ]
+}

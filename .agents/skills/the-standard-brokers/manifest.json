@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-brokers",
+  "version": "0.1.0",
+  "description": "Enforces broker design, naming, language, abstraction, and SPAL rules for The Standard.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# broker source file (*Broker*.cs)"],
+  "outputs": ["Standard-compliant broker code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core"],
+  "applies_to": ["*Broker*.cs"]
+}

@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances
 {
-    public partial class AllergyIntoleranceMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class AllergyIntoleranceMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public AllergyIntoleranceMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)

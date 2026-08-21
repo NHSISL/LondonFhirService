@@ -1,0 +1,1 @@
+{"skill":"the-standard-reacttypescript-hooks","enforcement":[{"rule_id":"tsr-hooks-008","check":"No broker calls in hooks","action":"block","pattern":"\\w+Broker","message":"Hooks must call view services, not brokers."}]}

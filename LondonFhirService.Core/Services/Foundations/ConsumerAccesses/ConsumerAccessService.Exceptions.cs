@@ -11,7 +11,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
 {
-    public partial class ConsumerAccessService
+    internal partial class ConsumerAccessService
     {
         private delegate ValueTask<ConsumerAccess> ReturningConsumerAccessFunction();
 

@@ -31,6 +31,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LondonFhirService.Core\LondonFhirService.Core.csproj" />
+		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -43,6 +44,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Unit" />
 		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Acceptance" />
 		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Integration" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />

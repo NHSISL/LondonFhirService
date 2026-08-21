@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
 {
-    public partial class ComparisonOrchestrationService
+    internal partial class ComparisonOrchestrationService
     {
         internal virtual void ValidateCompareArguments(
             string correlationId,

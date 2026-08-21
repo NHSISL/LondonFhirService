@@ -1,0 +1,132 @@
+{
+  "skill": "the-standard-reacttypescript-brokers",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "tsr-brokers-001",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "Brokers MUST be the only layer that talks to external dependencies (APIs, storage, logging, external services)."
+    },
+    {
+      "id": "tsr-brokers-002",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "Broker methods MUST use async/await for all I/O operations."
+    },
+    {
+      "id": "tsr-brokers-003",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "Brokers MUST map external exceptions to broker-layer exceptions with meaningful messages."
+    },
+    {
+      "id": "tsr-brokers-004",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "API broker methods MUST use standard HTTP verbs: Get, Post, Put, Delete."
+    },
+    {
+      "id": "tsr-brokers-005",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "Broker method names MUST follow pattern: `{verb}{Entity}Async` (e.g., `getPatientAsync`, `postPatientAsync`)."
+    },
+    {
+      "id": "tsr-brokers-006",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "Storage brokers MUST abstract localStorage/sessionStorage/IndexedDB behind interface."
+    },
+    {
+      "id": "tsr-brokers-007",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "Logging brokers MUST abstract console or external logging services."
+    },
+    {
+      "id": "tsr-brokers-008",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "Brokers MUST NOT contain business logic (filtering, validation, transformation beyond format conversion)."
+    },
+    {
+      "id": "tsr-brokers-009",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "Brokers MUST be injected via dependency injection, not instantiated directly in services."
+    },
+    {
+      "id": "tsr-brokers-010",
+      "severity": "ERROR",
+      "category": "Broker Responsibility",
+      "rule": "DateTime brokers MUST abstract Date object creation and manipulation."
+    },
+    {
+      "id": "tsr-brokers-011",
+      "severity": "ERROR",
+      "category": "Broker Organization",
+      "rule": "Brokers MUST be organized by external dependency type: apis/, storages/, loggings/, datetimes/."
+    },
+    {
+      "id": "tsr-brokers-012",
+      "severity": "ERROR",
+      "category": "Broker Organization",
+      "rule": "Broker class names MUST follow pattern: `{Entity}{Type}Broker` (e.g., `PatientApiBroker`, `LocalStorageBroker`)."
+    },
+    {
+      "id": "tsr-brokers-013",
+      "severity": "ERROR",
+      "category": "Broker Organization",
+      "rule": "Each broker MUST serve one and only one external dependency."
+    },
+    {
+      "id": "tsr-brokers-014",
+      "severity": "WARN",
+      "category": "Broker Organization",
+      "rule": "Brokers SHOULD expose interfaces for testing and mocking."
+    },
+    {
+      "id": "tsr-brokers-015",
+      "severity": "ERROR",
+      "category": "Exception Handling",
+      "rule": "Brokers MUST catch external exceptions and wrap them in broker-specific exceptions."
+    },
+    {
+      "id": "tsr-brokers-016",
+      "severity": "ERROR",
+      "category": "Exception Handling",
+      "rule": "Broker exceptions MUST preserve the original exception as inner exception."
+    },
+    {
+      "id": "tsr-brokers-017",
+      "severity": "ERROR",
+      "category": "Exception Handling",
+      "rule": "Brokers MUST NOT catch and swallow exceptions without rethrowing."
+    },
+    {
+      "id": "tsr-brokers-018",
+      "severity": "ERROR",
+      "category": "Exception Handling",
+      "rule": "Brokers MUST NOT return error codes — use exceptions for error signaling."
+    },
+    {
+      "id": "tsr-brokers-019",
+      "severity": "ERROR",
+      "category": "Broker Interactions",
+      "rule": "Brokers MUST NOT call other brokers — composition happens in services."
+    },
+    {
+      "id": "tsr-brokers-020",
+      "severity": "ERROR",
+      "category": "Broker Interactions",
+      "rule": "Brokers MUST NOT perform retries or circuit breaking — that belongs in services."
+    },
+    {
+      "id": "tsr-brokers-021",
+      "severity": "WARN",
+      "category": "Broker Interactions",
+      "rule": "API brokers SHOULD accept CancellationToken-equivalent (AbortSignal) for request cancellation."
+    }
+  ]
+}

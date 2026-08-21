@@ -9,7 +9,9 @@ using System.Linq.Expressions;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using ISL.Security.Client.Models.Foundations.Users;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
@@ -22,6 +24,8 @@ using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
+using System.Threading;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
@@ -35,8 +39,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
         private readonly Mock<IStu3PatientService> patientServiceMock;
         private readonly Mock<IConsumerAccessService> consumerAccessServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
         private readonly Mock<ISecurityBroker> securityBrokerMock;
+        private readonly Mock<IIdentifierBroker> identifierBrokerMock;
+        private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly AccessConfigurations accessConfigurations;
         private readonly IStu3PatientOrchestrationService patientOrchestrationService;
 
@@ -45,9 +51,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.providerServiceMock = new Mock<IProviderService>();
             this.patientServiceMock = new Mock<IStu3PatientService>();
             this.consumerAccessServiceMock = new Mock<IConsumerAccessService>();
-            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
             this.securityBrokerMock = new Mock<ISecurityBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
+            this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
 
             this.accessConfigurations = new AccessConfigurations
             {
@@ -63,9 +71,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 providerService: this.providerServiceMock.Object,
                 patientService: this.patientServiceMock.Object,
                 consumerAccessService: this.consumerAccessServiceMock.Object,
-                auditBroker: this.auditBrokerMock.Object,
+                auditAndMetricBroker: this.auditAndMetricBrokerMock.Object,
                 securityBroker: this.securityBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
+                identifierBroker: this.identifierBrokerMock.Object,
+                dateTimeBroker: this.dateTimeBrokerMock.Object,
                 accessConfigurations: accessConfigurations);
 
         private static int GetRandomNumber() =>
@@ -286,5 +296,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException)
             };
         }
+
+        /// <summary>
+        /// Metric spans are cross cutting - every path through this service records them, and
+        /// asserting on each one in every behavioural test would bury what the test is actually
+        /// about. Marking them verified here keeps VerifyNoOtherCalls meaningful for everything
+        /// else, while the span tree itself is covered by the Metrics tests.
+        /// </summary>
+        private void AcceptMetricSpans()
+        {
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+        }
+
     }
 }

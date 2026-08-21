@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions
 {
-    public class InvalidFhirRecordDifferenceException : Xeption
+    internal class InvalidFhirRecordDifferenceException : Xeption
     {
         public InvalidFhirRecordDifferenceException(string message)
             : base(message)

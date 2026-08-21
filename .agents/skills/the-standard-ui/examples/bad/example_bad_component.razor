@@ -1,0 +1,38 @@
+@* ---
+skill: the-standard-ui
+type: example
+source-section: "3.2 User Interfaces"
+demonstrates: "ts-ui-001 violation, ts-ui-002 violation, ts-ui-004 violation, ts-ui-005 violation"
+--- *@
+
+@* ❌ VIOLATION ts-ui-001: injects domain service directly *@
+@inject IStudentService StudentService
+@* ❌ VIOLATION ts-ui-001: injects another domain service *@
+@inject ICourseService CourseService
+
+<div>
+    @* ❌ VIOLATION ts-ui-005: no loading or error state handled *@
+    @foreach (var student in students)
+    {
+        <p>@student.Name</p>
+    }
+
+    @* ❌ VIOLATION ts-ui-002: renders courses in the same component as students *@
+    @foreach (var course in courses)
+    {
+        <p>@course.Title</p>
+    }
+</div>
+
+@* ❌ VIOLATION ts-ui-004: all logic in @code block instead of base class *@
+@code {
+    private List<Student> students = new();
+    private List<Course> courses = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ❌ Directly calling domain service from UI — no view service, no error handling
+        students = (await StudentService.RetrieveAllStudentsAsync()).ToList();
+        courses = (await CourseService.RetrieveAllCoursesAsync()).ToList();
+    }
+}

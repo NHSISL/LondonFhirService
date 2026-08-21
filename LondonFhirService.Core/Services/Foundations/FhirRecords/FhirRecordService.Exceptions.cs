@@ -14,7 +14,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.FhirRecords
 {
-    public partial class FhirRecordService
+    internal partial class FhirRecordService
     {
         private delegate ValueTask<FhirRecord> ReturningFhirRecordFunction();
         private delegate ValueTask<IQueryable<FhirRecord>> ReturningFhirRecordsFunction();

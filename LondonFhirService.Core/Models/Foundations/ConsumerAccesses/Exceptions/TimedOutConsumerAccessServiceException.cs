@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class TimedOutConsumerAccessServiceException : Xeption
+    internal class TimedOutConsumerAccessServiceException : Xeption
     {
         public TimedOutConsumerAccessServiceException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

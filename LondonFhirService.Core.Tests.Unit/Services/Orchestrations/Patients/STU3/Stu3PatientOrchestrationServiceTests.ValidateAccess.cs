@@ -60,7 +60,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             await this.patientOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             // then
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Check Access Permissions",
@@ -73,10 +73,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 broker.GetCurrentUserAsync(),
                     Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     "Access",
-                    "Check Access Permissons",
+                    "Check Access Permissions",
                     currentUserJson,
                     null,
                     correlationId.ToString()),
@@ -88,8 +88,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     default),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.RecordAuditAsync(
                     "Access",
                     "Access Allowed",
 
@@ -100,12 +100,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         $"CorrelationId: {correlationId.ToString()}")),
 
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString(),
+                    "Information",
+                    default),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -126,7 +129,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             await orchestrationService.ValidateAccess(inputNhsNumber, correlationId);
 
             // then
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
@@ -145,9 +148,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     It.IsAny<CancellationToken>()),
                         Times.Never);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -200,9 +204,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 broker.GetCurrentUserAsync(),
                     Times.Never);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -255,7 +260,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 broker.GetCurrentUserAsync(),
                     Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Check Access Permissions",
@@ -264,10 +269,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     "Access",
-                    "Check Access Permissons",
+                    "Check Access Permissions",
                     currentUserJson,
                     null,
                     correlationId.ToString()),
@@ -284,9 +289,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     It.IsAny<CancellationToken>()),
                         Times.Never);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -360,7 +366,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     default),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Check Access Permissions",
@@ -369,17 +375,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     "Access",
-                    "Check Access Permissons",
+                    "Check Access Permissions",
                     currentUserJson,
                     null,
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.RecordAuditAsync(
                     "Access",
                     "Access Forbidden",
 
@@ -389,7 +395,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         $"CorrelationId: {correlationId.ToString()}")),
 
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString(),
+                    "Information",
+                    default),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -397,9 +405,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }

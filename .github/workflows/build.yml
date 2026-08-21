@@ -34,19 +34,36 @@ jobs:
       run: >-
         $projects = Get-ChildItem -Path . -Filter "*Tests.Unit*.csproj" -Recurse
 
+        $failed = @()
+
         foreach ($project in $projects) {
           Write-Host "Running tests for: $($project.FullName)"
           dotnet test $project.FullName --no-build --verbosity normal
+          if ($LASTEXITCODE -ne 0) { $failed += $project.Name }
+        }
+
+        if ($failed.Count -gt 0) {
+          Write-Host "::error::Test projects failed: $($failed -join ', ')"
+          exit 1
         }
       shell: pwsh
     - name: Run Acceptance Tests
       run: >-
         $projects = Get-ChildItem -Path . -Filter "*Tests.Acceptance*.csproj" -Recurse
 
+        $failed = @()
+
         foreach ($project in $projects) {
           Write-Host "Running tests for: $($project.FullName)"
           dotnet test $project.FullName --no-build --verbosity normal
+          if ($LASTEXITCODE -ne 0) { $failed += $project.Name }
         }
+
+        if ($failed.Count -gt 0) {
+          Write-Host "::error::Test projects failed: $($failed -join ', ')"
+          exit 1
+        }
+      shell: pwsh
     env:
       NOTIFICATIONCONFIGURATIONS__APIKEY: ${{ secrets.NOTIFICATIONCONFIGURATIONS__APIKEY }}
   add_tag:

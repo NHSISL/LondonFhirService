@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Audits.Exceptions
 {
-    public class InvalidAuditServiceException : Xeption
+    internal class InvalidAuditServiceException : Xeption
     {
         public InvalidAuditServiceException(string message)
             : base(message)

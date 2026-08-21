@@ -11,7 +11,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
-    public partial class Stu3PatientService
+    internal partial class Stu3PatientService
     {
         public static void ValidateOnEverything(
             List<Provider> providerNames,

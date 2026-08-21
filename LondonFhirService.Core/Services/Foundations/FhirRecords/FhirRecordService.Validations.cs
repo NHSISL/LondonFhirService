@@ -10,7 +10,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.FhirRecords
 {
-    public partial class FhirRecordService
+    internal partial class FhirRecordService
     {
         private async ValueTask ValidateFhirRecordOnAdd(FhirRecord fhirRecord)
         {

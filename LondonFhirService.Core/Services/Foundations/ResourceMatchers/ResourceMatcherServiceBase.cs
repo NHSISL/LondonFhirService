@@ -10,7 +10,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers
     using LondonFhirService.Core.Brokers.Loggings;
     using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
-    public abstract partial class ResourceMatcherServiceBase : IResourceMatcherService
+    internal abstract partial class ResourceMatcherServiceBase : IResourceMatcherService
     {
         protected readonly ILoggingBroker loggingBroker;
 

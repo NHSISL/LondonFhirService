@@ -1,0 +1,24 @@
+{
+  "name": "the-standard-reacttypescript-view-services",
+  "version": "0.1.0",
+  "description": "View service layer for transforming foundation models to UI-ready view models in React + TypeScript projects",
+  "the_standard_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": [
+    "Foundation services",
+    "Foundation models",
+    "UI transformation requirements"
+  ],
+  "outputs": [
+    "View models for UI consumption",
+    "Formatted display data",
+    "UI-ready transformations",
+    "Presentation layer contracts"
+  ],
+  "dependencies": [
+    "the-standard-reacttypescript-typescript",
+    "the-standard-reacttypescript-models",
+    "the-standard-reacttypescript-services"
+  ],
+  "applies_to": ["src/services/views/**/*"]
+}

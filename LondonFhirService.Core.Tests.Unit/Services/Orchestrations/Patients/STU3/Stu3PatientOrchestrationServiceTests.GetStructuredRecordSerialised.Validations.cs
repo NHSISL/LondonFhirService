@@ -66,12 +66,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -127,6 +128,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
+                    It.IsAny<Guid?>(),
                     cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
@@ -146,7 +148,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Orchestration Service Request Submitted",
@@ -155,7 +157,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
@@ -164,7 +166,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Retrieve active providers and execute request",
@@ -173,12 +175,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -238,6 +241,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
+                    It.IsAny<Guid?>(),
                     cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
@@ -257,7 +261,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Orchestration Service Request Submitted",
@@ -266,7 +270,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
@@ -275,7 +279,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Retrieve active providers and execute request",
@@ -284,12 +288,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
