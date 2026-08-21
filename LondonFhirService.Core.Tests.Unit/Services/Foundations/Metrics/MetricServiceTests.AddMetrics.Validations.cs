@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
@@ -29,7 +30,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     innerException: nullMetricException);
 
             // when
-            ValueTask addMetricsTask = this.metricService.AddMetricsAsync(nullMetrics);
+            ValueTask addMetricsTask =
+                this.metricService.AddMetricsAsync(nullMetrics, TestContext.Current.CancellationToken);
 
             MetricValidationException actualMetricValidationException =
                 await Assert.ThrowsAsync<MetricValidationException>(addMetricsTask.AsTask);
@@ -43,7 +45,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkInsertMetricsAsync(It.IsAny<List<Metric>>()),
+                broker.BulkInsertMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -74,7 +76,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(randomDateTimeOffset);
 
             // when
-            ValueTask addMetricsTask = this.metricService.AddMetricsAsync(metricsWithNull);
+            ValueTask addMetricsTask =
+                this.metricService.AddMetricsAsync(metricsWithNull, TestContext.Current.CancellationToken);
 
             MetricValidationException actualMetricValidationException =
                 await Assert.ThrowsAsync<MetricValidationException>(addMetricsTask.AsTask);
@@ -94,11 +97,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             // Nothing is written when any one span in the batch is unusable, so a partial
             // flush can never leave a half recorded request behind.
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkInsertMetricsAsync(It.IsAny<List<Metric>>()),
+                broker.BulkInsertMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.metricBrokerMock.Verify(broker =>
-                broker.RecordAsync(It.IsAny<List<Metric>>()),
+                broker.RecordAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             VerifyNoOtherCallsOnAllBrokers();
@@ -132,7 +135,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(randomDateTimeOffset);
 
             // when
-            ValueTask addMetricsTask = this.metricService.AddMetricsAsync(metrics);
+            ValueTask addMetricsTask =
+                this.metricService.AddMetricsAsync(metrics, TestContext.Current.CancellationToken);
 
             MetricValidationException actualMetricValidationException =
                 await Assert.ThrowsAsync<MetricValidationException>(addMetricsTask.AsTask);
@@ -150,11 +154,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkInsertMetricsAsync(It.IsAny<List<Metric>>()),
+                broker.BulkInsertMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.metricBrokerMock.Verify(broker =>
-                broker.RecordAsync(It.IsAny<List<Metric>>()),
+                broker.RecordAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             VerifyNoOtherCallsOnAllBrokers();

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
@@ -40,11 +41,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync())
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
             // when
-            int actualPurgedCount = await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync();
+            int actualPurgedCount =
+                await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(
+                    TestContext.Current.CancellationToken);
 
             // then
             actualPurgedCount.Should().Be(1);
@@ -53,11 +56,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             // the number of days kept rather than the number of days minus a boundary case.
             this.storageBrokerMock.Verify(broker =>
                 broker.BulkDeleteMetricsAsync(It.Is<List<Metric>>(metrics =>
-                    metrics.Count == 1 && metrics[0].Id == expiredMetric.Id)),
+                    metrics.Count == 1 && metrics[0].Id == expiredMetric.Id), It.IsAny<CancellationToken>()),
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(),
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -78,17 +81,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             this.metricServiceConfigurations.IsPurgingAllowed = false;
 
             // when
-            int actualPurgedCount = await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync();
+            int actualPurgedCount =
+                await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(
+                    TestContext.Current.CancellationToken);
 
             // then
             actualPurgedCount.Should().Be(0);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(),
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>()),
+                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -106,7 +111,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             this.metricServiceConfigurations.RetentionPeriodInDays = GetRandomNegativeNumber();
 
             // when
-            int actualPurgedCount = await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync();
+            int actualPurgedCount =
+                await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(
+                    TestContext.Current.CancellationToken);
 
             // then
             actualPurgedCount.Should().Be(0);
@@ -136,21 +143,23 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync())
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
             // when
-            int actualPurgedCount = await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync();
+            int actualPurgedCount =
+                await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(
+                    TestContext.Current.CancellationToken);
 
             // then
             actualPurgedCount.Should().Be(0);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(),
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>()),
+                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -189,11 +198,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync())
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
             // when
-            int actualPurgedCount = await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync();
+            int actualPurgedCount =
+                await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(
+                    TestContext.Current.CancellationToken);
 
             // then
             actualPurgedCount.Should().Be(expiredCount);
@@ -201,15 +212,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             // One bulk call rather than a delete per row, which matters on a table this large.
             this.storageBrokerMock.Verify(broker =>
                 broker.BulkDeleteMetricsAsync(It.Is<List<Metric>>(metrics =>
-                    metrics.Count == expiredCount)),
+                    metrics.Count == expiredCount), It.IsAny<CancellationToken>()),
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteMetricAsync(It.IsAny<Metric>()),
+                broker.DeleteMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(),
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>

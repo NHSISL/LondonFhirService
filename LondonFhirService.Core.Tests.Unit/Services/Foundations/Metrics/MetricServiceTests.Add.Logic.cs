@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -28,11 +29,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(randomDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.InsertMetricAsync(inputMetric))
+                broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
             // when
-            Metric actualMetric = await this.metricService.AddMetricAsync(inputMetric);
+            Metric actualMetric =
+                await this.metricService.AddMetricAsync(inputMetric, TestContext.Current.CancellationToken);
 
             // then
             actualMetric.Should().BeEquivalentTo(expectedMetric);
@@ -42,11 +44,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.InsertMetricAsync(inputMetric),
+                broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.metricBrokerMock.Verify(broker =>
-                broker.RecordAsync(storageMetric),
+                broker.RecordAsync(storageMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();
@@ -67,11 +69,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ReturnsAsync(currentDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.InsertMetricAsync(It.IsAny<Metric>()))
+                broker.InsertMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
             // when
-            await this.metricService.AddMetricAsync(inputMetric);
+            await this.metricService.AddMetricAsync(inputMetric, TestContext.Current.CancellationToken);
 
             // then
             inputMetric.CreatedDate.Should().Be(currentDateTimeOffset);
@@ -82,11 +84,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
 
             this.storageBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(It.Is<Metric>(metric =>
-                    metric.CreatedDate == currentDateTimeOffset)),
+                    metric.CreatedDate == currentDateTimeOffset), It.IsAny<CancellationToken>()),
                         Times.Once);
 
             this.metricBrokerMock.Verify(broker =>
-                broker.RecordAsync(storageMetric),
+                broker.RecordAsync(storageMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();
@@ -102,17 +104,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             this.metricServiceConfigurations.IsEnabled = false;
 
             // when
-            Metric actualMetric = await this.metricService.AddMetricAsync(inputMetric);
+            Metric actualMetric =
+                await this.metricService.AddMetricAsync(inputMetric, TestContext.Current.CancellationToken);
 
             // then
             actualMetric.Should().BeEquivalentTo(expectedMetric);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.InsertMetricAsync(It.IsAny<Metric>()),
+                broker.InsertMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.metricBrokerMock.Verify(broker =>
-                broker.RecordAsync(It.IsAny<Metric>()),
+                broker.RecordAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -130,7 +133,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             this.metricServiceConfigurations.IsEnabled = false;
 
             // when
-            Metric actualMetric = await this.metricService.AddMetricAsync(nullMetric);
+            Metric actualMetric =
+                await this.metricService.AddMetricAsync(nullMetric, TestContext.Current.CancellationToken);
 
             // then
             actualMetric.Should().BeNull();

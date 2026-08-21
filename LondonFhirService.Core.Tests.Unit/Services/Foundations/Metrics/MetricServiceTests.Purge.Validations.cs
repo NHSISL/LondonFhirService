@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
@@ -38,7 +39,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     innerException: invalidMetricException);
 
             // when
-            ValueTask<int> purgeMetricsTask = this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync();
+            ValueTask<int> purgeMetricsTask =
+                this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(TestContext.Current.CancellationToken);
 
             MetricValidationException actualMetricValidationException =
                 await Assert.ThrowsAsync<MetricValidationException>(purgeMetricsTask.AsTask);
@@ -54,11 +56,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             // Nothing is read and nothing is deleted. A retention period of zero or less would
             // put the cut off at or after the present moment and take the whole table with it.
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(),
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>()),
+                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>

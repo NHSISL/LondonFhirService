@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
@@ -32,11 +33,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     innerException: failedStorageMetricException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectMetricByIdAsync(It.IsAny<Guid>()))
+                broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(sqlException);
 
             // when
-            ValueTask<Metric> retrieveMetricByIdTask = this.metricService.RetrieveMetricByIdAsync(someMetricId);
+            ValueTask<Metric> retrieveMetricByIdTask =
+                this.metricService.RetrieveMetricByIdAsync(someMetricId, TestContext.Current.CancellationToken);
 
             MetricDependencyException actualMetricDependencyException =
                 await Assert.ThrowsAsync<MetricDependencyException>(retrieveMetricByIdTask.AsTask);
@@ -45,7 +47,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectMetricByIdAsync(someMetricId),
+                broker.SelectMetricByIdAsync(someMetricId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -76,11 +78,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     innerException: timedOutMetricException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectMetricByIdAsync(It.IsAny<Guid>()))
+                broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(timeoutException);
 
             // when
-            ValueTask<Metric> retrieveMetricByIdTask = this.metricService.RetrieveMetricByIdAsync(someMetricId);
+            ValueTask<Metric> retrieveMetricByIdTask =
+                this.metricService.RetrieveMetricByIdAsync(someMetricId, TestContext.Current.CancellationToken);
 
             MetricDependencyException actualMetricDependencyException =
                 await Assert.ThrowsAsync<MetricDependencyException>(retrieveMetricByIdTask.AsTask);
@@ -89,7 +92,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectMetricByIdAsync(someMetricId),
+                broker.SelectMetricByIdAsync(someMetricId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -120,11 +123,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     innerException: cancelledMetricException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectMetricByIdAsync(It.IsAny<Guid>()))
+                broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(cancellationException);
 
             // when
-            ValueTask<Metric> retrieveMetricByIdTask = this.metricService.RetrieveMetricByIdAsync(someMetricId);
+            ValueTask<Metric> retrieveMetricByIdTask =
+                this.metricService.RetrieveMetricByIdAsync(someMetricId, TestContext.Current.CancellationToken);
 
             MetricDependencyException actualMetricDependencyException =
                 await Assert.ThrowsAsync<MetricDependencyException>(retrieveMetricByIdTask.AsTask);
@@ -133,7 +137,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectMetricByIdAsync(someMetricId),
+                broker.SelectMetricByIdAsync(someMetricId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -162,11 +166,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     innerException: failedMetricServiceException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectMetricByIdAsync(It.IsAny<Guid>()))
+                broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(serviceException);
 
             // when
-            ValueTask<Metric> retrieveMetricByIdTask = this.metricService.RetrieveMetricByIdAsync(someMetricId);
+            ValueTask<Metric> retrieveMetricByIdTask =
+                this.metricService.RetrieveMetricByIdAsync(someMetricId, TestContext.Current.CancellationToken);
 
             MetricServiceException actualMetricServiceException =
                 await Assert.ThrowsAsync<MetricServiceException>(retrieveMetricByIdTask.AsTask);
@@ -175,7 +180,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricServiceException.Should().BeEquivalentTo(expectedMetricServiceException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectMetricByIdAsync(someMetricId),
+                broker.SelectMetricByIdAsync(someMetricId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>

@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
@@ -21,17 +22,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             IQueryable<Metric> expectedMetrics = storageMetrics;
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync())
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
             // when
-            IQueryable<Metric> actualMetrics = await this.metricService.RetrieveAllMetricsAsync();
+            IQueryable<Metric> actualMetrics =
+                await this.metricService.RetrieveAllMetricsAsync(TestContext.Current.CancellationToken);
 
             // then
             actualMetrics.Should().BeEquivalentTo(expectedMetrics);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(),
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();
@@ -47,11 +49,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             this.metricServiceConfigurations.IsEnabled = false;
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllMetricsAsync())
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
             // when
-            IQueryable<Metric> actualMetrics = await this.metricService.RetrieveAllMetricsAsync();
+            IQueryable<Metric> actualMetrics =
+                await this.metricService.RetrieveAllMetricsAsync(TestContext.Current.CancellationToken);
 
             // then
             // The kill switch stops recording, not reading. Metrics already captured stay
@@ -59,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetrics.Should().BeEquivalentTo(expectedMetrics);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllMetricsAsync(),
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();

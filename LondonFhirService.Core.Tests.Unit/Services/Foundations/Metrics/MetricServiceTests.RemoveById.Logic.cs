@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -22,25 +23,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             Metric expectedMetric = deletedMetric.DeepClone();
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectMetricByIdAsync(randomMetric.Id))
+                broker.SelectMetricByIdAsync(randomMetric.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.DeleteMetricAsync(storageMetric))
+                broker.DeleteMetricAsync(storageMetric, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(deletedMetric);
 
             // when
-            Metric actualMetric = await this.metricService.RemoveMetricByIdAsync(randomMetric.Id);
+            Metric actualMetric =
+                await this.metricService.RemoveMetricByIdAsync(randomMetric.Id, TestContext.Current.CancellationToken);
 
             // then
             actualMetric.Should().BeEquivalentTo(expectedMetric);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectMetricByIdAsync(randomMetric.Id),
+                broker.SelectMetricByIdAsync(randomMetric.Id, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteMetricAsync(storageMetric),
+                broker.DeleteMetricAsync(storageMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();

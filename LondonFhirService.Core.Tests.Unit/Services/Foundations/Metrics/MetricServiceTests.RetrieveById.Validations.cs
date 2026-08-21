@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
@@ -33,7 +34,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     innerException: invalidMetricException);
 
             // when
-            ValueTask<Metric> retrieveMetricByIdTask = this.metricService.RetrieveMetricByIdAsync(invalidMetricId);
+            ValueTask<Metric> retrieveMetricByIdTask =
+                this.metricService.RetrieveMetricByIdAsync(invalidMetricId, TestContext.Current.CancellationToken);
 
             MetricValidationException actualMetricValidationException =
                 await Assert.ThrowsAsync<MetricValidationException>(retrieveMetricByIdTask.AsTask);
@@ -47,7 +49,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectMetricByIdAsync(It.IsAny<Guid>()),
+                broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             VerifyNoOtherCallsOnAllBrokers();
@@ -70,11 +72,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     innerException: notFoundMetricException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectMetricByIdAsync(It.IsAny<Guid>()))
+                broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(noMetric);
 
             // when
-            ValueTask<Metric> retrieveMetricByIdTask = this.metricService.RetrieveMetricByIdAsync(someMetricId);
+            ValueTask<Metric> retrieveMetricByIdTask =
+                this.metricService.RetrieveMetricByIdAsync(someMetricId, TestContext.Current.CancellationToken);
 
             MetricValidationException actualMetricValidationException =
                 await Assert.ThrowsAsync<MetricValidationException>(retrieveMetricByIdTask.AsTask);
@@ -83,7 +86,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             actualMetricValidationException.Should().BeEquivalentTo(expectedMetricValidationException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectMetricByIdAsync(someMetricId),
+                broker.SelectMetricByIdAsync(someMetricId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
