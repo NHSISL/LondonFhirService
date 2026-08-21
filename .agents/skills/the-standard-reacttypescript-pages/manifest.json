@@ -1,0 +1,1 @@
+﻿{"name":"the-standard-reacttypescript-pages","version":"0.1.0","description":"Page layer","applies_to":["src/pages/**/*.tsx"],"dependencies":["the-standard-reacttypescript-components","the-standard-reacttypescript-hooks"]}

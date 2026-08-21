@@ -1,0 +1,11 @@
+{
+  "skill": "the-standard-processings",
+  "rules": [
+    { "id": "ts-processings-001", "severity": "ERROR", "category": "Dependency", "rule": "Processing services must call only foundation services — never brokers directly." },
+    { "id": "ts-processings-002", "severity": "ERROR", "category": "Single Entity", "rule": "Processing services must serve only one entity type." },
+    { "id": "ts-processings-003", "severity": "ERROR", "category": "Higher-Order Operations", "rule": "Processing services must implement higher-order operations combining foundation service calls." },
+    { "id": "ts-processings-004", "severity": "ERROR", "category": "Exception Handling", "rule": "Processing services must catch and wrap all downstream exceptions from foundation services." },
+    { "id": "ts-processings-005", "severity": "ERROR", "category": "Naming", "rule": "Processing service interfaces must follow the naming pattern I{Entity}ProcessingService." },
+    { "id": "ts-processings-006", "severity": "ERROR", "category": "Structure", "rule": "Processing services must be partial classes split by operation category." }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "skill": "the-standard-aggregations",
+  "version": "1.0.0",
+  "naming": {
+    "interface_pattern": "I{Purpose}AggregationService",
+    "concrete_pattern": "{Purpose}AggregationService"
+  },
+  "structure": {
+    "partial_class_required": true,
+    "calls_orchestration_services_only": true,
+    "can_call_processing_service": false,
+    "can_call_foundation_service": false,
+    "can_call_broker": false
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "skill": "the-standard-reacttypescript-typescript",
+  "enforcement": [
+    {
+      "rule_id": "tsr-typescript-001",
+      "check": "TypeScript strict mode enabled in tsconfig.json",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsr-typescript-004",
+      "check": "No `any` types in source code",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsr-typescript-006",
+      "check": "noImplicitAny is true in tsconfig.json",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsr-typescript-007",
+      "check": "strictNullChecks is true in tsconfig.json",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsr-typescript-010",
+      "check": "No @ts-ignore or @ts-expect-error without justification comment",
+      "action": "warn"
+    },
+    {
+      "rule_id": "tsr-typescript-014",
+      "check": "Function return types are explicit at architectural boundaries",
+      "action": "block"
+    }
+  ]
+}

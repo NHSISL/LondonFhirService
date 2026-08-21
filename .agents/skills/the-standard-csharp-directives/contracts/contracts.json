@@ -1,0 +1,13 @@
+{
+  "skill": "the-standard-csharp-directives",
+  "version": "1.0.0",
+  "group_order": [
+    { "position": 1, "prefix": "System", "description": "Base .NET runtime namespaces" },
+    { "position": 2, "prefix": "Microsoft", "description": "Microsoft framework namespaces" },
+    { "position": 3, "prefix": "*", "description": "Third-party package namespaces (NuGet etc.)" },
+    { "position": 4, "prefix": "{ProjectRootNamespace}", "description": "Project-local namespaces" }
+  ],
+  "separator": "one blank line between groups",
+  "within_group_sort": "alphabetical",
+  "placement": "outside namespace block, top of file"
+}

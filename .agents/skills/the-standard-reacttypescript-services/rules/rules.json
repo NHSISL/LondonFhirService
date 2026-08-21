@@ -1,0 +1,162 @@
+{
+  "skill": "the-standard-reacttypescript-services",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "tsr-services-001",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Foundation services MUST wrap exactly one broker — no more, no less."
+    },
+    {
+      "id": "tsr-services-002",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Foundation services MUST validate all inputs before calling brokers."
+    },
+    {
+      "id": "tsr-services-003",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Foundation services MUST map broker exceptions to service-layer exceptions (ValidationException, DependencyException, ServiceException)."
+    },
+    {
+      "id": "tsr-services-004",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Service methods MUST use try-catch pattern when calling brokers."
+    },
+    {
+      "id": "tsr-services-005",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Foundation services MUST use dependency injection to receive broker instances."
+    },
+    {
+      "id": "tsr-services-006",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Service method names SHOULD mirror broker method names (e.g., broker: `getPatientAsync` → service: `retrievePatientByIdAsync`)."
+    },
+    {
+      "id": "tsr-services-007",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Services MUST implement TryCatch wrapper for exception mapping and logging."
+    },
+    {
+      "id": "tsr-services-008",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Foundation services MUST NOT contain UI logic (formatting, display strings, className generation)."
+    },
+    {
+      "id": "tsr-services-009",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Foundation services MUST NOT call other services — composition happens at processing/orchestration layer."
+    },
+    {
+      "id": "tsr-services-010",
+      "severity": "ERROR",
+      "category": "Service Responsibility",
+      "rule": "Services MUST define clear exception types: ValidationException, DependencyException, ServiceException."
+    },
+    {
+      "id": "tsr-services-011",
+      "severity": "ERROR",
+      "category": "Validation Rules",
+      "rule": "Services MUST validate for null/undefined inputs."
+    },
+    {
+      "id": "tsr-services-012",
+      "severity": "ERROR",
+      "category": "Validation Rules",
+      "rule": "Services MUST validate required string fields are not empty."
+    },
+    {
+      "id": "tsr-services-013",
+      "severity": "ERROR",
+      "category": "Validation Rules",
+      "rule": "Services MUST validate required ID fields exist before retrieval operations."
+    },
+    {
+      "id": "tsr-services-014",
+      "severity": "WARN",
+      "category": "Validation Rules",
+      "rule": "Services SHOULD validate structural integrity (e.g., valid email format, date ranges)."
+    },
+    {
+      "id": "tsr-services-015",
+      "severity": "ERROR",
+      "category": "Validation Rules",
+      "rule": "Validation exceptions MUST include the field name and reason for failure."
+    },
+    {
+      "id": "tsr-services-016",
+      "severity": "ERROR",
+      "category": "Validation Rules",
+      "rule": "Validation MUST happen before broker calls, not after."
+    },
+    {
+      "id": "tsr-services-017",
+      "severity": "ERROR",
+      "category": "Exception Mapping",
+      "rule": "Broker exceptions MUST be caught and wrapped in DependencyException."
+    },
+    {
+      "id": "tsr-services-018",
+      "severity": "ERROR",
+      "category": "Exception Mapping",
+      "rule": "Validation failures MUST throw ValidationException with descriptive messages."
+    },
+    {
+      "id": "tsr-services-019",
+      "severity": "ERROR",
+      "category": "Exception Mapping",
+      "rule": "Unexpected service errors MUST be wrapped in ServiceException."
+    },
+    {
+      "id": "tsr-services-020",
+      "severity": "ERROR",
+      "category": "Exception Mapping",
+      "rule": "All service exceptions MUST preserve the inner exception for debugging."
+    },
+    {
+      "id": "tsr-services-021",
+      "severity": "ERROR",
+      "category": "Exception Mapping",
+      "rule": "Exception messages MUST be user-facing and actionable."
+    },
+    {
+      "id": "tsr-services-022",
+      "severity": "ERROR",
+      "category": "Service Organization",
+      "rule": "Foundation services MUST be in `services/foundations/{domain}/` directory."
+    },
+    {
+      "id": "tsr-services-023",
+      "severity": "ERROR",
+      "category": "Service Organization",
+      "rule": "Service class names MUST follow pattern `{Domain}Service` (e.g., `PatientService`)."
+    },
+    {
+      "id": "tsr-services-024",
+      "severity": "ERROR",
+      "category": "Service Organization",
+      "rule": "Service interface names MUST follow pattern `I{Domain}Service` (e.g., `IPatientService`)."
+    },
+    {
+      "id": "tsr-services-025",
+      "severity": "WARN",
+      "category": "Service Organization",
+      "rule": "Services SHOULD expose interfaces for testing and dependency inversion."
+    },
+    {
+      "id": "tsr-services-026",
+      "severity": "ERROR",
+      "category": "Service Organization",
+      "rule": "Each service file MUST contain one service class only."
+    }
+  ]
+}

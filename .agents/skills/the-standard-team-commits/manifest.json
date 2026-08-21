@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-team-commits",
+  "version": "0.1.0",
+  "description": "Enforces The Standard Team commit message conventions for TDD (FAIL/PASS) and non-TDD (CATEGORY: Description) workflows.",
+  "the_standard_team_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["Commit message string"],
+  "outputs": ["Compliant commit message", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-team-branching"],
+  "applies_to": ["*", ".git/*"]
+}

@@ -1,0 +1,22 @@
+{
+  "skill": "the-standard-processings",
+  "version": "1.0.0",
+  "naming": {
+    "interface_pattern": "I{Entity}ProcessingService",
+    "concrete_pattern": "{Entity}ProcessingService"
+  },
+  "higher_order_operations": [
+    "EnsureAsync",
+    "UpsertAsync",
+    "TryAddAsync",
+    "TryRemoveAsync",
+    "TryRetrieveAsync"
+  ],
+  "structure": {
+    "partial_class_required": true,
+    "calls_foundation_services_only": true,
+    "can_call_broker": false,
+    "can_call_other_processing_services": false,
+    "max_entity_types": 1
+  }
+}

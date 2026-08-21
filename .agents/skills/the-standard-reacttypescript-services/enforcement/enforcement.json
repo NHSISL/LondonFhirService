@@ -1,0 +1,39 @@
+{
+  "skill": "the-standard-reacttypescript-services",
+  "enforcement": [
+    {
+      "rule_id": "tsr-services-001",
+      "check": "Foundation service must inject exactly one broker",
+      "action": "warn",
+      "pattern": "constructor\\([^)]*Broker[^)]*,.*Broker",
+      "message": "Foundation service appears to inject multiple brokers. Multi-broker orchestration belongs in processing/orchestration layer."
+    },
+    {
+      "rule_id": "tsr-services-002",
+      "check": "Service methods must validate inputs before broker calls",
+      "action": "warn",
+      "pattern": "async\\s+\\w+Async\\([^)]+\\):\\s*Promise<[^>]+>\\s*\\{\\s*return\\s+await\\s+this\\.\\w+Broker",
+      "message": "Service method appears to call broker without validation. Add validation before broker call."
+    },
+    {
+      "rule_id": "tsr-services-008",
+      "check": "Foundation services must not contain UI logic",
+      "action": "block",
+      "patterns": [
+        "className",
+        "displayName.*=.*`",
+        "text-.*-\\d+",
+        "\\.join\\('",
+        "CSS"
+      ],
+      "message": "UI logic detected in foundation service. Move display formatting to view service layer."
+    },
+    {
+      "rule_id": "tsr-services-009",
+      "check": "Foundation services must not call other services",
+      "action": "block",
+      "pattern": "constructor\\([^)]*Service[^)]*\\)",
+      "message": "Foundation service is injecting another service. Service composition belongs in processing/orchestration layer."
+    }
+  ]
+}

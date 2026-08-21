@@ -1,0 +1,13 @@
+{
+  "skill": "the-standard-exceptions",
+  "rules": [
+    { "id": "ts-exceptions-001", "severity": "ERROR", "category": "Three-Category Model", "rule": "Every service must expose Validation, Dependency, and Service exception categories." },
+    { "id": "ts-exceptions-002", "severity": "ERROR", "category": "Validation", "rule": "ValidationException must wrap all input-related errors." },
+    { "id": "ts-exceptions-003", "severity": "ERROR", "category": "Dependency", "rule": "DependencyException must wrap all infrastructure-related errors." },
+    { "id": "ts-exceptions-004", "severity": "ERROR", "category": "DependencyValidation", "rule": "DependencyValidationException must wrap dependency-detected business rule violations." },
+    { "id": "ts-exceptions-005", "severity": "ERROR", "category": "Service", "rule": "ServiceException must wrap any unexpected exception not in Validation or Dependency categories." },
+    { "id": "ts-exceptions-006", "severity": "ERROR", "category": "Layer Isolation", "rule": "Each layer must define its own exception types — never re-use types from a lower layer." },
+    { "id": "ts-exceptions-007", "severity": "ERROR", "category": "Inner Exception", "rule": "The original caught exception must always be passed as the inner exception when wrapping." },
+    { "id": "ts-exceptions-008", "severity": "ERROR", "category": "Message Quality", "rule": "Exception messages must be human-readable and must not expose infrastructure details." }
+  ]
+}

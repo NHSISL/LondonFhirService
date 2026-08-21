@@ -1,0 +1,16 @@
+# The Standard — Exposers — Checklist
+
+- [ ] Controller delegates all logic to a single injected service (ts-exposers-001)
+- [ ] Controller contains no business logic or validation (ts-exposers-001)
+- [ ] POST endpoints return 201 Created (ts-exposers-003)
+- [ ] GET endpoints return 200 OK (ts-exposers-004)
+- [ ] PUT endpoints return 200 OK with updated resource (ts-exposers-005)
+- [ ] DELETE endpoints return 200 OK with deleted resource (ts-exposers-006)
+- [ ] All service exception types are mapped to correct HTTP status codes (ts-exposers-002)
+- [ ] ValidationException → 400 Bad Request (ts-exposers-002)
+- [ ] DependencyValidationException (conflict) → 409 Conflict (ts-exposers-002)
+- [ ] DependencyException → 424 Failed Dependency (ts-exposers-002)
+- [ ] ServiceException → 500 Internal Server Error (ts-exposers-002)
+- [ ] Controller decorated with [ApiController] and [Route("api/[controller]")] (ts-exposers-007)
+- [ ] Controller inherits from RESTFulController or ControllerBase (ts-exposers-008)
+- [ ] Only one service is injected (ts-exposers-001)

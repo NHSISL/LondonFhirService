@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-foundations",
+  "version": "0.1.0",
+  "description": "Enforces structural validation, pass-through operations, and single-entity responsibility for foundation services.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# foundation service source file (*Service*.cs)"],
+  "outputs": ["Standard-compliant foundation service code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core", "the-standard-brokers"],
+  "applies_to": ["*Service*.cs"]
+}

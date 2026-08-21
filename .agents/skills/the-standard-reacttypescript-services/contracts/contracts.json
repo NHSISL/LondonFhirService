@@ -1,0 +1,36 @@
+{
+  "skill": "the-standard-reacttypescript-services",
+  "version": "1.0.0",
+  "service_structure": {
+    "directory": "src/services/foundations/{domain}/",
+    "class_pattern": "{Domain}Service",
+    "interface_pattern": "I{Domain}Service"
+  },
+  "method_patterns": {
+    "add": "add{Entity}Async",
+    "retrieve_all": "retrieveAll{Entity}sAsync",
+    "retrieve_by_id": "retrieve{Entity}ByIdAsync",
+    "modify": "modify{Entity}Async",
+    "remove": "remove{Entity}ByIdAsync"
+  },
+  "exception_types": {
+    "validation": "PatientValidationException",
+    "dependency": "PatientDependencyException",
+    "service": "PatientServiceException"
+  },
+  "trycatch_pattern": {
+    "purpose": "Wrap all broker calls for exception mapping",
+    "structure": "private async tryCatch<T>(returningFunction: () => Promise<T>): Promise<T>",
+    "catches": [
+      "ValidationException (rethrow)",
+      "BrokerException (wrap in DependencyException)",
+      "Error (wrap in ServiceException)"
+    ]
+  },
+  "validation_rules": {
+    "null_check": "Validate input is not null/undefined",
+    "required_fields": "Validate required string fields not empty",
+    "structural": "Validate data structure integrity",
+    "timing": "Validate before broker call"
+  }
+}

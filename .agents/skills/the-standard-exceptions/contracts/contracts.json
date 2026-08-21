@@ -1,0 +1,25 @@
+{
+  "skill": "the-standard-exceptions",
+  "version": "1.0.0",
+  "exception_hierarchy": {
+    "outer_categories": [
+      "{Entity}ValidationException",
+      "{Entity}DependencyValidationException",
+      "{Entity}DependencyException",
+      "{Entity}ServiceException"
+    ],
+    "inner_types": {
+      "validation": ["Null{Entity}Exception", "Invalid{Entity}Exception"],
+      "dependency_validation": ["AlreadyExists{Entity}Exception", "NotFound{Entity}Exception", "Locked{Entity}Exception"],
+      "dependency": ["Failed{Entity}StorageException", "Failed{Entity}ServiceException"],
+      "service": ["Failed{Entity}ServiceException"]
+    }
+  },
+  "http_mapping": {
+    "{Entity}ValidationException": 400,
+    "{Entity}DependencyValidationException (AlreadyExists)": 409,
+    "{Entity}DependencyValidationException (NotFound)": 404,
+    "{Entity}DependencyException": 424,
+    "{Entity}ServiceException": 500
+  }
+}

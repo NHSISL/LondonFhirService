@@ -1,0 +1,17 @@
+{
+  "skill": "the-standard-csharp-variables",
+  "rules": [
+    { "id": "tsc-csharp-variables-001", "severity": "ERROR", "category": "Naming", "rule": "Variable names must fully spell out the concept — no abbreviations, single letters, or shortened names." },
+    { "id": "tsc-csharp-variables-002", "severity": "ERROR", "category": "Naming", "rule": "Collection variable names must be plural — must not be suffixed with List, Array, or a type name." },
+    { "id": "tsc-csharp-variables-003", "severity": "ERROR", "category": "Naming", "rule": "Variable names must not include the type as a suffix or prefix." },
+    { "id": "tsc-csharp-variables-004", "severity": "ERROR", "category": "Naming", "rule": "Variables holding a null or default value must be prefixed with no (e.g., noStudent, noChangeCount)." },
+    { "id": "tsc-csharp-variables-005", "severity": "ERROR", "category": "Declarations", "rule": "Use var when the right-hand side type is immediately clear from the expression." },
+    { "id": "tsc-csharp-variables-006", "severity": "ERROR", "category": "Declarations", "rule": "Use explicit type when the right-hand side is a method call whose return type is not immediately visible." },
+    { "id": "tsc-csharp-variables-007", "severity": "WARN",  "category": "Declarations", "rule": "Use var for anonymous types where no explicit type exists." },
+    { "id": "tsc-csharp-variables-008", "severity": "ERROR", "category": "Declarations", "rule": "For single-property instantiation: declare then assign on the next line. Must not use an object initializer block for a single property." },
+    { "id": "tsc-csharp-variables-009", "severity": "ERROR", "category": "Declarations", "rule": "For two or more properties: use an object initializer block." },
+    { "id": "tsc-csharp-variables-010", "severity": "ERROR", "category": "Organization", "rule": "Variable declarations exceeding 120 characters must break at the = sign, with the RHS indented on the next line." },
+    { "id": "tsc-csharp-variables-011", "severity": "ERROR", "category": "Organization", "rule": "Single-line declarations must be stacked with no blank lines between them." },
+    { "id": "tsc-csharp-variables-012", "severity": "ERROR", "category": "Organization", "rule": "Declarations that occupy two or more lines must be surrounded by one blank line above and one below." }
+  ]
+}

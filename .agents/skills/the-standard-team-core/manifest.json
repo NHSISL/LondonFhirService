@@ -1,0 +1,18 @@
+{
+  "name": "the-standard-team-core",
+  "version": "0.1.0",
+  "description": "Enforces The Standard Team purposing model: business nature, goals, future considerations, and user scenarios.",
+  "the_standard_team_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": [
+    "Project purpose document (markdown)",
+    "Scenario document (markdown)"
+  ],
+  "outputs": [
+    "Compliant purpose documentation with nature, goals, and future considerations",
+    "Well-formed scenarios using GIVEN/WHEN/THEN format",
+    "Review feedback citing rule IDs"
+  ],
+  "dependencies": [],
+  "applies_to": ["*.md", "**/*.md"]
+}

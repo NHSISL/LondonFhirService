@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-team-projects",
+  "version": "0.1.0",
+  "description": "Enforces The Standard Team solution and project folder structure conventions.",
+  "the_standard_team_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["Solution folder structure", "*.sln file", "*.csproj files"],
+  "outputs": ["Standard-compliant solution layout", "Review feedback citing rule IDs"],
+  "dependencies": [],
+  "applies_to": ["*.sln", "*.csproj", "**/*.cs"]
+}

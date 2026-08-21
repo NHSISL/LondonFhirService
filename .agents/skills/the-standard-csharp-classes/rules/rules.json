@@ -1,0 +1,17 @@
+{
+  "skill": "the-standard-csharp-classes",
+  "rules": [
+    { "id": "tsc-csharp-classes-001", "severity": "ERROR", "category": "Class Naming", "rule": "Model class names must match the entity name exactly — no suffix (e.g., Student, not StudentModel)." },
+    { "id": "tsc-csharp-classes-002", "severity": "ERROR", "category": "Class Naming", "rule": "Service class names must be singular: {Entity}Service." },
+    { "id": "tsc-csharp-classes-003", "severity": "ERROR", "category": "Class Naming", "rule": "Service class names must not use alternative suffixes such as BusinessLogic or BL." },
+    { "id": "tsc-csharp-classes-004", "severity": "ERROR", "category": "Class Naming", "rule": "Broker class names must be singular: {Entity}Broker." },
+    { "id": "tsc-csharp-classes-005", "severity": "ERROR", "category": "Class Naming", "rule": "Controller class names must be plural: {Entities}Controller." },
+    { "id": "tsc-csharp-classes-006", "severity": "ERROR", "category": "Field Naming", "rule": "Class fields must use camelCase." },
+    { "id": "tsc-csharp-classes-007", "severity": "ERROR", "category": "Field Naming", "rule": "Class fields must not be prefixed with an underscore." },
+    { "id": "tsc-csharp-classes-008", "severity": "ERROR", "category": "Field Referencing", "rule": "Private class fields must be referenced using this. to distinguish them from local variables." },
+    { "id": "tsc-csharp-classes-009", "severity": "ERROR", "category": "Instantiation", "rule": "Use var on the left side of object instantiation; must not use explicit type with target-typed new." },
+    { "id": "tsc-csharp-classes-010", "severity": "ERROR", "category": "Instantiation", "rule": "Must not pass positional unnamed literal values to constructors — use named parameters or matching variable names." },
+    { "id": "tsc-csharp-classes-011", "severity": "ERROR", "category": "Instantiation", "rule": "Property assignment in object initializers must match the order in which properties are declared in the class." },
+    { "id": "tsc-csharp-classes-012", "severity": "ERROR", "category": "Instantiation", "rule": "Constructor parameter order must match the order in which fields are declared in the class." }
+  ]
+}

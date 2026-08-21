@@ -1,0 +1,29 @@
+{
+  "skill": "the-standard-team-projects",
+  "version": "1.0.0",
+  "solution_projects": {
+    "required": [
+      "{Product}.Core — API project",
+      "{Product}.Core.Infrastructure.Build — Console App (build)",
+      "{Product}.Core.Infrastructure.Provision — Console App (provision)",
+      "{Product}.Core.Tests.Acceptance — xUnit Test Project",
+      "{Product}.Core.Tests.Build — xUnit Test Project"
+    ]
+  },
+  "source_folder_structure": {
+    "Brokers": ["DateTimes", "Loggings", "Storages"],
+    "Models": {
+      "Foundations": "{Entity}/Exceptions/"
+    },
+    "Migrations": [],
+    "Services": ["Foundations/{Entity}", "Processings/{Entity}", "Orchestrations/{Entity}"],
+    "Controllers": []
+  },
+  "test_folder_structure": {
+    "Services": {
+      "Foundations": "{Entity}/",
+      "Processings": "{Entity}/",
+      "Orchestrations": "{Entity}/"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-csharp-variables",
+  "version": "0.1.0",
+  "description": "Enforces C# variable naming, var vs. explicit type, null naming, single-property instantiation, 120-char limits, and multi-declaration spacing.",
+  "the_standard_version": "v0.8",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# source file"],
+  "outputs": ["Standard-compliant variable declarations"],
+  "dependencies": [],
+  "applies_to": ["*.cs"]
+}

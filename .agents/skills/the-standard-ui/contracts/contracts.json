@@ -1,0 +1,12 @@
+{
+  "skill": "the-standard-ui",
+  "version": "1.0.0",
+  "naming": {
+    "base_class_pattern": "{ComponentName}Base",
+    "base_class_inherits": "ComponentBase",
+    "view_service_interface_pattern": "I{Entity}ViewService",
+    "view_service_concrete_pattern": "{Entity}ViewService"
+  },
+  "component_states": ["Loading", "Error", "Empty", "Populated"],
+  "forbidden_direct_dependencies": ["IStorageBroker", "IFoundationService", "IProcessingService"]
+}

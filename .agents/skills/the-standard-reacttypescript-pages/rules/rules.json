@@ -1,0 +1,21 @@
+{
+  "skill": "the-standard-reacttypescript-pages",
+  "version": "1.0.0",
+  "rules": [
+    {"id": "tsr-pages-001", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST use page hooks for data fetching and business logic."},
+    {"id": "tsr-pages-002", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST be in src/pages/ directory."},
+    {"id": "tsr-pages-003", "severity": "ERROR", "category": "Page Responsibility", "rule": "Page files MUST follow pattern {Domain}Page.tsx (e.g., DashboardPage.tsx)."},
+    {"id": "tsr-pages-004", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST compose reusable components, not duplicate rendering logic."},
+    {"id": "tsr-pages-005", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST handle route-level concerns only (layout, navigation, hook orchestration)."},
+    {"id": "tsr-pages-006", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST export as named exports, not default exports."},
+    {"id": "tsr-pages-007", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST NOT contain business logic."},
+    {"id": "tsr-pages-008", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST NOT fetch data directly (use hooks)."},
+    {"id": "tsr-pages-009", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST NOT call services directly."},
+    {"id": "tsr-pages-010", "severity": "ERROR", "category": "Page Responsibility", "rule": "Pages MUST handle loading/error states from hooks."},
+    {"id": "tsr-pages-011", "severity": "ERROR", "category": "Page Structure", "rule": "Pages MUST use exactly one page hook."},
+    {"id": "tsr-pages-012", "severity": "WARN", "category": "Page Structure", "rule": "Pages SHOULD be under 150 lines."},
+    {"id": "tsr-pages-013", "severity": "ERROR", "category": "Page Structure", "rule": "Pages MUST use early returns for loading/error states."},
+    {"id": "tsr-pages-014", "severity": "ERROR", "category": "Page Structure", "rule": "Pages MUST compose components, not inline all JSX."},
+    {"id": "tsr-pages-015", "severity": "ERROR", "category": "Page Structure", "rule": "Pages MUST NOT duplicate component logic."}
+  ]
+}

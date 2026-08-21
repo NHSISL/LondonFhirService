@@ -1,0 +1,26 @@
+{
+  "skill": "the-standard-reacttypescript-components",
+  "version": "1.0.0",
+  "rules": [
+    {"id": "tsr-comp-001", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST be pure rendering functions without side effects or business logic."},
+    {"id": "tsr-comp-002", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST receive all data via props, never fetch data directly."},
+    {"id": "tsr-comp-003", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST use TypeScript for props definition."},
+    {"id": "tsr-comp-004", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST be in src/components/{domain}/ directory."},
+    {"id": "tsr-comp-005", "severity": "ERROR", "category": "Component Responsibility", "rule": "Component files MUST follow pattern {Domain}{Purpose}.tsx (e.g., PatientCard.tsx)."},
+    {"id": "tsr-comp-006", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST export as named exports, not default exports."},
+    {"id": "tsr-comp-007", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST handle loading/error states via props, not internal state."},
+    {"id": "tsr-comp-008", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST NOT call services, brokers, or APIs directly."},
+    {"id": "tsr-comp-009", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST delegate all business logic to services via page hooks."},
+    {"id": "tsr-comp-010", "severity": "ERROR", "category": "Component Responsibility", "rule": "Components MUST NOT use useEffect for data fetching."},
+    {"id": "tsr-comp-011", "severity": "ERROR", "category": "Component Structure", "rule": "Components MUST use function component syntax, not class components."},
+    {"id": "tsr-comp-012", "severity": "ERROR", "category": "Component Structure", "rule": "Component props MUST be destructured in function signature."},
+    {"id": "tsr-comp-013", "severity": "WARN", "category": "Component Structure", "rule": "Components SHOULD be under 200 lines; split if larger."},
+    {"id": "tsr-comp-014", "severity": "ERROR", "category": "Component Structure", "rule": "Components MUST have single responsibility."},
+    {"id": "tsr-comp-015", "severity": "ERROR", "category": "Component Structure", "rule": "Event handlers MUST be passed as props, not defined inline when complex."},
+    {"id": "tsr-comp-016", "severity": "ERROR", "category": "Props and Types", "rule": "Props type MUST be defined in models/components/{domain}/."},
+    {"id": "tsr-comp-017", "severity": "ERROR", "category": "Props and Types", "rule": "Optional props MUST use ? syntax."},
+    {"id": "tsr-comp-018", "severity": "ERROR", "category": "Props and Types", "rule": "Callback props MUST be optional unless always required."},
+    {"id": "tsr-comp-019", "severity": "ERROR", "category": "Props and Types", "rule": "Props MUST NOT include foundation models directly."},
+    {"id": "tsr-comp-020", "severity": "WARN", "category": "Props and Types", "rule": "Components SHOULD use view models for data props."}
+  ]
+}
