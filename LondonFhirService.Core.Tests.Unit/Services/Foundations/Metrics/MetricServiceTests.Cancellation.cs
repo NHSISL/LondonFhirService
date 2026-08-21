@@ -228,7 +228,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                 await Assert.ThrowsAsync<MetricDependencyException>(addMetricTask.AsTask);
 
             // then
-            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricException>();
+            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricServiceException>();
 
             actualMetricDependencyException.InnerException.InnerException.Should()
                 .BeAssignableTo<OperationCanceledException>();
@@ -271,7 +271,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                 await Assert.ThrowsAsync<MetricDependencyException>(addMetricsTask.AsTask);
 
             // then
-            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricException>();
+            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricServiceException>();
 
             actualMetricDependencyException.InnerException.InnerException.Should()
                 .BeAssignableTo<OperationCanceledException>();
@@ -296,7 +296,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
         }
 
         [Fact]
-        public async Task ShouldNotThrowOnAddMetricIfTokenIsCancelledButRecordingIsDisabledAsync()
+        public async Task ShouldThrowDependencyExceptionOnAddMetricIfCancelledEvenWhenRecordingIsDisabledAsync()
         {
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
@@ -306,15 +306,145 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             this.metricServiceConfigurations.IsEnabled = false;
 
             // when
-            Metric actualMetric = await this.metricService.AddMetricAsync(randomMetric, cancelledToken);
+            ValueTask<Metric> addMetricTask = this.metricService.AddMetricAsync(randomMetric, cancelledToken);
+
+            MetricDependencyException actualMetricDependencyException =
+                await Assert.ThrowsAsync<MetricDependencyException>(addMetricTask.AsTask);
 
             // then
-            // The kill switch is checked first, so a disabled service stays a pure no-op rather
-            // than raising a cancellation the caller would have to handle.
-            actualMetric.Should().BeSameAs(randomMetric);
+            // The token is checked before the kill switch, so a caller that has already given up
+            // is told so rather than receiving a silent success from a disabled service.
+            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricServiceException>();
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.IsAny<Exception>()),
+                    Times.Once);
+
+            VerifyNoOtherCallsOnAllBrokers();
+        }
+
+        [Fact]
+        public async Task ShouldThrowDependencyExceptionOnRetrieveAllIfTokenIsAlreadyCancelledAndLogItAsync()
+        {
+            // given
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+            CancellationToken cancelledToken = cancellationTokenSource.Token;
+
+            // when
+            ValueTask<IQueryable<Metric>> retrieveAllMetricsTask =
+                this.metricService.RetrieveAllMetricsAsync(cancelledToken);
+
+            MetricDependencyException actualMetricDependencyException =
+                await Assert.ThrowsAsync<MetricDependencyException>(retrieveAllMetricsTask.AsTask);
+
+            // then
+            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricServiceException>();
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Exception>()),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
+                    Times.Never);
+
+            VerifyNoOtherCallsOnAllBrokers();
+        }
+
+        [Fact]
+        public async Task ShouldThrowDependencyExceptionOnRetrieveByIdIfTokenIsAlreadyCancelledAndLogItAsync()
+        {
+            // given
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+            CancellationToken cancelledToken = cancellationTokenSource.Token;
+            Guid someMetricId = Guid.NewGuid();
+
+            // when
+            ValueTask<Metric> retrieveMetricByIdTask =
+                this.metricService.RetrieveMetricByIdAsync(someMetricId, cancelledToken);
+
+            MetricDependencyException actualMetricDependencyException =
+                await Assert.ThrowsAsync<MetricDependencyException>(retrieveMetricByIdTask.AsTask);
+
+            // then
+            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricServiceException>();
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Exception>()),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+                    Times.Never);
+
+            VerifyNoOtherCallsOnAllBrokers();
+        }
+
+        [Fact]
+        public async Task ShouldThrowDependencyExceptionOnRemoveByIdIfTokenIsAlreadyCancelledAndLogItAsync()
+        {
+            // given
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+            CancellationToken cancelledToken = cancellationTokenSource.Token;
+            Guid someMetricId = Guid.NewGuid();
+
+            // when
+            ValueTask<Metric> removeMetricByIdTask =
+                this.metricService.RemoveMetricByIdAsync(someMetricId, cancelledToken);
+
+            MetricDependencyException actualMetricDependencyException =
+                await Assert.ThrowsAsync<MetricDependencyException>(removeMetricByIdTask.AsTask);
+
+            // then
+            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricServiceException>();
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Exception>()),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+                    Times.Never);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.DeleteMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
+                    Times.Never);
+
+            VerifyNoOtherCallsOnAllBrokers();
+        }
+
+        [Fact]
+        public async Task ShouldThrowDependencyExceptionOnPurgeIfTokenIsAlreadyCancelledAndLogItAsync()
+        {
+            // given
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+            CancellationToken cancelledToken = cancellationTokenSource.Token;
+
+            // when
+            ValueTask<int> purgeMetricsTask =
+                this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(cancelledToken);
+
+            MetricDependencyException actualMetricDependencyException =
+                await Assert.ThrowsAsync<MetricDependencyException>(purgeMetricsTask.AsTask);
+
+            // then
+            actualMetricDependencyException.InnerException.Should().BeOfType<CancelledMetricServiceException>();
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Exception>()),
+                    Times.Once);
+
+            // Nothing is read and nothing is deleted.
+            this.storageBrokerMock.Verify(broker =>
+                broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
+                    Times.Never);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.BulkDeleteMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             VerifyNoOtherCallsOnAllBrokers();

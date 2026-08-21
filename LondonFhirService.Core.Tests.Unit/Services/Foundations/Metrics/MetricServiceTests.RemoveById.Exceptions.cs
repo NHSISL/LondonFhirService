@@ -67,7 +67,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             Guid someMetricId = Guid.NewGuid();
 
             var timedOutMetricException =
-                new TimedOutMetricException(
+                new TimedOutMetricServiceException(
                     message: "Metric request timed out, please try again.",
                     innerException: timeoutException,
                     data: timeoutException.Data);
@@ -112,7 +112,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             Guid someMetricId = Guid.NewGuid();
 
             var cancelledMetricException =
-                new CancelledMetricException(
+                new CancelledMetricServiceException(
                     message: "Metric request was cancelled, please try again.",
                     innerException: cancellationException,
                     data: cancellationException.Data);

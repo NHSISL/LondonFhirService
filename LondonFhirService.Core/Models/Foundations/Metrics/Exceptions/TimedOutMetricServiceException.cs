@@ -8,9 +8,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Metrics.Exceptions
 {
-    public class TimedOutMetricException : Xeption
+    public class TimedOutMetricServiceException : Xeption
     {
-        public TimedOutMetricException(string message, Exception innerException, IDictionary data)
+        public TimedOutMetricServiceException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)
         { }
     }

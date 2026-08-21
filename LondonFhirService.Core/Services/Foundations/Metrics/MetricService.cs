@@ -40,12 +40,13 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
         public ValueTask<Metric> AddMetricAsync(Metric metric, CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (this.metricServiceConfigurations.IsEnabled is false)
             {
                 return metric;
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
             ValidateMetricIsNotNull(metric);
             metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
             ValidateMetricOnAdd(metric);
@@ -58,12 +59,13 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
         public ValueTask AddMetricsAsync(List<Metric> metrics, CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (this.metricServiceConfigurations.IsEnabled is false)
             {
                 return;
             }
 
-            cancellationToken.ThrowIfCancellationRequested();
             ValidateMetricsIsNotNull(metrics);
 
             if (metrics.Count == 0)
@@ -85,13 +87,19 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
         });
 
         public ValueTask<IQueryable<Metric>> RetrieveAllMetricsAsync(CancellationToken cancellationToken = default) =>
-            TryCatch(async () => await this.storageBroker.SelectAllMetricsAsync(cancellationToken));
+        TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return await this.storageBroker.SelectAllMetricsAsync(cancellationToken);
+        });
 
         public ValueTask<Metric> RetrieveMetricByIdAsync(
             Guid metricId,
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateMetricId(metricId);
             Metric maybeMetric = await this.storageBroker.SelectMetricByIdAsync(metricId, cancellationToken);
             ValidateStorageMetric(maybeMetric, metricId);
@@ -104,6 +112,7 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateMetricId(metricId);
             Metric maybeMetric = await this.storageBroker.SelectMetricByIdAsync(metricId, cancellationToken);
             ValidateStorageMetric(maybeMetric, metricId);
@@ -115,6 +124,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (this.metricServiceConfigurations.IsPurgingAllowed is false)
             {
                 return 0;

@@ -51,33 +51,33 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             catch (OperationCanceledException operationCanceledException)
                 when (operationCanceledException.InnerException is TimeoutException)
             {
-                var timedOutMetricException =
-                    new TimedOutMetricException(
+                var timedOutMetricServiceException =
+                    new TimedOutMetricServiceException(
                         message: "Metric request timed out, please try again.",
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricServiceException);
             }
             catch (TimeoutException timeoutException)
             {
-                var timedOutMetricException =
-                    new TimedOutMetricException(
+                var timedOutMetricServiceException =
+                    new TimedOutMetricServiceException(
                         message: "Metric request timed out, please try again.",
                         innerException: timeoutException,
                         data: timeoutException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricServiceException);
             }
             catch (OperationCanceledException operationCanceledException)
             {
-                var cancelledMetricException =
-                    new CancelledMetricException(
+                var cancelledMetricServiceException =
+                    new CancelledMetricServiceException(
                         message: "Metric request was cancelled, please try again.",
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(cancelledMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(cancelledMetricServiceException);
             }
             catch (DuplicateKeyException duplicateKeyException)
             {
@@ -152,33 +152,33 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             catch (OperationCanceledException operationCanceledException)
                 when (operationCanceledException.InnerException is TimeoutException)
             {
-                var timedOutMetricException =
-                    new TimedOutMetricException(
+                var timedOutMetricServiceException =
+                    new TimedOutMetricServiceException(
                         message: "Metric request timed out, please try again.",
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricServiceException);
             }
             catch (TimeoutException timeoutException)
             {
-                var timedOutMetricException =
-                    new TimedOutMetricException(
+                var timedOutMetricServiceException =
+                    new TimedOutMetricServiceException(
                         message: "Metric request timed out, please try again.",
                         innerException: timeoutException,
                         data: timeoutException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricServiceException);
             }
             catch (OperationCanceledException operationCanceledException)
             {
-                var cancelledMetricException =
-                    new CancelledMetricException(
+                var cancelledMetricServiceException =
+                    new CancelledMetricServiceException(
                         message: "Metric request was cancelled, please try again.",
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(cancelledMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(cancelledMetricServiceException);
             }
             catch (DuplicateKeyException duplicateKeyException)
             {
@@ -236,33 +236,33 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             catch (OperationCanceledException operationCanceledException)
                 when (operationCanceledException.InnerException is TimeoutException)
             {
-                var timedOutMetricException =
-                    new TimedOutMetricException(
+                var timedOutMetricServiceException =
+                    new TimedOutMetricServiceException(
                         message: "Metric request timed out, please try again.",
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricServiceException);
             }
             catch (TimeoutException timeoutException)
             {
-                var timedOutMetricException =
-                    new TimedOutMetricException(
+                var timedOutMetricServiceException =
+                    new TimedOutMetricServiceException(
                         message: "Metric request timed out, please try again.",
                         innerException: timeoutException,
                         data: timeoutException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricServiceException);
             }
             catch (OperationCanceledException operationCanceledException)
             {
-                var cancelledMetricException =
-                    new CancelledMetricException(
+                var cancelledMetricServiceException =
+                    new CancelledMetricServiceException(
                         message: "Metric request was cancelled, please try again.",
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(cancelledMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(cancelledMetricServiceException);
             }
             catch (Exception exception)
             {
@@ -297,33 +297,33 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             catch (OperationCanceledException operationCanceledException)
                 when (operationCanceledException.InnerException is TimeoutException)
             {
-                var timedOutMetricException =
-                    new TimedOutMetricException(
+                var timedOutMetricServiceException =
+                    new TimedOutMetricServiceException(
                         message: "Metric request timed out, please try again.",
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricServiceException);
             }
             catch (TimeoutException timeoutException)
             {
-                var timedOutMetricException =
-                    new TimedOutMetricException(
+                var timedOutMetricServiceException =
+                    new TimedOutMetricServiceException(
                         message: "Metric request timed out, please try again.",
                         innerException: timeoutException,
                         data: timeoutException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(timedOutMetricServiceException);
             }
             catch (OperationCanceledException operationCanceledException)
             {
-                var cancelledMetricException =
-                    new CancelledMetricException(
+                var cancelledMetricServiceException =
+                    new CancelledMetricServiceException(
                         message: "Metric request was cancelled, please try again.",
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw await CreateAndLogDependencyExceptionAsync(cancelledMetricException);
+                throw await CreateAndLogDependencyExceptionAsync(cancelledMetricServiceException);
             }
             catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
             {

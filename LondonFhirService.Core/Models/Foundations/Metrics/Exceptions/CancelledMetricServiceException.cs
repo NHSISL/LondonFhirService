@@ -8,9 +8,9 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Metrics.Exceptions
 {
-    public class CancelledMetricException : Xeption
+    public class CancelledMetricServiceException : Xeption
     {
-        public CancelledMetricException(string message, Exception innerException, IDictionary data)
+        public CancelledMetricServiceException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)
         { }
     }

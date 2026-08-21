@@ -82,7 +82,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             Metric randomMetric = CreateRandomMetric(randomDateTimeOffset);
 
             var timedOutMetricException =
-                new TimedOutMetricException(
+                new TimedOutMetricServiceException(
                     message: "Metric request timed out, please try again.",
                     innerException: timeoutException,
                     data: timeoutException.Data);
@@ -139,7 +139,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             Metric randomMetric = CreateRandomMetric(randomDateTimeOffset);
 
             var cancelledMetricException =
-                new CancelledMetricException(
+                new CancelledMetricServiceException(
                     message: "Metric request was cancelled, please try again.",
                     innerException: cancellationException,
                     data: cancellationException.Data);
