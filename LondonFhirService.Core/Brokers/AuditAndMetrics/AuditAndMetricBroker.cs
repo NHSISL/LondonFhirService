@@ -43,7 +43,13 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             string correlationId,
             CancellationToken cancellationToken = default) =>
             await this.auditAndMetricsClient.AuditClient.LogAuditAsync(
-                auditType, title, message, fileName, correlationId, "Information", cancellationToken);
+                auditType,
+                title,
+                message,
+                fileName,
+                correlationId,
+                logLevel: "Information",
+                cancellationToken);
 
         public async ValueTask<Audit> RecordAuditAsync(
             string auditType,
