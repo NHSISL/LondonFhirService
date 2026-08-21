@@ -7,7 +7,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Audits;
+using LondonFhirService.Core.Abstractions.Models.Audits;
 using Moq;
 using Xeptions;
 
@@ -23,7 +24,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
         {
             // given
             this.auditServiceMock.Setup(service =>
-                service.AddAuditAsync(
+                service.LogAuditAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
@@ -54,11 +55,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
             Xeption expectedClientException)
         {
             // given
-            List<Audit> randomAudits = CreateRandomAudits();
+            List<IAudit> randomAudits = CreateRandomAudits();
 
             this.auditServiceMock.Setup(service =>
                 service.BulkAddAuditsAsync(
-                    It.IsAny<List<Audit>>(),
+                    It.IsAny<List<IAudit>>(),
                     It.IsAny<int>(),
                     It.IsAny<CancellationToken>()))
                         .ThrowsAsync(serviceException);
@@ -67,7 +68,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
             Func<Task> bulkLogAudits = async () =>
                 await this.auditClient.BulkLogAuditsAsync(
                     randomAudits,
-                    TestContext.Current.CancellationToken);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             await AssertMappedAsync(bulkLogAudits, expectedClientException);

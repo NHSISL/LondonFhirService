@@ -6,180 +6,105 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using ISL.Security.Client.Models.Foundations.Users;
-using KellermanSoftware.CompareNetObjects;
-using LondonFhirService.Core.Brokers.DateTimes;
-using LondonFhirService.Core.Brokers.Identifiers;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Brokers.Securities;
-using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
+using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Audits;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
+using ClientExceptions = LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 {
+    /// <summary>
+    /// This service no longer validates or stamps anything - both moved into the audit and
+    /// metrics library, behind the broker. What is left to test is that it forwards faithfully
+    /// and that it localises the client's exceptions into this application's own, so callers keep
+    /// depending on Core's contract.
+    /// </summary>
     public partial class AuditServiceTests
     {
-        private readonly Mock<IStorageBroker> storageBrokerMock;
-        private readonly Mock<IStorageBrokerFactory> storageBrokerFactoryMock;
-        private readonly Mock<IConfiguration> configurationMock;
-        private readonly Mock<IIdentifierBroker> identifierBrokerMock;
-        private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
-        private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
+        private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly IAuditService auditService;
-        private readonly ICompareLogic compareLogic;
 
         public AuditServiceTests()
         {
-            this.configurationMock = new Mock<IConfiguration>();
-
-            this.storageBrokerMock = new Mock<IStorageBroker>();
-            this.storageBrokerFactoryMock = new Mock<IStorageBrokerFactory>();
-
-            this.storageBrokerFactoryMock
-                .Setup(factory => factory.CreateStorageBrokerAsync())
-                    .ReturnsAsync(this.storageBrokerMock.Object);
-
-            this.storageBrokerMock
-                .Setup(broker => broker.DisposeAsync())
-                    .Returns(ValueTask.CompletedTask);
-
-            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
-            this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
-            this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
+            this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
-            this.compareLogic = new CompareLogic();
 
             this.auditService = new AuditService(
-                storageBrokerFactory: this.storageBrokerFactoryMock.Object,
-                storageBroker: this.storageBrokerMock.Object,
-                identifierBroker: this.identifierBrokerMock.Object,
-                dateTimeBroker: this.dateTimeBrokerMock.Object,
-                securityAuditBroker: this.securityAuditBrokerMock.Object,
+                auditAndMetricBroker: this.auditAndMetricBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object);
+        }
+
+        /// <summary>
+        /// Each case is a client exception paired with the service exception it must surface as.
+        /// </summary>
+        public static TheoryData<Xeption, Xeption> ClientExceptionMappings()
+        {
+            var innerException = new Xeption(message: "Inner.");
+
+            return new TheoryData<Xeption, Xeption>
+            {
+                {
+                    new ClientExceptions.AuditClientValidationException("Client validation.", innerException),
+                    new AuditServiceValidationException(
+                        "Audit validation errors occurred, please try again.",
+                        innerException)
+                },
+                {
+                    new ClientExceptions.AuditClientDependencyException("Client dependency.", innerException),
+                    new AuditServiceDependencyException(
+                        "Audit dependency error occurred, please contact support.",
+                        innerException)
+                },
+                {
+                    new ClientExceptions.AuditClientServiceException("Client service.", innerException),
+                    new AuditServiceException(
+                        "Audit service error occurred, please contact support.",
+                        new FailedAuditServiceException(
+                            "Failed audit service error occurred, please contact support.",
+                            new ClientExceptions.AuditClientServiceException("Client service.", innerException)))
+                }
+            };
+        }
+
+        private void VerifyNoOtherCallsOnAllBrokers()
+        {
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
 
-        private Expression<Func<Audit, bool>> SameAuditAs(Audit expectedAudit) =>
-            actualAudit => this.compareLogic.Compare(expectedAudit, actualAudit).AreEqual;
+        private static int GetRandomNumber() =>
+            new IntRange(min: 2, max: 10).GetValue();
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();
 
-        private static string GetRandomStringWithLengthOf(int length)
-        {
-            string result = new MnemonicString(wordCount: 1, wordMinLength: length, wordMaxLength: length).GetValue();
-
-            return result.Length > length ? result.Substring(0, length) : result;
-        }
-
-        public static TheoryData<int> MinutesBeforeOrAfter()
-        {
-            int randomNumber = GetRandomNumber();
-            int randomNegativeNumber = GetRandomNegativeNumber();
-
-            return new TheoryData<int>
-            {
-                randomNumber,
-                randomNegativeNumber
-            };
-        }
-
-        private static SqlException GetSqlException() =>
-            (SqlException)RuntimeHelpers.GetUninitializedObject(typeof(SqlException));
-
-        private static int GetRandomNumber() =>
-            new IntRange(min: 2, max: 10).GetValue();
-
-        private static int GetRandomNegativeNumber() =>
-            -1 * new IntRange(min: 2, max: 10).GetValue();
-
         private static DateTimeOffset GetRandomDateTimeOffset() =>
-            new DateTimeRange(earliestDate: new DateTime()).GetValue();
-
-        private static Audit CreateRandomModifyAudit(
-            DateTimeOffset dateTimeOffset,
-            string userId)
-        {
-            int randomDaysInPast = GetRandomNegativeNumber();
-            Audit randomAudit = CreateRandomAudit(dateTimeOffset, userId);
-
-            randomAudit.CreatedDate =
-                randomAudit.CreatedDate.AddDays(randomDaysInPast);
-
-            return randomAudit;
-        }
-
-        private static List<Audit> CreateRandomAudits()
-        {
-            return CreateAuditFiller(dateTimeOffset: GetRandomDateTimeOffset())
-                .Create(count: GetRandomNumber())
-                    .ToList();
-        }
+            new DateTimeRange(earliestDate: DateTime.UtcNow.AddYears(-1)).GetValue();
 
         private static Audit CreateRandomAudit() =>
-            CreateAuditFiller(dateTimeOffset: GetRandomDateTimeOffset()).Create();
+            CreateAuditFiller().Create();
 
-        private static Audit CreateRandomAudit(DateTimeOffset dateTimeOffset) =>
-            CreateAuditFiller(dateTimeOffset).Create();
+        private static List<Audit> CreateRandomAudits() =>
+            CreateAuditFiller().Create(count: GetRandomNumber()).ToList();
 
-        private static Filler<Audit> CreateAuditFiller(DateTimeOffset dateTimeOffset)
-        {
-            string user = Guid.NewGuid().ToString();
-            var filler = new Filler<Audit>();
+        private static IQueryable<Audit> CreateRandomAuditsQueryable() =>
+            CreateAuditFiller().Create(count: GetRandomNumber()).AsQueryable();
 
-            filler.Setup()
-                .OnType<DateTimeOffset>().Use(dateTimeOffset)
-                .OnProperty(audit => audit.CreatedBy).Use(user)
-                .OnProperty(audit => audit.UpdatedBy).Use(user);
-
-            return filler;
-        }
-
-        private static Audit CreateRandomAudit(
-            DateTimeOffset dateTimeOffset,
-            string userId) =>
-            CreateAuditFiller(dateTimeOffset, userId).Create();
-
-        private static Filler<Audit> CreateAuditFiller(
-            DateTimeOffset dateTimeOffset,
-            string userId)
+        private static Filler<Audit> CreateAuditFiller()
         {
             var filler = new Filler<Audit>();
-
-            filler.Setup()
-                .OnType<DateTimeOffset>().Use(dateTimeOffset)
-                .OnProperty(audit => audit.CreatedBy).Use(userId)
-                .OnProperty(audit => audit.UpdatedBy).Use(userId);
+            filler.Setup().OnType<DateTimeOffset>().Use(GetRandomDateTimeOffset());
 
             return filler;
-        }
-
-        private User CreateRandomUser(string userId = "")
-        {
-            return new User(
-                userId: string.IsNullOrWhiteSpace(userId) ? GetRandomStringWithLengthOf(255) : userId,
-                givenName: GetRandomString(),
-                surname: GetRandomString(),
-                displayName: GetRandomString(),
-                email: GetRandomString(),
-                jobTitle: GetRandomString(),
-                roles: new List<string> { GetRandomString() },
-
-                claims: new List<System.Security.Claims.Claim>
-                {
-                    new System.Security.Claims.Claim(type: GetRandomString(), value: GetRandomString())
-                });
         }
     }
 }

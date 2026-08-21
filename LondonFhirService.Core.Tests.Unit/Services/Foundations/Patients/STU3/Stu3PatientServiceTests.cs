@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using KellermanSoftware.CompareNetObjects;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -40,7 +40,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         private readonly Mock<IFhirProvider> unsupportedErrorFhirProviderMock;
         private readonly Stu3FhirBroker fhirBroker;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
         private readonly Mock<IStorageBroker> storageBrokerMock;
@@ -67,7 +67,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
-            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
             this.compareLogic = new CompareLogic();
@@ -97,7 +97,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.patientService = new Stu3PatientService(
                 fhirBroker: this.fhirBroker,
-                auditBroker: this.auditBrokerMock.Object,
+                auditAndMetricBroker: this.auditAndMetricBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
                 securityAuditBroker: this.securityAuditBrokerMock.Object,
                 storageBrokerFactory: this.storageBrokerFactoryMock.Object,

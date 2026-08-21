@@ -8,7 +8,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Metrics;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using Moq;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
@@ -19,16 +20,16 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldAddMetricAsync()
         {
             // given
-            Metric randomMetric = CreateRandomMetric();
-            Metric serviceMetric = randomMetric;
-            Metric expectedMetric = serviceMetric;
+            IMetric randomMetric = CreateRandomMetric();
+            IMetric serviceMetric = randomMetric;
+            IMetric expectedMetric = serviceMetric;
 
             this.metricServiceMock.Setup(service =>
                 service.AddMetricAsync(randomMetric, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(serviceMetric);
 
             // when
-            Metric actualMetric =
+            IMetric actualMetric =
                 await this.metricClient.AddMetricAsync(randomMetric, TestContext.Current.CancellationToken);
 
             // then
@@ -45,7 +46,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldAddMetricsAsync()
         {
             // given
-            List<Metric> randomMetrics = CreateRandomMetrics();
+            List<IMetric> randomMetrics = CreateRandomMetrics();
 
             // when
             await this.metricClient.AddMetricsAsync(randomMetrics, TestContext.Current.CancellationToken);
@@ -62,15 +63,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldRetrieveAllMetricsAsync()
         {
             // given
-            IQueryable<Metric> randomMetrics = CreateRandomMetricsQueryable();
-            IQueryable<Metric> expectedMetrics = randomMetrics;
+            IQueryable<IMetric> randomMetrics = CreateRandomMetricsQueryable();
+            IQueryable<IMetric> expectedMetrics = randomMetrics;
 
             this.metricServiceMock.Setup(service =>
                 service.RetrieveAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(randomMetrics);
 
             // when
-            IQueryable<Metric> actualMetrics =
+            IQueryable<IMetric> actualMetrics =
                 await this.metricClient.RetrieveAllMetricsAsync(TestContext.Current.CancellationToken);
 
             // then
@@ -87,7 +88,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldRetrieveMetricByIdAsync()
         {
             // given
-            Metric randomMetric = CreateRandomMetric();
+            IMetric randomMetric = CreateRandomMetric();
             Guid inputMetricId = randomMetric.Id;
 
             this.metricServiceMock.Setup(service =>
@@ -95,7 +96,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
                     .ReturnsAsync(randomMetric);
 
             // when
-            Metric actualMetric =
+            IMetric actualMetric =
                 await this.metricClient.RetrieveMetricByIdAsync(inputMetricId, TestContext.Current.CancellationToken);
 
             // then
@@ -112,7 +113,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldRemoveMetricByIdAsync()
         {
             // given
-            Metric randomMetric = CreateRandomMetric();
+            IMetric randomMetric = CreateRandomMetric();
             Guid inputMetricId = randomMetric.Id;
 
             this.metricServiceMock.Setup(service =>
@@ -120,7 +121,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
                     .ReturnsAsync(randomMetric);
 
             // when
-            Metric actualMetric =
+            IMetric actualMetric =
                 await this.metricClient.RemoveMetricByIdAsync(inputMetricId, TestContext.Current.CancellationToken);
 
             // then
@@ -164,10 +165,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = cancellationTokenSource.Token;
-            Metric randomMetric = CreateRandomMetric();
+            IMetric randomMetric = CreateRandomMetric();
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                service.AddMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(randomMetric);
 
             // when

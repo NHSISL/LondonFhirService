@@ -9,7 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -27,7 +27,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
     public partial class Stu3PatientService : IStu3PatientService
     {
         private readonly IStu3FhirBroker fhirBroker;
-        private readonly IAuditBroker auditBroker;
+        private readonly IAuditAndMetricBroker auditAndMetricBroker;
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly ISecurityAuditBroker securityAuditBroker;
@@ -36,7 +36,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
         public Stu3PatientService(
             IStu3FhirBroker fhirBroker,
-            IAuditBroker auditBroker,
+            IAuditAndMetricBroker auditAndMetricBroker,
             IIdentifierBroker identifierBroker,
             ISecurityAuditBroker securityAuditBroker,
             IStorageBrokerFactory storageBrokerFactory,
@@ -44,7 +44,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             PatientServiceConfig patientServiceConfig)
         {
             this.fhirBroker = fhirBroker;
-            this.auditBroker = auditBroker;
+            this.auditAndMetricBroker = auditAndMetricBroker;
             this.identifierBroker = identifierBroker;
             this.securityAuditBroker = securityAuditBroker;
             this.storageBrokerFactory = storageBrokerFactory;
@@ -72,7 +72,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     $"demographicsOnly = \"{demographicsOnly}\", " +
                     $"includeInactivePatients = \"{includeInactivePatients}\" }}";
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Foundation Service Request Submitted",
                     message,
@@ -82,7 +82,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 List<(string providerFriendlyName, bool isPrimaryProvider, IFhirProvider provider)> fhirProviders =
                     await GetFhirProviders(activeProviders);
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Parallel Provider Execution Started",
                     message,
@@ -105,7 +105,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 stopwatchOutcomes.Stop();
                 long elapsedTimeOutcomes = stopwatchOutcomes.ElapsedMilliseconds;
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Parallel Provider Execution Completed in {elapsedTimeOutcomes}ms",
                     message,
@@ -139,7 +139,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Foundation Service Request Completed in {elapsedTime}ms",
                     message,
@@ -220,7 +220,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 $"demographicsOnly = \"{demographicsOnly}\", " +
                 $"includeInactivePatients = \"{includeInactivePatients}\" }}";
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"{provider.DisplayName} Provider Execution Started",
                 message,
@@ -250,7 +250,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     $"{auditType}-DATA",
                     title: $"{provider.DisplayName} - DATA ({providerFriendlyName})",
                     json,
@@ -277,7 +277,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                 await storageBroker.InsertFhirRecordAsync(fhirRecord);
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"{provider.DisplayName} Provider Execution Completed in {elapsedTime}ms",
                     message,
@@ -301,7 +301,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             }
             catch (Exception exception)
             {
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Parallel Provider Execution - {provider.DisplayName} failed",
 

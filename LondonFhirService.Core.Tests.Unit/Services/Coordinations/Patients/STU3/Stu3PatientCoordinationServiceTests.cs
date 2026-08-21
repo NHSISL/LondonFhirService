@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 using System;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Providers;
@@ -27,7 +27,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
         private readonly Mock<IStu3PatientOrchestrationService> patientOrchestrationServiceMock;
         private readonly Mock<IStu3FhirReconciliationService> fhirReconciliationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly IStu3PatientCoordinationService patientCoordinationService;
 
@@ -36,14 +36,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.patientOrchestrationServiceMock = new Mock<IStu3PatientOrchestrationService>();
             this.fhirReconciliationServiceMock = new Mock<IStu3FhirReconciliationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
-            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
 
             this.patientCoordinationService = new Stu3PatientCoordinationService(
                 patientOrchestrationService: patientOrchestrationServiceMock.Object,
                 fhirReconciliationService: fhirReconciliationServiceMock.Object,
                 loggingBroker: loggingBrokerMock.Object,
-                auditBroker: auditBrokerMock.Object,
+                auditAndMetricBroker: auditAndMetricBrokerMock.Object,
                 identifierBroker: identifierBrokerMock.Object);
         }
 

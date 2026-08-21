@@ -5,11 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LondonFhirService.Clients.AuditAndMetrics.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions;
-using LondonFhirService.Core.Models.Foundations.Metrics;
-using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
-using LondonFhirService.Core.Services.Foundations.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Metrics;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
@@ -70,18 +70,22 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: DateTime.UtcNow.AddYears(-1)).GetValue();
 
-        private static Metric CreateRandomMetric() =>
+        private static IMetric CreateRandomMetric() =>
             CreateMetricFiller().Create();
 
-        private static List<Metric> CreateRandomMetrics() =>
-            CreateMetricFiller().Create(count: GetRandomNumber()).ToList();
+        private static List<IMetric> CreateRandomMetrics() =>
+            CreateMetricFiller().Create(count: GetRandomNumber())
+                .Cast<IMetric>()
+                    .ToList();
 
-        private static IQueryable<Metric> CreateRandomMetricsQueryable() =>
-            CreateMetricFiller().Create(count: GetRandomNumber()).AsQueryable();
+        private static IQueryable<IMetric> CreateRandomMetricsQueryable() =>
+            CreateMetricFiller().Create(count: GetRandomNumber())
+                .Cast<IMetric>()
+                    .AsQueryable();
 
-        private static Filler<Metric> CreateMetricFiller()
+        private static Filler<TestMetric> CreateMetricFiller()
         {
-            var filler = new Filler<Metric>();
+            var filler = new Filler<TestMetric>();
             filler.Setup().OnType<DateTimeOffset>().Use(GetRandomDateTimeOffset());
 
             return filler;

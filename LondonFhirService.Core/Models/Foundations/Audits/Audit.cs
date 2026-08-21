@@ -3,11 +3,12 @@
 // ---------------------------------------------------------
 
 using System;
-using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Abstractions.Models;
+using LondonFhirService.Core.Abstractions.Models.Audits;
 
 namespace LondonFhirService.Core.Models.Foundations.Audits
 {
-    public class Audit : IKey, IAudit
+    public class Audit : IKey, IAuditable, IAudit
     {
         public Guid Id { get; set; }
         public string CorrelationId { get; set; }

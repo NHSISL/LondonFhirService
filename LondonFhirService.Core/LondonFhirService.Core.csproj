@@ -21,6 +21,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\LondonFhirService.Core.Abstractions\LondonFhirService.Core.Abstractions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Azure.Identity" Version="1.21.0" />
 		<PackageReference Include="EFxceptions" Version="10.0.0" />
 		<PackageReference Include="Hl7.Fhir.STU3" Version="6.4.0" />

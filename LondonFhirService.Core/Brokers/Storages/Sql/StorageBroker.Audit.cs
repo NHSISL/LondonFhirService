@@ -9,40 +9,49 @@ using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using Microsoft.EntityFrameworkCore;
+using IAudit = LondonFhirService.Core.Abstractions.Models.Audits.IAudit;
 
 namespace LondonFhirService.Core.Brokers.Storages.Sql
 {
+    /// <summary>
+    /// Declared over IAudit because the contract is inherited from the storage port. The cast to
+    /// the concrete entity happens here, where this broker is the one component that knows what
+    /// the ORM is actually mapping.
+    /// </summary>
     public partial class StorageBroker
     {
         public DbSet<Audit> Audits { get; set; }
 
+        public IAudit CreateAudit() =>
+            new Audit();
+
         public virtual async ValueTask BulkInsertAuditsAsync(
-            List<Audit> audits,
+            List<IAudit> audits,
             CancellationToken cancellationToken = default) =>
-            await BulkInsertAsync(audits, cancellationToken);
+            await BulkInsertAsync(audits.Cast<Audit>().ToList(), cancellationToken);
 
-        public virtual async ValueTask<Audit> InsertAuditAsync(
-            Audit audit,
+        public virtual async ValueTask<IAudit> InsertAuditAsync(
+            IAudit audit,
             CancellationToken cancellationToken = default) =>
-            await InsertAsync(audit, cancellationToken);
+            await InsertAsync((Audit)audit, cancellationToken);
 
-        public virtual async ValueTask<IQueryable<Audit>> SelectAllAuditsAsync(
+        public virtual async ValueTask<IQueryable<IAudit>> SelectAllAuditsAsync(
             CancellationToken cancellationToken = default) =>
-            await SelectAllAsync<Audit>(cancellationToken);
+            (await SelectAllAsync<Audit>(cancellationToken)).Cast<IAudit>();
 
-        public virtual async ValueTask<Audit> SelectAuditByIdAsync(
+        public virtual async ValueTask<IAudit> SelectAuditByIdAsync(
             Guid auditId,
             CancellationToken cancellationToken = default) =>
             await SelectAsync<Audit>(cancellationToken, auditId);
 
-        public virtual async ValueTask<Audit> UpdateAuditAsync(
-            Audit audit,
+        public virtual async ValueTask<IAudit> UpdateAuditAsync(
+            IAudit audit,
             CancellationToken cancellationToken = default) =>
-            await UpdateAsync(audit, cancellationToken);
+            await UpdateAsync((Audit)audit, cancellationToken);
 
-        public virtual async ValueTask<Audit> DeleteAuditAsync(
-            Audit audit,
+        public virtual async ValueTask<IAudit> DeleteAuditAsync(
+            IAudit audit,
             CancellationToken cancellationToken = default) =>
-            await DeleteAsync(audit, cancellationToken);
+            await DeleteAsync((Audit)audit, cancellationToken);
     }
 }

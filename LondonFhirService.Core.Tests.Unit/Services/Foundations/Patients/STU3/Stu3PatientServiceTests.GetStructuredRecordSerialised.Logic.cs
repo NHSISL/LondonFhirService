@@ -63,7 +63,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
-                this.auditBrokerMock.Object,
+                this.auditAndMetricBrokerMock.Object,
                 this.identifierBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
@@ -141,7 +141,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputActivePatientsOnly),
                         Times.Once());
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Foundation Service Request Submitted",
@@ -150,7 +150,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Parallel Provider Execution Started",
@@ -159,7 +159,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
@@ -168,7 +168,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
@@ -178,7 +178,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                         Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();

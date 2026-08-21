@@ -7,7 +7,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Audits;
+using LondonFhirService.Core.Abstractions.Models.Audits;
 using Moq;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
@@ -50,11 +51,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
             using var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Cancel();
             CancellationToken cancelledToken = cancellationTokenSource.Token;
-            List<Audit> randomAudits = CreateRandomAudits();
+            List<IAudit> randomAudits = CreateRandomAudits();
 
             // when
             Func<Task> bulkLogAudits = async () =>
-                await this.auditClient.BulkLogAuditsAsync(randomAudits, cancelledToken);
+                await this.auditClient.BulkLogAuditsAsync(randomAudits, cancellationToken: cancelledToken);
 
             // then
             await bulkLogAudits.Should().ThrowAsync<OperationCanceledException>();
@@ -69,7 +70,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
             var operationCanceledException = new OperationCanceledException();
 
             this.auditServiceMock.Setup(service =>
-                service.AddAuditAsync(
+                service.LogAuditAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
@@ -94,7 +95,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
                 .Which.Should().BeSameAs(operationCanceledException);
 
             this.auditServiceMock.Verify(service =>
-                service.AddAuditAsync(
+                service.LogAuditAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
@@ -113,10 +114,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = cancellationTokenSource.Token;
-            List<Audit> randomAudits = CreateRandomAudits();
+            List<IAudit> randomAudits = CreateRandomAudits();
 
             // when
-            await this.auditClient.BulkLogAuditsAsync(randomAudits, cancellationToken);
+            await this.auditClient.BulkLogAuditsAsync(randomAudits, cancellationToken: cancellationToken);
 
             // then
             // The exact token, so the client cannot quietly call the service with

@@ -8,7 +8,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Metrics;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using Moq;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
@@ -54,11 +55,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldNotWrapAnOperationCanceledExceptionRaisedByTheServiceAsync()
         {
             // given
-            Metric randomMetric = CreateRandomMetric();
+            IMetric randomMetric = CreateRandomMetric();
             var operationCanceledException = new OperationCanceledException();
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                service.AddMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(operationCanceledException);
 
             // when
@@ -81,11 +82,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
         public async Task ShouldNotWrapATaskCanceledExceptionRaisedByTheServiceAsync()
         {
             // given
-            Metric randomMetric = CreateRandomMetric();
+            IMetric randomMetric = CreateRandomMetric();
             var taskCanceledException = new TaskCanceledException();
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                service.AddMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(taskCanceledException);
 
             // when

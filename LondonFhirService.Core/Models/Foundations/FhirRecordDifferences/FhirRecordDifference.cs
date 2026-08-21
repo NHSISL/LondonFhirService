@@ -3,11 +3,11 @@
 // ---------------------------------------------------------
 
 using System;
-using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Abstractions.Models;
 
 namespace LondonFhirService.Core.Models.Foundations.FhirRecordDifferences
 {
-    public class FhirRecordDifference : IKey, IAudit
+    public class FhirRecordDifference : IKey, IAuditable
     {
         public Guid Id { get; set; }
         public Guid PrimaryId { get; set; }

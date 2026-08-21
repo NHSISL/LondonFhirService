@@ -15,18 +15,18 @@ using ISL.Providers.Captcha.GoogleReCaptcha.Models.Brokers.GoogleReCaptcha;
 using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Api.Workers;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Clients;
+using LondonFhirService.Core.Abstractions.Brokers;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Services.Foundations.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Brokers.Metrics;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Clients.AuditAndMetrics.Audits;
-using LondonFhirService.Clients.AuditAndMetrics.Metrics;
-using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
@@ -42,7 +42,6 @@ using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
-using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
@@ -88,6 +87,8 @@ using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
 using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
+using LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
 
 public partial class Program
 {
@@ -157,7 +158,7 @@ public partial class Program
         AddOrchestrationServices(builder.Services, configuration);
         AddProcessingServices(builder.Services);
         AddCoordinationServices(builder.Services, configuration);
-        AddClients(builder.Services);
+        AddClients(builder.Services, builder.Configuration);
         AddBackgroundWorkers(builder.Services, configuration);
 
         // IConfiguration registration (optional, but mirrors original)
@@ -255,17 +256,10 @@ public partial class Program
             .GetSection("AccessConfigurations")
             .Get<AccessConfigurations>();
 
-        MetricServiceConfigurations metricServiceConfigurations = configuration
-            .GetSection("MetricServiceConfigurations")
-            .Get<MetricServiceConfigurations>()
-            ?? throw new InvalidOperationException(
-                "MetricServiceConfigurations is missing or invalid. Please check appsettings.json.");
-
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);
         services.AddSingleton(ldsConfig);
         services.AddSingleton(accessConfig);
-        services.AddSingleton(metricServiceConfigurations);
 
         services.AddSingleton<STU3FhirAbstractions.IFhirAbstractionProvider>(sp =>
         {
@@ -309,13 +303,13 @@ public partial class Program
     {
         SecurityConfigurations securityConfigurations = new()
         {
-            CreatedByPropertyName = nameof(IAudit.CreatedBy),
+            CreatedByPropertyName = nameof(IAuditable.CreatedBy),
             CreatedByPropertyType = typeof(string),
-            CreatedWhenPropertyName = nameof(IAudit.CreatedDate),
+            CreatedWhenPropertyName = nameof(IAuditable.CreatedDate),
             CreatedWhenPropertyType = typeof(DateTimeOffset),
-            UpdatedByPropertyName = nameof(IAudit.UpdatedBy),
+            UpdatedByPropertyName = nameof(IAuditable.UpdatedBy),
             UpdatedByPropertyType = typeof(string),
-            UpdatedWhenPropertyName = nameof(IAudit.UpdatedDate),
+            UpdatedWhenPropertyName = nameof(IAuditable.UpdatedDate),
             UpdatedWhenPropertyType = typeof(DateTimeOffset),
             DeletedByPropertyName = "DeletedBy",
             DeletedByPropertyType = typeof(string),
@@ -333,12 +327,13 @@ public partial class Program
         services.AddSingleton(consumerAccessConfiguration);
         services.AddSingleton<TokenCredential>(new DefaultAzureCredential());
         services.AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>();
-        services.AddTransient<IAuditBroker, AuditBroker>();
+        services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
+        services.AddScoped<IAuditAndMetricsStorageBroker, AuditAndMetricsStorageService>();
+        services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
         services.AddTransient<IIdentifierBroker, IdentifierBroker>();
         services.AddTransient<ILoggingBroker, LoggingBroker>();
-        services.AddTransient<IMetricBroker, MetricBroker>();
         services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
         services.AddTransient<ISecurityBroker, SecurityBroker>();
 
@@ -354,7 +349,6 @@ public partial class Program
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
-        services.AddTransient<IMetricService, MetricService>();
         services.AddTransient<IStu3PatientService, Stu3PatientService>();
         services.AddTransient<IProviderService, ProviderService>();
         services.AddSingleton<IJsonElementService, JsonElementService>();
@@ -405,10 +399,17 @@ public partial class Program
         services.AddTransient<IComparisonCoordinationService, ComparisonCoordinationService>();
     }
 
-    private static void AddClients(IServiceCollection services)
+    private static void AddClients(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IAuditClient, AuditClient>();
-        services.AddTransient<IMetricClient, MetricClient>();
+        // Scoped, and it has to stay that way. SecurityAuditBroker captures the ClaimsPrincipal
+        // in its constructor, so a singleton client would hold the first request's identity and
+        // stamp every audit entry after that with the wrong user - silently. It would also
+        // capture a DbContext past the scope that owns it.
+        services.AddScoped<IAuditAndMetricsClient>(serviceProvider =>
+            new AuditAndMetricsClient(
+                serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
+                serviceProvider.GetRequiredService<IAuditUserBroker>(),
+                configuration));
     }
 
     private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)

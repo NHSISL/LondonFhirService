@@ -9,7 +9,7 @@ using System.Linq.Expressions;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using ISL.Security.Client.Models.Foundations.Users;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
@@ -35,7 +35,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
         private readonly Mock<IStu3PatientService> patientServiceMock;
         private readonly Mock<IConsumerAccessService> consumerAccessServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
         private readonly Mock<ISecurityBroker> securityBrokerMock;
         private readonly AccessConfigurations accessConfigurations;
         private readonly IStu3PatientOrchestrationService patientOrchestrationService;
@@ -45,7 +45,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.providerServiceMock = new Mock<IProviderService>();
             this.patientServiceMock = new Mock<IStu3PatientService>();
             this.consumerAccessServiceMock = new Mock<IConsumerAccessService>();
-            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
             this.securityBrokerMock = new Mock<ISecurityBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
@@ -63,7 +63,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 providerService: this.providerServiceMock.Object,
                 patientService: this.patientServiceMock.Object,
                 consumerAccessService: this.consumerAccessServiceMock.Object,
-                auditBroker: this.auditBrokerMock.Object,
+                auditAndMetricBroker: this.auditAndMetricBrokerMock.Object,
                 securityBroker: this.securityBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 accessConfigurations: accessConfigurations);

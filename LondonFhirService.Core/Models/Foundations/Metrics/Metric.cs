@@ -3,7 +3,8 @@
 // ---------------------------------------------------------
 
 using System;
-using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
+using LondonFhirService.Core.Abstractions.Models;
 
 namespace LondonFhirService.Core.Models.Foundations.Metrics
 {
@@ -17,7 +18,7 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
     /// when that detail is needed. Keeping this table free of PII is what allows it to be
     /// retained, aggregated and reported on independently of the audit retention rules.
     /// </summary>
-    public class Metric : IKey
+    public class Metric : IKey, IMetric
     {
         public Guid Id { get; set; }
 
@@ -78,6 +79,7 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
         /// particular consumer's request pattern rather than the provider itself.
         /// </summary>
         public string Consumer { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
         /// When the row was written. Deliberately separate from <see cref="Started"/>, which is

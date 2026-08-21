@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Orchestrations.Patients;
@@ -20,20 +20,20 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         private readonly IStu3PatientOrchestrationService patientOrchestrationService;
         private readonly IStu3FhirReconciliationService fhirReconciliationService;
         private readonly ILoggingBroker loggingBroker;
-        private readonly IAuditBroker auditBroker;
+        private readonly IAuditAndMetricBroker auditAndMetricBroker;
         private readonly IIdentifierBroker identifierBroker;
 
         public Stu3PatientCoordinationService(
             IStu3PatientOrchestrationService patientOrchestrationService,
             IStu3FhirReconciliationService fhirReconciliationService,
             ILoggingBroker loggingBroker,
-            IAuditBroker auditBroker,
+            IAuditAndMetricBroker auditAndMetricBroker,
             IIdentifierBroker identifierBroker)
         {
             this.patientOrchestrationService = patientOrchestrationService;
             this.fhirReconciliationService = fhirReconciliationService;
             this.loggingBroker = loggingBroker;
-            this.auditBroker = auditBroker;
+            this.auditAndMetricBroker = auditAndMetricBroker;
             this.identifierBroker = identifierBroker;
         }
 
@@ -55,14 +55,14 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 $"demographicsOnly = \"{demographicsOnly}\", " +
                 $"includeInactivePatients = \"{includeInactivePatients}\" }}";
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"Coordination Service Request Submitted",
                 message,
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"Requesting Patient Info",
                 message,
@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     includeInactivePatients,
                     cancellationToken);
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"Reconcile bundles",
                 message,
@@ -94,7 +94,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"Coordination Service Request Completed in {elapsedTime}ms",
                 message,

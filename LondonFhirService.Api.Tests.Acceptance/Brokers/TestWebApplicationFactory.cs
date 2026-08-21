@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -150,19 +150,20 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void MockExternalClientsForTesting(IServiceCollection services)
         {
-            // Mocked at the broker rather than the client. AuditBroker now calls IAuditService
-            // directly, so replacing IAuditClient would intercept nothing and audit writes would
-            // reach the database during an acceptance run.
-            var auditBrokerDescriptor = services
-               .FirstOrDefault(d => d.ServiceType == typeof(IAuditBroker));
+            // Mocked at the broker rather than at the client. Every service that records an
+            // audit entry or a metric span goes through this one broker, so replacing it here
+            // stops the writes reaching the database during an acceptance run - and stops the
+            // backgrounded ones outliving the test that started them.
+            var auditAndMetricBrokerDescriptor = services
+               .FirstOrDefault(d => d.ServiceType == typeof(IAuditAndMetricBroker));
 
-            if (auditBrokerDescriptor != null)
+            if (auditAndMetricBrokerDescriptor != null)
             {
-                services.Remove(auditBrokerDescriptor);
+                services.Remove(auditAndMetricBrokerDescriptor);
             }
 
-            var mockAuditBroker = new Mock<IAuditBroker>();
-            services.AddTransient<IAuditBroker>(_ => mockAuditBroker.Object);
+            var mockAuditAndMetricBroker = new Mock<IAuditAndMetricBroker>();
+            services.AddTransient<IAuditAndMetricBroker>(_ => mockAuditAndMetricBroker.Object);
         }
     }
 }

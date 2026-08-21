@@ -17,6 +17,7 @@
   </Folder>
   <Folder Name="/Core/">
     <Project Path="LondonFhirService.Core.Tests.Unit/LondonFhirService.Core.Tests.Unit.csproj" />
+    <Project Path="LondonFhirService.Core.Abstractions/LondonFhirService.Core.Abstractions.csproj" />
     <Project Path="LondonFhirService.Core/LondonFhirService.Core.csproj" />
   </Folder>
   <Folder Name="/Documentation/" />

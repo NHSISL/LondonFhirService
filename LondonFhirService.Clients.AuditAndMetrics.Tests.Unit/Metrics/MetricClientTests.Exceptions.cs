@@ -8,7 +8,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Models.Foundations.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Metrics;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using Moq;
 using Xeptions;
 
@@ -23,10 +24,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
             Xeption expectedClientException)
         {
             // given
-            Metric randomMetric = CreateRandomMetric();
+            IMetric randomMetric = CreateRandomMetric();
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                service.AddMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(serviceException);
 
             // when
@@ -44,10 +45,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Metrics
             Xeption expectedClientException)
         {
             // given
-            List<Metric> randomMetrics = CreateRandomMetrics();
+            List<IMetric> randomMetrics = CreateRandomMetrics();
 
             this.metricServiceMock.Setup(service =>
-                service.AddMetricsAsync(It.IsAny<List<Metric>>(), It.IsAny<CancellationToken>()))
+                service.AddMetricsAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(serviceException);
 
             // when

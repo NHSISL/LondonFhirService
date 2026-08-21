@@ -5,11 +5,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LondonFhirService.Clients.AuditAndMetrics.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
-using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
-using LondonFhirService.Core.Services.Foundations.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Audits;
+using LondonFhirService.Core.Abstractions.Models.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
@@ -29,24 +29,24 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
 
         public static TheoryData<Xeption, Xeption> ServiceExceptionMappings()
         {
-            var innerException = new NullAuditServiceException(message: "Audit is null.");
+            var innerException = new NullAuditException(message: "Audit is null.");
 
             return new TheoryData<Xeption, Xeption>
             {
                 {
-                    new AuditServiceValidationException("Service validation.", innerException),
+                    new AuditValidationException("Service validation.", innerException),
                     new AuditClientValidationException(
                         "Audit client validation error occurred, fix errors and try again.",
                         innerException)
                 },
                 {
-                    new AuditServiceDependencyValidationException("Service dependency validation.", innerException),
+                    new AuditDependencyValidationException("Service dependency validation.", innerException),
                     new AuditClientValidationException(
                         "Audit client validation error occurred, fix errors and try again.",
                         innerException)
                 },
                 {
-                    new AuditServiceDependencyException("Service dependency.", innerException),
+                    new AuditDependencyException("Service dependency.", innerException),
                     new AuditClientDependencyException(
                         "Audit client dependency error occurred, please contact support.",
                         innerException)
@@ -69,15 +69,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: DateTime.UtcNow.AddYears(-1)).GetValue();
 
-        private static Audit CreateRandomAudit() =>
+        private static IAudit CreateRandomAudit() =>
             CreateAuditFiller().Create();
 
-        private static List<Audit> CreateRandomAudits() =>
-            CreateAuditFiller().Create(count: GetRandomNumber()).ToList();
+        private static List<IAudit> CreateRandomAudits() =>
+            CreateAuditFiller().Create(count: GetRandomNumber())
+                .Cast<IAudit>()
+                    .ToList();
 
-        private static Filler<Audit> CreateAuditFiller()
+        private static Filler<TestAudit> CreateAuditFiller()
         {
-            var filler = new Filler<Audit>();
+            var filler = new Filler<TestAudit>();
             filler.Setup().OnType<DateTimeOffset>().Use(GetRandomDateTimeOffset());
 
             return filler;

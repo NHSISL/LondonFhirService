@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using ISL.Security.Client.Models.Foundations.Users;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
@@ -30,7 +30,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         private readonly IProviderService providerService;
         private readonly IStu3PatientService patientService;
         private readonly IConsumerAccessService consumerAccessService;
-        private readonly IAuditBroker auditBroker;
+        private readonly IAuditAndMetricBroker auditAndMetricBroker;
         private readonly ISecurityBroker securityBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly AccessConfigurations accessConfigurations;
@@ -39,7 +39,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             IProviderService providerService,
             IStu3PatientService patientService,
             IConsumerAccessService consumerAccessService,
-            IAuditBroker auditBroker,
+            IAuditAndMetricBroker auditAndMetricBroker,
             ISecurityBroker securityBroker,
             ILoggingBroker loggingBroker,
             AccessConfigurations accessConfigurations)
@@ -47,7 +47,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             this.providerService = providerService;
             this.patientService = patientService;
             this.consumerAccessService = consumerAccessService;
-            this.auditBroker = auditBroker;
+            this.auditAndMetricBroker = auditAndMetricBroker;
             this.securityBroker = securityBroker;
             this.loggingBroker = loggingBroker;
             this.accessConfigurations = accessConfigurations;
@@ -71,7 +71,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 $"demographicsOnly = \"{demographicsOnly}\", " +
                 $"includeInactivePatients = \"{includeInactivePatients}\" }}";
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"Orchestration Service Request Submitted",
                 message,
@@ -80,7 +80,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 
             await CheckAccessPermissionsAsync(nhsNumber, correlationId, cancellationToken);
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"Retrieve active providers and execute request",
                 message,
@@ -103,7 +103,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-            await this.auditBroker.LogInformationAsync(
+            await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
                 title: $"Orchestration Service Request Completed in {elapsedTime}ms",
                 message,
@@ -142,7 +142,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             {
                 var stopwatch = Stopwatch.StartNew();
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Check Access Permissions",
                     message,
@@ -161,7 +161,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 
                 string currentUserJson = JsonSerializer.Serialize(currentUser, options);
 
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType: "Access",
                     title: "Check Access Permissons",
                     message: currentUserJson,
@@ -193,7 +193,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     string reasons = string.Join(", ", consumerAccess.Reasons
                         .Select(reason => $"{reason.Code}: {reason.Message}"));
 
-                    await this.auditBroker.LogInformationAsync(
+                    // Awaited, unlike the operational tracing around it. An access decision is
+                    // the compliance record of who read a patient's record; it must not be lost
+                    // to a process restart, and a failure to write it must surface.
+                    await this.auditAndMetricBroker.RecordAuditAsync(
                         auditType: "Access",
                         title: "Access Forbidden",
 
@@ -210,7 +213,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         $"CorrelationId: {correlationId.ToString()}");
                 }
 
-                await this.auditBroker.LogInformationAsync(
+                // Awaited - see the forbidden branch above.
+                await this.auditAndMetricBroker.RecordAuditAsync(
                     auditType: "Access",
                     title: "Access Allowed",
 
@@ -225,7 +229,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             }
             else
             {
-                await this.auditBroker.LogInformationAsync(
+                await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     message,
