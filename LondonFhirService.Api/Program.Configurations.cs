@@ -21,6 +21,7 @@ using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Metrics;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Clients.Audits;
@@ -327,6 +328,7 @@ public partial class Program
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
         services.AddTransient<IIdentifierBroker, IdentifierBroker>();
         services.AddTransient<ILoggingBroker, LoggingBroker>();
+        services.AddTransient<IMetricBroker, MetricBroker>();
         services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
         services.AddTransient<ISecurityBroker, SecurityBroker>();
 
