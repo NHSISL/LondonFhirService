@@ -28,6 +28,7 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnCheckConsumerAccess(request);
 
             return await this.consumerAccessBroker

@@ -59,8 +59,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                     .ReturnsAsync(returnedConsumerAccess);
 
             // when
+            // The omitted token is the subject of this test, so the analyzer prompt to pass
+            // TestContext.Current.CancellationToken does not apply here.
+#pragma warning disable xUnit1051
             ConsumerAccess actualConsumerAccess = await this.consumerAccessService
                 .CheckConsumerAccessAsync(inputValidateAccessRequest);
+#pragma warning restore xUnit1051
 
             // then
             actualConsumerAccess.Should().BeEquivalentTo(expectedConsumerAccess);

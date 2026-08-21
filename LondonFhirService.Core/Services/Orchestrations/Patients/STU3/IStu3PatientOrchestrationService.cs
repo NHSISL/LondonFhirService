@@ -19,6 +19,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             bool? includeInactivePatients = null,
             CancellationToken cancellationToken = default);
 
-        ValueTask ValidateAccess(string nhsNumber, Guid correlationId);
+        ValueTask ValidateAccess(
+            string nhsNumber,
+            Guid correlationId,
+            CancellationToken cancellationToken = default);
     }
 }

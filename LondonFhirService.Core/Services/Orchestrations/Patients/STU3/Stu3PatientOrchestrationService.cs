@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            await CheckAccessPermissionsAsync(nhsNumber, correlationId);
+            await CheckAccessPermissionsAsync(nhsNumber, correlationId, cancellationToken);
 
             await this.auditBroker.LogInformationAsync(
                 auditType,
@@ -117,15 +117,22 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             };
         });
 
-        public ValueTask ValidateAccess(string nhsNumber, Guid correlationId) =>
-        TryCatch(async () => await CheckAccessPermissionsAsync(nhsNumber, correlationId));
+        public ValueTask ValidateAccess(
+            string nhsNumber,
+            Guid correlationId,
+            CancellationToken cancellationToken = default) =>
+        TryCatch(async () =>
+            await CheckAccessPermissionsAsync(nhsNumber, correlationId, cancellationToken));
 
         /// <summary>
         /// The access decision itself. Kept separate from the public ValidateAccess so
         /// GetStructuredRecordSerialisedAsync can await it inside its own TryCatch — calling the
         /// public method would localise the same exception twice.
         /// </summary>
-        private async ValueTask CheckAccessPermissionsAsync(string nhsNumber, Guid correlationId)
+        private async ValueTask CheckAccessPermissionsAsync(
+            string nhsNumber,
+            Guid correlationId,
+            CancellationToken cancellationToken = default)
         {
             ValidateArgsOnValidateAccess(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
@@ -175,7 +182,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 };
 
                 ConsumerAccess consumerAccess =
-                    await this.consumerAccessService.CheckConsumerAccessAsync(validateAccessRequest);
+                    await this.consumerAccessService.CheckConsumerAccessAsync(
+                        validateAccessRequest, cancellationToken);
 
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;
