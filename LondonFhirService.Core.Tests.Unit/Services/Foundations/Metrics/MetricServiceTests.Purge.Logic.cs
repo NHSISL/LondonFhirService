@@ -67,9 +67,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(It.IsAny<string>()),
-                    Times.Once);
+this.loggingBrokerMock.Verify(broker =>
+    broker.LogInformationAsync($"Purged {expiredMetrics.Count} metric(s) created before {cutOffDate}."),
+        Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();
         }
