@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Foundations.Audits;
 
 namespace LondonFhirService.Core.Services.Foundations.Audits
@@ -25,13 +26,16 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
     internal partial class AuditService : IAuditService
     {
         private readonly IAuditAndMetricBroker auditAndMetricBroker;
+        private readonly ISecurityAuditBroker securityAuditBroker;
         private readonly ILoggingBroker loggingBroker;
 
         public AuditService(
             IAuditAndMetricBroker auditAndMetricBroker,
+            ISecurityAuditBroker securityAuditBroker,
             ILoggingBroker loggingBroker)
         {
             this.auditAndMetricBroker = auditAndMetricBroker;
+            this.securityAuditBroker = securityAuditBroker;
             this.loggingBroker = loggingBroker;
         }
 
@@ -62,7 +66,18 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         });
 
         public ValueTask<Audit> AddAuditAsync(Audit audit, CancellationToken cancellationToken = default) =>
-            TryCatch(async () => await this.auditAndMetricBroker.AddAuditAsync(audit, cancellationToken));
+        TryCatch(async () =>
+        {
+            // Stamped here, overwriting whatever the caller sent. This entity arrived on the API
+            // surface from a request body, so its CreatedBy and CreatedDate are claims rather
+            // than facts. The library's stamping only fills gaps, which is correct for entries
+            // it builds itself but would let a caller attribute an entry to another user.
+            Audit auditWithAddAuditApplied =
+                await this.securityAuditBroker.ApplyAddAuditValuesAsync(audit);
+
+            return await this.auditAndMetricBroker.AddAuditAsync(
+                auditWithAddAuditApplied, cancellationToken);
+        });
 
         public ValueTask BulkAddAuditsAsync(
             List<Audit> audits,
@@ -81,7 +96,17 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
                 await this.auditAndMetricBroker.RetrieveAuditByIdAsync(auditId, cancellationToken));
 
         public ValueTask<Audit> ModifyAuditAsync(Audit audit, CancellationToken cancellationToken = default) =>
-            TryCatch(async () => await this.auditAndMetricBroker.ModifyAuditAsync(audit, cancellationToken));
+        TryCatch(async () =>
+        {
+            // UpdatedBy and UpdatedDate come from the principal, never the request body. The
+            // creation stamp is protected further down, where the stored row is available to
+            // compare against.
+            Audit auditWithModifyAuditApplied =
+                await this.securityAuditBroker.ApplyModifyAuditValuesAsync(audit);
+
+            return await this.auditAndMetricBroker.ModifyAuditAsync(
+                auditWithModifyAuditApplied, cancellationToken);
+        });
 
         public ValueTask<Audit> RemoveAuditByIdAsync(
             Guid auditId,

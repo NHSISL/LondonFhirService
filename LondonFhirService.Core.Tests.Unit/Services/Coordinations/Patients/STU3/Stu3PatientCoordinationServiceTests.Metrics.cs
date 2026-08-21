@@ -13,6 +13,7 @@ using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Orchestrations.Patients;
 using Moq;
+using Xeptions;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
@@ -107,6 +108,57 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             requestSpan.Method.Should().Be("STU3-Patient-GetStructuredRecordSerialised");
             requestSpan.PayloadBytes.Should().Be(expectedBundle.Length);
+        }
+
+        [Fact]
+        public async Task ShouldRecordTheRequestSpanWhenTheRequestFailsAsync()
+        {
+            // given
+            string inputNhsNumber = GetRandomString();
+            CancellationToken cancellationToken = CancellationToken.None;
+            Guid correlationId = Guid.NewGuid();
+            Guid requestSpanId = Guid.NewGuid();
+            var recordedMetrics = new List<Metric>();
+            var serviceException = new Exception(GetRandomString());
+
+            this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
+                .ReturnsAsync(correlationId)
+                .ReturnsAsync(requestSpanId);
+
+            this.patientOrchestrationServiceMock.Setup(service =>
+                service.GetStructuredRecordSerialisedAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<bool?>(),
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(serviceException);
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                    .Callback<Metric, CancellationToken>((metric, _) => recordedMetrics.Add(metric));
+
+            // when
+            Func<Task> getStructuredRecord = async () =>
+                await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                    inputNhsNumber,
+                    cancellationToken: cancellationToken);
+
+            await getStructuredRecord.Should().ThrowAsync<Xeption>();
+
+            // then
+            // The root has to be written on the way out too. Children are recorded as they
+            // complete, so without this every span already written points at a row that never
+            // got inserted - and a failed request is the one worth walking the tree for.
+            Metric requestSpan = recordedMetrics.Should().ContainSingle(metric =>
+                metric.Type == MetricType.Request).Subject;
+
+            requestSpan.Id.Should().Be(requestSpanId);
+            requestSpan.ParentId.Should().BeNull();
+            requestSpan.Status.Should().Be(MetricStatus.Failed);
+            requestSpan.ErrorCode.Should().Be(nameof(Exception));
         }
 
         [Fact]

@@ -409,7 +409,8 @@ public partial class Program
             new AuditAndMetricsClient(
                 serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
-                configuration));
+                configuration,
+                serviceProvider.GetRequiredService<ILoggerFactory>()));
     }
 
     private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)

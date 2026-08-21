@@ -15,6 +15,8 @@ using LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits;
 using LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Clients
 {
@@ -31,17 +33,19 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
         public AuditAndMetricsClient(
             IAuditAndMetricsStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
-            IConfiguration configuration)
-            : this(storageBroker, auditUserBroker, BindConfigurations(configuration))
+            IConfiguration configuration,
+            ILoggerFactory loggerFactory = null)
+            : this(storageBroker, auditUserBroker, BindConfigurations(configuration), loggerFactory)
         { }
 
         public AuditAndMetricsClient(
             IAuditAndMetricsStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
-            AuditAndMetricsConfigurations configurations)
+            AuditAndMetricsConfigurations configurations,
+            ILoggerFactory loggerFactory = null)
         {
             IServiceProvider serviceProvider =
-                RegisterServices(storageBroker, auditUserBroker, configurations);
+                RegisterServices(storageBroker, auditUserBroker, configurations, loggerFactory);
 
             InitializeClients(serviceProvider);
         }
@@ -58,7 +62,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
         private static IServiceProvider RegisterServices(
             IAuditAndMetricsStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
-            AuditAndMetricsConfigurations configurations)
+            AuditAndMetricsConfigurations configurations,
+            ILoggerFactory loggerFactory)
         {
             // The storage broker is supplied rather than constructed: it is the seam that keeps
             // this library free of any reference to the application that hosts it.
@@ -66,7 +71,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
                 .AddSingleton(storageBroker)
                 .AddSingleton(auditUserBroker)
                 .AddSingleton(configurations)
-                .AddLogging()
+
+                // The consuming application's factory, not a fresh one. AddLogging() on its own
+                // registers an ILoggerFactory with no providers, so every line this library
+                // writes would be discarded - including the only channel a failed fire-and-forget
+                // write has to report itself. NullLoggerFactory is the deliberate no-op for a
+                // consumer that genuinely wants silence.
+                .AddSingleton(loggerFactory ?? NullLoggerFactory.Instance)
+                .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
                 .AddTransient<IDateTimeBroker, DateTimeBroker>()
                 .AddTransient<IIdentifierBroker, IdentifierBroker>()
                 .AddTransient<ILoggingBroker, LoggingBroker>()

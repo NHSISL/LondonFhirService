@@ -64,6 +64,31 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
 
                 validations: (Rule: IsNotPositive(batchSize), Parameter: "BatchSize"));
 
+        /// <summary>
+        /// The creation stamp belongs to whoever created the row. An update carries a whole
+        /// entity, so without this check a caller could rewrite CreatedBy and CreatedDate and
+        /// re-attribute an existing audit entry to somebody else - which for an access decision
+        /// is the exact record the audit trail exists to protect.
+        /// </summary>
+        private static void ValidateAgainstStorageAuditOnModify(IAudit inputAudit, IAudit storageAudit)
+        {
+            Validate(
+                createException: () => new InvalidAuditException(
+                    "Invalid audit. Please correct the errors and try again."),
+
+                (Rule: IsNotSame(
+                    firstDate: inputAudit.CreatedDate,
+                    secondDate: storageAudit.CreatedDate,
+                    secondDateName: nameof(IAudit.CreatedDate)),
+                Parameter: nameof(IAudit.CreatedDate)),
+
+                (Rule: IsNotSame(
+                    first: inputAudit.CreatedBy,
+                    second: storageAudit.CreatedBy,
+                    secondName: nameof(IAudit.CreatedBy)),
+                Parameter: nameof(IAudit.CreatedBy)));
+        }
+
         private static void ValidateStorageAudit(IAudit maybeAudit, Guid auditId)
         {
             if (maybeAudit is null)
@@ -106,6 +131,24 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             Condition = date == default,
             Message = "Date is required"
         };
+
+        private static dynamic IsNotSame(
+            DateTimeOffset firstDate,
+            DateTimeOffset secondDate,
+            string secondDateName) => new
+            {
+                Condition = firstDate != secondDate,
+                Message = $"Date is not the same as {secondDateName}"
+            };
+
+        private static dynamic IsNotSame(
+            string first,
+            string second,
+            string secondName) => new
+            {
+                Condition = first != second,
+                Message = $"Text is not the same as {secondName}"
+            };
 
         private static dynamic IsGreaterThan(string text, int maxLength) => new
         {

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 // Only the three client exceptions are imported. A blanket using would collide with
 // Core's own AuditServiceException, since both layers name their categories the same way.
+using AbstractionExceptions = LondonFhirService.Core.Abstractions.Models.Audits.Exceptions;
 using ClientExceptions = LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
@@ -35,9 +36,19 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             {
                 throw;
             }
+            catch (ClientExceptions.AuditClientNotFoundException auditClientNotFoundException)
+            {
+                throw await CreateAndLogNotFoundExceptionAsync(auditClientNotFoundException);
+            }
             catch (ClientExceptions.AuditClientValidationException auditClientValidationException)
             {
                 throw await CreateAndLogValidationExceptionAsync(auditClientValidationException);
+            }
+            catch (ClientExceptions.AuditClientDependencyValidationException
+                auditClientDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    auditClientDependencyValidationException);
             }
             catch (ClientExceptions.AuditClientDependencyException auditClientDependencyException)
             {
@@ -63,9 +74,19 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             {
                 throw;
             }
+            catch (ClientExceptions.AuditClientNotFoundException auditClientNotFoundException)
+            {
+                throw await CreateAndLogNotFoundExceptionAsync(auditClientNotFoundException);
+            }
             catch (ClientExceptions.AuditClientValidationException auditClientValidationException)
             {
                 throw await CreateAndLogValidationExceptionAsync(auditClientValidationException);
+            }
+            catch (ClientExceptions.AuditClientDependencyValidationException
+                auditClientDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    auditClientDependencyValidationException);
             }
             catch (ClientExceptions.AuditClientDependencyException auditClientDependencyException)
             {
@@ -91,9 +112,19 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             {
                 throw;
             }
+            catch (ClientExceptions.AuditClientNotFoundException auditClientNotFoundException)
+            {
+                throw await CreateAndLogNotFoundExceptionAsync(auditClientNotFoundException);
+            }
             catch (ClientExceptions.AuditClientValidationException auditClientValidationException)
             {
                 throw await CreateAndLogValidationExceptionAsync(auditClientValidationException);
+            }
+            catch (ClientExceptions.AuditClientDependencyValidationException
+                auditClientDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    auditClientDependencyValidationException);
             }
             catch (ClientExceptions.AuditClientDependencyException auditClientDependencyException)
             {
@@ -107,6 +138,59 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             {
                 throw await CreateAndLogServiceExceptionAsync(exception);
             }
+        }
+
+        /// <summary>
+        /// The client's category is translated into this application's own, because the
+        /// controllers dispatch on Core's categorization types to choose a status code. Without
+        /// this the library's category is carried in a type the controller cannot name, and every
+        /// not-found, duplicate and locked row collapses into a 400.
+        /// </summary>
+        private async ValueTask<AuditServiceValidationException> CreateAndLogNotFoundExceptionAsync(
+            Xeption exception)
+        {
+            var notFoundAuditServiceException =
+                new NotFoundAuditServiceException(
+                    message: exception.InnerException?.Message ?? "Audit not found.");
+
+            var auditServiceValidationException =
+                new AuditServiceValidationException(
+                    message: "Audit validation errors occurred, please try again.",
+                    innerException: notFoundAuditServiceException);
+
+            await this.loggingBroker.LogErrorAsync(auditServiceValidationException);
+
+            return auditServiceValidationException;
+        }
+
+        private async ValueTask<AuditServiceDependencyValidationException>
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
+        {
+            Xeption categorised = exception.InnerException switch
+            {
+                AbstractionExceptions.AlreadyExistsAuditException alreadyExists =>
+                    new AlreadyExistsAuditServiceException(
+                        message: "Audit with the same id already exists.",
+                        innerException: alreadyExists,
+                        data: alreadyExists.Data),
+
+                AbstractionExceptions.LockedAuditException locked =>
+                    new LockedAuditServiceException(
+                        message: "Locked audit record exception, please try again later.",
+                        innerException: locked),
+
+                Xeption inner => inner,
+                _ => exception,
+            };
+
+            var auditServiceDependencyValidationException =
+                new AuditServiceDependencyValidationException(
+                    message: "Audit dependency validation occurred, please try again.",
+                    innerException: categorised);
+
+            await this.loggingBroker.LogErrorAsync(auditServiceDependencyValidationException);
+
+            return auditServiceDependencyValidationException;
         }
 
         private async ValueTask<AuditServiceValidationException> CreateAndLogValidationExceptionAsync(

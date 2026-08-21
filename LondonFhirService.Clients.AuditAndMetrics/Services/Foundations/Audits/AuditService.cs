@@ -193,6 +193,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             ValidateAuditOnModify(audit);
             IAudit maybeAudit = await this.storageBroker.SelectAuditByIdAsync(audit.Id, cancellationToken);
             ValidateStorageAudit(maybeAudit, audit.Id);
+            ValidateAgainstStorageAuditOnModify(inputAudit: audit, storageAudit: maybeAudit);
 
             return await this.storageBroker.UpdateAuditAsync(audit, cancellationToken);
         });

@@ -9,6 +9,7 @@ using LondonFhirService.Clients.AuditAndMetrics.Clients;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
@@ -45,6 +46,50 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
             // then
             // Resolving both exercises every registration behind them - the services, and every
             // broker those services depend on.
+            auditAndMetricsClient.AuditClient.Should().NotBeNull();
+            auditAndMetricsClient.MetricClient.Should().NotBeNull();
+        }
+
+        [Fact]
+        public void ShouldLogThroughTheHostsLoggerFactory()
+        {
+            // given
+            var loggerFactoryMock = new Mock<ILoggerFactory>();
+            var loggerMock = new Mock<ILogger>();
+
+            loggerFactoryMock.Setup(factory => factory.CreateLogger(It.IsAny<string>()))
+                .Returns(loggerMock.Object);
+
+            // when
+            var auditAndMetricsClient = new AuditAndMetricsClient(
+                this.storageBrokerMock.Object,
+                this.auditUserBrokerMock.Object,
+                new AuditAndMetricsConfigurations(),
+                loggerFactoryMock.Object);
+
+            _ = auditAndMetricsClient.AuditClient;
+
+            // then
+            // Without this the library builds its own factory with no providers, and every line
+            // it writes is discarded - including the only report a failed background write makes.
+            loggerFactoryMock.Verify(factory =>
+                factory.CreateLogger(It.IsAny<string>()),
+                    Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void ShouldStillConstructWhenTheHostSuppliesNoLoggerFactory()
+        {
+            // given, when
+            var auditAndMetricsClient = new AuditAndMetricsClient(
+                this.storageBrokerMock.Object,
+                this.auditUserBrokerMock.Object,
+                new AuditAndMetricsConfigurations(),
+                loggerFactory: null);
+
+            // then
+            // Silence is a legitimate choice for a consumer, but it has to be chosen rather than
+            // arrived at by accident.
             auditAndMetricsClient.AuditClient.Should().NotBeNull();
             auditAndMetricsClient.MetricClient.Should().NotBeNull();
         }

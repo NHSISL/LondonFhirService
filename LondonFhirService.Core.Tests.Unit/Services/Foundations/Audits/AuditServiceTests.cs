@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Audits;
@@ -27,16 +28,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
     public partial class AuditServiceTests
     {
         private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
+        private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly IAuditService auditService;
 
         public AuditServiceTests()
         {
             this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
+            this.securityAuditBrokerMock = new Mock<ISecurityAuditBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+
+            // The security broker is what makes CreatedBy/CreatedDate server-side facts rather
+            // than request-body claims, so it echoes the entity back by default and individual
+            // tests override it when the stamping itself is what is under test.
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<Audit>()))
+                    .ReturnsAsync((Audit audit) => audit);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyModifyAuditValuesAsync(It.IsAny<Audit>()))
+                    .ReturnsAsync((Audit audit) => audit);
 
             this.auditService = new AuditService(
                 auditAndMetricBroker: this.auditAndMetricBrokerMock.Object,
+                securityAuditBroker: this.securityAuditBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object);
         }
 
@@ -75,6 +90,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
         private void VerifyNoOtherCallsOnAllBrokers()
         {
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
+            this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 

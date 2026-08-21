@@ -150,10 +150,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void MockExternalClientsForTesting(IServiceCollection services)
         {
-            // Mocked at the broker rather than at the client. Every service that records an
-            // audit entry or a metric span goes through this one broker, so replacing it here
-            // stops the writes reaching the database during an acceptance run - and stops the
-            // backgrounded ones outliving the test that started them.
+            // Decorated rather than replaced. This one broker now serves both the operational
+            // tracing every request emits and the data path behind the audits API, so swapping it
+            // for a bare mock would stub out the very endpoints AuditsApiTests exercise. The
+            // decorator drops the background writes and delegates everything else.
             var auditAndMetricBrokerDescriptor = services
                .FirstOrDefault(d => d.ServiceType == typeof(IAuditAndMetricBroker));
 
@@ -162,8 +162,9 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 services.Remove(auditAndMetricBrokerDescriptor);
             }
 
-            var mockAuditAndMetricBroker = new Mock<IAuditAndMetricBroker>();
-            services.AddTransient<IAuditAndMetricBroker>(_ => mockAuditAndMetricBroker.Object);
+            services.AddTransient<IAuditAndMetricBroker>(provider =>
+                new QuietAuditAndMetricBroker(
+                    ActivatorUtilities.CreateInstance<AuditAndMetricBroker>(provider)));
         }
     }
 }

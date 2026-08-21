@@ -131,7 +131,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Audits
             }
             catch (AuditDependencyValidationException auditDependencyValidationException)
             {
-                throw CreateValidationException(auditDependencyValidationException);
+                throw CreateDependencyValidationException(auditDependencyValidationException);
             }
             catch (AuditDependencyException auditDependencyException)
             {
@@ -159,7 +159,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Audits
             }
             catch (AuditDependencyValidationException auditDependencyValidationException)
             {
-                throw CreateValidationException(auditDependencyValidationException);
+                throw CreateDependencyValidationException(auditDependencyValidationException);
             }
             catch (AuditDependencyException auditDependencyException)
             {
@@ -171,9 +171,36 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Audits
             }
         }
 
-        private static AuditClientValidationException CreateValidationException(Xeption exception) =>
-            new AuditClientValidationException(
+        /// <summary>
+        /// A not-found is surfaced as its own type rather than as a generic validation failure.
+        /// The categorized exception behind it is internal to this library, so a caller has no
+        /// other way to tell "no such audit" from "the audit you sent is invalid" - and those
+        /// are a 404 and a 400.
+        /// </summary>
+        private static Xeption CreateValidationException(Xeption exception)
+        {
+            var innerException = exception.InnerException as Xeption;
+
+            if (innerException is NotFoundAuditException)
+            {
+                return new AuditClientNotFoundException(
+                    message: "Audit not found.",
+                    innerException: innerException);
+            }
+
+            return new AuditClientValidationException(
                 message: "Audit client validation error occurred, fix errors and try again.",
+                innerException: innerException);
+        }
+
+        /// <summary>
+        /// The inner exception is one of the storage contract types from Core.Abstractions, which
+        /// are public, so the caller can tell an already-exists from a locked row.
+        /// </summary>
+        private static AuditClientDependencyValidationException CreateDependencyValidationException(
+            Xeption exception) =>
+            new AuditClientDependencyValidationException(
+                message: "Audit client dependency validation error occurred, fix errors and try again.",
                 innerException: exception.InnerException as Xeption);
 
         private static AuditClientDependencyException CreateDependencyException(Xeption exception) =>

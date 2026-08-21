@@ -78,6 +78,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                 broker.AddAuditAsync(randomAudit, It.IsAny<CancellationToken>()),
                     Times.Once);
 
+            // Stamped before it reaches storage, so a request body cannot claim to have been
+            // created by somebody else.
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyAddAuditValuesAsync(randomAudit),
+                    Times.Once);
+
             VerifyNoOtherCallsOnAllBrokers();
         }
 
@@ -170,6 +176,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.ModifyAuditAsync(randomAudit, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            // UpdatedBy and UpdatedDate come from the principal, never the request body.
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.ApplyModifyAuditValuesAsync(randomAudit),
                     Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();

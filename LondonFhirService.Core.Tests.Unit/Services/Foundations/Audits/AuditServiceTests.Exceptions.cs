@@ -12,6 +12,7 @@ using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using Moq;
 using Xeptions;
+using AbstractionExceptions = LondonFhirService.Core.Abstractions.Models.Audits.Exceptions;
 using ClientExceptions = LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
@@ -158,6 +159,100 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(expectedAuditServiceException))),
                     Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldLocaliseNotFoundIntoTheTypeTheControllerGuardsOnAsync()
+        {
+            // given
+            Guid auditId = Guid.NewGuid();
+
+            var clientNotFoundException =
+                new ClientExceptions.AuditClientNotFoundException(
+                    message: "Audit not found.",
+                    innerException: new Xeption("Couldn't find audit."));
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.RetrieveAuditByIdAsync(auditId, It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(clientNotFoundException);
+
+            // when
+            ValueTask<Audit> retrieveTask =
+                this.auditService.RetrieveAuditByIdAsync(auditId, TestContext.Current.CancellationToken);
+
+            AuditServiceValidationException actualException =
+                await Assert.ThrowsAsync<AuditServiceValidationException>(retrieveTask.AsTask);
+
+            // then
+            // AuditsController answers 404 by testing the inner exception's type. A localisation
+            // that loses the category turns every not-found into a 400.
+            actualException.InnerException.Should().BeOfType<NotFoundAuditServiceException>();
+        }
+
+        [Fact]
+        public async Task ShouldLocaliseAlreadyExistsIntoTheTypeTheControllerGuardsOnAsync()
+        {
+            // given
+            Audit randomAudit = CreateRandomAudit();
+
+            var alreadyExistsException =
+                new AbstractionExceptions.AlreadyExistsAuditException(
+                    message: "Audit with the same id already exists.",
+                    innerException: new Exception(),
+                    data: null);
+
+            var clientException =
+                new ClientExceptions.AuditClientDependencyValidationException(
+                    message: "Audit client dependency validation error occurred, fix errors and try again.",
+                    innerException: alreadyExistsException);
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.AddAuditAsync(It.IsAny<Audit>(), It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(clientException);
+
+            // when
+            ValueTask<Audit> addTask =
+                this.auditService.AddAuditAsync(randomAudit, TestContext.Current.CancellationToken);
+
+            AuditServiceDependencyValidationException actualException =
+                await Assert.ThrowsAsync<AuditServiceDependencyValidationException>(addTask.AsTask);
+
+            // then
+            // 409 Conflict rather than 400.
+            actualException.InnerException.Should().BeOfType<AlreadyExistsAuditServiceException>();
+        }
+
+        [Fact]
+        public async Task ShouldLocaliseLockedIntoTheTypeTheControllerGuardsOnAsync()
+        {
+            // given
+            Guid auditId = Guid.NewGuid();
+
+            var lockedException =
+                new AbstractionExceptions.LockedAuditException(
+                    message: "Locked audit record exception, please try again later.",
+                    innerException: new Exception(),
+                    data: null);
+
+            var clientException =
+                new ClientExceptions.AuditClientDependencyValidationException(
+                    message: "Audit client dependency validation error occurred, fix errors and try again.",
+                    innerException: lockedException);
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.RemoveAuditByIdAsync(auditId, It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(clientException);
+
+            // when
+            ValueTask<Audit> removeTask =
+                this.auditService.RemoveAuditByIdAsync(auditId, TestContext.Current.CancellationToken);
+
+            AuditServiceDependencyValidationException actualException =
+                await Assert.ThrowsAsync<AuditServiceDependencyValidationException>(removeTask.AsTask);
+
+            // then
+            // 423 Locked rather than 400.
+            actualException.InnerException.Should().BeOfType<LockedAuditServiceException>();
         }
 
         /// <summary>

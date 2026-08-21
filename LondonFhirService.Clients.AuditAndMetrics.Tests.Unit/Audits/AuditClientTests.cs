@@ -41,8 +41,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
                 },
                 {
                     new AuditDependencyValidationException("Service dependency validation.", innerException),
-                    new AuditClientValidationException(
-                        "Audit client validation error occurred, fix errors and try again.",
+                    new AuditClientDependencyValidationException(
+                        "Audit client dependency validation error occurred, fix errors and try again.",
                         innerException)
                 },
                 {

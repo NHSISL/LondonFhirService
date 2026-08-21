@@ -100,43 +100,66 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 // Provider span from it gives the time that provider's result sat idle waiting
                 // for the slowest sibling.
                 Guid fanOutSpanId = await this.identifierBroker.GetIdentifierAsync();
+
+                // Both origins are taken here, before ToArray materialises the tasks. The wall
+                // clock and the stopwatch then measure from the same instant, and no child can
+                // start before the parent it hangs from.
                 DateTimeOffset fanOutStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-                var tasks = fhirProviders.Select(fhirProviders => ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
-                    fhirProviders.providerFriendlyName,
-                    fhirProviders.isPrimaryProvider,
-                    fhirProviders.provider,
-                    correlationId,
-                    nhsNumber,
-                    dateOfBirth,
-                    demographicsOnly,
-                    includeInactivePatients,
-                    fanOutSpanId,
-                    cancellationToken)).ToArray();
-
                 var stopwatchOutcomes = Stopwatch.StartNew();
-                var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
-                stopwatchOutcomes.Stop();
-                long elapsedTimeOutcomes = stopwatchOutcomes.ElapsedMilliseconds;
 
-                await this.auditAndMetricBroker.LogMetricAsync(new Metric
+
+                // Recorded on both exits. Individual provider failures already have their own
+                // spans; this covers the barrier itself failing, which would orphan them.
+                async ValueTask RecordFanOutSpanAsync(MetricStatus status, string errorCode)
                 {
-                    Id = fanOutSpanId,
-                    ParentId = parentId,
-                    CorrelationId = correlationId,
-                    Method = auditType,
-                    Type = MetricType.ProviderFanOut,
-                    Name = "Parallel provider execution",
-                    Started = fanOutStarted,
-                    Completed = fanOutStarted.AddMilliseconds(stopwatchOutcomes.Elapsed.TotalMilliseconds),
-                    DurationMs = stopwatchOutcomes.Elapsed.TotalMilliseconds,
-                    Status = MetricStatus.Succeeded,
-                    Description = $"{fhirProviders.Count} provider task(s) awaited."
-                });
+                    stopwatchOutcomes.Stop();
+
+                    await this.auditAndMetricBroker.LogMetricAsync(new Metric
+                    {
+                        Id = fanOutSpanId,
+                        ParentId = parentId,
+                        CorrelationId = correlationId,
+                        Method = auditType,
+                        Type = MetricType.ProviderFanOut,
+                        Name = "Parallel provider execution",
+                        Started = fanOutStarted,
+                        Completed = fanOutStarted.AddMilliseconds(stopwatchOutcomes.Elapsed.TotalMilliseconds),
+                        DurationMs = stopwatchOutcomes.Elapsed.TotalMilliseconds,
+                        Status = status,
+                        ErrorCode = errorCode,
+                        Description = $"{fhirProviders.Count} provider task(s) awaited."
+                    });
+                }
+
+                (string Provider, string Json, Exception Exception)[] outcomes;
+
+                try
+                {
+                    var tasks = fhirProviders.Select(fhirProviders => ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                        fhirProviders.providerFriendlyName,
+                        fhirProviders.isPrimaryProvider,
+                        fhirProviders.provider,
+                        correlationId,
+                        nhsNumber,
+                        dateOfBirth,
+                        demographicsOnly,
+                        includeInactivePatients,
+                        fanOutSpanId,
+                        cancellationToken)).ToArray();
+
+                    outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
+                    await RecordFanOutSpanAsync(MetricStatus.Succeeded, errorCode: null);
+                }
+                catch (Exception exception)
+                {
+                    await RecordFanOutSpanAsync(MetricStatus.Failed, exception.GetType().Name);
+
+                    throw;
+                }
 
                 await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
-                    title: $"Parallel Provider Execution Completed in {elapsedTimeOutcomes}ms",
+                    title: $"Parallel Provider Execution Completed in {stopwatchOutcomes.ElapsedMilliseconds}ms",
                     message,
                     fileName: null,
                     correlationId: correlationId.ToString());

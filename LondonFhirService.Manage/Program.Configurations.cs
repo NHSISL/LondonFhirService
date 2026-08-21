@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
@@ -244,6 +245,7 @@ public partial class Program
             new AuditAndMetricsClient(
                 serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
-                configuration));
+                configuration,
+                serviceProvider.GetRequiredService<ILoggerFactory>()));
     }
 }
