@@ -88,8 +88,8 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     dateOfBirth,
                     demographicsOnly,
                     includeInactivePatients,
-                    cancellationToken,
-                    parentId: requestSpanId);
+                    parentId: requestSpanId,
+                    cancellationToken);
 
             await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,

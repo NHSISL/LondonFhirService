@@ -65,8 +65,8 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
-            CancellationToken cancellationToken = default,
-            Guid? parentId = null) =>
+            Guid? parentId = null,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 var stopwatch = Stopwatch.StartNew();
@@ -106,13 +106,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     fhirProviders.providerFriendlyName,
                     fhirProviders.isPrimaryProvider,
                     fhirProviders.provider,
-                    cancellationToken,
                     correlationId,
                     nhsNumber,
                     dateOfBirth,
                     demographicsOnly,
                     includeInactivePatients,
-                    fanOutSpanId)).ToArray();
+                    fanOutSpanId,
+                    cancellationToken)).ToArray();
 
                 var stopwatchOutcomes = Stopwatch.StartNew();
                 var outcomes = await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -230,13 +230,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 string providerFriendlyName,
                 bool isPrimaryProvider,
                 IFhirProvider provider,
-                CancellationToken globalToken,
                 Guid correlationId,
                 string nhsNumber,
                 string dateOfBirth = null,
                 bool? demographicsOnly = null,
                 bool? includeInactivePatients = null,
-                Guid? parentId = null)
+                Guid? parentId = null,
+                CancellationToken globalToken = default)
         {
             if (globalToken.IsCancellationRequested)
             {

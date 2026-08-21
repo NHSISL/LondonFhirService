@@ -82,13 +82,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    cancellationToken,
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    parentId: null);
+                    parentId: null,
+                    cancellationToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -189,12 +189,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    alreadyCanceledToken,
                     correlationId,
                     inputNhsNumber,
                     null,
                     null,
-                    null);
+                    null,
+                    parentId: null,
+                    globalToken: alreadyCanceledToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -253,12 +254,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    default,
                     correlationId,
                     nhsNumber,
                     null,
                     null,
-                    null);
+                    null,
+                    parentId: null,
+                    globalToken: default);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -329,12 +331,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    default,
                     correlationId,
                     nhsNumber,
                     null,
                     null,
-                    null);
+                    null,
+                    parentId: null,
+                    globalToken: default);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -426,12 +429,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    default,
                     correlationId,
                     nhsNumber,
                     null,
                     null,
-                    null);
+                    null,
+                    parentId: null,
+                    globalToken: default);
 
             // then
             actualResult.Json.Should().BeNull();

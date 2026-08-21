@@ -63,7 +63,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         inputDateOfBirth,
                         inputDemographicsOnly,
                         inputActivePatientsOnly,
-                        cancellationToken);
+                        cancellationToken: cancellationToken);
 
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
@@ -161,7 +161,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         inputDateOfBirth,
                         inputDemographicsOnly,
                         inputActivePatientsOnly,
-                        cancellationToken);
+                        cancellationToken: cancellationToken);
 
             PatientOrchestrationDependencyException
                 actualPatientOrchestrationDependencyException =
@@ -256,7 +256,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         inputDateOfBirth,
                         inputDemographicsOnly,
                         inputActivePatientsOnly,
-                        cancellationToken);
+                        cancellationToken: cancellationToken);
 
             PatientOrchestrationDependencyValidationException
                 actualPatientOrchestrationDependencyValidationException =
@@ -327,7 +327,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         inputDateOfBirth,
                         inputDemographicsOnly,
                         inputActivePatientsOnly,
-                        cancellationToken);
+                        cancellationToken: cancellationToken);
 
             PatientOrchestrationDependencyException actualPatientOrchestrationDependencyException =
                 await Assert.ThrowsAsync<PatientOrchestrationDependencyException>(
@@ -408,7 +408,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         inputDateOfBirth,
                         inputDemographicsOnly,
                         inputActivePatientsOnly,
-                        cancellationToken);
+                        cancellationToken: cancellationToken);
 
             PatientOrchestrationServiceException actualPatientOrchestrationServiceException =
                 await Assert.ThrowsAsync<PatientOrchestrationServiceException>(

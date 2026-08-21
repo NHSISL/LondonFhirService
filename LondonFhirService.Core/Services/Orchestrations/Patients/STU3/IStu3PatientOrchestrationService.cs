@@ -17,8 +17,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
-            CancellationToken cancellationToken = default,
-            Guid? parentId = null);
+            Guid? parentId = null,
+            CancellationToken cancellationToken = default);
 
         ValueTask ValidateAccess(
             string nhsNumber,

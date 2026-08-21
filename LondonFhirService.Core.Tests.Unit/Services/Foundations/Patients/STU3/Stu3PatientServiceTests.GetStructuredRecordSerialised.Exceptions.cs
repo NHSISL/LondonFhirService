@@ -74,13 +74,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()))
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()))
                 .ThrowsAsync(dependencyValidationException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -106,13 +106,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()),
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -202,13 +202,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()))
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()))
                 .ThrowsAsync(dependencyException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -234,13 +234,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()),
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -330,13 +330,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()))
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()))
                 .ThrowsAsync(serviceException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -362,13 +362,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()),
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -461,13 +461,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()))
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()))
                 .ThrowsAsync(cancelledProviderException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -494,13 +494,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()),
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -594,13 +594,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()))
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()))
                 .ThrowsAsync(networkProviderException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -626,13 +626,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool>(),
                     It.IsAny<IFhirProvider>(),
-                    It.IsAny<CancellationToken>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<Guid?>()),
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>

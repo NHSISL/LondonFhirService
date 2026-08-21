@@ -69,8 +69,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
-            CancellationToken cancellationToken = default,
-            Guid? parentId = null) =>
+            Guid? parentId = null,
+            CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
             var stopwatch = Stopwatch.StartNew();
@@ -89,7 +89,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            await CheckAccessPermissionsAsync(nhsNumber, correlationId, cancellationToken, parentId);
+            await CheckAccessPermissionsAsync(nhsNumber, correlationId, parentId, cancellationToken);
 
             await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
@@ -141,8 +141,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 dateOfBirth,
                 demographicsOnly,
                 includeInactivePatients,
-                cancellationToken,
-                parentId: providerRequestsSpanId);
+                parentId: providerRequestsSpanId,
+                cancellationToken);
 
             providerRequestsStopwatch.Stop();
 
@@ -186,7 +186,11 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             Guid correlationId,
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
-            await CheckAccessPermissionsAsync(nhsNumber, correlationId, cancellationToken));
+            await CheckAccessPermissionsAsync(
+                nhsNumber,
+                correlationId,
+                parentId: null,
+                cancellationToken));
 
         /// <summary>
         /// The access decision itself. Kept separate from the public ValidateAccess so
@@ -196,8 +200,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         private async ValueTask CheckAccessPermissionsAsync(
             string nhsNumber,
             Guid correlationId,
-            CancellationToken cancellationToken = default,
-            Guid? parentId = null)
+            Guid? parentId = null,
+            CancellationToken cancellationToken = default)
         {
             ValidateArgsOnValidateAccess(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";

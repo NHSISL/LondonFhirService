@@ -49,8 +49,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken,
-                    It.IsAny<Guid?>()))
+                    It.IsAny<Guid?>(),
+                    cancellationToken))
                         .ReturnsAsync(new StructuredRecordsResponse
                         {
                             PrimaryProvider = randomPrimaryProvider,
@@ -87,8 +87,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken,
-                    It.IsAny<Guid?>()),
+                    It.IsAny<Guid?>(),
+                    cancellationToken),
                         Times.Once);
 
             this.fhirReconciliationServiceMock.Verify(service =>

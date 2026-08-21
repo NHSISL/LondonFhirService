@@ -58,8 +58,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    cancellationToken,
-                    It.IsAny<Guid?>()))
+                    It.IsAny<Guid?>(),
+                    cancellationToken))
                         .ReturnsAsync(new StructuredRecordsResponse
                         {
                             PrimaryProvider = randomPrimaryProvider,
@@ -134,8 +134,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<CancellationToken>(),
-                    It.IsAny<Guid?>()))
+                    It.IsAny<Guid?>(),
+                    It.IsAny<CancellationToken>()))
                         .ReturnsAsync(new StructuredRecordsResponse
                         {
                             PrimaryProvider = randomPrimaryProvider,
@@ -165,8 +165,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
                     It.IsAny<bool?>(),
-                    cancellationToken,
-                    requestSpanId),
+                    requestSpanId,
+                    cancellationToken),
                         Times.Once);
         }
     }

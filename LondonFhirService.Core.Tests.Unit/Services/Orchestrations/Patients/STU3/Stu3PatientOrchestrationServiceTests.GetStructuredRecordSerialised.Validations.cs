@@ -128,8 +128,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken,
-                    It.IsAny<Guid?>());
+                    It.IsAny<Guid?>(),
+                    cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -241,8 +241,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken,
-                    It.IsAny<Guid?>());
+                    It.IsAny<Guid?>(),
+                    cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
