@@ -22,7 +22,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
     /// There is deliberately no Validations partial any more: duplicating the library's rules
     /// here would let the two drift, and the library rejects the same input either way.
     /// </summary>
-    public partial class AuditService : IAuditService
+    internal partial class AuditService : IAuditService
     {
         private readonly IAuditAndMetricBroker auditAndMetricBroker;
         private readonly ILoggingBroker loggingBroker;

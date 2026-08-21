@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions
 {
-    public class CancelledMetricServiceException : Xeption
+    internal class CancelledMetricServiceException : Xeption
     {
         public CancelledMetricServiceException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

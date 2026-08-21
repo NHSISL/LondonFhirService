@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.FamilyMemberHistories
 {
-    public partial class FamilyMemberHistoryMatcherService
+    internal partial class FamilyMemberHistoryMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 

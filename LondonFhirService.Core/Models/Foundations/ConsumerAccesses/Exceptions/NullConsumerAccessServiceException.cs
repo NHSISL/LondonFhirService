@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class NullConsumerAccessServiceException : Xeption
+    internal class NullConsumerAccessServiceException : Xeption
     {
         public NullConsumerAccessServiceException(string message)
             : base(message)

@@ -12,7 +12,7 @@ using LondonFhirService.Core.Brokers.Storages.Sql;
 
 namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
 {
-    public partial class AuditAndMetricsStorageService
+    internal partial class AuditAndMetricsStorageService
     {
         public ValueTask<IMetric> InsertMetricAsync(
             IMetric metric,

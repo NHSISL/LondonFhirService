@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3
 {
-    public partial class Stu3FhirReconciliationService : IStu3FhirReconciliationService
+    internal partial class Stu3FhirReconciliationService : IStu3FhirReconciliationService
     {
         private delegate ValueTask<string> ReturningStringFunction();
 

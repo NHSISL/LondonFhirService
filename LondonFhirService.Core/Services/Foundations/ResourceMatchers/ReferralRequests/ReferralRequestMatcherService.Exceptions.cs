@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.ReferralRequests
 {
-    public partial class ReferralRequestMatcherService
+    internal partial class ReferralRequestMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 

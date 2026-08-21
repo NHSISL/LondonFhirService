@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Processings.ListEntryComparisons.Exceptions
 {
-    public class FailedListEntryComparisonProcessingException : Xeption
+    internal class FailedListEntryComparisonProcessingException : Xeption
     {
         public FailedListEntryComparisonProcessingException(
             string message,

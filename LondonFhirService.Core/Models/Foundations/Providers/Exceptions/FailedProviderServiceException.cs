@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Providers.Exceptions
 {
-    public class FailedProviderServiceException : Xeption
+    internal class FailedProviderServiceException : Xeption
     {
         public FailedProviderServiceException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

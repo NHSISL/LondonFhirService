@@ -14,7 +14,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Audits
 {
-    public partial class AuditService
+    internal partial class AuditService
     {
         private delegate ValueTask<Audit> ReturningAuditFunction();
         private delegate ValueTask<IQueryable<Audit>> ReturningAuditsFunction();

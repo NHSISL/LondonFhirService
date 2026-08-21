@@ -8,7 +8,7 @@ using LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions;
 
 namespace LondonFhirService.Core.Services.Foundations.JsonElements
 {
-    public partial class JsonElementService
+    internal partial class JsonElementService
     {
         private void ValidateOnCreateStringElement(string value)
         {

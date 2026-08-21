@@ -29,7 +29,7 @@ using LondonFhirService.Core.Services.Foundations.Providers;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
-    public partial class Stu3PatientOrchestrationService : IStu3PatientOrchestrationService
+    internal partial class Stu3PatientOrchestrationService : IStu3PatientOrchestrationService
     {
         private readonly IProviderService providerService;
         private readonly IStu3PatientService patientService;

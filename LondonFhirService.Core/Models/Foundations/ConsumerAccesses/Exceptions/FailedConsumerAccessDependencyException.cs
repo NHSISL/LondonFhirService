@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions
 {
-    public class FailedConsumerAccessDependencyException : Xeption
+    internal class FailedConsumerAccessDependencyException : Xeption
     {
         public FailedConsumerAccessDependencyException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

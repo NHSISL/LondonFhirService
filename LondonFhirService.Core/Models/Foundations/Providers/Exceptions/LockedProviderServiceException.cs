@@ -7,7 +7,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Providers.Exceptions
 {
-    public class LockedProviderServiceException : Xeption
+    internal class LockedProviderServiceException : Xeption
     {
         public LockedProviderServiceException(string message, Exception innerException)
             : base(message, innerException)

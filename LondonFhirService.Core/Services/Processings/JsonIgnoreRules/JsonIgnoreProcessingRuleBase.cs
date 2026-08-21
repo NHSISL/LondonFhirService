@@ -9,7 +9,7 @@ namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
     using LondonFhirService.Core.Brokers.Loggings;
     using LondonFhirService.Core.Services.Foundations.JsonElements;
 
-    public abstract partial class JsonIgnoreProcessingRuleBase : IJsonIgnoreProcessingRule
+    internal abstract partial class JsonIgnoreProcessingRuleBase : IJsonIgnoreProcessingRule
     {
         protected readonly IJsonElementService jsonElementService;
         protected readonly ILoggingBroker loggingBroker;

@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Patients.Exceptions
 {
-    public class FailedPatientDependencyValidationException : Xeption
+    internal class FailedPatientDependencyValidationException : Xeption
     {
         public FailedPatientDependencyValidationException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

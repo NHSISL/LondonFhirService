@@ -13,7 +13,7 @@ using LondonFhirService.Core.Models.Foundations.Audits;
 
 namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
 {
-    public partial class AuditAndMetricsStorageService
+    internal partial class AuditAndMetricsStorageService
     {
         public IAudit CreateAudit() =>
             new Audit();

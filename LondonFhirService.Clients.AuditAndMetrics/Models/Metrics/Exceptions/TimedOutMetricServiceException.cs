@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions
 {
-    public class TimedOutMetricServiceException : Xeption
+    internal class TimedOutMetricServiceException : Xeption
     {
         public TimedOutMetricServiceException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions
 {
-    public class NotFoundAuditException : Xeption
+    internal class NotFoundAuditException : Xeption
     {
         public NotFoundAuditException(string message)
             : base(message)

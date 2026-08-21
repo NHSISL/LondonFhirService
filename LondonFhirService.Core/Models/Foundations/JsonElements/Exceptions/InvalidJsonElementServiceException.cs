@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.JsonElements.Exceptions
 {
-    public class InvalidJsonElementServiceException : Xeption
+    internal class InvalidJsonElementServiceException : Xeption
     {
         public InvalidJsonElementServiceException(string message)
             : base(message)

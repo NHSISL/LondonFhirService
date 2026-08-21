@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions
 {
-    public class InvalidMetricException : Xeption
+    internal class InvalidMetricException : Xeption
     {
         public InvalidMetricException(string message)
             : base(message)

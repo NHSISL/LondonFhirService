@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions
 {
-    public class NullAuditException : Xeption
+    internal class NullAuditException : Xeption
     {
         public NullAuditException(string message)
             : base(message)

@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions
 {
-    public class FailedAuditServiceException : Xeption
+    internal class FailedAuditServiceException : Xeption
     {
         public FailedAuditServiceException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

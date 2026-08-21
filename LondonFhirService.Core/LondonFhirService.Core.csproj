@@ -61,7 +61,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Service implementations and categorization exceptions are internal; the service
+		     interfaces and the localization exceptions are the public contract. The hosts still
+		     have to register the implementations and catch the categorized failures. -->
+		<InternalsVisibleTo Include="LondonFhirService.Api" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage" />
 		<InternalsVisibleTo Include="LondonFhirService.Core.Tests.Unit" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Unit" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Acceptance" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Integration" />
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Performance" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Unit" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Acceptance" />
+		<InternalsVisibleTo Include="LondonFhirService.Manage.Tests.Integration" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 

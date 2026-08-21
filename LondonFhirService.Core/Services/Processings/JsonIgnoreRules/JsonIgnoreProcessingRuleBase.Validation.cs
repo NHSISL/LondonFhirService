@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
-    public abstract partial class JsonIgnoreProcessingRuleBase
+    internal abstract partial class JsonIgnoreProcessingRuleBase
     {
         protected internal virtual void ValidateOnShouldIgnore(JsonElement element, string path)
         {

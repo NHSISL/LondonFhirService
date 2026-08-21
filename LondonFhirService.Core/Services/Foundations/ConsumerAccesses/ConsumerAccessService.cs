@@ -10,7 +10,7 @@ using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 
 namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
 {
-    public partial class ConsumerAccessService : IConsumerAccessService
+    internal partial class ConsumerAccessService : IConsumerAccessService
     {
         private readonly IConsumerAccessBroker consumerAccessBroker;
         private readonly ILoggingBroker loggingBroker;

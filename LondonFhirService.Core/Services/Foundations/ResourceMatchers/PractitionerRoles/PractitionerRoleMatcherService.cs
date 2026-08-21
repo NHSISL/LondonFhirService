@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.PractitionerRoles
 {
-    public partial class PractitionerRoleMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class PractitionerRoleMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public PractitionerRoleMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)

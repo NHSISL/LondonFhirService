@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
 {
-    public partial class AuditAndMetricsStorageService
+    internal partial class AuditAndMetricsStorageService
     {
         private delegate ValueTask<T> ReturningGenericFunction<T>();
         private delegate ValueTask ReturningNothingFunction();

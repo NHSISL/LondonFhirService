@@ -13,7 +13,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
-    public partial class Stu3PatientOrchestrationService
+    internal partial class Stu3PatientOrchestrationService
     {
         private delegate ValueTask<StructuredRecordsResponse> ReturningStructuredRecordsResponseFunction();
 

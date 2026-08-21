@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Immunizations
 {
-    public partial class ImmunizationMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class ImmunizationMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public ImmunizationMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)

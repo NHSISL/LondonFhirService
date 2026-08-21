@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions
 {
-    public class NotFoundMetricException : Xeption
+    internal class NotFoundMetricException : Xeption
     {
         public NotFoundMetricException(string message)
             : base(message)

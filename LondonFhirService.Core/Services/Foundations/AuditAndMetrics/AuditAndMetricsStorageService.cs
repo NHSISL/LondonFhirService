@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
     /// the scoped broker, because they return an IQueryable the caller enumerates and disposing
     /// the context underneath it would kill the query.
     /// </summary>
-    public partial class AuditAndMetricsStorageService : IAuditAndMetricsStorageBroker
+    internal partial class AuditAndMetricsStorageService : IAuditAndMetricsStorageBroker
     {
         private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly IStorageBroker storageBroker;

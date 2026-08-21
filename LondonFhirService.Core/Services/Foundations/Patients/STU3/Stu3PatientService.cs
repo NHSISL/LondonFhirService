@@ -27,7 +27,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 {
-    public partial class Stu3PatientService : IStu3PatientService
+    internal partial class Stu3PatientService : IStu3PatientService
     {
         private readonly IStu3FhirBroker fhirBroker;
         private readonly IAuditAndMetricBroker auditAndMetricBroker;

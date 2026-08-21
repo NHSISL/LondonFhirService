@@ -10,7 +10,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
 {
-    public partial class ComparisonOrchestrationService
+    internal partial class ComparisonOrchestrationService
     {
         private delegate ValueTask<ComparisonResult> ReturningComparisonResultFunction();
 

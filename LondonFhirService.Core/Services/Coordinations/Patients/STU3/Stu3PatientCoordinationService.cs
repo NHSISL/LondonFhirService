@@ -18,7 +18,7 @@ using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
-    public partial class Stu3PatientCoordinationService : IStu3PatientCoordinationService
+    internal partial class Stu3PatientCoordinationService : IStu3PatientCoordinationService
     {
         private readonly IStu3PatientOrchestrationService patientOrchestrationService;
         private readonly IStu3FhirReconciliationService fhirReconciliationService;

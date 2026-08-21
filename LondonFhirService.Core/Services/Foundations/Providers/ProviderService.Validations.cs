@@ -10,7 +10,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Providers
 {
-    public partial class ProviderService
+    internal partial class ProviderService
     {
         private async ValueTask ValidateProviderOnAdd(Provider provider)
         {

@@ -14,7 +14,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Providers
 {
-    public partial class ProviderService
+    internal partial class ProviderService
     {
         private delegate ValueTask<Provider> ReturningProviderFunction();
         private delegate ValueTask<IQueryable<Provider>> ReturningProvidersFunction();

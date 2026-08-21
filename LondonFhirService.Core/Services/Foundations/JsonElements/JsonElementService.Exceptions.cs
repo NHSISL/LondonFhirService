@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LondonFhirService.Core.Services.Foundations.JsonElements
 {
-    public partial class JsonElementService
+    internal partial class JsonElementService
     {
         private delegate ValueTask<JsonElement> ReturningJsonElementFunction();
 

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LondonFhirService.Core.Services.Foundations.JsonElements
 {
-    public partial class JsonElementService : IJsonElementService
+    internal partial class JsonElementService : IJsonElementService
     {
         public ValueTask<JsonElement> CreateStringElement(string value) =>
         TryCatch(async () =>

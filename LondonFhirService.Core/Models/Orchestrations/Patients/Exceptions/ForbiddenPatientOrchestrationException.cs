@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions
 {
-    public class ForbiddenPatientOrchestrationException : Xeption
+    internal class ForbiddenPatientOrchestrationException : Xeption
     {
         public ForbiddenPatientOrchestrationException(string message)
             : base(message)

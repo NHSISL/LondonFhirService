@@ -7,7 +7,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Providers.Exceptions
 {
-    public class AlreadyExistsProviderServiceException : Xeption
+    internal class AlreadyExistsProviderServiceException : Xeption
     {
         public AlreadyExistsProviderServiceException(string message, Exception innerException)
             : base(message, innerException)
