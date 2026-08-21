@@ -9,6 +9,7 @@ using EFxceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -49,6 +50,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             AddProviderConfigurations(modelBuilder.Entity<Provider>());
             AddFhirRecordConfigurations(modelBuilder.Entity<FhirRecord>());
             AddFhirRecordDifferenceConfigurations(modelBuilder.Entity<FhirRecordDifference>());
+            AddMetricConfigurations(modelBuilder.Entity<Metric>());
         }
 
         private async ValueTask<T> InsertAsync<T>(T @object) where T : class =>
