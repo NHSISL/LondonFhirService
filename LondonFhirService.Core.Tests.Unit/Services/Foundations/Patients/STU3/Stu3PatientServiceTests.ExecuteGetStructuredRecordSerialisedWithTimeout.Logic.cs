@@ -87,7 +87,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly);
+                    inputActivePatientsOnly,
+                    parentId: null);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -133,7 +134,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.identifierBrokerMock.Verify(broker =>
                 broker.GetIdentifierAsync(),
-                    Times.Once);
+                    Times.AtLeastOnce);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyAddAuditValuesAsync(It.Is(SameFhirRecordAs(fhirRecord))),
@@ -151,6 +152,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 factory.DisposeAsync(),
                     Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
@@ -205,6 +207,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 alreadyCanceledToken),
                     Times.Never());
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
@@ -281,6 +284,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.DisplayName,
                     Times.AtLeastOnce);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
@@ -365,6 +369,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.DisplayName,
                     Times.AtLeastOnce);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
@@ -458,6 +463,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.DisplayName,
                     Times.AtLeastOnce);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();

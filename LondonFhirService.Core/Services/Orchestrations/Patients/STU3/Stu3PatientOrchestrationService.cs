@@ -11,10 +11,14 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using ISL.Security.Client.Models.Foundations.Users;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Models.Orchestrations.Patients;
@@ -33,6 +37,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         private readonly IAuditAndMetricBroker auditAndMetricBroker;
         private readonly ISecurityBroker securityBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly IIdentifierBroker identifierBroker;
+        private readonly IDateTimeBroker dateTimeBroker;
         private readonly AccessConfigurations accessConfigurations;
 
         public Stu3PatientOrchestrationService(
@@ -42,6 +48,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             IAuditAndMetricBroker auditAndMetricBroker,
             ISecurityBroker securityBroker,
             ILoggingBroker loggingBroker,
+            IIdentifierBroker identifierBroker,
+            IDateTimeBroker dateTimeBroker,
             AccessConfigurations accessConfigurations)
         {
             this.providerService = providerService;
@@ -50,6 +58,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             this.auditAndMetricBroker = auditAndMetricBroker;
             this.securityBroker = securityBroker;
             this.loggingBroker = loggingBroker;
+            this.identifierBroker = identifierBroker;
+            this.dateTimeBroker = dateTimeBroker;
             this.accessConfigurations = accessConfigurations;
         }
 
@@ -59,7 +69,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
-            CancellationToken cancellationToken = default) =>
+            CancellationToken cancellationToken = default,
+            Guid? parentId = null) =>
         TryCatch(async () =>
         {
             var stopwatch = Stopwatch.StartNew();
@@ -78,7 +89,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
-            await CheckAccessPermissionsAsync(nhsNumber, correlationId, cancellationToken);
+            await CheckAccessPermissionsAsync(nhsNumber, correlationId, cancellationToken, parentId);
 
             await this.auditAndMetricBroker.LogInformationAsync(
                 auditType,
@@ -87,9 +98,41 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 fileName: null,
                 correlationId: correlationId.ToString());
 
+            // ProviderRequests wraps discovery and the fan out together, so it is the single
+            // figure to set against AccessCheck and Consolidation. Discovery is measured again
+            // inside it, as a child, because a slow provider table is a different problem from
+            // slow providers.
+            Guid providerRequestsSpanId = await this.identifierBroker.GetIdentifierAsync();
+
+            DateTimeOffset providerRequestsStarted =
+                await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+            var providerRequestsStopwatch = Stopwatch.StartNew();
+            Guid discoverySpanId = await this.identifierBroker.GetIdentifierAsync();
+            DateTimeOffset discoveryStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            var discoveryStopwatch = Stopwatch.StartNew();
+
             Provider primaryProvider;
             List<Provider> activeProviders;
             (primaryProvider, activeProviders) = await GetProviderInfo();
+
+            discoveryStopwatch.Stop();
+
+            await this.auditAndMetricBroker.LogMetricAsync(new Metric
+            {
+                Id = discoverySpanId,
+                ParentId = providerRequestsSpanId,
+                CorrelationId = correlationId,
+                Method = auditType,
+                Type = MetricType.ProviderDiscovery,
+                Name = "Resolve active providers",
+                Started = discoveryStarted,
+                Completed = discoveryStarted.AddMilliseconds(discoveryStopwatch.Elapsed.TotalMilliseconds),
+                DurationMs = discoveryStopwatch.Elapsed.TotalMilliseconds,
+                Status = MetricStatus.Succeeded,
+                Target = primaryProvider?.FullyQualifiedName,
+                Description = $"{activeProviders.Count} active STU3 provider(s) resolved."
+            });
 
             List<(string Provider, string Json)> bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
                 activeProviders,
@@ -98,7 +141,28 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 dateOfBirth,
                 demographicsOnly,
                 includeInactivePatients,
-                cancellationToken);
+                cancellationToken,
+                parentId: providerRequestsSpanId);
+
+            providerRequestsStopwatch.Stop();
+
+            await this.auditAndMetricBroker.LogMetricAsync(new Metric
+            {
+                Id = providerRequestsSpanId,
+                ParentId = parentId,
+                CorrelationId = correlationId,
+                Method = auditType,
+                Type = MetricType.ProviderRequests,
+                Name = "Provider requests",
+                Started = providerRequestsStarted,
+
+                Completed = providerRequestsStarted
+                    .AddMilliseconds(providerRequestsStopwatch.Elapsed.TotalMilliseconds),
+
+                DurationMs = providerRequestsStopwatch.Elapsed.TotalMilliseconds,
+                Status = MetricStatus.Succeeded,
+                Description = $"{bundles.Count} of {activeProviders.Count} provider(s) returned a bundle."
+            });
 
             stopwatch.Stop();
             long elapsedTime = stopwatch.ElapsedMilliseconds;
@@ -132,11 +196,16 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
         private async ValueTask CheckAccessPermissionsAsync(
             string nhsNumber,
             Guid correlationId,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            Guid? parentId = null)
         {
             ValidateArgsOnValidateAccess(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
             string message = $"Parameters:  {{ nhsNumber = \"{nhsNumber}\" }}";
+            Guid accessCheckSpanId = await this.identifierBroker.GetIdentifierAsync();
+
+            DateTimeOffset accessCheckStarted =
+                await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
             if (this.accessConfigurations.CheckAccessPermissions)
             {
@@ -208,6 +277,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         fileName: null,
                         correlationId: correlationId.ToString());
 
+                    await this.auditAndMetricBroker.LogMetricAsync(new Metric
+                    {
+                        Id = accessCheckSpanId,
+                        ParentId = parentId,
+                        CorrelationId = correlationId,
+                        Method = auditType,
+                        Type = MetricType.AccessCheck,
+                        Name = "Check access permissions",
+                        Started = accessCheckStarted,
+                        Completed = accessCheckStarted.AddMilliseconds(stopwatch.Elapsed.TotalMilliseconds),
+                        DurationMs = stopwatch.Elapsed.TotalMilliseconds,
+                        Status = MetricStatus.Failed,
+                        ErrorCode = "AccessForbidden",
+                        Consumer = currentUser.UserId,
+                        Description = "Access denied."
+                    });
+
                     throw new ForbiddenPatientOrchestrationException(
                         "Current consumer is not permitted to access this patient.  " +
                         $"CorrelationId: {correlationId.ToString()}");
@@ -226,6 +312,24 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 
                     fileName: null,
                     correlationId: correlationId.ToString());
+
+                await this.auditAndMetricBroker.LogMetricAsync(new Metric
+                {
+                    Id = accessCheckSpanId,
+                    ParentId = parentId,
+                    CorrelationId = correlationId,
+                    Method = auditType,
+                    Type = MetricType.AccessCheck,
+                    Name = "Check access permissions",
+                    Started = accessCheckStarted,
+                    Completed = accessCheckStarted.AddMilliseconds(stopwatch.Elapsed.TotalMilliseconds),
+                    DurationMs = stopwatch.Elapsed.TotalMilliseconds,
+                    Status = MetricStatus.Succeeded,
+                    Consumer = currentUser.UserId,
+
+                    Description =
+                        $"Allowed via {consumerAccess.AllowedViaOrganisations.Count} organisation(s)."
+                });
             }
             else
             {
@@ -235,6 +339,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     message,
                     fileName: null,
                     correlationId: correlationId.ToString());
+
+                // Recorded rather than omitted, so a request with no access check is visibly a
+                // configuration choice rather than a gap in the trace.
+                await this.auditAndMetricBroker.LogMetricAsync(new Metric
+                {
+                    Id = accessCheckSpanId,
+                    ParentId = parentId,
+                    CorrelationId = correlationId,
+                    Method = auditType,
+                    Type = MetricType.AccessCheck,
+                    Name = "Check access permissions",
+                    Started = accessCheckStarted,
+                    Completed = accessCheckStarted,
+                    DurationMs = 0,
+                    Status = MetricStatus.Skipped,
+                    Description = "Skipped: CheckAccessPermissions is false."
+                });
             }
         }
 

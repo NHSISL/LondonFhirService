@@ -60,6 +60,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditAndMetricBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
@@ -78,7 +79,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()))
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()))
                 .ThrowsAsync(dependencyValidationException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -109,7 +111,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()),
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -135,6 +138,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -184,6 +188,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditAndMetricBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
@@ -202,7 +207,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()))
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()))
                 .ThrowsAsync(dependencyException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -233,7 +239,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()),
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -259,6 +266,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -308,6 +316,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditAndMetricBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
@@ -326,7 +335,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()))
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()))
                 .ThrowsAsync(serviceException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -357,7 +367,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()),
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -383,6 +394,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -435,6 +447,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditAndMetricBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
@@ -453,7 +466,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()))
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()))
                 .ThrowsAsync(cancelledProviderException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -485,7 +499,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()),
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -511,6 +526,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
@@ -564,6 +580,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditAndMetricBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
@@ -582,7 +599,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()))
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()))
                 .ThrowsAsync(networkProviderException);
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -613,7 +631,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<bool?>(),
-                    It.IsAny<bool?>()),
+                    It.IsAny<bool?>(),
+                    It.IsAny<Guid?>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>
@@ -639,6 +658,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();

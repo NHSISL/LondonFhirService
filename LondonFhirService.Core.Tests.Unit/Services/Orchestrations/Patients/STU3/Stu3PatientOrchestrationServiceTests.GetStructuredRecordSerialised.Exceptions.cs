@@ -110,6 +110,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
@@ -207,6 +208,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
@@ -280,6 +282,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 service.RetrieveAllProvidersAsync(),
                     Times.Never);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
@@ -349,6 +352,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 service.RetrieveAllProvidersAsync(),
                     Times.Never);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
@@ -450,6 +454,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();

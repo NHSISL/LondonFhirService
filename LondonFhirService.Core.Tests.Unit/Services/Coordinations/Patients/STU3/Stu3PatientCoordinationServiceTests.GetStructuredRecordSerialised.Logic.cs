@@ -49,7 +49,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken))
+                    cancellationToken,
+                    It.IsAny<Guid?>()))
                         .ReturnsAsync(new StructuredRecordsResponse
                         {
                             PrimaryProvider = randomPrimaryProvider,
@@ -77,7 +78,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             this.identifierBrokerMock.Verify(broker =>
                 broker.GetIdentifierAsync(),
-                    Times.Once);
+                    Times.AtLeastOnce);
 
             this.patientOrchestrationServiceMock.Verify(service =>
                 service.GetStructuredRecordSerialisedAsync(
@@ -86,7 +87,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken),
+                    cancellationToken,
+                    It.IsAny<Guid?>()),
                         Times.Once);
 
             this.fhirReconciliationServiceMock.Verify(service =>
@@ -133,6 +135,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();

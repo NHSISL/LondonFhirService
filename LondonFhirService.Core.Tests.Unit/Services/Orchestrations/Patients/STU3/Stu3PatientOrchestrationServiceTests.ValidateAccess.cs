@@ -105,6 +105,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     default),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
@@ -147,6 +148,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     It.IsAny<CancellationToken>()),
                         Times.Never);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
@@ -202,6 +204,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 broker.GetCurrentUserAsync(),
                     Times.Never);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
@@ -286,6 +289,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     It.IsAny<CancellationToken>()),
                         Times.Never);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
@@ -401,6 +405,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();

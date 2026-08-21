@@ -8,6 +8,7 @@ using System;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Providers;
@@ -16,6 +17,8 @@ using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
+using System.Threading;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
@@ -29,6 +32,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
+        private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly IStu3PatientCoordinationService patientCoordinationService;
 
         public Stu3PatientCoordinationServiceTests()
@@ -38,13 +42,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
+            this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
 
             this.patientCoordinationService = new Stu3PatientCoordinationService(
                 patientOrchestrationService: patientOrchestrationServiceMock.Object,
                 fhirReconciliationService: fhirReconciliationServiceMock.Object,
                 loggingBroker: loggingBrokerMock.Object,
                 auditAndMetricBroker: auditAndMetricBrokerMock.Object,
-                identifierBroker: identifierBrokerMock.Object);
+                identifierBroker: identifierBrokerMock.Object,
+                dateTimeBroker: dateTimeBrokerMock.Object);
         }
 
         private static string GetRandomStringWithLength(int length)
@@ -158,5 +164,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     innerException)
             };
         }
+
+        /// <summary>
+        /// Metric spans are cross cutting - every path through this service records them, and
+        /// asserting on each one in every behavioural test would bury what the test is actually
+        /// about. Marking them verified here keeps VerifyNoOtherCalls meaningful for everything
+        /// else, while the span tree itself is covered by the Metrics tests.
+        /// </summary>
+        private void AcceptMetricSpans()
+        {
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+        }
+
     }
 }

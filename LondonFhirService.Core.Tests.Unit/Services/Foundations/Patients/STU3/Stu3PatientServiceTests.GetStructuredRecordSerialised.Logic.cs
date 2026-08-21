@@ -65,6 +65,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.fhirBroker,
                 this.auditAndMetricBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
@@ -83,7 +84,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly))
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>()))
                 .ReturnsAsync((ddsProvider.FriendlyName, rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
@@ -96,7 +98,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly))
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>()))
                 .ReturnsAsync((ldsProvider.FriendlyName, rawOutputLdsBundle, null));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -125,7 +128,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly),
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>()),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
@@ -138,7 +142,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly),
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>()),
                         Times.Once());
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -177,6 +182,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();

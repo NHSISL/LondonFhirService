@@ -95,7 +95,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken))
+                    cancellationToken,
+                    It.IsAny<Guid?>()))
                     .ReturnsAsync(randomBundles);
 
             // when
@@ -106,7 +107,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken);
+                    cancellationToken,
+                    It.IsAny<Guid?>());
 
             // then
             actualResponse.PrimaryProvider.Should().BeEquivalentTo(randomPrimaryProvider);
@@ -134,7 +136,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken),
+                    cancellationToken,
+                    It.IsAny<Guid?>()),
                     Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -199,6 +202,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();

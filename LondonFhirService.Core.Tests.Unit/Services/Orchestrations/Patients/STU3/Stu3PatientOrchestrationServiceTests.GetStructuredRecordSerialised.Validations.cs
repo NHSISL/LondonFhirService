@@ -66,6 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
@@ -127,7 +128,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken);
+                    cancellationToken,
+                    It.IsAny<Guid?>());
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -173,6 +175,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
@@ -238,7 +241,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     inputDateOfBirth,
                     inputDemographicsOnly,
                     inputActivePatientsOnly,
-                    cancellationToken);
+                    cancellationToken,
+                    It.IsAny<Guid?>());
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -284,6 +288,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
