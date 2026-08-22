@@ -53,7 +53,16 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Audits
                     auditType, title, message, fileName, correlationId, logLevel, cancellationToken);
             });
 
-        public async ValueTask<IAudit> LogAuditAsync(
+        public async ValueTask LogAuditAsync(
+            IAudit audit,
+            CancellationToken cancellationToken = default) =>
+            await TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await this.auditService.LogAuditAsync(audit, cancellationToken);
+            });
+
+        public async ValueTask<IAudit> AddAuditAsync(
             IAudit audit,
             CancellationToken cancellationToken = default) =>
             await TryCatch(async () =>
@@ -64,6 +73,16 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Audits
             });
 
         public async ValueTask BulkLogAuditsAsync(
+            List<IAudit> audits,
+            int batchSize = 10000,
+            CancellationToken cancellationToken = default) =>
+            await TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await this.auditService.BulkLogAuditsAsync(audits, batchSize, cancellationToken);
+            });
+
+        public async ValueTask BulkAddAuditsAsync(
             List<IAudit> audits,
             int batchSize = 10000,
             CancellationToken cancellationToken = default) =>

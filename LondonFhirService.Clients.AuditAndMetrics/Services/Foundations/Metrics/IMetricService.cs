@@ -22,11 +22,20 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         ValueTask<IMetric> AddMetricAsync(IMetric metric, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// The dispatched twin of AddMetricAsync. A metric span is recorded from inside the very
+        /// work it measures, so waiting for the write would inflate the figure being recorded.
+        /// </summary>
+        ValueTask LogMetricAsync(IMetric metric, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Records a batch of spans in one round trip. This is the flush the instrumented code
         /// uses at the end of a request, so that no storage write happens inside the work being
         /// measured. A no-op when recording is disabled by configuration.
         /// </summary>
         ValueTask AddMetricsAsync(List<IMetric> metrics, CancellationToken cancellationToken = default);
+
+        /// <summary>The dispatched twin of AddMetricsAsync.</summary>
+        ValueTask LogMetricsAsync(List<IMetric> metrics, CancellationToken cancellationToken = default);
 
         ValueTask<IQueryable<IMetric>> RetrieveAllMetricsAsync(CancellationToken cancellationToken = default);
         ValueTask<IMetric> RetrieveMetricByIdAsync(Guid metricId, CancellationToken cancellationToken = default);

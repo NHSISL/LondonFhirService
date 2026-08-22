@@ -24,7 +24,13 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics
     public interface IMetricClient
     {
         ValueTask<IMetric> AddMetricAsync(IMetric metric, CancellationToken cancellationToken = default);
+
+        /// <summary>Dispatched: validated and stamped now, written later.</summary>
+        ValueTask LogMetricAsync(IMetric metric, CancellationToken cancellationToken = default);
         ValueTask AddMetricsAsync(List<IMetric> metrics, CancellationToken cancellationToken = default);
+
+        /// <summary>Dispatched; see LogMetricAsync.</summary>
+        ValueTask LogMetricsAsync(List<IMetric> metrics, CancellationToken cancellationToken = default);
         ValueTask<IQueryable<IMetric>> RetrieveAllMetricsAsync(CancellationToken cancellationToken = default);
         ValueTask<IMetric> RetrieveMetricByIdAsync(Guid metricId, CancellationToken cancellationToken = default);
         ValueTask<IMetric> RemoveMetricByIdAsync(Guid metricId, CancellationToken cancellationToken = default);

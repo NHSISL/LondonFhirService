@@ -25,19 +25,22 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly AuditAndMetricsConfigurations metricServiceConfigurations;
+        private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public MetricService(
             IAuditAndMetricsStorageBroker storageBroker,
             IMetricBroker metricBroker,
             IDateTimeBroker dateTimeBroker,
             ILoggingBroker loggingBroker,
-            AuditAndMetricsConfigurations metricServiceConfigurations)
+            AuditAndMetricsConfigurations metricServiceConfigurations,
+            IAuditAndMetricsDispatcher dispatcher)
         {
             this.storageBroker = storageBroker;
             this.metricBroker = metricBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.loggingBroker = loggingBroker;
             this.metricServiceConfigurations = metricServiceConfigurations;
+            this.dispatcher = dispatcher;
         }
 
         public ValueTask<IMetric> AddMetricAsync(IMetric metric, CancellationToken cancellationToken = default) =>
@@ -88,6 +91,107 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             await this.storageBroker.BulkInsertMetricsAsync(metrics, cancellationToken);
             await this.metricBroker.RecordAsync(metrics, cancellationToken);
         });
+
+        public ValueTask LogMetricAsync(IMetric metric, CancellationToken cancellationToken = default) =>
+        SwallowAsync(() => TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.metricServiceConfigurations.IsEnabled is false)
+            {
+                return;
+            }
+
+            ValidateMetricIsNotNull(metric);
+            metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            ValidateMetricOnAdd(metric);
+
+            Dispatch(async token =>
+            {
+                IMetric addedMetric = await this.storageBroker.InsertMetricAsync(metric, token);
+                await this.metricBroker.RecordAsync(addedMetric, token);
+            });
+        }));
+
+        public ValueTask LogMetricsAsync(
+            List<IMetric> metrics,
+            CancellationToken cancellationToken = default) =>
+        SwallowAsync(() => TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.metricServiceConfigurations.IsEnabled is false)
+            {
+                return;
+            }
+
+            ValidateMetricsIsNotNull(metrics);
+
+            if (metrics.Count == 0)
+            {
+                return;
+            }
+
+            DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+            foreach (IMetric metric in metrics)
+            {
+                ValidateMetricIsNotNull(metric);
+                metric.CreatedDate = currentDateTime;
+                ValidateMetricOnAdd(metric);
+            }
+
+            // Snapshotted, so a caller that keeps mutating its list after handing it over cannot
+            // change what the deferred write persists. The audit bulk path already does this.
+            List<IMetric> snapshot = metrics.ToList();
+
+            Dispatch(async token =>
+            {
+                await this.storageBroker.BulkInsertMetricsAsync(snapshot, token);
+                await this.metricBroker.RecordAsync(snapshot, token);
+            });
+        }));
+
+        /// <summary>
+        /// A dispatched write must never fail the work it is measuring. These spans and entries
+        /// are recorded from inside the very request they describe, so a malformed one, or
+        /// storage being down, has to cost that request nothing.
+        ///
+        /// The broker used to provide this by wrapping the whole call in Task.Run with a catch.
+        /// Moving the deferral into this service removed it accidentally: validation now runs on
+        /// the caller thread, and without this its exception would surface in the patient request
+        /// instead of in a log line.
+        /// </summary>
+        private async ValueTask SwallowAsync(Func<ValueTask> work)
+        {
+            try
+            {
+                await work();
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected. The caller gave up, or the host is stopping.
+            }
+            catch (Exception)
+            {
+                // Swallowed, not logged. TryCatch has already localised this and written it to
+                // the logging broker on the way past; logging it again here would put two lines
+                // in the log for one failure and double the noise of a storage outage.
+            }
+        }
+
+        /// <summary>
+        /// See AuditService.Dispatch - a rejected write is logged, never thrown.
+        /// </summary>
+        private void Dispatch(Func<CancellationToken, ValueTask> work)
+        {
+            if (this.dispatcher.TryDispatch(work) is false)
+            {
+                _ = this.loggingBroker.LogWarningAsync(
+                    "A metric write was dropped because the dispatch queue was full. The span is "
+                        + "lost; the request it belongs to was not affected.");
+            }
+        }
 
         public ValueTask<IQueryable<IMetric>> RetrieveAllMetricsAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>

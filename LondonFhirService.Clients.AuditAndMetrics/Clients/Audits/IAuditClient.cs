@@ -41,9 +41,20 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Audits
             string logLevel = "Information",
             CancellationToken cancellationToken = default);
 
-        ValueTask<IAudit> LogAuditAsync(IAudit audit, CancellationToken cancellationToken = default);
+        /// <summary>Dispatched: the entry is validated and stamped now, written later.</summary>
+        ValueTask LogAuditAsync(IAudit audit, CancellationToken cancellationToken = default);
 
+        /// <summary>Awaited, for the API surface, which hands the stored entity back.</summary>
+        ValueTask<IAudit> AddAuditAsync(IAudit audit, CancellationToken cancellationToken = default);
+
+        /// <summary>Dispatched; see LogAuditAsync.</summary>
         ValueTask BulkLogAuditsAsync(
+            List<IAudit> audits,
+            int batchSize = 10000,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>Awaited counterpart of BulkLogAuditsAsync.</summary>
+        ValueTask BulkAddAuditsAsync(
             List<IAudit> audits,
             int batchSize = 10000,
             CancellationToken cancellationToken = default);

@@ -28,6 +28,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         private readonly Mock<IMetricBroker> metricBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly Mock<IAuditAndMetricsDispatcher> dispatcherMock;
         private readonly AuditAndMetricsConfigurations metricServiceConfigurations;
         private readonly IMetricService metricService;
 
@@ -37,6 +38,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.metricBrokerMock = new Mock<IMetricBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.dispatcherMock = new Mock<IAuditAndMetricsDispatcher>();
+
+            // Inline, so a dispatched write is observable by the time the call returns.
+            this.dispatcherMock.Setup(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()))
+                    .Returns((Func<CancellationToken, ValueTask> work) =>
+                    {
+                        work(CancellationToken.None).AsTask().GetAwaiter().GetResult();
+
+                        return true;
+                    });
 
             // Held as a field rather than a mock so a test can flip a switch in place and
             // exercise the configured behaviour without building a second service.
@@ -53,7 +65,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 metricBroker: this.metricBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
-                metricServiceConfigurations: this.metricServiceConfigurations);
+                metricServiceConfigurations: this.metricServiceConfigurations,
+                dispatcher: this.dispatcherMock.Object);
         }
 
         private void VerifyNoOtherCallsOnAllBrokers()

@@ -22,19 +22,22 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly IAuditUserBroker auditUserBroker;
+        private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public AuditService(
             IAuditAndMetricsStorageBroker storageBroker,
             IDateTimeBroker dateTimeBroker,
             IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker,
-            IAuditUserBroker auditUserBroker)
+            IAuditUserBroker auditUserBroker,
+            IAuditAndMetricsDispatcher dispatcher)
         {
             this.storageBroker = storageBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
             this.auditUserBroker = auditUserBroker;
+            this.dispatcher = dispatcher;
         }
 
         public ValueTask LogAuditAsync(
@@ -45,7 +48,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             string correlationId,
             string logLevel = "Information",
             CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
+        SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -56,10 +59,9 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
 
             // Only the write is deferred. Everything above ran on the caller's thread, so the
             // entry carries the time and user of the moment it happened rather than of whenever
-            // the thread pool got round to it.
-            FireAndForget(async () =>
-                await this.storageBroker.InsertAuditAsync(audit, cancellationToken));
-        });
+            // the write got round to running.
+            Dispatch(async token => await this.storageBroker.InsertAuditAsync(audit, token));
+        }));
 
         public ValueTask<IAudit> RecordAuditAsync(
             string auditType,
@@ -92,6 +94,42 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             return await this.storageBroker.InsertAuditAsync(audit, cancellationToken);
         });
 
+        public ValueTask LogAuditAsync(IAudit audit, CancellationToken cancellationToken = default) =>
+        SwallowAsync(() => TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateAuditIsNotNull(audit);
+            await StampAsync(audit);
+            ValidateAuditOnAdd(audit);
+
+            // Validated and stamped on the caller's thread; only the write is deferred.
+            Dispatch(async token => await this.storageBroker.InsertAuditAsync(audit, token));
+        }));
+
+        public ValueTask BulkLogAuditsAsync(
+            List<IAudit> audits,
+            int batchSize = 10000,
+            CancellationToken cancellationToken = default) =>
+        SwallowAsync(() => TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateAuditsIsNotNull(audits);
+            ValidateBatchSize(batchSize);
+
+            if (audits.Count == 0)
+            {
+                return;
+            }
+
+            await StampBatchAsync(audits);
+
+            for (int index = 0; index < audits.Count; index += batchSize)
+            {
+                List<IAudit> batch = audits.Skip(index).Take(batchSize).ToList();
+                Dispatch(token => this.storageBroker.BulkInsertAuditsAsync(batch, token));
+            }
+        }));
+
         public ValueTask BulkAddAuditsAsync(
             List<IAudit> audits,
             int batchSize = 10000,
@@ -107,52 +145,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
                 return;
             }
 
-            // One clock reading for the whole batch, so entries flushed together are not spread
-            // across the boundary of a tick.
-            DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-            int unstampedCount = 0;
-            var unstampedTypes = new List<string>();
-            var unstampedCorrelationIds = new List<string>();
-
-            foreach (IAudit audit in audits)
-            {
-                ValidateAuditIsNotNull(audit);
-
-                if (await StampAsync(audit, currentDateTime))
-                {
-                    unstampedCount++;
-                    unstampedTypes.Add(audit.AuditType);
-                    unstampedCorrelationIds.Add(audit.CorrelationId);
-                }
-
-                ValidateAuditOnAdd(audit);
-            }
-
-            // One warning for the batch rather than one per entry, so a caller that stamps
-            // nothing produces a single actionable line instead of thousands.
-            //
-            // The audit types and correlation ids are included because they identify the calling
-            // service far better than the stack trace does: these writes are dispatched to the
-            // background, so by the time this runs the original caller's frames are gone and the
-            // trace shows only the thread pool and this library. The trace is still carried in
-            // case the caller invoked the service directly.
-            if (unstampedCount > 0)
-            {
-                string affectedTypes = string.Join(
-                    ", ",
-                    audits.Where(audit => unstampedTypes.Contains(audit.AuditType))
-                        .Select(audit => audit.AuditType)
-                        .Distinct());
-
-                await this.loggingBroker.LogWarningAsync(
-                    $"{unstampedCount} of {audits.Count} audit entries arrived without a creation " +
-                    "timestamp and were stamped with the write time instead, so their order " +
-                    "within the batch is not reliable. The calling service should stamp " +
-                    $"CreatedDate when the entry is created. Audit types affected: {affectedTypes}. " +
-                    $"Correlation ids: {string.Join(", ", unstampedCorrelationIds.Distinct())}. " +
-                    $"Stack trace: {Environment.StackTrace}");
-            }
+            await StampBatchAsync(audits);
 
             for (int index = 0; index < audits.Count; index += batchSize)
             {
@@ -245,22 +238,102 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         }
 
         /// <summary>
-        /// Dispatches the write and returns. Failures are logged rather than thrown: a caller
-        /// recording an audit entry has no way to react to the recording failing, and throwing
-        /// would turn an observability problem into an outage.
+        /// A dispatched write must never fail the work it is measuring. These spans and entries
+        /// are recorded from inside the very request they describe, so a malformed one, or
+        /// storage being down, has to cost that request nothing.
+        ///
+        /// The broker used to provide this by wrapping the whole call in Task.Run with a catch.
+        /// Moving the deferral into this service removed it accidentally: validation now runs on
+        /// the caller thread, and without this its exception would surface in the patient request
+        /// instead of in a log line.
         /// </summary>
-        private void FireAndForget(Func<Task> work) =>
-            _ = Task.Run(async () =>
+        private async ValueTask SwallowAsync(Func<ValueTask> work)
+        {
+            try
             {
-                try
+                await work();
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected. The caller gave up, or the host is stopping.
+            }
+            catch (Exception)
+            {
+                // Swallowed, not logged. TryCatch has already localised this and written it to
+                // the logging broker on the way past; logging it again here would put two lines
+                // in the log for one failure and double the noise of a storage outage.
+            }
+        }
+
+        /// <summary>
+        /// Hands a deferred write to the dispatcher. A rejection is logged rather than thrown:
+        /// the caller is recording what happened, not doing the work the request came for, and
+        /// turning a full queue into a failed patient request would be the wrong trade.
+        /// </summary>
+        private void Dispatch(Func<CancellationToken, ValueTask> work)
+        {
+            if (this.dispatcher.TryDispatch(work) is false)
+            {
+                _ = this.loggingBroker.LogWarningAsync(
+                    "An audit or metric write was dropped because the dispatch queue was full. "
+                        + "The entry is lost; the request it belongs to was not affected.");
+            }
+        }
+
+        /// <summary>
+        /// Stamps a whole batch against one clock reading and reports, once, how many entries
+        /// arrived without a creation time of their own. Shared by the awaited and dispatched
+        /// bulk paths so the two cannot drift apart on something this easy to get wrong.
+        /// </summary>
+        private async ValueTask StampBatchAsync(List<IAudit> audits)
+        {
+            // One clock reading for the whole batch, so entries flushed together are not spread
+            // across the boundary of a tick.
+            DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+            int unstampedCount = 0;
+            var unstampedTypes = new List<string>();
+            var unstampedCorrelationIds = new List<string>();
+
+            foreach (IAudit audit in audits)
+            {
+                ValidateAuditIsNotNull(audit);
+
+                if (await StampAsync(audit, currentDateTime))
                 {
-                    await work();
+                    unstampedCount++;
+                    unstampedTypes.Add(audit.AuditType);
+                    unstampedCorrelationIds.Add(audit.CorrelationId);
                 }
-                catch (Exception exception)
-                {
-                    await this.loggingBroker.LogErrorAsync(exception);
-                }
-            });
+
+                ValidateAuditOnAdd(audit);
+            }
+
+            // One warning for the batch rather than one per entry, so a caller that stamps
+            // nothing produces a single actionable line instead of thousands.
+            //
+            // The audit types and correlation ids are included because they identify the calling
+            // service far better than the stack trace does: these writes are dispatched to the
+            // background, so by the time this runs the original caller's frames are gone and the
+            // trace shows only the thread pool and this library. The trace is still carried in
+            // case the caller invoked the service directly.
+            if (unstampedCount > 0)
+            {
+                string affectedTypes = string.Join(
+                    ", ",
+                    audits.Where(audit => unstampedTypes.Contains(audit.AuditType))
+                        .Select(audit => audit.AuditType)
+                        .Distinct());
+
+                await this.loggingBroker.LogWarningAsync(
+                    $"{unstampedCount} of {audits.Count} audit entries arrived without a creation " +
+                    "timestamp and were stamped with the write time instead, so their order " +
+                    "within the batch is not reliable. The calling service should stamp " +
+                    $"CreatedDate when the entry is created. Audit types affected: {affectedTypes}. " +
+                    $"Correlation ids: {string.Join(", ", unstampedCorrelationIds.Distinct())}. " +
+                    $"Stack trace: {Environment.StackTrace}");
+            }
+        }
 
         /// <summary>
         /// Fills in what the caller is not expected to know: the identity and the timestamps. The

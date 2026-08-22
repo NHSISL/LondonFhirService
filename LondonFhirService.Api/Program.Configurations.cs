@@ -14,6 +14,7 @@ using ISL.Providers.Captcha.FakeCaptcha.Providers.FakeCaptcha;
 using ISL.Providers.Captcha.GoogleReCaptcha.Models.Brokers.GoogleReCaptcha;
 using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
+using LondonFhirService.Api.Dispatchers;
 using LondonFhirService.Api.Workers;
 using LondonFhirService.Clients.AuditAndMetrics.Clients;
 using Microsoft.ApplicationInsights;
@@ -412,7 +413,8 @@ public partial class Program
                 serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
                 configuration,
-                serviceProvider.GetRequiredService<ILoggerFactory>()));
+                serviceProvider.GetRequiredService<ILoggerFactory>(),
+                serviceProvider.GetRequiredService<IAuditAndMetricsDispatcher>()));
     }
 
     private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)
@@ -427,6 +429,18 @@ public partial class Program
             configuration.GetSection("MetricPurgeWorkerSettings"));
 
         services.AddHostedService<MetricPurgeWorker>();
+
+        // Deferred audit and metric writes go through a bounded queue rather than a thread pool
+        // item each. Singleton, and shared with the worker that drains it.
+        services.Configure<AuditAndMetricsDispatcherSettings>(
+            configuration.GetSection("AuditAndMetricsDispatcherSettings"));
+
+        services.AddSingleton<AuditAndMetricsDispatcher>();
+
+        services.AddSingleton<IAuditAndMetricsDispatcher>(serviceProvider =>
+            serviceProvider.GetRequiredService<AuditAndMetricsDispatcher>());
+
+        services.AddHostedService<AuditAndMetricsDispatchWorker>();
 
         // Nothing was subscribed to the metric library's ActivitySource, so every span it
         // published was dropped before it reached Application Insights.

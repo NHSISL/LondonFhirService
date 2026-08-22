@@ -58,7 +58,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
             List<IAudit> randomAudits = CreateRandomAudits();
 
             this.auditServiceMock.Setup(service =>
-                service.BulkAddAuditsAsync(
+                service.BulkLogAuditsAsync(
                     It.IsAny<List<IAudit>>(),
                     It.IsAny<int>(),
                     It.IsAny<CancellationToken>()))

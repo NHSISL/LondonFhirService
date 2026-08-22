@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.DateTimes;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Identifiers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
@@ -26,6 +28,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly Mock<IAuditUserBroker> auditUserBrokerMock;
+        private readonly Mock<IAuditAndMetricsDispatcher> dispatcherMock;
         private readonly IAuditService auditService;
 
         public AuditServiceTests()
@@ -35,6 +38,19 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.auditUserBrokerMock = new Mock<IAuditUserBroker>();
+            this.dispatcherMock = new Mock<IAuditAndMetricsDispatcher>();
+
+            // Runs the deferred work inline. The production dispatcher hands it to a queue, which
+            // would make every dispatched-path assertion a race; here the write has happened by
+            // the time the call returns.
+            this.dispatcherMock.Setup(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()))
+                    .Returns((Func<CancellationToken, ValueTask> work) =>
+                    {
+                        work(CancellationToken.None).AsTask().GetAwaiter().GetResult();
+
+                        return true;
+                    });
 
             // The library holds no implementation of IAudit, so the entity it builds comes back
             // through the port - exactly as it does from the hosting application at runtime.
@@ -46,7 +62,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
-                auditUserBroker: this.auditUserBrokerMock.Object);
+                auditUserBroker: this.auditUserBrokerMock.Object,
+                dispatcher: this.dispatcherMock.Object);
         }
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
