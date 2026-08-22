@@ -135,7 +135,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Audits
             // The exact token, so the client cannot quietly call the service with
             // CancellationToken.None and leave the write uncancellable.
             this.auditServiceMock.Verify(service =>
-                service.BulkAddAuditsAsync(randomAudits, inputBatchSize, cancellationToken),
+                service.BulkLogAuditsAsync(randomAudits, inputBatchSize, cancellationToken),
                     Times.Once);
 
             this.auditServiceMock.VerifyNoOtherCalls();

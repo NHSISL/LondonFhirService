@@ -4,6 +4,7 @@
 
 using System;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.DateTimes;
+using LondonFhirService.Clients.AuditAndMetrics.Brokers.Dispatchers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Identifiers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
@@ -34,18 +35,29 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             IAuditAndMetricsStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
             IConfiguration configuration,
-            ILoggerFactory loggerFactory = null)
-            : this(storageBroker, auditUserBroker, BindConfigurations(configuration), loggerFactory)
+            ILoggerFactory loggerFactory = null,
+            IAuditAndMetricsDispatcher dispatcher = null)
+            : this(
+                storageBroker,
+                auditUserBroker,
+                BindConfigurations(configuration),
+                loggerFactory,
+                dispatcher)
         { }
 
         public AuditAndMetricsClient(
             IAuditAndMetricsStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
-            ILoggerFactory loggerFactory = null)
+            ILoggerFactory loggerFactory = null,
+            IAuditAndMetricsDispatcher dispatcher = null)
         {
-            IServiceProvider serviceProvider =
-                RegisterServices(storageBroker, auditUserBroker, configurations, loggerFactory);
+            IServiceProvider serviceProvider = RegisterServices(
+                storageBroker,
+                auditUserBroker,
+                configurations,
+                loggerFactory,
+                dispatcher);
 
             InitializeClients(serviceProvider);
         }
@@ -63,7 +75,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             IAuditAndMetricsStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IAuditAndMetricsDispatcher dispatcher)
         {
             // The storage broker is supplied rather than constructed: it is the seam that keeps
             // this library free of any reference to the application that hosts it.
@@ -87,6 +100,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
                 .AddTransient<IMetricService, MetricService>()
                 .AddTransient<IAuditClient, AuditClient>()
                 .AddTransient<IMetricClient, MetricClient>();
+
+            // A host with a lifecycle can queue deferred writes and drain them under control.
+            // Without one the fallback is a thread pool item per write, which is unbounded.
+            if (dispatcher is null)
+            {
+                serviceCollection.AddSingleton<IAuditAndMetricsDispatcher, ThreadPoolDispatcher>();
+            }
+            else
+            {
+                serviceCollection.AddSingleton(dispatcher);
+            }
 
             return serviceCollection.BuildServiceProvider();
         }

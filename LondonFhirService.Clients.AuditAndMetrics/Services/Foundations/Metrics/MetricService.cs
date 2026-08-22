@@ -25,19 +25,22 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly AuditAndMetricsConfigurations metricServiceConfigurations;
+        private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public MetricService(
             IAuditAndMetricsStorageBroker storageBroker,
             IMetricBroker metricBroker,
             IDateTimeBroker dateTimeBroker,
             ILoggingBroker loggingBroker,
-            AuditAndMetricsConfigurations metricServiceConfigurations)
+            AuditAndMetricsConfigurations metricServiceConfigurations,
+            IAuditAndMetricsDispatcher dispatcher)
         {
             this.storageBroker = storageBroker;
             this.metricBroker = metricBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.loggingBroker = loggingBroker;
             this.metricServiceConfigurations = metricServiceConfigurations;
+            this.dispatcher = dispatcher;
         }
 
         public ValueTask<IMetric> AddMetricAsync(IMetric metric, CancellationToken cancellationToken = default) =>
@@ -88,6 +91,75 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             await this.storageBroker.BulkInsertMetricsAsync(metrics, cancellationToken);
             await this.metricBroker.RecordAsync(metrics, cancellationToken);
         });
+
+        public ValueTask LogMetricAsync(IMetric metric, CancellationToken cancellationToken = default) =>
+        TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.metricServiceConfigurations.IsEnabled is false)
+            {
+                return;
+            }
+
+            ValidateMetricIsNotNull(metric);
+            metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            ValidateMetricOnAdd(metric);
+
+            Dispatch(async token =>
+            {
+                IMetric addedMetric = await this.storageBroker.InsertMetricAsync(metric, token);
+                await this.metricBroker.RecordAsync(addedMetric, token);
+            });
+        });
+
+        public ValueTask LogMetricsAsync(
+            List<IMetric> metrics,
+            CancellationToken cancellationToken = default) =>
+        TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.metricServiceConfigurations.IsEnabled is false)
+            {
+                return;
+            }
+
+            ValidateMetricsIsNotNull(metrics);
+
+            if (metrics.Count == 0)
+            {
+                return;
+            }
+
+            DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+            foreach (IMetric metric in metrics)
+            {
+                ValidateMetricIsNotNull(metric);
+                metric.CreatedDate = currentDateTime;
+                ValidateMetricOnAdd(metric);
+            }
+
+            Dispatch(async token =>
+            {
+                await this.storageBroker.BulkInsertMetricsAsync(metrics, token);
+                await this.metricBroker.RecordAsync(metrics, token);
+            });
+        });
+
+        /// <summary>
+        /// See AuditService.Dispatch - a rejected write is logged, never thrown.
+        /// </summary>
+        private void Dispatch(Func<CancellationToken, ValueTask> work)
+        {
+            if (this.dispatcher.TryDispatch(work) is false)
+            {
+                _ = this.loggingBroker.LogWarningAsync(
+                    "A metric write was dropped because the dispatch queue was full. The span is "
+                        + "lost; the request it belongs to was not affected.");
+            }
+        }
 
         public ValueTask<IQueryable<IMetric>> RetrieveAllMetricsAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>

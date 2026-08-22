@@ -52,7 +52,20 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
 
         ValueTask<IAudit> AddAuditAsync(IAudit audit, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// The dispatched twin of AddAuditAsync, for an entry the caller has already built and
+        /// does not need back. Returns nothing: there is no stored entity to hand back until the
+        /// write has run, and the caller is not waiting for it.
+        /// </summary>
+        ValueTask LogAuditAsync(IAudit audit, CancellationToken cancellationToken = default);
+
         ValueTask BulkAddAuditsAsync(
+            List<IAudit> audits,
+            int batchSize = 10000,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>The dispatched twin of BulkAddAuditsAsync.</summary>
+        ValueTask BulkLogAuditsAsync(
             List<IAudit> audits,
             int batchSize = 10000,
             CancellationToken cancellationToken = default);

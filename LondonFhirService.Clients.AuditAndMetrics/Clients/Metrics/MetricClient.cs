@@ -40,6 +40,24 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics
                 await this.metricService.AddMetricsAsync(metrics, cancellationToken);
             });
 
+        public async ValueTask LogMetricAsync(
+            IMetric metric,
+            CancellationToken cancellationToken = default) =>
+            await TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await this.metricService.LogMetricAsync(metric, cancellationToken);
+            });
+
+        public async ValueTask LogMetricsAsync(
+            List<IMetric> metrics,
+            CancellationToken cancellationToken = default) =>
+            await TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await this.metricService.LogMetricsAsync(metrics, cancellationToken);
+            });
+
         public async ValueTask<IQueryable<IMetric>> RetrieveAllMetricsAsync(
             CancellationToken cancellationToken = default) =>
             await TryCatch(async () =>
