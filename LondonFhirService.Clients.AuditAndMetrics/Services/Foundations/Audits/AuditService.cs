@@ -257,9 +257,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             {
                 // Expected. The caller gave up, or the host is stopping.
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                await this.loggingBroker.LogErrorAsync(exception);
+                // Swallowed, not logged. TryCatch has already localised this and written it to
+                // the logging broker on the way past; logging it again here would put two lines
+                // in the log for one failure and double the noise of a storage outage.
             }
         }
 

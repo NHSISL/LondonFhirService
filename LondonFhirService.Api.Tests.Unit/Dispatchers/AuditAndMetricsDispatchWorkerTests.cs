@@ -32,7 +32,11 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
                 new AuditAndMetricsDispatcherSettings
                 {
                     Capacity = capacity,
-                    DrainConcurrency = concurrency
+                    DrainConcurrency = concurrency,
+
+                    // No grace window in most tests: the point being asserted is the drain, and
+                    // waiting the production five seconds for each would only slow the suite.
+                    ShutdownGraceSeconds = 0
                 });
 
             var dispatcher = new AuditAndMetricsDispatcher(settings);
@@ -75,17 +79,23 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
             (AuditAndMetricsDispatcher dispatcher, AuditAndMetricsDispatchWorker worker) =
                 Create(concurrency: 1);
 
+            var firstPickedUp = new TaskCompletionSource();
             var gate = new TaskCompletionSource();
             var completed = new ConcurrentQueue<int>();
             await worker.StartAsync(CancellationToken.None);
 
-            // The first item blocks the single reader, so the rest are still queued when the
-            // host is asked to stop - which is the situation the drain has to survive.
+            // The first item blocks the single reader. Waiting for it to actually be picked up
+            // before queueing the rest is what makes this deterministic: otherwise the reader
+            // might drain everything before the stop even begins, and the test would be asserting
+            // nothing.
             dispatcher.TryDispatch(async _ =>
             {
+                firstPickedUp.TrySetResult();
                 await gate.Task;
                 completed.Enqueue(0);
             });
+
+            await firstPickedUp.Task.WaitAsync(WaitTimeout);
 
             for (int index = 1; index <= 5; index++)
             {
@@ -163,6 +173,52 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
             ranAfterCancellation.Task.IsCompletedSuccessfully.Should().BeTrue();
 
             await worker.StopAsync(CancellationToken.None);
+        }
+
+        [Fact]
+        public async Task ShouldKeepAcceptingWritesDuringTheShutdownGraceWindowAsync()
+        {
+            // given
+            IOptions<AuditAndMetricsDispatcherSettings> settings = Options.Create(
+                new AuditAndMetricsDispatcherSettings
+                {
+                    Capacity = 10,
+                    DrainConcurrency = 1,
+                    ShutdownGraceSeconds = 2
+                });
+
+            var dispatcher = new AuditAndMetricsDispatcher(settings);
+
+            var worker = new AuditAndMetricsDispatchWorker(
+                dispatcher,
+                Mock.Of<ILogger<AuditAndMetricsDispatchWorker>>(),
+                settings);
+
+            var lateWriteRan = new TaskCompletionSource();
+            await worker.StartAsync(CancellationToken.None);
+
+            // when
+            Task stopping = worker.StopAsync(CancellationToken.None);
+            await Task.Delay(200);
+
+            // A request still draining under Kestrel records a span after this worker was told
+            // to stop. Hosted services stop before the web host finishes, so this is the normal
+            // case on every deployment, not an edge one.
+            bool accepted = dispatcher.TryDispatch(_ =>
+            {
+                lateWriteRan.TrySetResult();
+
+                return ValueTask.CompletedTask;
+            });
+
+            await stopping.WaitAsync(WaitTimeout);
+
+            // then
+            accepted.Should().BeTrue(
+                because: "the queue must stay open while in-flight requests are still recording");
+
+            lateWriteRan.Task.IsCompletedSuccessfully.Should().BeTrue();
+            dispatcher.DroppedCount.Should().Be(0);
         }
 
         [Fact]

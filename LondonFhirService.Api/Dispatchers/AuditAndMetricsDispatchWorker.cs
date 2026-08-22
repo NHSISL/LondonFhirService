@@ -80,7 +80,25 @@ namespace LondonFhirService.Api.Dispatchers
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            // Stop accepting first, so the readers see the channel complete and drain the
+            // Not immediately. Hosted services stop in reverse registration order and the web
+            // host registers first, so Kestrel is still draining in-flight requests when this
+            // worker is asked to stop - and those requests are still recording spans. Completing
+            // the channel here would refuse precisely the writes the drain exists to save.
+            //
+            // The wait is bounded by the host's own shutdown token, so a slow drain cannot hold a
+            // deployment open beyond the timeout the host already enforces.
+            try
+            {
+                await Task.Delay(
+                    TimeSpan.FromSeconds(Math.Max(0, this.settings.Value.ShutdownGraceSeconds)),
+                    cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // The host is out of patience. Fall through and drain what is already queued.
+            }
+
+            // Now stop accepting, so the readers see the channel complete and finish the
             // remainder rather than being cut off mid-queue.
             this.dispatcher.Complete();
 
