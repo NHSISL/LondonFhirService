@@ -48,7 +48,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             string correlationId,
             string logLevel = "Information",
             CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
+        SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -61,7 +61,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             // entry carries the time and user of the moment it happened rather than of whenever
             // the write got round to running.
             Dispatch(async token => await this.storageBroker.InsertAuditAsync(audit, token));
-        });
+        }));
 
         public ValueTask<IAudit> RecordAuditAsync(
             string auditType,
@@ -95,7 +95,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         });
 
         public ValueTask LogAuditAsync(IAudit audit, CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
+        SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateAuditIsNotNull(audit);
@@ -104,13 +104,13 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
 
             // Validated and stamped on the caller's thread; only the write is deferred.
             Dispatch(async token => await this.storageBroker.InsertAuditAsync(audit, token));
-        });
+        }));
 
         public ValueTask BulkLogAuditsAsync(
             List<IAudit> audits,
             int batchSize = 10000,
             CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
+        SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateAuditsIsNotNull(audits);
@@ -128,7 +128,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
                 List<IAudit> batch = audits.Skip(index).Take(batchSize).ToList();
                 Dispatch(token => this.storageBroker.BulkInsertAuditsAsync(batch, token));
             }
-        });
+        }));
 
         public ValueTask BulkAddAuditsAsync(
             List<IAudit> audits,
@@ -235,6 +235,32 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             audit.UpdatedDate = createdDate;
 
             return audit;
+        }
+
+        /// <summary>
+        /// A dispatched write must never fail the work it is measuring. These spans and entries
+        /// are recorded from inside the very request they describe, so a malformed one, or
+        /// storage being down, has to cost that request nothing.
+        ///
+        /// The broker used to provide this by wrapping the whole call in Task.Run with a catch.
+        /// Moving the deferral into this service removed it accidentally: validation now runs on
+        /// the caller thread, and without this its exception would surface in the patient request
+        /// instead of in a log line.
+        /// </summary>
+        private async ValueTask SwallowAsync(Func<ValueTask> work)
+        {
+            try
+            {
+                await work();
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected. The caller gave up, or the host is stopping.
+            }
+            catch (Exception exception)
+            {
+                await this.loggingBroker.LogErrorAsync(exception);
+            }
         }
 
         /// <summary>

@@ -93,7 +93,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         });
 
         public ValueTask LogMetricAsync(IMetric metric, CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
+        SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -111,12 +111,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
                 IMetric addedMetric = await this.storageBroker.InsertMetricAsync(metric, token);
                 await this.metricBroker.RecordAsync(addedMetric, token);
             });
-        });
+        }));
 
         public ValueTask LogMetricsAsync(
             List<IMetric> metrics,
             CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
+        SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -141,12 +141,42 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
                 ValidateMetricOnAdd(metric);
             }
 
+            // Snapshotted, so a caller that keeps mutating its list after handing it over cannot
+            // change what the deferred write persists. The audit bulk path already does this.
+            List<IMetric> snapshot = metrics.ToList();
+
             Dispatch(async token =>
             {
-                await this.storageBroker.BulkInsertMetricsAsync(metrics, token);
-                await this.metricBroker.RecordAsync(metrics, token);
+                await this.storageBroker.BulkInsertMetricsAsync(snapshot, token);
+                await this.metricBroker.RecordAsync(snapshot, token);
             });
-        });
+        }));
+
+        /// <summary>
+        /// A dispatched write must never fail the work it is measuring. These spans and entries
+        /// are recorded from inside the very request they describe, so a malformed one, or
+        /// storage being down, has to cost that request nothing.
+        ///
+        /// The broker used to provide this by wrapping the whole call in Task.Run with a catch.
+        /// Moving the deferral into this service removed it accidentally: validation now runs on
+        /// the caller thread, and without this its exception would surface in the patient request
+        /// instead of in a log line.
+        /// </summary>
+        private async ValueTask SwallowAsync(Func<ValueTask> work)
+        {
+            try
+            {
+                await work();
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected. The caller gave up, or the host is stopping.
+            }
+            catch (Exception exception)
+            {
+                await this.loggingBroker.LogErrorAsync(exception);
+            }
+        }
 
         /// <summary>
         /// See AuditService.Dispatch - a rejected write is logged, never thrown.
