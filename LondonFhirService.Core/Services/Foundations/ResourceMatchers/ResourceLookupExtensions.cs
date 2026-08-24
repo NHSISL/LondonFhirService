@@ -33,6 +33,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers
             Func<TSource, TKey> keySelector,
             Func<TSource, TValue> valueSelector,
             Action<TKey, TValue> onDuplicate = null)
+            where TKey : notnull
         {
             var lookup = new Dictionary<TKey, TValue>();
 
@@ -41,14 +42,12 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers
                 TKey key = keySelector(item);
                 TValue value = valueSelector(item);
 
-                if (lookup.ContainsKey(key) == false)
+                // TryAdd rather than ContainsKey then Add: one hash lookup instead of two, and
+                // the return value is exactly the "was this a duplicate" answer we need.
+                if (lookup.TryAdd(key, value) == false)
                 {
-                    lookup.Add(key, value);
-
-                    continue;
+                    onDuplicate?.Invoke(key, value);
                 }
-
-                onDuplicate?.Invoke(key, value);
             }
 
             return lookup;
