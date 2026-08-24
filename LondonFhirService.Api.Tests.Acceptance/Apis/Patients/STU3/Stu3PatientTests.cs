@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -188,8 +188,8 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Patients.STU3
                 .OnProperty(provider => provider.FullyQualifiedName).Use(providerFullyQualifiedName)
                 .OnProperty(provider => provider.FhirVersion).Use(fhirVersion)
                 .OnProperty(provider => provider.IsActive).Use(true)
-                .OnProperty(provider => provider.IsPrimary).Use(true)
                 .OnProperty(provider => provider.IsForComparisonOnly).Use(false)
+                .OnProperty(provider => provider.IsPrimary).Use(true)
 
                 .OnProperty(provider => provider.ActiveFrom)
                     .Use(dateTimeOffset.AddDays(-30))
