@@ -20,7 +20,7 @@ using FhirStu3Abstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
-    // Non-generic � we always host Program
+    // Non-generic - we always host Program
     public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         static TestWebApplicationFactory()
