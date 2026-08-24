@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -52,7 +52,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: dependencyValidationException.InnerException as Xeption);
 
             this.providerServiceMock.Setup(service =>
-                service.RetrieveAllProvidersAsync())
+                service.RetrieveAllProvidersAsListAsync())
                     .ThrowsAsync(dependencyValidationException);
 
             // when
@@ -75,7 +75,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 .BeEquivalentTo(expectedPatientOrchestrationDependencyValidationException);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsync(),
+                service.RetrieveAllProvidersAsListAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -150,7 +150,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: dependencyException.InnerException as Xeption);
 
             this.providerServiceMock.Setup(service =>
-                service.RetrieveAllProvidersAsync())
+                service.RetrieveAllProvidersAsListAsync())
                     .ThrowsAsync(dependencyException);
 
             // when
@@ -173,7 +173,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 .BeEquivalentTo(expectedPatientOrchestrationDependencyException);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsync(),
+                service.RetrieveAllProvidersAsListAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -279,7 +279,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         Times.Once);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsync(),
+                service.RetrieveAllProvidersAsListAsync(),
                     Times.Never);
 
             AcceptMetricSpans();
@@ -349,7 +349,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         Times.Once);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsync(),
+                service.RetrieveAllProvidersAsListAsync(),
                     Times.Never);
 
             AcceptMetricSpans();
@@ -386,7 +386,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Exception serviceException = new Exception(randomExceptionMessage);
 
             this.providerServiceMock.Setup(service =>
-                service.RetrieveAllProvidersAsync())
+                service.RetrieveAllProvidersAsListAsync())
                     .ThrowsAsync(serviceException);
 
             var failedPatientOrchestrationException =
@@ -419,7 +419,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 .BeEquivalentTo(expectedPatientOrchestrationServiceException);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsync(),
+                service.RetrieveAllProvidersAsListAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>

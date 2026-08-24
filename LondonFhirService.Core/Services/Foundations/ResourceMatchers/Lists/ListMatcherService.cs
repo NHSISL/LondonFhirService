@@ -41,12 +41,20 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists
             var source1ByKey = source1Resources
                 .Select(r => new { Resource = r, Key = InternalGetMatchKey(r, source1ResourceIndex) })
                 .Where(x => x.Key != null)
-                .ToDictionary(x => x.Key!, x => x.Resource);
+                .ToDictionaryFirstWins(
+                    x => x.Key!,
+                    x => x.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, true)));
 
             var source2ByKey = source2Resources
                 .Select(r => new { Resource = r, Key = InternalGetMatchKey(r, source2ResourceIndex) })
                 .Where(x => x.Key != null)
-                .ToDictionary(x => x.Key!, x => x.Resource);
+                .ToDictionaryFirstWins(
+                    x => x.Key!,
+                    x => x.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, false)));
 
             var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
 

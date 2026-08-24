@@ -177,15 +177,61 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 
                 return bundle;
             }
+            catch (OperationCanceledException operationCanceledException)
+            {
+                // Classified rather than lumped in with Failed. A client abort and a genuine
+                // fault produce very different durations, and MetricStatus exists so the two are
+                // never averaged together - the foundation layer already stamps Cancelled and
+                // TimedOut per provider, so the root span was the only place losing the
+                // distinction.
+                await RecordRequestSpanAsync(
+                    MetricStatus.Cancelled,
+                    errorCode: operationCanceledException.GetType().Name,
+                    payloadBytes: null);
+
+                throw;
+            }
+            catch (TimeoutException timeoutException)
+            {
+                await RecordRequestSpanAsync(
+                    MetricStatus.TimedOut,
+                    errorCode: timeoutException.GetType().Name,
+                    payloadBytes: null);
+
+                throw;
+            }
             catch (Exception exception)
             {
                 await RecordRequestSpanAsync(
-                    MetricStatus.Failed,
+                    ClassifyFailure(exception),
                     errorCode: exception.GetType().Name,
                     payloadBytes: null);
 
                 throw;
             }
         });
+
+        /// <summary>
+        /// A cancellation or timeout that has already been localised arrives here wrapped in a
+        /// dependency exception, so the cause survives only in the inner chain. Walking it keeps
+        /// the root span's status honest instead of recording every localised abort as Failed.
+        /// </summary>
+        private static MetricStatus ClassifyFailure(Exception exception)
+        {
+            for (Exception current = exception; current is not null; current = current.InnerException)
+            {
+                if (current is TimeoutException)
+                {
+                    return MetricStatus.TimedOut;
+                }
+
+                if (current is OperationCanceledException)
+                {
+                    return MetricStatus.Cancelled;
+                }
+            }
+
+            return MetricStatus.Failed;
+        }
     }
 }

@@ -110,6 +110,21 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             // The main reporting slice: durations for one operation and span kind over a window.
             model
                 .HasIndex(metric => new { metric.Method, metric.Type, metric.Started });
+
+            // Slicing by what was called rather than how: one provider or target across every
+            // operation, over a window. Method-led queries that also name a provider are already
+            // served by the index above, which filters the residue after the Started range.
+            model
+                .HasIndex(metric => new { metric.Name, metric.Started });
+
+            // Per-consumer reporting over a window.
+            model
+                .HasIndex(metric => new { metric.Consumer, metric.Started });
+
+            // Completion-time windows. Almost always Started plus a bounded duration, but a
+            // range predicate on Completed cannot seek an index keyed on Started.
+            model
+                .HasIndex(metric => metric.Completed);
         }
     }
 }

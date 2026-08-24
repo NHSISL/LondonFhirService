@@ -38,6 +38,20 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             }
         }
 
+        /// <summary>
+        /// Mirrors the ValidateStorage* checks every sibling foundation service performs on a
+        /// broker response. Localising an unusable access response here makes it a ConsumerAccess
+        /// dependency failure rather than a NullReferenceException surfacing three layers up.
+        /// </summary>
+        private static void ValidateConsumerAccessResponse(ConsumerAccess consumerAccess)
+        {
+            if (consumerAccess is null)
+            {
+                throw new NullConsumerAccessServiceException(
+                    message: "Consumer access response is null.");
+            }
+        }
+
         private static dynamic IsInvalid(string text) => new
         {
             Condition = string.IsNullOrWhiteSpace(text),

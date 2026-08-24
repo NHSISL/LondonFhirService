@@ -124,20 +124,17 @@ namespace LondonFhirService.Api.Workers
 
                 // Correlation comes from Activity.Current, not from the telemetry item: version 3
                 // of the SDK removed OperationContext.Id in favour of the W3C trace context its
-                // initializers read off the ambient activity. The span being reported has already
-                // stopped, so it is made current for the duration of the call - without this every
-                // span lands as its own operation instead of under the request it belongs to.
-                Activity previousActivity = Activity.Current;
-
-                try
-                {
-                    Activity.Current = activity;
-                    this.telemetryClient.TrackDependency(dependencyTelemetry);
-                }
-                finally
-                {
-                    Activity.Current = previousActivity;
-                }
+                // initializers read off the ambient activity.
+                //
+                // Nothing is assigned to Activity.Current here. This callback runs from inside
+                // Activity.Stop, which restores the previous activity only after the callback
+                // returns, so the span being reported is still the ambient one. An assignment
+                // would in any case be refused: the setter rejects a stopped activity and
+                // swallows the exception, so the previous save/restore block was two silently
+                // discarded writes rather than the safeguard its comment claimed. MetricBroker
+                // additionally derives an explicit trace context from the correlation id, which
+                // is what actually guarantees the span lands under its request.
+                this.telemetryClient.TrackDependency(dependencyTelemetry);
             }
             catch (Exception exception)
             {

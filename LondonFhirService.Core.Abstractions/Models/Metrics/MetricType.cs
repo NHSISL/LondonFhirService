@@ -12,28 +12,46 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
     /// For GetStructuredRecord the tree is:
     ///
     ///   Request
-    ///   +- AccessCheck
-    ///   +- ProviderRequests
-    ///   |  +- ProviderDiscovery
-    ///   |  +- ProviderFanOut
-    ///   |     +- Provider          (one per provider, in parallel)
-    ///   |     |  +- ProviderCall
-    ///   |     |  +- Persist
-    ///   |     +- Provider
-    ///   |        +- ProviderCall
-    ///   |        +- Persist
+    ///   +- Orchestration
+    ///   |  +- AccessCheck
+    ///   |  +- ProviderRequests
+    ///   |     +- ProviderDiscovery
+    ///   |     +- Foundation
+    ///   |        +- ProviderFanOut
+    ///   |           +- Provider    (one per provider, in parallel)
+    ///   |           |  +- ProviderCall
+    ///   |           |  +- Persist  (deferred; runs after its parent completes)
+    ///   |           +- Provider
+    ///   |              +- ProviderCall
+    ///   |              +- Persist  (deferred)
     ///   +- Consolidation
     ///
     /// Which yields, without any span kind being special cased:
     ///
     ///   sibling wait  = ProviderFanOut - Provider          per provider, time spent idle
     ///                                                      waiting for the slowest sibling
-    ///   API overhead  = Request - (AccessCheck + ProviderRequests + Consolidation)
+    ///   API overhead  = Request - (Orchestration + Consolidation)
+    ///
+    /// Persist is the one span whose duration is not part of its ancestors' durations: the write
+    /// is dispatched to a background queue, so it starts around the time its Provider parent
+    /// finishes and costs the request nothing.
     /// </summary>
     public enum MetricType
     {
-        /// <summary>The full API request, measured at the controller boundary.</summary>
+        /// <summary>
+        /// The root span: the coordination service end to end, which is the outermost layer that
+        /// records spans. Controller and middleware time sits above it and is not measured, so
+        /// this is the figure the old "Coordination Service Request Completed in Nms" audit line
+        /// used to carry, not the wire-to-wire time.
+        /// </summary>
         Request,
+
+        /// <summary>
+        /// The orchestration layer end to end: access check, provider requests, and the
+        /// orchestration overhead between them. Subtracting AccessCheck and ProviderRequests
+        /// from it isolates that overhead.
+        /// </summary>
+        Orchestration,
 
         /// <summary>The consumer access permission check.</summary>
         AccessCheck,
@@ -48,6 +66,13 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
         ProviderDiscovery,
 
         /// <summary>
+        /// The foundation service end to end: the fan out plus the assembly of its outcomes.
+        /// Sits between ProviderRequests and ProviderFanOut, so foundation overhead is
+        /// Foundation - ProviderFanOut.
+        /// </summary>
+        Foundation,
+
+        /// <summary>
         /// The parallel execution barrier that waits for every provider task. Recorded rather
         /// than inferred as the longest Provider span, which is wrong whenever task scheduling
         /// delays a start.
@@ -55,9 +80,9 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
         ProviderFanOut,
 
         /// <summary>
-        /// One provider task end to end, including the persistence it performs. Subtracting this
-        /// from its ProviderFanOut parent gives the time the result sat idle waiting for the
-        /// slowest sibling.
+        /// One provider task end to end, excluding the persistence it queues - that write is
+        /// deferred and recorded as a Persist child. Subtracting this from its ProviderFanOut
+        /// parent gives the time the result sat idle waiting for the slowest sibling.
         /// </summary>
         Provider,
 
@@ -70,7 +95,8 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
 
         /// <summary>
         /// Writing a retrieved payload to storage. A child of the Provider span whose payload it
-        /// writes, since this happens once per provider inside that provider's own task.
+        /// writes, but deferred to a background queue - its duration is deliberately not part of
+        /// its parent's, or of the request's.
         /// </summary>
         Persist,
 

@@ -58,7 +58,8 @@ namespace LondonFhirService.Core.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("UpdatedBy")
                         .IsRequired()
@@ -70,11 +71,15 @@ namespace LondonFhirService.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuditType");
-
                     b.HasIndex("CorrelationId");
 
+                    b.HasIndex("CreatedDate");
+
                     b.HasIndex("LogLevel");
+
+                    b.HasIndex("AuditType", "CreatedDate");
+
+                    b.HasIndex("Title", "CreatedDate");
 
                     b.ToTable("Audits", (string)null);
                 });
@@ -165,6 +170,11 @@ namespace LondonFhirService.Core.Migrations
                     b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetimeoffset")
+                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
+
                     b.Property<bool>("IsPrimarySource")
                         .HasColumnType("bit");
 
@@ -199,6 +209,8 @@ namespace LondonFhirService.Core.Migrations
                     b.HasIndex("IsProcessed");
 
                     b.HasIndex("SourceName");
+
+                    b.HasIndex("Status", "IsPrimarySource", "InsertedDate", "CreatedDate");
 
                     b.ToTable("FhirRecords", (string)null);
                 });
@@ -268,11 +280,17 @@ namespace LondonFhirService.Core.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Completed");
+
                     b.HasIndex("CorrelationId");
 
                     b.HasIndex("CreatedDate");
 
                     b.HasIndex("ParentId");
+
+                    b.HasIndex("Consumer", "Started");
+
+                    b.HasIndex("Name", "Started");
 
                     b.HasIndex("Method", "Type", "Started");
 

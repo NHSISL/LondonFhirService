@@ -50,8 +50,10 @@ namespace LondonFhirService.Api.Dispatchers
             await Task.WhenAll(readers);
 
             this.logger.LogInformation(
-                "AuditAndMetricsDispatchWorker stopped. {DroppedCount} write(s) were dropped.",
-                this.dispatcher.DroppedCount);
+                "AuditAndMetricsDispatchWorker stopped. {DroppedCount} write(s) were dropped "
+                    + "because the queue was full, {RefusedAfterCloseCount} because it had closed.",
+                this.dispatcher.DroppedCount,
+                this.dispatcher.RefusedAfterCloseCount);
         }
 
         private async Task DrainAsync(CancellationToken stoppingToken)

@@ -26,6 +26,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
                 (Rule: IsInvalid(audit.UpdatedDate), Parameter: nameof(IAudit.UpdatedDate)),
                 (Rule: IsGreaterThan(audit.CorrelationId, 255), Parameter: nameof(IAudit.CorrelationId)),
                 (Rule: IsGreaterThan(audit.AuditType, 255), Parameter: nameof(IAudit.AuditType)),
+                (Rule: IsGreaterThan(audit.Title, 500), Parameter: nameof(IAudit.Title)),
                 (Rule: IsGreaterThan(audit.LogLevel, 255), Parameter: nameof(IAudit.LogLevel)),
                 (Rule: IsGreaterThan(audit.FileName, 1000), Parameter: nameof(IAudit.FileName)),
                 (Rule: IsGreaterThan(audit.CreatedBy, 255), Parameter: nameof(IAudit.CreatedBy)),
@@ -45,6 +46,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
                 (Rule: IsInvalid(audit.UpdatedDate), Parameter: nameof(IAudit.UpdatedDate)),
                 (Rule: IsGreaterThan(audit.CorrelationId, 255), Parameter: nameof(IAudit.CorrelationId)),
                 (Rule: IsGreaterThan(audit.AuditType, 255), Parameter: nameof(IAudit.AuditType)),
+                (Rule: IsGreaterThan(audit.Title, 500), Parameter: nameof(IAudit.Title)),
                 (Rule: IsGreaterThan(audit.LogLevel, 255), Parameter: nameof(IAudit.LogLevel)),
                 (Rule: IsGreaterThan(audit.FileName, 1000), Parameter: nameof(IAudit.FileName)),
                 (Rule: IsGreaterThan(audit.UpdatedBy, 255), Parameter: nameof(IAudit.UpdatedBy)));

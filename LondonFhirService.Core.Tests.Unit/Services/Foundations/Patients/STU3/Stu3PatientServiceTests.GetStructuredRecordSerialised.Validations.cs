@@ -241,6 +241,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
+                this.dispatcherMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -412,6 +413,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
+                this.dispatcherMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -586,6 +588,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
+                this.dispatcherMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -768,6 +771,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
+                this.dispatcherMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -953,6 +957,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
+                this.dispatcherMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -1133,6 +1138,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
+                this.dispatcherMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {

@@ -17,7 +17,7 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
     /// around it. These pin that the queue actually refuses rather than growing, and that a
     /// refusal is counted rather than silent.
     /// </summary>
-    public class AuditAndMetricsDispatcherTests
+    public partial class AuditAndMetricsDispatcherTests
     {
         private static AuditAndMetricsDispatcher CreateDispatcher(int capacity) =>
             new AuditAndMetricsDispatcher(
@@ -122,8 +122,11 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
             bool accepted = dispatcher.TryDispatch(_ => ValueTask.CompletedTask);
 
             // then
+            // Counted as a shutdown refusal, not a capacity drop. Only one of the two means the
+            // queue is too small, and conflating them made the warning misleading during a deploy.
             accepted.Should().BeFalse();
-            dispatcher.DroppedCount.Should().Be(1);
+            dispatcher.RefusedAfterCloseCount.Should().Be(1);
+            dispatcher.DroppedCount.Should().Be(0);
         }
     }
 }

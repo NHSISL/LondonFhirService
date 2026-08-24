@@ -17,6 +17,17 @@ namespace LondonFhirService.Core.Brokers.Securities
     /// </summary>
     public class SecurityBroker : ISecurityBroker
     {
+        /// <summary>
+        /// Shared, because constructing a SecurityClient builds and abandons a whole DI container:
+        /// its constructor ends in BuildServiceProvider. This broker is transient and one patient
+        /// request resolves several of these, so a container was built per instance per request.
+        ///
+        /// Safe to share: every method takes the ClaimsPrincipal as a parameter, so the client
+        /// holds no per-caller state, and the graph is readonly with no static state of its own.
+        /// The per-request ClaimsPrincipal capture below is unchanged.
+        /// </summary>
+        private static readonly ISecurityClient SharedSecurityClient = new SecurityClient();
+
         private readonly ClaimsPrincipal claimsPrincipal;
         private string remoteIpAddress;
         private readonly ISecurityClient securityClient;
@@ -31,7 +42,7 @@ namespace LondonFhirService.Core.Brokers.Securities
         {
             claimsPrincipal = httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal();
             remoteIpAddress = httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
-            securityClient = new SecurityClient();
+            securityClient = SharedSecurityClient;
         }
 
         /// <summary>
@@ -42,7 +53,7 @@ namespace LondonFhirService.Core.Brokers.Securities
         public SecurityBroker(string accessToken)
         {
             claimsPrincipal = GetClaimsPrincipalFromToken(accessToken);
-            securityClient = new SecurityClient();
+            securityClient = SharedSecurityClient;
         }
 
         /// <summary>
@@ -53,7 +64,7 @@ namespace LondonFhirService.Core.Brokers.Securities
         public SecurityBroker(ClaimsPrincipal claimsPrincipal)
         {
             this.claimsPrincipal = claimsPrincipal;
-            securityClient = new SecurityClient();
+            securityClient = SharedSecurityClient;
         }
 
         /// <summary>

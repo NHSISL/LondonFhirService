@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Providers;
+using Moq;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconciliations.STU3
@@ -13,14 +14,56 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconcil
     public partial class Stu3FhirReconciliationServiceTests
     {
         [Fact]
-        public async Task ShouldReturnFirstPopulatedBundleOnReconcileSerialisedAsync()
+        public async Task ShouldReturnThePrimaryProvidersBundleWhenItIsNotFirstOnReconcileSerialisedAsync()
         {
             // given
-            List<(string Provider, string Json)> randomBundles = CreateRandomBundles();
-            List<(string Provider, string Json)> inputBundles = randomBundles;
-            string expectedJson = inputBundles[0].Json;
+            // The primary is placed last on purpose. Selection used to be positional, so this
+            // arrangement returned the secondary's record and discarded the primary's.
+            string secondaryJson = SerializeBundle(CreateRandomBundle());
+            string primaryJson = SerializeBundle(CreateRandomBundle());
+            string primaryProviderName = GetRandomString();
+            Provider randomPrimaryProvider = CreateRandomProvider(friendlyName: primaryProviderName);
+
+            List<(string Provider, string Json)> inputBundles = new List<(string Provider, string Json)>
+            {
+                (GetRandomString(), secondaryJson),
+                (primaryProviderName, primaryJson)
+            };
+
+            string expectedJson = primaryJson;
             string randomNhsNumber = GetRandomString();
-            Provider randomPrimaryProvider = CreateRandomProvider();
+            Guid correlationId = Guid.NewGuid();
+
+            // when
+            string actualJson = await this.fhirReconciliationService.ReconcileSerialisedAsync(
+                bundles: inputBundles,
+                nhsNumber: randomNhsNumber,
+                primaryProvider: randomPrimaryProvider,
+                correlationId: correlationId);
+
+            // then
+            actualJson.Should().BeEquivalentTo(expectedJson);
+            actualJson.Should().NotBeEquivalentTo(secondaryJson);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldSkipEmptyBundlesOnReconcileSerialisedAsync()
+        {
+            // given
+            string populatedJson = SerializeBundle(CreateRandomBundle());
+            string primaryProviderName = GetRandomString();
+            Provider randomPrimaryProvider = CreateRandomProvider(friendlyName: primaryProviderName);
+
+            List<(string Provider, string Json)> inputBundles = new List<(string Provider, string Json)>
+            {
+                (GetRandomString(), null),
+                (GetRandomString(), string.Empty),
+                (primaryProviderName, populatedJson)
+            };
+
+            string expectedJson = populatedJson;
+            string randomNhsNumber = GetRandomString();
             Guid correlationId = Guid.NewGuid();
 
             // when
@@ -36,22 +79,29 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconcil
         }
 
         [Fact]
-        public async Task ShouldSkipEmptyBundlesOnReconcileSerialisedAsync()
+        public async Task ShouldFallBackAndWarnWhenPrimaryProviderReturnedNoRecordOnReconcileSerialisedAsync()
         {
             // given
-            string populatedJson = SerializeBundle(CreateRandomBundle());
+            // The primary is present in the list but returned nothing, so a secondary's record is
+            // substituted. That substitution has to be visible rather than silent.
+            string secondaryProviderName = GetRandomString();
+            string secondaryJson = SerializeBundle(CreateRandomBundle());
+            string primaryProviderName = GetRandomString();
+            Provider randomPrimaryProvider = CreateRandomProvider(friendlyName: primaryProviderName);
 
             List<(string Provider, string Json)> inputBundles = new List<(string Provider, string Json)>
             {
-                (GetRandomString(), null),
-                (GetRandomString(), string.Empty),
-                (GetRandomString(), populatedJson)
+                (primaryProviderName, null),
+                (secondaryProviderName, secondaryJson)
             };
 
-            string expectedJson = populatedJson;
             string randomNhsNumber = GetRandomString();
-            Provider randomPrimaryProvider = CreateRandomProvider();
             Guid correlationId = Guid.NewGuid();
+
+            string expectedWarning =
+                $"Primary provider '{primaryProviderName}' returned no record; " +
+                    $"returning '{secondaryProviderName}' instead.  " +
+                    $"CorrelationId: {correlationId}";
 
             // when
             string actualJson = await this.fhirReconciliationService.ReconcileSerialisedAsync(
@@ -61,7 +111,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconcil
                 correlationId: correlationId);
 
             // then
-            actualJson.Should().BeEquivalentTo(expectedJson);
+            actualJson.Should().BeEquivalentTo(secondaryJson);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogWarningAsync(expectedWarning),
+                    Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }

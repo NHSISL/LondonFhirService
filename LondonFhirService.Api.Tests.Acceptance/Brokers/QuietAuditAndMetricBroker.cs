@@ -15,13 +15,11 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
     /// <summary>
     /// Silences the incidental audit and metric writes an acceptance run produces, while leaving
-    /// the audit CRUD alone.
+    /// every read and write a test asserts on delegated to the real broker.
     ///
-    /// Replacing the whole broker with a bare mock would be simpler, but this one broker now
-    /// serves two different purposes: the operational tracing every request emits, and the data
-    /// path behind the audits API. Stubbing both means the AuditsApiTests exercise a mock instead
-    /// of the database and can never pass. So the logging verbs are dropped and everything the
-    /// controllers actually read and write is delegated to the real broker.
+    /// Decorating rather than replacing keeps the distinction between the operational tracing
+    /// every request emits - which is noise here - and any audit data a test genuinely inspects.
+    /// A bare mock would stub both.
     /// </summary>
     internal class QuietAuditAndMetricBroker : IAuditAndMetricBroker
     {

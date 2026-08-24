@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using KellermanSoftware.CompareNetObjects;
+using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
@@ -48,6 +49,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         private readonly Mock<ISecurityAuditBroker> securityAuditBrokerMock;
         private readonly Mock<IStorageBroker> storageBrokerMock;
         private readonly Mock<IStorageBrokerFactory> storageBrokerFactoryMock;
+        private readonly Mock<IAuditAndMetricsDispatcher> dispatcherMock;
         private readonly PatientServiceConfig patientServiceConfig;
         private readonly Stu3PatientService patientService;
         private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
@@ -66,6 +68,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.storageBrokerMock
                 .Setup(broker => broker.DisposeAsync())
                     .Returns(ValueTask.CompletedTask);
+
+            this.dispatcherMock = new Mock<IAuditAndMetricsDispatcher>();
+
+            // Inline, so a dispatched persistence is observable by the time the call returns.
+            this.dispatcherMock.Setup(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()))
+                    .Returns((Func<CancellationToken, ValueTask> work) =>
+                    {
+                        work(CancellationToken.None).AsTask().GetAwaiter().GetResult();
+
+                        return true;
+                    });
 
 
             this.fhirAbstractionProviderMock = new Mock<IFhirAbstractionProvider>();
@@ -106,6 +120,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 securityAuditBroker: this.securityAuditBrokerMock.Object,
                 storageBrokerFactory: this.storageBrokerFactoryMock.Object,
+                dispatcher: this.dispatcherMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 patientServiceConfig: this.patientServiceConfig);
         }

@@ -53,7 +53,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                             await this.loggingBroker.LogWarningAsync(
                                 $"CompareQueueItem with CorrelationId: " +
                                 $"{compareQueueItem.SecondaryFhirRecord.CorrelationId} does not have " +
-                                $"a primary record. Marking as completed without comparison.");
+                                $"a primary record. Marking as failed without comparison.");
 
                             await this.compareQueueOrchestrationService
                                 .ChangeFhirRecordStatusAsync(

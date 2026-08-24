@@ -18,6 +18,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
     {
         private delegate ValueTask<FhirRecord> ReturningFhirRecordFunction();
         private delegate ValueTask<IQueryable<FhirRecord>> ReturningFhirRecordsFunction();
+        private delegate ValueTask<bool> ReturningBooleanFunction();
 
         private async ValueTask<FhirRecord> TryCatch(ReturningFhirRecordFunction returningFhirRecordFunction)
         {
@@ -108,6 +109,54 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                         innerException: sqlException);
 
                 throw await CreateAndLogCriticalDependencyException(failedFhirRecordStorageException);
+            }
+            catch (Exception exception)
+            {
+                var failedFhirRecordServiceException =
+                    new FailedFhirRecordServiceException(
+                        message: "Failed fhirRecord service occurred, please contact support",
+                        innerException: exception);
+
+                throw await CreateAndLogServiceException(failedFhirRecordServiceException);
+            }
+        }
+
+        private async ValueTask<bool> TryCatch(ReturningBooleanFunction returningBooleanFunction)
+        {
+            try
+            {
+                return await returningBooleanFunction();
+            }
+            catch (InvalidFhirRecordException invalidFhirRecordException)
+            {
+                throw await CreateAndLogValidationException(invalidFhirRecordException);
+            }
+            catch (SqlException sqlException)
+            {
+                var failedFhirRecordStorageException =
+                    new FailedStorageFhirRecordException(
+                        message: "Failed fhirRecord storage error occurred, contact support.",
+                        innerException: sqlException);
+
+                throw await CreateAndLogCriticalDependencyException(failedFhirRecordStorageException);
+            }
+            catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
+            {
+                var lockedFhirRecordException =
+                    new LockedFhirRecordException(
+                        message: "Locked fhirRecord record exception, please try again later",
+                        innerException: dbUpdateConcurrencyException);
+
+                throw await CreateAndLogDependencyValidationException(lockedFhirRecordException);
+            }
+            catch (DbUpdateException databaseUpdateException)
+            {
+                var failedFhirRecordStorageException =
+                    new FailedStorageFhirRecordException(
+                        message: "Failed fhirRecord storage error occurred, contact support.",
+                        innerException: databaseUpdateException);
+
+                throw await CreateAndLogDependencyException(failedFhirRecordStorageException);
             }
             catch (Exception exception)
             {

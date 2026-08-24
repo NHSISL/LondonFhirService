@@ -39,8 +39,11 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .HasMaxLength(1000)
                 .IsRequired(false);
 
+            // Bounded so it can be an index key - nvarchar(max) cannot be one. Every title this
+            // codebase writes is a short generated phrase; 500 leaves generous headroom.
             model
                 .Property(audit => audit.Title)
+                .HasMaxLength(500)
                 .IsRequired(false);
 
             model
@@ -65,14 +68,24 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .Property(audit => audit.UpdatedDate)
                 .IsRequired();
 
+            // Assembling every entry of one request.
             model
                 .HasIndex(audit => audit.CorrelationId);
 
+            // Type-led reporting over a window; also serves AuditType-only filters as a prefix.
             model
-                .HasIndex(audit => audit.AuditType);
+                .HasIndex(audit => new { audit.AuditType, audit.CreatedDate });
 
             model
                 .HasIndex(audit => audit.LogLevel);
+
+            // Title-led slices ("Access Forbidden") over a window.
+            model
+                .HasIndex(audit => new { audit.Title, audit.CreatedDate });
+
+            // Time windows and the retention sweep.
+            model
+                .HasIndex(audit => audit.CreatedDate);
         }
     }
 }
