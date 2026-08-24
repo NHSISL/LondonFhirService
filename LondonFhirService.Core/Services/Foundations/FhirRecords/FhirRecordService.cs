@@ -57,6 +57,28 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 return maybeFhirRecord;
             });
 
+        public ValueTask<bool> TryClaimFhirRecordAsync(
+            Guid fhirRecordId,
+            StatusType expectedStatus,
+            StatusType claimedStatus,
+            DateTimeOffset? notUpdatedAfter = null) =>
+            TryCatch(async () =>
+            {
+                ValidateFhirRecordId(fhirRecordId);
+
+                DateTimeOffset claimedDate =
+                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+                int claimedCount = await this.storageBroker.ClaimFhirRecordAsync(
+                    fhirRecordId,
+                    expectedStatus,
+                    claimedStatus,
+                    claimedDate,
+                    notUpdatedAfter);
+
+                return claimedCount == 1;
+            });
+
         public ValueTask<FhirRecord> ModifyFhirRecordAsync(FhirRecord fhirRecord) =>
             TryCatch(async () =>
             {

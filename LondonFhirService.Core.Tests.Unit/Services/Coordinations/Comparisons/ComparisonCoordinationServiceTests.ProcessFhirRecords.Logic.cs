@@ -128,7 +128,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             string expectedWarningMessage =
                 $"CompareQueueItem with CorrelationId: " +
                 $"{inputSecondaryFhirRecord.CorrelationId} does not have " +
-                $"a primary record. Marking as completed without comparison.";
+                $"a primary record. Marking as failed without comparison.";
 
             this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
                 service.GetUnprocessedRecordAsync())
