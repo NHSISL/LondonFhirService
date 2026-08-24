@@ -20,12 +20,12 @@ using FhirStu3Abstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
-    // Non-generic – we always host Program
+    // Non-generic ï¿½ we always host Program
     public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         static TestWebApplicationFactory()
         {
-            // Configure configuration *before* the app’s builder is used
+            // Configure configuration *before* the appï¿½s builder is used
             Program.TestConfigurationOverrides = builder =>
             {
                 var testProjectPath =
@@ -150,10 +150,9 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void MockExternalClientsForTesting(IServiceCollection services)
         {
-            // Decorated rather than replaced. This one broker now serves both the operational
-            // tracing every request emits and the data path behind the audits API, so swapping it
-            // for a bare mock would stub out the very endpoints AuditsApiTests exercise. The
-            // decorator drops the background writes and delegates everything else.
+            // Decorated rather than replaced. A bare mock would stub every audit read and write,
+            // not just the incidental tracing an acceptance run emits, so the decorator drops the
+            // background writes and delegates everything else to the real broker.
             var auditAndMetricBrokerDescriptor = services
                .FirstOrDefault(d => d.ServiceType == typeof(IAuditAndMetricBroker));
 

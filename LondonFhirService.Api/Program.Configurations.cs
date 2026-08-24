@@ -1,11 +1,10 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Attrify.InvisibleApi.Models;
 using Azure.Core;
 using Azure.Identity;
 using Hl7.Fhir.Serialization;
@@ -31,9 +30,6 @@ using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
-using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
-using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
@@ -81,14 +77,11 @@ using LondonFhirService.Providers.FHIR.STU3.LondonDataService.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
-using Microsoft.OData.Edm;
-using Microsoft.OData.ModelBuilder;
 using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 using LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics;
 using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
@@ -169,13 +162,11 @@ public partial class Program
 
         JsonNamingPolicy jsonNamingPolicy = JsonNamingPolicy.CamelCase;
 
+        // No OData here. The Audits, FhirRecords and FhirRecordDifference entity sets used to be
+        // exposed from this host, which put whole patient payloads behind a queryable surface on
+        // the public API. They live on the internal management host instead.
         builder.Services
             .AddControllers()
-            .AddOData(options =>
-            {
-                options.AddRouteComponents("odata", GetEdmModel());
-                options.Select().Filter().Expand().OrderBy().Count().SetMaxTop(100);
-            })
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ForFhir(Hl7.Fhir.Model.ModelInfo.ModelInspector);
@@ -189,9 +180,6 @@ public partial class Program
 
     internal static void ConfigurePipeline(WebApplication app)
     {
-        // Resolve InvisibleApiKey from DI
-        var invisibleApiKey = app.Services.GetRequiredService<InvisibleApiKey>();
-
         app.MapGet("/", () => Results.Ok(new
         {
             Name = "London FHIR Service API",
@@ -224,19 +212,8 @@ public partial class Program
         app.UseRequestTimeouts();
         app.UseAuthentication();
         app.UseAuthorization();
-        //app.UseInvisibleApiMiddleware(invisibleApiKey);
         app.MapControllers();
         //app.MapFallbackToFile("/index.html");
-    }
-
-    private static IEdmModel GetEdmModel()
-    {
-        ODataConventionModelBuilder builder = new();
-        builder.EntitySet<Audit>("Audits");
-        builder.EntitySet<FhirRecord>("FhirRecords");
-        builder.EntitySet<FhirRecordDifference>("FhirRecordDifferences");
-        builder.EnableLowerCamelCase();
-        return builder.GetEdmModel();
     }
 
     private static void AddProviders(IServiceCollection services, IConfiguration configuration)
@@ -255,9 +232,20 @@ public partial class Program
             ?? throw new InvalidOperationException(
                 "LdsConfigurations is missing or invalid. Please check appsettings.json.");
 
+        // Guarded like LdsConfigurations above. Get<T> returns null for a section that is absent
+        // or has no children, and this section decides whether the per-patient consumer access
+        // check runs at all - so an absent one should stop startup rather than reach AddSingleton
+        // as a null and fail somewhere less obvious.
+        //
+        // The guard is about ABSENCE, not the value. checkAccessPermissions is deliberately false
+        // for now: the consumer access service is not yet in use, and the flag is the switch that
+        // turns it on when it is. A present section saying false is the intended state, not a
+        // misconfiguration.
         AccessConfigurations accessConfig = configuration
             .GetSection("AccessConfigurations")
-            .Get<AccessConfigurations>();
+            .Get<AccessConfigurations>()
+            ?? throw new InvalidOperationException(
+                "AccessConfigurations is missing or invalid. Please check appsettings.json.");
 
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);

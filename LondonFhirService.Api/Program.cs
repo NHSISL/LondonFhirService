@@ -3,7 +3,6 @@
 // ---------------------------------------------------------
 
 using System.IO;
-using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -34,10 +33,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.ForwardedHeaders =
         ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
 });
-
-// Shared InvisibleApiKey instance, also available via DI
-var invisibleApiKey = new InvisibleApiKey();
-builder.Services.AddSingleton(invisibleApiKey);
 
 // Register health checks
 builder.Services.AddHealthChecks();
