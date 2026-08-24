@@ -1,0 +1,23 @@
+{
+  "skill": "the-standard-reacttypescript-models",
+  "version": "1.0.0",
+  "organization": {
+    "foundations": "src/models/foundations/{domain}/",
+    "views": "src/models/views/{domain}/",
+    "components": "src/models/components/{domain}/",
+    "configurations": "src/models/configurations/",
+    "errors": "src/models/errors/"
+  },
+  "naming": {
+    "foundation_pattern": "{Domain}.ts",
+    "view_pattern": "{Domain}View.ts",
+    "props_pattern": "{Component}Props.ts",
+    "config_pattern": "{Purpose}Config.ts"
+  },
+  "rules": {
+    "no_behavior": "Models must not contain methods, functions, or API calls",
+    "use_type_keyword": "Prefer type over interface for data shapes",
+    "layer_separation": "Foundation, view, and component models must be separate",
+    "explicit_optionality": "Use ? only when field can truly be absent"
+  }
+}

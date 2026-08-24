@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
 {
-    public partial class CompareQueueOrchestrationService
+    internal partial class CompareQueueOrchestrationService
     {
         private static void ValidateChangeFhirRecordStatus(Guid fhirRecordId)
         {

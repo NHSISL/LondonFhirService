@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.ReferralRequests
 {
-    public partial class ReferralRequestMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class ReferralRequestMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public ReferralRequestMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)

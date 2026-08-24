@@ -1,0 +1,24 @@
+{
+  "name": "the-standard-reacttypescript-brokers",
+  "version": "0.1.0",
+  "description": "Broker layer for external dependency abstraction in React + TypeScript projects",
+  "the_standard_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": [
+    "External dependencies (APIs, storage, logging)",
+    "HTTP requests and responses",
+    "LocalStorage/SessionStorage operations",
+    "Third-party service integrations"
+  ],
+  "outputs": [
+    "Abstracted external dependencies",
+    "Type-safe I/O operations",
+    "Mapped exceptions",
+    "Testable boundary layer"
+  ],
+  "dependencies": [
+    "the-standard-reacttypescript-typescript",
+    "the-standard-reacttypescript-models"
+  ],
+  "applies_to": ["src/brokers/**/*"]
+}

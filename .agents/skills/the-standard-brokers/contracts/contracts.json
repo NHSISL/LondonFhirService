@@ -1,0 +1,22 @@
+{
+  "skill": "the-standard-brokers",
+  "version": "1.0.0",
+  "naming": {
+    "interface_pattern": "I{Purpose}Broker",
+    "concrete_pattern": "{Technology}{Purpose}Broker",
+    "forbidden_interface_names": ["ISqlStorageBroker", "IMongoStorageBroker", "ICosmosStorageBroker"],
+    "allowed_interface_names": ["IStorageBroker", "IApiBroker", "IQueueBroker", "ILoggingBroker", "IDateTimeBroker"]
+  },
+  "methods": {
+    "storage": ["InsertAsync", "SelectAsync", "SelectAllAsync", "UpdateAsync", "DeleteAsync"],
+    "api": ["PostAsync", "GetAsync", "PutAsync", "DeleteAsync"],
+    "queue": ["EnqueueAsync", "DequeueAsync"]
+  },
+  "structure": {
+    "partial_class_required": true,
+    "configuration_injection": "IConfiguration via constructor",
+    "no_business_logic": true,
+    "no_validation": true,
+    "no_broker_to_broker_calls": true
+  }
+}

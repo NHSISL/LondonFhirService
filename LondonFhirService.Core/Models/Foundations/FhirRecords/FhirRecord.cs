@@ -3,11 +3,11 @@
 // ---------------------------------------------------------
 
 using System;
-using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Abstractions.Models;
 
 namespace LondonFhirService.Core.Models.Foundations.FhirRecords
 {
-    public class FhirRecord : IKey, IAudit
+    public class FhirRecord : IKey, IAuditable
     {
         public Guid Id { get; set; }
         public string CorrelationId { get; set; }

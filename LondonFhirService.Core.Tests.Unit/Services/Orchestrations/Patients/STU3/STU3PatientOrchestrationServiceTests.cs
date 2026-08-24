@@ -4,23 +4,32 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using LondonFhirService.Core.Brokers.Audits;
+using ISL.Security.Client.Models.Foundations.Users;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
+using LondonFhirService.Core.Brokers.Securities;
+using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
+using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
+using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
+using System.Threading;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
+using Claim = System.Security.Claims.Claim;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU3
 {
@@ -28,29 +37,46 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
     {
         private readonly Mock<IProviderService> providerServiceMock;
         private readonly Mock<IStu3PatientService> patientServiceMock;
-        private readonly Mock<IStu3FhirReconciliationService> fhirReconciliationServiceMock;
+        private readonly Mock<IConsumerAccessService> consumerAccessServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
+        private readonly Mock<ISecurityBroker> securityBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
+        private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
+        private readonly AccessConfigurations accessConfigurations;
         private readonly IStu3PatientOrchestrationService patientOrchestrationService;
 
         public Stu3PatientOrchestrationServiceTests()
         {
             this.providerServiceMock = new Mock<IProviderService>();
             this.patientServiceMock = new Mock<IStu3PatientService>();
-            this.auditBrokerMock = new Mock<IAuditBroker>();
-            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
-            this.fhirReconciliationServiceMock = new Mock<IStu3FhirReconciliationService>();
+            this.consumerAccessServiceMock = new Mock<IConsumerAccessService>();
+            this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
+            this.securityBrokerMock = new Mock<ISecurityBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
+            this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
 
-            this.patientOrchestrationService = new Stu3PatientOrchestrationService(
-                providerService: providerServiceMock.Object,
-                patientService: patientServiceMock.Object,
-                fhirReconciliationService: fhirReconciliationServiceMock.Object,
-                loggingBroker: loggingBrokerMock.Object,
-                auditBroker: auditBrokerMock.Object,
-                identifierBroker: identifierBrokerMock.Object);
+            this.accessConfigurations = new AccessConfigurations
+            {
+                CheckAccessPermissions = true
+            };
+
+            this.patientOrchestrationService = CreateOrchestrationService(this.accessConfigurations);
         }
+
+        private Stu3PatientOrchestrationService CreateOrchestrationService(
+            AccessConfigurations accessConfigurations) =>
+            new Stu3PatientOrchestrationService(
+                providerService: this.providerServiceMock.Object,
+                patientService: this.patientServiceMock.Object,
+                consumerAccessService: this.consumerAccessServiceMock.Object,
+                auditAndMetricBroker: this.auditAndMetricBrokerMock.Object,
+                securityBroker: this.securityBrokerMock.Object,
+                loggingBroker: this.loggingBrokerMock.Object,
+                identifierBroker: this.identifierBrokerMock.Object,
+                dateTimeBroker: this.dateTimeBrokerMock.Object,
+                accessConfigurations: accessConfigurations);
 
         private static int GetRandomNumber() =>
             new IntRange(min: 2, max: 10).GetValue();
@@ -73,6 +99,62 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
+
+        private static Expression<Func<ValidateAccessRequest, bool>> SameValidateAccessRequestAs(
+            string consumerUserId,
+            string nhsNumber,
+            Guid correlationId)
+        {
+            return actualRequest =>
+                actualRequest.ConsumerUserId == consumerUserId
+                    && actualRequest.NhsNumber == nhsNumber
+                    && actualRequest.CorrelationId == correlationId;
+        }
+
+        private static User CreateRandomUser(string userId)
+        {
+            string randomString = GetRandomString();
+
+            return new User(
+                userId: userId,
+                givenName: randomString,
+                surname: randomString,
+                displayName: randomString,
+                email: randomString,
+                jobTitle: randomString,
+                roles: new List<string> { randomString },
+                claims: CreateRandomClaims());
+        }
+
+        private static List<Claim> CreateRandomClaims()
+        {
+            string randomString = GetRandomString();
+
+            return Enumerable.Range(start: 1, count: GetRandomNumber())
+                .Select(_ => new Claim(type: randomString, value: randomString)).ToList();
+        }
+
+        private static ConsumerAccess CreateRandomConsumerAccess(bool isAccessAllowed) =>
+            new ConsumerAccess
+            {
+                NhsNumber = GetRandomString(),
+                ConsumerId = GetRandomString(),
+                ConsumerOrgCode = GetRandomString(),
+                IsAccessAllowed = isAccessAllowed,
+                AllowedViaInformationSharingAgreements = CreateRandomStrings(),
+                AllowedViaOrganisations = CreateRandomStrings(),
+
+                Reasons = new List<AccessReason>
+                {
+                    new AccessReason { Code = GetRandomString(), Message = GetRandomString() }
+                },
+
+                CorrelationId = Guid.NewGuid()
+            };
+
+        private static List<string> CreateRandomStrings() =>
+            Enumerable.Range(start: 1, count: GetRandomNumber())
+                .Select(_ => GetRandomString()).ToList();
 
         private static List<(string Provider, string Json)> CreateRandomBundles()
         {
@@ -155,14 +237,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
                 new PatientServiceDependencyValidationException(
                     message: "Patient dependency validation errors occurred, please try again.",
-                    innerException),
-
-                new FhirReconciliationServiceValidationException(
-                    message: "FHIR reconciliation validation errors occurred, please try again",
-                    innerException),
-
-                new FhirReconciliationServiceDependencyValidationException(
-                    message: "FHIR reconciliation dependency validation errors occurred, please try again.",
                     innerException)
             };
         }
@@ -189,16 +263,60 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
                 new PatientServiceException(
                     message: "Patient service error occurred, please contact support.",
-                    innerException),
-
-                new FhirReconciliationServiceDependencyException(
-                    message: "FHIR reconciliation dependency error occurred, please try again",
-                    innerException),
-
-                new FhirReconciliationServiceException(
-                    message: "FHIR reconciliation service error occurred, please contact support.",
-                    innerException),
+                    innerException)
             };
         }
+
+        public static TheoryData<Xeption> ConsumerAccessDependencyValidationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            var innerException = new Xeption(randomMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new ConsumerAccessServiceValidationException(
+                    message: "Consumer access validation errors occurred, please try again",
+                    innerException)
+            };
+        }
+
+        public static TheoryData<Xeption> ConsumerAccessDependencyExceptions()
+        {
+            string randomMessage = GetRandomString();
+            var innerException = new Xeption(randomMessage);
+
+            return new TheoryData<Xeption>
+            {
+                new ConsumerAccessServiceDependencyException(
+                    message: "Consumer access dependency error occurred, please contact support.",
+                    innerException),
+
+                new ConsumerAccessServiceException(
+                    message: "Consumer access service error occurred, please contact support.",
+                    innerException)
+            };
+        }
+
+        /// <summary>
+        /// Metric spans are cross cutting - every path through this service records them, and
+        /// asserting on each one in every behavioural test would bury what the test is actually
+        /// about. Marking them verified here keeps VerifyNoOtherCalls meaningful for everything
+        /// else, while the span tree itself is covered by the Metrics tests.
+        /// </summary>
+        private void AcceptMetricSpans()
+        {
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+        }
+
     }
 }

@@ -1,0 +1,101 @@
+{
+  "skill": "the-standard-reacttypescript-typescript",
+  "rules": [
+    {
+      "id": "tsr-typescript-001",
+      "severity": "ERROR",
+      "category": "Type Safety",
+      "rule": "TypeScript MUST be configured with strict mode enabled."
+    },
+    {
+      "id": "tsr-typescript-002",
+      "severity": "ERROR",
+      "category": "Type Safety",
+      "rule": "Use explicit domain types at architectural boundaries (service methods, broker methods, component props)."
+    },
+    {
+      "id": "tsr-typescript-003",
+      "severity": "ERROR",
+      "category": "Type Safety",
+      "rule": "Use `type` for data shapes and `interface` for behavioral contracts."
+    },
+    {
+      "id": "tsr-typescript-004",
+      "severity": "ERROR",
+      "category": "Type Safety",
+      "rule": "Use `unknown` at unsafe boundaries — never use `any`."
+    },
+    {
+      "id": "tsr-typescript-005",
+      "severity": "ERROR",
+      "category": "Type Safety",
+      "rule": "Prefer named exports for services, brokers, models, hooks, and utilities."
+    },
+    {
+      "id": "tsr-typescript-006",
+      "severity": "ERROR",
+      "category": "TypeScript Configuration",
+      "rule": "`noImplicitAny` MUST be set to `true`."
+    },
+    {
+      "id": "tsr-typescript-007",
+      "severity": "ERROR",
+      "category": "TypeScript Configuration",
+      "rule": "`strictNullChecks` MUST be set to `true`."
+    },
+    {
+      "id": "tsr-typescript-008",
+      "severity": "ERROR",
+      "category": "TypeScript Configuration",
+      "rule": "`noUncheckedIndexedAccess` MUST be set to `true`."
+    },
+    {
+      "id": "tsr-typescript-009",
+      "severity": "ERROR",
+      "category": "TypeScript Configuration",
+      "rule": "`exactOptionalPropertyTypes` MUST be set to `true`."
+    },
+    {
+      "id": "tsr-typescript-010",
+      "severity": "ERROR",
+      "category": "Type Usage",
+      "rule": "Never suppress TypeScript errors with `@ts-ignore` or `@ts-expect-error` without documented justification."
+    },
+    {
+      "id": "tsr-typescript-011",
+      "severity": "ERROR",
+      "category": "Type Usage",
+      "rule": "Never use type assertions (`as`) without validation or guard."
+    },
+    {
+      "id": "tsr-typescript-012",
+      "severity": "WARN",
+      "category": "Type Usage",
+      "rule": "Avoid barrel files (index.ts) when they hide dependency direction."
+    },
+    {
+      "id": "tsr-typescript-013",
+      "severity": "ERROR",
+      "category": "Type Usage",
+      "rule": "Default exports MAY be used for pages and components only when framework convention benefits from it."
+    },
+    {
+      "id": "tsr-typescript-014",
+      "severity": "ERROR",
+      "category": "Type Usage",
+      "rule": "Function return types MUST be explicit at architectural boundaries."
+    },
+    {
+      "id": "tsr-typescript-015",
+      "severity": "WARN",
+      "category": "Type Usage",
+      "rule": "Consider using `Readonly<T>` for props types to prevent mutation."
+    },
+    {
+      "id": "tsr-typescript-016",
+      "severity": "ERROR",
+      "category": "Type Usage",
+      "rule": "Never use `Function` or `Object` as types — use specific function signatures or object shapes."
+    }
+  ]
+}

@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Immunizations
 {
-    public partial class ImmunizationMatcherService
+    internal partial class ImmunizationMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 

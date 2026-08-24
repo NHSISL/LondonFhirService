@@ -13,7 +13,7 @@ using LondonFhirService.Core.Models.Foundations.Providers;
 
 namespace LondonFhirService.Core.Services.Foundations.Providers
 {
-    public partial class ProviderService : IProviderService
+    internal partial class ProviderService : IProviderService
     {
         private readonly IStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;

@@ -11,5 +11,5 @@ components:
     col: 12
     shared: true
     deriveMethods: true
-    description: "The DbContext handed to STX.EFCore.Client's EFCoreClient. In this solution that is Core's StorageBroker itself — it derives from EFxceptionsContext (EF Core DbContext) and passes `this` into `new EFCoreClient(this)`. SQL Server with HierarchyId enabled (OdsData.OdsHierarchy)."
+    description: "The DbContext handed to STX.EFCore.Client's EFCoreClient. In this solution that is Core's StorageBroker itself — it derives from EFxceptionsContext (EF Core DbContext) and passes `this` into `new EFCoreClient(this)`. SQL Server with HierarchyId enabled."
     methods: []

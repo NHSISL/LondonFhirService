@@ -1,0 +1,21 @@
+{
+  "skill": "the-standard-reacttypescript-hooks",
+  "version": "1.0.0",
+  "rules": [
+    {"id": "tsr-hooks-001", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Page hooks MUST call view services for data, never brokers or foundation services."},
+    {"id": "tsr-hooks-002", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Hook files MUST follow pattern use{Purpose}.ts (e.g., useDashboardPage.ts)."},
+    {"id": "tsr-hooks-003", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Page hooks MUST manage loading and error state."},
+    {"id": "tsr-hooks-004", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Hooks MUST return object with data, loading, error, and handlers."},
+    {"id": "tsr-hooks-005", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Hooks MUST use useEffect for data fetching on mount."},
+    {"id": "tsr-hooks-006", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Hooks MUST be in src/hooks/ directory."},
+    {"id": "tsr-hooks-007", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Hooks MUST NOT contain UI rendering logic."},
+    {"id": "tsr-hooks-008", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Hooks MUST NOT call brokers directly."},
+    {"id": "tsr-hooks-009", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Hooks MUST handle exceptions from view services."},
+    {"id": "tsr-hooks-010", "severity": "ERROR", "category": "Hook Responsibility", "rule": "Page hooks MUST fetch data on mount and when dependencies change."},
+    {"id": "tsr-hooks-011", "severity": "ERROR", "category": "Hook Structure", "rule": "Hooks MUST use TypeScript for all types."},
+    {"id": "tsr-hooks-012", "severity": "ERROR", "category": "Hook Structure", "rule": "Hooks MUST export as named exports."},
+    {"id": "tsr-hooks-013", "severity": "WARN", "category": "Hook Structure", "rule": "Hooks SHOULD be under 100 lines."},
+    {"id": "tsr-hooks-014", "severity": "ERROR", "category": "Hook Structure", "rule": "Event handlers MUST use useCallback when passed to components."},
+    {"id": "tsr-hooks-015", "severity": "ERROR", "category": "Hook Structure", "rule": "Hooks MUST clean up effects properly."}
+  ]
+}

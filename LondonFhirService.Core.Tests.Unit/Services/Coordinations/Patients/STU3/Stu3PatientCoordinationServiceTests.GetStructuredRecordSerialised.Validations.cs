@@ -51,11 +51,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     expectedPatientCoordinationValidationException))),
                         Times.Once);
 
-            this.accessOrchestrationServiceMock.VerifyNoOtherCalls();
+            AcceptMetricSpans();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

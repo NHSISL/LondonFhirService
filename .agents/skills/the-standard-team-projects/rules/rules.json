@@ -1,0 +1,16 @@
+{
+  "skill": "the-standard-team-projects",
+  "rules": [
+    { "id": "tst-projects-001", "severity": "ERROR", "category": "Solution Structure", "rule": "A Standard solution must contain: an API project, a Build infrastructure project, a Provision project, an Acceptance test project, and a Build test project." },
+    { "id": "tst-projects-002", "severity": "ERROR", "category": "Solution Structure", "rule": "Projects must be named using the pattern {Product}.{Layer}." },
+    { "id": "tst-projects-003", "severity": "ERROR", "category": "Solution Structure", "rule": "Infrastructure projects must use the suffix .Infrastructure.Build for build and .Infrastructure.Provision for provisioning." },
+    { "id": "tst-projects-004", "severity": "ERROR", "category": "Solution Structure", "rule": "Test projects must use the suffix .Tests.Acceptance for acceptance tests and .Tests.Build for build tests." },
+    { "id": "tst-projects-005", "severity": "ERROR", "category": "Source Folder Structure", "rule": "Source project folders must be organised by architectural layer: Brokers, Models, Migrations, Services, Controllers." },
+    { "id": "tst-projects-006", "severity": "ERROR", "category": "Source Folder Structure", "rule": "Models must be organised by domain under Models/Foundations/{Entity}/ with an Exceptions/ subfolder per entity." },
+    { "id": "tst-projects-007", "severity": "ERROR", "category": "Source Folder Structure", "rule": "Services must be organised by type: Services/Foundations/, Services/Processings/, Services/Orchestrations/." },
+    { "id": "tst-projects-008", "severity": "ERROR", "category": "Source Folder Structure", "rule": "Brokers must be organised by concern: Brokers/DateTimes/, Brokers/Loggings/, Brokers/Storages/." },
+    { "id": "tst-projects-009", "severity": "ERROR", "category": "Source Folder Structure", "rule": "Layers must not be mixed in the same folder." },
+    { "id": "tst-projects-010", "severity": "ERROR", "category": "Test Folder Structure", "rule": "Test projects must mirror the source project folder structure." },
+    { "id": "tst-projects-011", "severity": "ERROR", "category": "Test Folder Structure", "rule": "Tests must be organised under Services/{ServiceType}/{ServiceName}/ within the test project." }
+  ]
+}

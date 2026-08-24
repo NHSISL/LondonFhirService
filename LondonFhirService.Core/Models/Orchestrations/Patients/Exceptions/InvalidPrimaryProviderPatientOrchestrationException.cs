@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions
 {
-    public class InvalidPrimaryProviderPatientOrchestrationException : Xeption
+    internal class InvalidPrimaryProviderPatientOrchestrationException : Xeption
     {
         public InvalidPrimaryProviderPatientOrchestrationException(string message)
             : base(message)

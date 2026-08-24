@@ -10,7 +10,7 @@ using LondonFhirService.Core.Services.Foundations.JsonElements;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
-    public partial class IdIgnoreProcessingRule : JsonIgnoreProcessingRuleBase, IJsonIgnoreProcessingRule
+    internal partial class IdIgnoreProcessingRule : JsonIgnoreProcessingRuleBase, IJsonIgnoreProcessingRule
     {
         public IdIgnoreProcessingRule(IJsonElementService jsonElementService, ILoggingBroker loggingBroker)
             : base(jsonElementService, loggingBroker)

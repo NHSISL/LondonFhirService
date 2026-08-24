@@ -10,7 +10,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
 {
-    public partial class FhirRecordDifferenceService
+    internal partial class FhirRecordDifferenceService
     {
         private async ValueTask ValidateFhirRecordDifferenceOnAdd(FhirRecordDifference fhirRecordDifference)
         {
@@ -156,7 +156,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
         private static dynamic IsGreaterThan(string text, int maxLength) => new
         {
             Condition = IsExceedingLength(text, maxLength),
-            Message = $"Text exceed max length of {maxLength} characters"
+            Message = $"Text exceeds max length of {maxLength} characters"
         };
 
         private static bool IsExceedingLength(string text, int maxLength) =>

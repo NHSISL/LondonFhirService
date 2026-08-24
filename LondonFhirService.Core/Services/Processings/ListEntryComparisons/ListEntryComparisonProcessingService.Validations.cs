@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 
-public partial class ListEntryComparisonProcessingService
+internal partial class ListEntryComparisonProcessingService
 {
     protected internal virtual void ValidateOnCompareListEntryCounts(
         JsonElement source1List,

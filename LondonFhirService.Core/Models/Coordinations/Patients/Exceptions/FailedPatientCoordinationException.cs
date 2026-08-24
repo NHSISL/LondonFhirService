@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Coordinations.Patients.Exceptions
 {
-    public class FailedPatientCoordinationException : Xeption
+    internal class FailedPatientCoordinationException : Xeption
     {
         public FailedPatientCoordinationException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

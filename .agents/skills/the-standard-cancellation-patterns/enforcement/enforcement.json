@@ -1,0 +1,50 @@
+{
+  "skill": "the-standard-cancellation-patterns",
+  "enforcement": [
+    {
+      "rule_id": "tsc-csharp-cp-001",
+      "check": "CancellationToken is last parameter in all async method signatures",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsc-csharp-cp-002",
+      "check": "CancellationToken defaults to `default`",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsc-csharp-cp-003",
+      "check": "CancellationToken is not nullable (no `CancellationToken?`)",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsc-csharp-cp-004",
+      "check": "Parameter is named `cancellationToken` — not `token`, `ct`, or `cancelToken`",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsc-csharp-cp-005",
+      "check": "Method calls `cancellationToken.ThrowIfCancellationRequested()` before dependency operations",
+      "action": "warn"
+    },
+    {
+      "rule_id": "tsc-csharp-cp-007",
+      "check": "Token is propagated to all dependency calls",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsc-csharp-cp-011",
+      "check": "Timeout-guarded catch block precedes plain OperationCanceledException catch",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsc-csharp-cp-013",
+      "check": "OperationCanceledException is rethrown with `throw;` — never wrapped",
+      "action": "block"
+    },
+    {
+      "rule_id": "tsc-csharp-cp-014",
+      "check": "`catch (OperationCanceledException) { throw; }` block exists when CancellationToken is present",
+      "action": "block"
+    }
+  ]
+}

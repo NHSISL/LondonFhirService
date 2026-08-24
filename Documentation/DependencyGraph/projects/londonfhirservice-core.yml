@@ -11,16 +11,6 @@ components:
     col: 8
     description: "Partial EF Core DbContext (derives from EFxceptions' EFxceptionsContext) with one partial per entity. Every method delegates to a private generic that calls STX.EFCore.Client's EFCoreClient. Registered both as a DbContextFactory and a scoped IStorageBroker; OnConfiguring reads the LondonFhirServiceConnectionString and enables HierarchyId. Per-entity method rows are generated from the entity config."
     methods:
-      - InsertConsumerAsync
-      - SelectAllConsumersAsync
-      - SelectConsumerByIdAsync
-      - UpdateConsumerAsync
-      - DeleteConsumerAsync
-      - InsertConsumerAccessAsync
-      - SelectAllConsumerAccessesAsync
-      - SelectConsumerAccessByIdAsync
-      - UpdateConsumerAccessAsync
-      - DeleteConsumerAccessAsync
       - InsertFhirRecordAsync
       - SelectAllFhirRecordsAsync
       - SelectFhirRecordByIdAsync
@@ -31,16 +21,6 @@ components:
       - SelectFhirRecordDifferenceByIdAsync
       - UpdateFhirRecordDifferenceAsync
       - DeleteFhirRecordDifferenceAsync
-      - InsertOdsDataAsync
-      - SelectAllOdsDatasAsync
-      - SelectOdsDataByIdAsync
-      - UpdateOdsDataAsync
-      - DeleteOdsDataAsync
-      - InsertPdsDataAsync
-      - SelectAllPdsDatasAsync
-      - SelectPdsDataByIdAsync
-      - UpdatePdsDataAsync
-      - DeletePdsDataAsync
       - InsertProviderAsync
       - SelectAllProvidersAsync
       - SelectProviderByIdAsync
@@ -53,36 +33,6 @@ components:
       - UpdateAuditAsync
       - DeleteAuditAsync
     calls:
-      - from: InsertConsumerAsync
-        to: LIB.EFCoreClient
-        method: InsertAsync
-      - from: SelectAllConsumersAsync
-        to: LIB.EFCoreClient
-        method: SelectAllAsync
-      - from: SelectConsumerByIdAsync
-        to: LIB.EFCoreClient
-        method: SelectAsync
-      - from: UpdateConsumerAsync
-        to: LIB.EFCoreClient
-        method: UpdateAsync
-      - from: DeleteConsumerAsync
-        to: LIB.EFCoreClient
-        method: DeleteAsync
-      - from: InsertConsumerAccessAsync
-        to: LIB.EFCoreClient
-        method: InsertAsync
-      - from: SelectAllConsumerAccessesAsync
-        to: LIB.EFCoreClient
-        method: SelectAllAsync
-      - from: SelectConsumerAccessByIdAsync
-        to: LIB.EFCoreClient
-        method: SelectAsync
-      - from: UpdateConsumerAccessAsync
-        to: LIB.EFCoreClient
-        method: UpdateAsync
-      - from: DeleteConsumerAccessAsync
-        to: LIB.EFCoreClient
-        method: DeleteAsync
       - from: InsertFhirRecordAsync
         to: LIB.EFCoreClient
         method: InsertAsync
@@ -111,36 +61,6 @@ components:
         to: LIB.EFCoreClient
         method: UpdateAsync
       - from: DeleteFhirRecordDifferenceAsync
-        to: LIB.EFCoreClient
-        method: DeleteAsync
-      - from: InsertOdsDataAsync
-        to: LIB.EFCoreClient
-        method: InsertAsync
-      - from: SelectAllOdsDatasAsync
-        to: LIB.EFCoreClient
-        method: SelectAllAsync
-      - from: SelectOdsDataByIdAsync
-        to: LIB.EFCoreClient
-        method: SelectAsync
-      - from: UpdateOdsDataAsync
-        to: LIB.EFCoreClient
-        method: UpdateAsync
-      - from: DeleteOdsDataAsync
-        to: LIB.EFCoreClient
-        method: DeleteAsync
-      - from: InsertPdsDataAsync
-        to: LIB.EFCoreClient
-        method: InsertAsync
-      - from: SelectAllPdsDatasAsync
-        to: LIB.EFCoreClient
-        method: SelectAllAsync
-      - from: SelectPdsDataByIdAsync
-        to: LIB.EFCoreClient
-        method: SelectAsync
-      - from: UpdatePdsDataAsync
-        to: LIB.EFCoreClient
-        method: UpdateAsync
-      - from: DeletePdsDataAsync
         to: LIB.EFCoreClient
         method: DeleteAsync
       - from: InsertProviderAsync
@@ -218,7 +138,7 @@ components:
     name: SecurityBroker
     layer: broker
     col: 8
-    description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today (by AccessOrchestrationService). ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called."
+    description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today (by Stu3PatientOrchestrationService, to build the ValidateAccessRequest). ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called."
     methods:
       - GetCurrentUserAsync
       - IsCurrentUserAuthenticatedAsync
@@ -270,26 +190,11 @@ components:
       - from: BulkLogAsync
         to: AuditClient
         method: BulkLogAuditsAsync
-  - id: HashBroker
-    name: HashBroker
-    layer: broker
-    col: 8
-    description: "Only GenerateSha256HashAsync(string, pepper) is consumed — AccessOrchestrationService hashes the NHS number before asking PdsDataService whether the consumer's organisations may see that patient (when AccessConfigurations.UseHashedNhsNumber is on)."
-    methods:
-      - GenerateSha256HashAsync
-      - GenerateMd5HashAsync
-    calls:
-      - from: GenerateSha256HashAsync
-        to: EXT.Crypto
-        method: SHA256.HashData
-      - from: GenerateMd5HashAsync
-        to: EXT.Crypto
-        method: MD5.ComputeHash
   - id: ConsumerAccessBroker
     name: ConsumerAccessBroker
     layer: broker
     col: 8
-    description: "Posts a ValidateAccessRequest to a remote consumer-access endpoint with a DefaultAzureCredential bearer token. Registered in the API host (AddHttpClient) but NOT consumed by any service today — the access decision is currently made in-process by AccessOrchestrationService."
+    description: "Posts a ValidateAccessRequest to a remote consumer-access endpoint with a DefaultAzureCredential bearer token and reads back a ConsumerAccess verdict. Registered in the API host (AddHttpClient) and consumed by ConsumerAccessService — this is now the whole access decision."
     methods:
       - CheckConsumerAccessAsync
     calls:
@@ -779,130 +684,17 @@ components:
       - from: BulkLogAuditsAsync
         to: FS.Audit
         method: BulkAddAuditsAsync
-  - id: FS.Consumer
-    name: ConsumerService
-    layer: foundation
-    col: 7
-    description: "Foundation CRUD for Consumer. Add and Modify take security-audit stamps; Modify also re-reads storage and asks the security-audit broker to keep the original Created values; Remove is a straight delete after a read. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
-    methods:
-      - AddConsumerAsync
-      - RetrieveAllConsumersAsync
-      - RetrieveConsumerByIdAsync
-      - ModifyConsumerAsync
-      - RemoveConsumerByIdAsync
-    calls:
-      - from: AddConsumerAsync
-        to: SecurityAuditBroker
-        method: ApplyAddAuditValuesAsync
-      - from: AddConsumerAsync
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: AddConsumerAsync
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: AddConsumerAsync
-        to: StorageBroker
-        method: InsertConsumerAsync
-      - from: RetrieveAllConsumersAsync
-        to: StorageBroker
-        method: SelectAllConsumersAsync
-      - from: RetrieveConsumerByIdAsync
-        to: StorageBroker
-        method: SelectConsumerByIdAsync
-      - from: ModifyConsumerAsync
-        to: SecurityAuditBroker
-        method: ApplyModifyAuditValuesAsync
-      - from: ModifyConsumerAsync
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: ModifyConsumerAsync
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: ModifyConsumerAsync
-        to: StorageBroker
-        method: SelectConsumerByIdAsync
-      - from: ModifyConsumerAsync
-        to: SecurityAuditBroker
-        method: EnsureAddAuditValuesRemainsUnchangedOnModifyAsync
-      - from: ModifyConsumerAsync
-        to: StorageBroker
-        method: UpdateConsumerAsync
-      - from: RemoveConsumerByIdAsync
-        to: StorageBroker
-        method: SelectConsumerByIdAsync
-      - from: RemoveConsumerByIdAsync
-        to: StorageBroker
-        method: DeleteConsumerAsync
   - id: FS.ConsumerAccess
     name: ConsumerAccessService
     layer: foundation
     col: 7
-    description: "Foundation CRUD for ConsumerAccess. As the audited template, plus Remove stamps remove-audit values and persists them with an Update before the Delete. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
+    description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService.ValidateAccess. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and timeout / cancellation onto TimedOut- and CancelledConsumerAccessServiceException. It takes no storage broker — consumer access is no longer held locally."
     methods:
-      - AddConsumerAccessAsync
-      - RetrieveAllConsumerAccessesAsync
-      - RetrieveConsumerAccessByIdAsync
-      - ModifyConsumerAccessAsync
-      - RemoveConsumerAccessByIdAsync
-      - RetrieveAllActiveOrganisationsUserHasAccessToAsync
+      - CheckConsumerAccessAsync
     calls:
-      - from: AddConsumerAccessAsync
-        to: SecurityAuditBroker
-        method: ApplyAddAuditValuesAsync
-      - from: AddConsumerAccessAsync
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: AddConsumerAccessAsync
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: AddConsumerAccessAsync
-        to: StorageBroker
-        method: InsertConsumerAccessAsync
-      - from: RetrieveAllConsumerAccessesAsync
-        to: StorageBroker
-        method: SelectAllConsumerAccessesAsync
-      - from: RetrieveConsumerAccessByIdAsync
-        to: StorageBroker
-        method: SelectConsumerAccessByIdAsync
-      - from: ModifyConsumerAccessAsync
-        to: SecurityAuditBroker
-        method: ApplyModifyAuditValuesAsync
-      - from: ModifyConsumerAccessAsync
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: ModifyConsumerAccessAsync
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: ModifyConsumerAccessAsync
-        to: StorageBroker
-        method: SelectConsumerAccessByIdAsync
-      - from: ModifyConsumerAccessAsync
-        to: StorageBroker
-        method: UpdateConsumerAccessAsync
-      - from: RemoveConsumerAccessByIdAsync
-        to: StorageBroker
-        method: SelectConsumerAccessByIdAsync
-      - from: RemoveConsumerAccessByIdAsync
-        to: SecurityAuditBroker
-        method: ApplyRemoveAuditValuesAsync
-      - from: RemoveConsumerAccessByIdAsync
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: RemoveConsumerAccessByIdAsync
-        to: StorageBroker
-        method: UpdateConsumerAccessAsync
-      - from: RemoveConsumerAccessByIdAsync
-        to: StorageBroker
-        method: DeleteConsumerAccessAsync
-      - from: RetrieveAllActiveOrganisationsUserHasAccessToAsync
-        to: StorageBroker
-        method: SelectAllConsumerAccessesAsync
-      - from: RetrieveAllActiveOrganisationsUserHasAccessToAsync
-        to: StorageBroker
-        method: SelectAllOdsDatasAsync
-      - from: RetrieveAllActiveOrganisationsUserHasAccessToAsync
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
+      - from: CheckConsumerAccessAsync
+        to: ConsumerAccessBroker
+        method: CheckConsumerAccessAsync
   - id: FS.FhirRecord
     name: FhirRecordService
     layer: foundation
@@ -1011,103 +803,6 @@ components:
       - from: RemoveFhirRecordDifferenceByIdAsync
         to: StorageBroker
         method: DeleteFhirRecordDifferenceAsync
-  - id: FS.OdsData
-    name: OdsDataService
-    layer: foundation
-    col: 7
-    description: "Foundation CRUD for OdsData. No security-audit broker — audit columns arrive already populated on the model. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
-    methods:
-      - AddOdsDataAsync
-      - RetrieveAllOdsDatasAsync
-      - RetrieveOdsDataByIdAsync
-      - ModifyOdsDataAsync
-      - RemoveOdsDataByIdAsync
-      - RetrieveChildrenByParentId
-      - RetrieveAllDescendantsByParentId
-      - RetrieveAllAncestorsByChildId
-    calls:
-      - from: AddOdsDataAsync
-        to: StorageBroker
-        method: InsertOdsDataAsync
-      - from: RetrieveAllOdsDatasAsync
-        to: StorageBroker
-        method: SelectAllOdsDatasAsync
-      - from: RetrieveOdsDataByIdAsync
-        to: StorageBroker
-        method: SelectOdsDataByIdAsync
-      - from: ModifyOdsDataAsync
-        to: StorageBroker
-        method: SelectOdsDataByIdAsync
-      - from: ModifyOdsDataAsync
-        to: StorageBroker
-        method: UpdateOdsDataAsync
-      - from: RemoveOdsDataByIdAsync
-        to: StorageBroker
-        method: SelectOdsDataByIdAsync
-      - from: RemoveOdsDataByIdAsync
-        to: StorageBroker
-        method: DeleteOdsDataAsync
-      - from: RetrieveChildrenByParentId
-        to: StorageBroker
-        method: SelectOdsDataByIdAsync
-      - from: RetrieveChildrenByParentId
-        to: StorageBroker
-        method: SelectAllOdsDatasAsync
-      - from: RetrieveAllDescendantsByParentId
-        to: StorageBroker
-        method: SelectOdsDataByIdAsync
-      - from: RetrieveAllDescendantsByParentId
-        to: StorageBroker
-        method: SelectAllOdsDatasAsync
-      - from: RetrieveAllAncestorsByChildId
-        to: StorageBroker
-        method: SelectOdsDataByIdAsync
-      - from: RetrieveAllAncestorsByChildId
-        to: StorageBroker
-        method: SelectAllOdsDatasAsync
-  - id: FS.PdsData
-    name: PdsDataService
-    layer: foundation
-    col: 7
-    description: "Foundation CRUD for PdsData. No security-audit broker — audit columns arrive already populated on the model. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
-    methods:
-      - AddPdsDataAsync
-      - RetrieveAllPdsDatasAsync
-      - RetrievePdsDataByIdAsync
-      - ModifyPdsDataAsync
-      - RemovePdsDataByIdAsync
-      - OrganisationsHaveAccessToThisPatient
-    calls:
-      - from: AddPdsDataAsync
-        to: StorageBroker
-        method: InsertPdsDataAsync
-      - from: RetrieveAllPdsDatasAsync
-        to: StorageBroker
-        method: SelectAllPdsDatasAsync
-      - from: RetrievePdsDataByIdAsync
-        to: StorageBroker
-        method: SelectPdsDataByIdAsync
-      - from: ModifyPdsDataAsync
-        to: StorageBroker
-        method: SelectPdsDataByIdAsync
-      - from: ModifyPdsDataAsync
-        to: StorageBroker
-        method: UpdatePdsDataAsync
-      - from: RemovePdsDataByIdAsync
-        to: StorageBroker
-        method: SelectPdsDataByIdAsync
-      - from: RemovePdsDataByIdAsync
-        to: StorageBroker
-        method: DeletePdsDataAsync
-      - from: OrganisationsHaveAccessToThisPatient
-        to: StorageBroker
-        method: SelectAllPdsDatasAsync
-      - from: OrganisationsHaveAccessToThisPatient
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: OrganisationsHaveAccessToThisPatient
-        to: AuditBroker
-        method: LogInformationAsync
   - id: FS.Provider
     name: ProviderService
     layer: foundation
@@ -1307,11 +1002,11 @@ components:
       - from: GetStructuredRecordSerialisedAsync
         to: LoggingBroker
         method: LogInformationAsync
-  - id: FS.Stu3FhirReconciliation
+  - id: OR.Stu3FhirReconciliation
     name: Stu3FhirReconciliationService
-    layer: foundation
-    col: 7
-    description: "Placeholder reconciliation: returns the first non-empty bundle and throws ResourceNotFoundException when every provider came back empty. It takes only ILoggingBroker — no real merge across providers yet."
+    layer: orchestration
+    col: 5
+    description: "Placeholder reconciliation: returns the first non-empty bundle and throws NotFoundFhirReconciliationOrchestrationException when every provider came back empty. It takes only ILoggingBroker — no real merge across providers yet. Modelled as an orchestration: it sits alongside Stu3PatientOrchestrationService under the coordination service, and its exceptions are the FhirReconciliationOrchestration* family."
     methods:
       - ReconcileSerialisedAsync
   - id: FS.JsonElement
@@ -1663,55 +1358,39 @@ components:
       - from: GetReplacementAsync
         to: FS.JsonElement
         method: CreateStringElement
-  - id: OR.Access
-    name: AccessOrchestrationService
-    layer: orchestration
-    col: 5
-    description: "The access decision, made in-process. Resolves the caller, matches them to a Consumer by UserId, checks the ActiveFrom/ActiveTo window, expands their organisations down the ODS hierarchy, optionally hashes the NHS number (AccessConfigurations.UseHashedNhsNumber + HashPepper), then asks PdsDataService whether any of those organisations may see that patient. Every allow and every denial is written to the audit trail."
-    methods:
-      - ValidateAccess
-    calls:
-      - from: ValidateAccess
-        to: SecurityBroker
-        method: GetCurrentUserAsync
-      - from: ValidateAccess
-        to: AuditBroker
-        method: LogInformationAsync
-      - from: ValidateAccess
-        to: FS.Consumer
-        method: RetrieveAllConsumersAsync
-      - from: ValidateAccess
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: ValidateAccess
-        to: FS.ConsumerAccess
-        method: RetrieveAllActiveOrganisationsUserHasAccessToAsync
-      - from: ValidateAccess
-        to: HashBroker
-        method: GenerateSha256HashAsync
-      - from: ValidateAccess
-        to: FS.PdsData
-        method: OrganisationsHaveAccessToThisPatient
   - id: OR.Stu3Patient
     name: Stu3PatientOrchestrationService
     layer: orchestration
     col: 5
-    description: "Reads the STU3 providers, keeps the active ones (IsActive plus the ActiveFrom/ActiveTo window) with the primary first, validates that exactly one primary exists, fans the request out through Stu3PatientService and hands the bundles to reconciliation."
+    description: "Gates the request on access, then fans it out. GetStructuredRecordSerialisedAsync runs the access check first (through the same private helper ValidateAccess wraps, so the exception is localised once), reads the STU3 providers, keeps the active ones (IsActive plus the ActiveFrom/ActiveTo window) with the primary first, validates that exactly one primary exists, and returns a StructuredRecordsResponse (primary provider + per-provider bundles) for the coordination service to reconcile. ValidateAccess honours AccessConfigurations.CheckAccessPermissions: off, it audits the skip and returns; on, it resolves the caller, builds a ValidateAccessRequest and asks ConsumerAccessService — not allowed writes an Access Forbidden audit carrying the returned reason codes and throws ForbiddenPatientOrchestrationException, allowed writes an Access Allowed audit naming the organisations that granted it."
     methods:
       - GetStructuredRecordSerialisedAsync
+      - ValidateAccess
     calls:
       - from: GetStructuredRecordSerialisedAsync
         to: AuditBroker
         method: LogInformationAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: SecurityBroker
+        method: GetCurrentUserAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: FS.ConsumerAccess
+        method: CheckConsumerAccessAsync
       - from: GetStructuredRecordSerialisedAsync
         to: FS.Provider
         method: RetrieveAllProvidersAsync
       - from: GetStructuredRecordSerialisedAsync
         to: FS.Stu3Patient
         method: GetStructuredRecordSerialisedAsync
-      - from: GetStructuredRecordSerialisedAsync
-        to: FS.Stu3FhirReconciliation
-        method: ReconcileSerialisedAsync
+      - from: ValidateAccess
+        to: AuditBroker
+        method: LogInformationAsync
+      - from: ValidateAccess
+        to: SecurityBroker
+        method: GetCurrentUserAsync
+      - from: ValidateAccess
+        to: FS.ConsumerAccess
+        method: CheckConsumerAccessAsync
   - id: OR.CompareQueue
     name: CompareQueueOrchestrationService
     layer: orchestration
@@ -1788,7 +1467,7 @@ components:
     name: Stu3PatientCoordinationService
     layer: coordination
     col: 4
-    description: "Mints the correlation id for the whole request, audits each stage, runs the access check when AccessConfigurations.CheckAccessPermissions is on (and audits the skip when it is off), then delegates to the patient orchestration."
+    description: "Mints the correlation id for the whole request, audits each stage, delegates to the patient orchestration for the access-gated fan-out, then hands the per-provider bundles to the reconciliation orchestration, which returns the single serialised bundle the API hands back."
     methods:
       - GetStructuredRecordSerialisedAsync
     calls:
@@ -1799,11 +1478,11 @@ components:
         to: AuditBroker
         method: LogInformationAsync
       - from: GetStructuredRecordSerialisedAsync
-        to: OR.Access
-        method: ValidateAccess
-      - from: GetStructuredRecordSerialisedAsync
         to: OR.Stu3Patient
         method: GetStructuredRecordSerialisedAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: OR.Stu3FhirReconciliation
+        method: ReconcileSerialisedAsync
   - id: CO.Comparison
     name: ComparisonCoordinationService
     layer: coordination

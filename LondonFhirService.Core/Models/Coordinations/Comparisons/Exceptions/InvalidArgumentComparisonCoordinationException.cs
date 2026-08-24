@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Coordinations.Comparisons.Exceptions
 {
-    public class InvalidArgumentComparisonCoordinationException : Xeption
+    internal class InvalidArgumentComparisonCoordinationException : Xeption
     {
         public InvalidArgumentComparisonCoordinationException(string message)
             : base(message)

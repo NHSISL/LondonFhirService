@@ -1,0 +1,26 @@
+{
+  "skill": "the-standard-reacttypescript-view-services",
+  "version": "1.0.0",
+  "rules": [
+    {"id": "tsr-view-001", "severity": "ERROR", "category": "View Service Responsibility", "rule": "View services MUST transform foundation models to view models for UI consumption."},
+    {"id": "tsr-view-002", "severity": "ERROR", "category": "View Service Responsibility", "rule": "View services MUST inject foundation services, never brokers directly."},
+    {"id": "tsr-view-003", "severity": "ERROR", "category": "View Service Responsibility", "rule": "View services MUST NOT contain business logic (validation, business rules, authorization)."},
+    {"id": "tsr-view-004", "severity": "ERROR", "category": "View Service Responsibility", "rule": "View services MUST handle UI-specific transformations (formatting, combining fields, calculating display values)."},
+    {"id": "tsr-view-005", "severity": "ERROR", "category": "View Service Responsibility", "rule": "View services MUST map foundation service exceptions to view-layer exceptions."},
+    {"id": "tsr-view-006", "severity": "ERROR", "category": "View Service Responsibility", "rule": "View service methods MUST return view models, never foundation models."},
+    {"id": "tsr-view-007", "severity": "ERROR", "category": "View Service Responsibility", "rule": "View services MUST NOT modify foundation models."},
+    {"id": "tsr-view-008", "severity": "ERROR", "category": "View Service Responsibility", "rule": "View services MUST centralize UI transformation logic, not scatter it across components."},
+    {"id": "tsr-view-009", "severity": "ERROR", "category": "Transformation Rules", "rule": "Date transformations MUST format dates for display (e.g., ISO string → \"Jan 1, 2024\")."},
+    {"id": "tsr-view-010", "severity": "ERROR", "category": "Transformation Rules", "rule": "Status mappings MUST convert codes to user-friendly labels."},
+    {"id": "tsr-view-011", "severity": "ERROR", "category": "Transformation Rules", "rule": "Computed fields MUST be calculated in view service, not components."},
+    {"id": "tsr-view-012", "severity": "ERROR", "category": "Transformation Rules", "rule": "ClassName generation MUST happen in view service for conditional styling."},
+    {"id": "tsr-view-013", "severity": "WARN", "category": "Transformation Rules", "rule": "Complex transformations SHOULD be split into private helper methods."},
+    {"id": "tsr-view-014", "severity": "ERROR", "category": "View Service Organization", "rule": "View services MUST be in `services/views/{domain}/` directory."},
+    {"id": "tsr-view-015", "severity": "ERROR", "category": "View Service Organization", "rule": "View service class names MUST follow pattern `{Domain}ViewService`."},
+    {"id": "tsr-view-016", "severity": "ERROR", "category": "View Service Organization", "rule": "View service interface names MUST follow pattern `I{Domain}ViewService`."},
+    {"id": "tsr-view-017", "severity": "WARN", "category": "View Service Organization", "rule": "View services SHOULD expose interfaces for testing."},
+    {"id": "tsr-view-018", "severity": "ERROR", "category": "View Service Organization", "rule": "Each view service file MUST contain one service class only."},
+    {"id": "tsr-view-019", "severity": "ERROR", "category": "View Service Organization", "rule": "View services MUST NOT call other view services."},
+    {"id": "tsr-view-020", "severity": "ERROR", "category": "View Service Organization", "rule": "View services MUST handle null/undefined foundation data gracefully with default view values."}
+  ]
+}

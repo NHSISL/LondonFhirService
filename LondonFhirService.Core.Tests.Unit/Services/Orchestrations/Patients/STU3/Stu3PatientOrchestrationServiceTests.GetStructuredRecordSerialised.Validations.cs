@@ -8,10 +8,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Force.DeepCloner;
-using Hl7.Fhir.Model;
 using LondonFhirService.Core.Models.Foundations.Providers;
+using LondonFhirService.Core.Models.Orchestrations.Accesses;
+using LondonFhirService.Core.Models.Orchestrations.Patients;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
+using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
@@ -47,7 +48,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: invalidArgumentPatientOrchestrationException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordsResponse> getStructuredRecordTask =
                 this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
                     correlationId: correlationId,
                     nhsNumber: invalidNhsNumber);
@@ -65,12 +66,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
-            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.securityBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
-            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -83,8 +85,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
-            Bundle randomBundle = CreateRandomBundle();
-            Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
@@ -102,6 +102,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 randomActiveProvider,
             }.AsQueryable();
 
+            Stu3PatientOrchestrationService orchestrationService =
+                CreateOrchestrationService(new AccessConfigurations { CheckAccessPermissions = false });
+
+            string accessMessage = $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\" }}";
+
             this.providerServiceMock.Setup(service =>
                 service.RetrieveAllProvidersAsync())
                     .ReturnsAsync(allProviders);
@@ -116,13 +121,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: invalidPrimaryProviderPatientOrchestrationException);
 
             // when
-            ValueTask<string> getStructuredRecordTask = this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
-                correlationId,
-                inputNhsNumber,
-                inputDateOfBirth,
-                inputDemographicsOnly,
-                inputActivePatientsOnly,
-                cancellationToken);
+            ValueTask<StructuredRecordsResponse> getStructuredRecordTask =
+                orchestrationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    inputNhsNumber,
+                    inputDateOfBirth,
+                    inputDemographicsOnly,
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>(),
+                    cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -141,7 +148,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Orchestration Service Request Submitted",
@@ -150,7 +157,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
+                    accessMessage,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Retrieve active providers and execute request",
@@ -159,12 +175,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
-            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.securityBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
-            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -177,8 +194,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
             CancellationToken cancellationToken = CancellationToken.None;
-            Bundle randomBundle = CreateRandomBundle();
-            Bundle expectedBundle = randomBundle.DeepClone();
             Guid correlationId = Guid.NewGuid();
             Provider randomPrimaryProvider = CreateRandomPrimaryProvider();
             Provider randomActiveProvider = CreateRandomActiveProvider();
@@ -197,6 +212,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 anotherRandomPrimaryProvider,
             }.AsQueryable();
 
+            Stu3PatientOrchestrationService orchestrationService =
+                CreateOrchestrationService(new AccessConfigurations { CheckAccessPermissions = false });
+
+            string accessMessage = $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\" }}";
+
             this.providerServiceMock.Setup(service =>
                 service.RetrieveAllProvidersAsync())
                     .ReturnsAsync(allProviders);
@@ -214,13 +234,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     innerException: invalidPrimaryProviderPatientOrchestrationException);
 
             // when
-            ValueTask<string> getStructuredRecordTask = this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
-                correlationId,
-                inputNhsNumber,
-                inputDateOfBirth,
-                inputDemographicsOnly,
-                inputActivePatientsOnly,
-                cancellationToken);
+            ValueTask<StructuredRecordsResponse> getStructuredRecordTask =
+                orchestrationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    inputNhsNumber,
+                    inputDateOfBirth,
+                    inputDemographicsOnly,
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>(),
+                    cancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -239,7 +261,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     expectedPatientOrchestrationValidationException))),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Orchestration Service Request Submitted",
@@ -248,7 +270,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
+                    accessMessage,
+                    null,
+                    correlationId.ToString()),
+                        Times.Once);
+
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Retrieve active providers and execute request",
@@ -257,12 +288,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.providerServiceMock.VerifyNoOtherCalls();
             this.patientServiceMock.VerifyNoOtherCalls();
-            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.securityBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
-            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

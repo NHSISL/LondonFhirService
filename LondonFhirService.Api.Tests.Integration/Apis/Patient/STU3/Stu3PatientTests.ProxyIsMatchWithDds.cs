@@ -6,10 +6,6 @@ using System;
 using FluentAssertions;
 using Hl7.Fhir.Model;
 using LondonFhirService.Api.Tests.Integration.Utilities;
-using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Models.Foundations.Consumers;
-using LondonFhirService.Core.Models.Foundations.OdsDatas;
-using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Task = System.Threading.Tasks.Task;
 
@@ -22,25 +18,11 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
         {
             // given
             string inputNhsNumber = "9435797881";
-            string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
-            bool isHashed = accessConfigurations.UseHashedNhsNumber;
-            string pepper = accessConfigurations.HashPepper;
-            string userId = TestAuthHandler.TestUserId;
             string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
             string fhirVersion = "STU3";
             Parameters inputParameters = CreateRandomGetStructuredRecordParameters(inputNhsNumber);
             Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
-            Consumer consumer = await CreateRandomConsumer(now, userId);
-            OdsData odsData = await CreateRandomOdsData(orgCode, now);
-
-            ConsumerAccess consumerAccess = await CreateRandomConsumerAccess(
-                consumer.Id,
-                orgCode,
-                now,
-                userId);
-
-            PdsData pdsData = await CreateRandomPdsData(inputNhsNumber, orgCode, now, isHashed, pepper);
 
             // when
             var (proxyText, proxyBundle) =
@@ -66,11 +48,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             }
 
             proxyNormalized.Should().Be(ddsNormalized);
-
-            await CleanupPdsDataAsync(pdsData);
-            await CleanupOdsDataAsync(odsData);
-            await CleanupConsumerAccessAsync(consumerAccess);
-            await CleanupConsumerAsync(consumer);
         }
 
         [Fact]
@@ -79,26 +56,12 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             // given
             string proxyInputNhsNumber = "9435797881";
             string ddsInputNhsNumber = "9435753973";
-            string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
-            string userId = TestAuthHandler.TestUserId;
             string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
             string fhirVersion = "STU3";
             Parameters proxyInputParameters = CreateRandomGetStructuredRecordParameters(proxyInputNhsNumber);
             Parameters ddsInputParameters = CreateRandomGetStructuredRecordParameters(ddsInputNhsNumber);
             Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
-            Consumer consumer = await CreateRandomConsumer(now, userId);
-            OdsData odsData = await CreateRandomOdsData(orgCode, now);
-            bool isHashed = accessConfigurations.UseHashedNhsNumber;
-            string pepper = accessConfigurations.HashPepper;
-
-            ConsumerAccess consumerAccess = await CreateRandomConsumerAccess(
-                consumer.Id,
-                orgCode,
-                now,
-                userId);
-
-            PdsData pdsData = await CreateRandomPdsData(proxyInputNhsNumber, orgCode, now, isHashed, pepper);
 
             // when
             var (proxyText, proxyBundle) =
@@ -124,11 +87,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
             }
 
             proxyNormalized.Should().NotBe(ddsNormalized);
-
-            await CleanupPdsDataAsync(pdsData);
-            await CleanupOdsDataAsync(odsData);
-            await CleanupConsumerAccessAsync(consumerAccess);
-            await CleanupConsumerAsync(consumer);
         }
     }
 }

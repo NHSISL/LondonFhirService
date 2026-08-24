@@ -7,7 +7,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Audits.Exceptions
 {
-    public class FailedStorageAuditServiceException : Xeption
+    internal class FailedStorageAuditServiceException : Xeption
     {
         public FailedStorageAuditServiceException(string message, Exception innerException)
             : base(message, innerException)

@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Patients.Exceptions
 {
-    public class InvalidArgumentsPatientServiceException : Xeption
+    internal class InvalidArgumentsPatientServiceException : Xeption
     {
         public InvalidArgumentsPatientServiceException(string message)
             : base(message)

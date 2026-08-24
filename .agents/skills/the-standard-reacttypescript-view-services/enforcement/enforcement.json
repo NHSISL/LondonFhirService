@@ -1,0 +1,19 @@
+{
+  "skill": "the-standard-reacttypescript-view-services",
+  "enforcement": [
+    {
+      "rule_id": "tsr-view-006",
+      "check": "View service must return view models, not foundation models",
+      "action": "warn",
+      "pattern": "Promise<(?!.*View).*>",
+      "message": "View service method appears to return foundation model instead of view model."
+    },
+    {
+      "rule_id": "tsr-view-002",
+      "check": "View service must inject foundation service, not broker",
+      "action": "block",
+      "pattern": "constructor\\([^)]*Broker",
+      "message": "View service is injecting a broker. View services must inject foundation services only."
+    }
+  ]
+}

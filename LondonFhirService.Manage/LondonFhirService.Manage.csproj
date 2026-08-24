@@ -21,8 +21,8 @@
 		<PackageReference Include="FluentAssertions" Version="[7.2.2]" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.2" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.5.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.11" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
 		<!--
 			Pin Microsoft.OpenApi to the latest 2.x. Do NOT move to 3.x: the
 			.NET 10 Microsoft.AspNetCore.OpenApi source generator is built against
@@ -31,15 +31,16 @@
 			(high severity advisory GHSA-v5pm-xwqc-g5wc) on the transitive 2.4.1.
 		-->
 		<PackageReference Include="Microsoft.OpenApi" Version="[2.11.0]" />
-		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.11" />
 		<PackageReference Include="Microsoft.Identity.Web" Version="4.14.2" />
 		<PackageReference Include="NHSISL.CsvHelperClient" Version="3.1.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.10" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.11" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\LondonFhirService.Core\LondonFhirService.Core.csproj" />
+		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,0 +1,16 @@
+{
+  "skill": "the-standard-reacttypescript-components",
+  "version": "1.0.0",
+  "component_structure": {
+    "directory": "src/components/{domain}/",
+    "file_pattern": "{Domain}{Purpose}.tsx",
+    "export_style": "named"
+  },
+  "component_rules": {
+    "pure_function": true,
+    "data_via_props": true,
+    "no_data_fetching": true,
+    "no_business_logic": true,
+    "typed_props": true
+  }
+}

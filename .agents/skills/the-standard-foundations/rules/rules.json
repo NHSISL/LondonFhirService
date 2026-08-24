@@ -1,0 +1,13 @@
+{
+  "skill": "the-standard-foundations",
+  "rules": [
+    { "id": "ts-foundations-001", "severity": "ERROR", "category": "Single Entity", "rule": "Foundation services must serve only one entity type." },
+    { "id": "ts-foundations-002", "severity": "ERROR", "category": "Validation", "rule": "Foundation services must perform structural and logical validation on all incoming models." },
+    { "id": "ts-foundations-003", "severity": "ERROR", "category": "Broker Dependency", "rule": "Foundation services must call only one broker per operation — never another service." },
+    { "id": "ts-foundations-004", "severity": "ERROR", "category": "Broker Dependency", "rule": "Foundation services must be a pass-through to the broker — no transformation or enrichment." },
+    { "id": "ts-foundations-005", "severity": "ERROR", "category": "Exception Handling", "rule": "Foundation services must map broker exceptions to local exceptions using dependency validation wrappers." },
+    { "id": "ts-foundations-006", "severity": "ERROR", "category": "Exception Handling", "rule": "Foundation services must wrap all broker calls in try-catch blocks." },
+    { "id": "ts-foundations-007", "severity": "ERROR", "category": "Structure", "rule": "Foundation services must be partial classes split by operation category." },
+    { "id": "ts-foundations-008", "severity": "ERROR", "category": "Naming", "rule": "Foundation service interfaces must follow the naming pattern I{Entity}Service." }
+  ]
+}

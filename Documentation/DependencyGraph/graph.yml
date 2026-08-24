@@ -62,10 +62,6 @@ projects:
     name: System.Net.Http
     kind: external
     file: projects/system-net-http.yml
-  - id: ext-crypto
-    name: System.Security.Cryptography
-    kind: external
-    file: projects/system-security-cryptography.yml
   - id: ext-fhir-src
     name: Upstream STU3 FHIR services
     kind: external
@@ -84,8 +80,8 @@ roots:
   - MG.FhirRecordDifferences
   - CO.Stu3Patient
   - CO.Comparison
-  - OR.Access
   - OR.Stu3Patient
+  - OR.Stu3FhirReconciliation
   - OR.CompareQueue
   - OR.Comparison
   - PR.ResourceMatcher
@@ -95,15 +91,11 @@ roots:
   - PR.Rule.Id
   - PR.Rule.Meta
   - FS.Audit
-  - FS.Consumer
   - FS.ConsumerAccess
   - FS.FhirRecord
   - FS.FhirRecordDifference
-  - FS.OdsData
-  - FS.PdsData
   - FS.Provider
   - FS.Stu3Patient
-  - FS.Stu3FhirReconciliation
   - FS.JsonElement
   - FS.Matcher.AllergyIntolerance
   - FS.Matcher.Appointment
@@ -133,7 +125,6 @@ roots:
   - StorageBroker
   - StorageBrokerFactory
   - Stu3FhirBroker
-  - HashBroker
   - ConsumerAccessBroker
   - DateTimeBroker
   - IdentifierBroker
@@ -146,7 +137,6 @@ roots:
   - EXT.ILogger
   - EXT.TokenCredential
   - EXT.HttpClient
-  - EXT.Crypto
   - EXT.DdsStu3
   - EXT.LdsStu3
 events: []

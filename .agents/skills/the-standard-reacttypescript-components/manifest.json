@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-reacttypescript-components",
+  "version": "0.1.0",
+  "description": "Component layer for pure rendering UI components in React + TypeScript projects",
+  "the_standard_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["View models via props", "Event callbacks", "UI state flags"],
+  "outputs": ["Rendered UI", "User interactions via callbacks", "Reusable components"],
+  "dependencies": ["the-standard-reacttypescript-typescript", "the-standard-reacttypescript-models"],
+  "applies_to": ["src/components/**/*.tsx"]
+}

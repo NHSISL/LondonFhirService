@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.ResourceMatchings;
 
-public partial class ResourceMatcherProcessingService
+internal partial class ResourceMatcherProcessingService
 {
     virtual internal void ValidateResourceType(string resourceType)
     {

@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointments
 {
-    public partial class AppointmentMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class AppointmentMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public AppointmentMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)

@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Processings.JsonIgnoreRules.Exceptions
 {
-    public class InvalidJsonIgnoreRulesProcessingException : Xeption
+    internal class InvalidJsonIgnoreRulesProcessingException : Xeption
     {
         public InvalidJsonIgnoreRulesProcessingException(string message)
             : base(message)

@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Processings.ResourceMatchings.Exceptions
 {
-    public class InvalidArgumentResourceMatcherProcessingException : Xeption
+    internal class InvalidArgumentResourceMatcherProcessingException : Xeption
     {
         public InvalidArgumentResourceMatcherProcessingException(string message)
             : base(message)

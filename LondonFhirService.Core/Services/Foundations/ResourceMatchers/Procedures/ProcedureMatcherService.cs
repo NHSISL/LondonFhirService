@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Procedures
 {
-    public partial class ProcedureMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class ProcedureMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public ProcedureMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)

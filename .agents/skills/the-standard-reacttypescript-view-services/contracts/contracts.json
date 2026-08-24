@@ -1,0 +1,16 @@
+{
+  "skill": "the-standard-reacttypescript-view-services",
+  "version": "1.0.0",
+  "service_structure": {
+    "directory": "src/services/views/{domain}/",
+    "class_pattern": "{Domain}ViewService",
+    "interface_pattern": "I{Domain}ViewService"
+  },
+  "transformation_types": {
+    "date_formatting": "ISO → display format",
+    "field_combination": "firstName + lastName → displayName",
+    "status_mapping": "code → label + className",
+    "calculated_fields": "dateOfBirth → age",
+    "default_values": "null/undefined → safe display defaults"
+  }
+}

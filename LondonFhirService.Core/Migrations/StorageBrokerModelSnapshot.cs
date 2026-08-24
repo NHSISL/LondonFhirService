@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Microsoft.SqlServer.Types;
 
 #nullable disable
 
@@ -18,7 +17,7 @@ namespace LondonFhirService.Core.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -78,102 +77,6 @@ namespace LondonFhirService.Core.Migrations
                     b.HasIndex("LogLevel");
 
                     b.ToTable("Audits", (string)null);
-                });
-
-            modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.ConsumerAccesses.ConsumerAccess", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ConsumerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTimeOffset>("CreatedDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("OrgCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTimeOffset>("UpdatedDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ConsumerId");
-
-                    b.ToTable("ConsumerAccesses", (string)null);
-                });
-
-            modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.Consumers.Consumer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("ActiveFrom")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset?>("ActiveTo")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("ContactEmail")
-                        .HasMaxLength(320)
-                        .HasColumnType("nvarchar(320)");
-
-                    b.Property<string>("ContactName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("ContactNotes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ContactPhone")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTimeOffset>("CreatedDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTimeOffset>("UpdatedDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Consumers", (string)null);
                 });
 
             modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.FhirRecordDifference", b =>
@@ -300,66 +203,80 @@ namespace LondonFhirService.Core.Migrations
                     b.ToTable("FhirRecords", (string)null);
                 });
 
-            modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.OdsDatas.OdsData", b =>
+            modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.Metrics.Metric", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("HasChildren")
-                        .HasColumnType("bit");
+                    b.Property<DateTimeOffset>("Completed")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<SqlHierarchyId?>("OdsHierarchy")
-                        .HasColumnType("hierarchyid");
-
-                    b.Property<string>("OrganisationCode")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<string>("OrganisationName")
+                    b.Property<string>("Consumer")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<DateTimeOffset?>("RelationshipWithParentEndDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset?>("RelationshipWithParentStartDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OdsDatas");
-                });
-
-            modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.PdsDatas.PdsData", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("CorrelationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("NhsNumber")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("OrgCode")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<string>("OrganisationName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset?>("RelationshipWithOrganisationEffectiveFromDate")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTimeOffset?>("RelationshipWithOrganisationEffectiveToDate")
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<double>("DurationMs")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long?>("PayloadBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("Started")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Target")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PdsDatas");
+                    b.HasIndex("CorrelationId");
+
+                    b.HasIndex("CreatedDate");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("Method", "Type", "Started");
+
+                    b.ToTable("Metrics", (string)null);
                 });
 
             modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.Providers.Provider", b =>
@@ -425,22 +342,6 @@ namespace LondonFhirService.Core.Migrations
                         .IsUnique();
 
                     b.ToTable("Providers", (string)null);
-                });
-
-            modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.ConsumerAccesses.ConsumerAccess", b =>
-                {
-                    b.HasOne("LondonFhirService.Core.Models.Foundations.Consumers.Consumer", "Consumer")
-                        .WithMany("ConsumerAccesses")
-                        .HasForeignKey("ConsumerId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Consumer");
-                });
-
-            modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.Consumers.Consumer", b =>
-                {
-                    b.Navigation("ConsumerAccesses");
                 });
 #pragma warning restore 612, 618
         }

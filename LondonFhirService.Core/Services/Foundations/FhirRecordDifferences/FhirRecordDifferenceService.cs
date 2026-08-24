@@ -13,7 +13,7 @@ using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 
 namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
 {
-    public partial class FhirRecordDifferenceService : IFhirRecordDifferenceService
+    internal partial class FhirRecordDifferenceService : IFhirRecordDifferenceService
     {
         private readonly IStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;

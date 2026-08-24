@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-exposers",
+  "version": "0.1.0",
+  "description": "Enforces thin controller design, correct HTTP verb and status code usage, and exception-to-HTTP mapping for RESTful API controllers.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# controller source file (*Controller*.cs)"],
+  "outputs": ["Standard-compliant controller code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core"],
+  "applies_to": ["*Controller*.cs"]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-csharp-methods",
+  "version": "0.1.0",
+  "description": "Enforces C# method naming, parameter naming, one-liner/multi-liner style, return spacing, 120-char limits, and method chain uglification.",
+  "the_standard_version": "v0.8",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# source file"],
+  "outputs": ["Standard-compliant method definitions and call sites"],
+  "dependencies": ["the-standard-csharp-variables"],
+  "applies_to": ["*.cs"]
+}

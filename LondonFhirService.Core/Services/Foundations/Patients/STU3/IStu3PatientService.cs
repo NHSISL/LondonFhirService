@@ -19,6 +19,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             string dateOfBirth = null,
             bool? demographicsOnly = null,
             bool? includeInactivePatients = null,
+            Guid? parentId = null,
             CancellationToken cancellationToken = default);
     }
 }

@@ -1,0 +1,21 @@
+{
+  "skill": "the-standard-reacttypescript-models",
+  "rules": [
+    {"id": "tsr-models-001", "severity": "ERROR", "category": "Model Types", "rule": "Foundation models MUST represent domain or API-facing concepts."},
+    {"id": "tsr-models-002", "severity": "ERROR", "category": "Model Types", "rule": "View models MUST represent UI-ready data produced by view services."},
+    {"id": "tsr-models-003", "severity": "ERROR", "category": "Model Types", "rule": "Component prop models MUST describe rendering input only."},
+    {"id": "tsr-models-004", "severity": "ERROR", "category": "Model Types", "rule": "Do NOT reuse API response models directly as component props when the UI needs a different shape."},
+    {"id": "tsr-models-005", "severity": "ERROR", "category": "Model Types", "rule": "Models MUST NOT contain behavior (methods, functions, API calls, mutations)."},
+    {"id": "tsr-models-006", "severity": "ERROR", "category": "Model Organization", "rule": "Models MUST be organized by architectural layer: foundations/, views/, components/, configurations/."},
+    {"id": "tsr-models-007", "severity": "ERROR", "category": "Model Organization", "rule": "Use `type` keyword for model definitions (not `interface` unless defining a behavioral contract)."},
+    {"id": "tsr-models-008", "severity": "ERROR", "category": "Model Organization", "rule": "Model files MUST follow pattern `{Domain}.ts` or `{Domain}{Purpose}.ts`."},
+    {"id": "tsr-models-009", "severity": "WARN", "category": "Model Organization", "rule": "Foundation models SHOULD match backend domain models when possible."},
+    {"id": "tsr-models-010", "severity": "ERROR", "category": "Model Types", "rule": "View models MUST be transformation output from view services, never created in components."},
+    {"id": "tsr-models-011", "severity": "ERROR", "category": "Property Rules", "rule": "Optional properties MUST use `?` only when the field can truly be absent."},
+    {"id": "tsr-models-012", "severity": "ERROR", "category": "Property Rules", "rule": "Use explicit types for all properties — never implicit `any`."},
+    {"id": "tsr-models-013", "severity": "WARN", "category": "Property Rules", "rule": "Prefer explicit union types over string for fixed sets of values."},
+    {"id": "tsr-models-014", "severity": "ERROR", "category": "Property Rules", "rule": "Date/time values SHOULD be strings (ISO 8601) at API boundaries, Date objects internally when needed."},
+    {"id": "tsr-models-015", "severity": "WARN", "category": "Property Rules", "rule": "Avoid deeply nested model structures beyond 3 levels."},
+    {"id": "tsr-models-016", "severity": "ERROR", "category": "Model Types", "rule": "Error models MUST be separate from domain models."}
+  ]
+}

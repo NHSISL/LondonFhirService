@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             await SelectAllAsync<FhirRecord>();
 
         public async ValueTask<FhirRecord> SelectFhirRecordByIdAsync(Guid fhirRecordId) =>
-            await SelectAsync<FhirRecord>(fhirRecordId);
+            await SelectAsync<FhirRecord>(new object[] { fhirRecordId });
 
         public async ValueTask<FhirRecord> UpdateFhirRecordAsync(FhirRecord fhirRecord) =>
             await UpdateAsync(fhirRecord);

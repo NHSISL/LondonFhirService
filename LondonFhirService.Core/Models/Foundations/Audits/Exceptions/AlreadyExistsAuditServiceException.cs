@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Audits.Exceptions
 {
-    public class AlreadyExistsAuditServiceException : Xeption
+    internal class AlreadyExistsAuditServiceException : Xeption
     {
         public AlreadyExistsAuditServiceException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

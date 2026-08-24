@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Coordinations.Comparisons.Exceptions
 {
-    public class FailedComparisonCoordinationException : Xeption
+    internal class FailedComparisonCoordinationException : Xeption
     {
         public FailedComparisonCoordinationException(string message, Exception innerException, IDictionary data)
             : base(message, innerException, data)

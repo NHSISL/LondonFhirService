@@ -1,0 +1,34 @@
+@* ---
+skill: the-standard-ui
+type: example
+source-section: "3.2 User Interfaces"
+demonstrates: "ts-ui-001, ts-ui-004, ts-ui-005"
+--- *@
+
+@* ✅ Inherits base class — logic is in StudentListBase.cs, not here *@
+@inherits StudentListBase
+
+<div class="student-list">
+    @if (IsLoading)
+    {
+        @* ✅ Explicit loading state *@
+        <p>Loading students...</p>
+    }
+    else if (HasError)
+    {
+        @* ✅ Explicit error state *@
+        <p class="error">@ErrorMessage</p>
+    }
+    else if (!Students.Any())
+    {
+        @* ✅ Explicit empty state *@
+        <p>No students found.</p>
+    }
+    else
+    {
+        @foreach (var student in Students)
+        {
+            <StudentCardComponent Student="student" />
+        }
+    }
+</div>

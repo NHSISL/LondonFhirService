@@ -82,12 +82,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    cancellationToken,
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly);
+                    inputActivePatientsOnly,
+                    parentId: null,
+                    cancellationToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -100,7 +101,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
@@ -109,7 +110,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     $"{auditType}-DATA",
                     $"{fhirProvider.DisplayName} - DATA ({inputFhirProviderName})",
@@ -118,7 +119,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     It.Is<string>(s => s.StartsWith($"{fhirProvider.DisplayName} Provider Execution Completed")),
@@ -133,7 +134,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.identifierBrokerMock.Verify(broker =>
                 broker.GetIdentifierAsync(),
-                    Times.Once);
+                    Times.AtLeastOnce);
 
             this.securityAuditBrokerMock.Verify(broker =>
                 broker.ApplyAddAuditValuesAsync(It.Is(SameFhirRecordAs(fhirRecord))),
@@ -151,9 +152,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 factory.DisposeAsync(),
                     Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
@@ -187,12 +189,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    alreadyCanceledToken,
                     correlationId,
                     inputNhsNumber,
                     null,
                     null,
-                    null);
+                    null,
+                    parentId: null,
+                    globalToken: alreadyCanceledToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -205,9 +208,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 alreadyCanceledToken),
                     Times.Never());
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
@@ -250,12 +254,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    default,
                     correlationId,
                     nhsNumber,
                     null,
                     null,
-                    null);
+                    null,
+                    parentId: null,
+                    globalToken: default);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -268,7 +273,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
@@ -281,9 +286,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.DisplayName,
                     Times.AtLeastOnce);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
@@ -325,12 +331,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    default,
                     correlationId,
                     nhsNumber,
                     null,
                     null,
-                    null);
+                    null,
+                    parentId: null,
+                    globalToken: default);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -343,7 +350,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
@@ -352,7 +359,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     $"Parallel Provider Execution - {fhirProvider.DisplayName} failed",
@@ -365,9 +372,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.DisplayName,
                     Times.AtLeastOnce);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
@@ -421,12 +429,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     inputFhirProviderName,
                     inputFhirProviderIsPrimary,
                     fhirProvider,
-                    default,
                     correlationId,
                     nhsNumber,
                     null,
                     null,
-                    null);
+                    null,
+                    parentId: null,
+                    globalToken: default);
 
             // then
             actualResult.Json.Should().BeNull();
@@ -445,7 +454,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 It.IsAny<CancellationToken>()),
                     Times.Once());
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
@@ -458,9 +467,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 provider.DisplayName,
                     Times.AtLeastOnce);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();

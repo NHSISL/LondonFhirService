@@ -1,0 +1,1 @@
+{"name":"the-standard-reacttypescript-hooks","version":"0.1.0","description":"Hook layer for page logic orchestration","applies_to":["src/hooks/**/*.ts"],"dependencies":["the-standard-reacttypescript-typescript","the-standard-reacttypescript-view-services"]}

@@ -23,7 +23,7 @@ using LondonFhirService.Core.Services.Processings.ResourceMatchings;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
 {
-    public partial class ComparisonOrchestrationService : IComparisonOrchestrationService
+    internal partial class ComparisonOrchestrationService : IComparisonOrchestrationService
     {
         private readonly List<IJsonIgnoreProcessingRule> ignoreRules;
         private readonly IResourceMatcherProcessingService resourceMatcherProcessingService;

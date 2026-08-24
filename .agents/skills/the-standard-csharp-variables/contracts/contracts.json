@@ -1,0 +1,24 @@
+{
+  "skill": "the-standard-csharp-variables",
+  "version": "1.0.0",
+  "naming": {
+    "style": "camelCase",
+    "abbreviations": "forbidden",
+    "collection_suffix": "plural — no List/Array suffix",
+    "type_suffix": "forbidden (no Model, Obj, etc.)",
+    "null_default_prefix": "no (e.g., noStudent, noChangeCount)"
+  },
+  "declaration": {
+    "clear_type": "var",
+    "semi_clear_type": "explicit",
+    "anonymous_type": "var",
+    "single_property": "declare then assign on next line",
+    "multi_property": "object initializer block"
+  },
+  "line_limit": 120,
+  "break_at": "= sign",
+  "spacing": {
+    "single_line_declarations": "stacked, no blank lines between",
+    "multi_line_declarations": "surrounded by one blank line above and below"
+  }
+}

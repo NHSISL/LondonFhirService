@@ -1,0 +1,80 @@
+{
+  "skill": "the-standard-reacttypescript-files",
+  "version": "1.0.0",
+  "naming": {
+    "brokers": {
+      "pattern": "{domain}{Kind}Broker.ts",
+      "interface_pattern": "i{domain}{Kind}Broker.ts",
+      "examples": [
+        "patientApiBroker.ts",
+        "localStorageBroker.ts",
+        "dateTimeBroker.ts"
+      ]
+    },
+    "services": {
+      "foundation_pattern": "{domain}Service.ts",
+      "view_pattern": "{domain}ViewService.ts",
+      "interface_pattern": "i{domain}Service.ts",
+      "examples": [
+        "patientService.ts",
+        "dashboardViewService.ts",
+        "iPatientService.ts"
+      ]
+    },
+    "components": {
+      "pattern": "{Domain}{Purpose}.tsx",
+      "examples": [
+        "PatientCard.tsx",
+        "PatientList.tsx",
+        "LoadingIndicator.tsx"
+      ]
+    },
+    "pages": {
+      "pattern": "{Domain}Page.tsx",
+      "examples": [
+        "DashboardPage.tsx",
+        "PatientProfilePage.tsx",
+        "HomePage.tsx"
+      ]
+    },
+    "hooks": {
+      "pattern": "use{Purpose}.ts",
+      "examples": [
+        "useDashboardPage.ts",
+        "usePatientProfile.ts",
+        "useModal.ts"
+      ]
+    },
+    "models": {
+      "pattern": "{Domain}.ts or {Domain}{Purpose}.ts",
+      "examples": [
+        "Patient.ts",
+        "PatientCardProps.ts",
+        "DashboardView.ts"
+      ]
+    }
+  },
+  "structure": {
+    "recommended_folders": [
+      "src/app",
+      "src/brokers",
+      "src/components",
+      "src/hooks",
+      "src/models",
+      "src/pages",
+      "src/services",
+      "src/styles"
+    ],
+    "max_nesting_depth": 4
+  },
+  "prohibited": {
+    "generic_names": [
+      "utils.ts",
+      "helpers.ts",
+      "common.ts",
+      "misc.ts",
+      "stuff.ts",
+      "temp.ts"
+    ]
+  }
+}

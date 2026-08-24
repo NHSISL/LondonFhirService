@@ -6,7 +6,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Providers.Exceptions
 {
-    public class NotFoundProviderServiceException : Xeption
+    internal class NotFoundProviderServiceException : Xeption
     {
         public NotFoundProviderServiceException(string message)
             : base(message)

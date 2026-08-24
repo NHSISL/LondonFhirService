@@ -63,8 +63,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
-                this.auditBrokerMock.Object,
+                this.auditAndMetricBrokerMock.Object,
                 this.identifierBrokerMock.Object,
+                this.dateTimeBrokerMock.Object,
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.loggingBrokerMock.Object,
@@ -78,12 +79,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     ddsProvider.FriendlyName,
                     ddsProvider.IsPrimary,
                     ddsFhirProviderMock.Object,
-                    cancellationToken,
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly))
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>(),
+                    cancellationToken))
                 .ReturnsAsync((ddsProvider.FriendlyName, rawOutputDdsBundle, null));
 
             patientServiceMock.Setup(service =>
@@ -91,12 +93,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     ldsProvider.FriendlyName,
                     ldsProvider.IsPrimary,
                     ldsFhirProviderMock.Object,
-                    cancellationToken,
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly))
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>(),
+                    cancellationToken))
                 .ReturnsAsync((ldsProvider.FriendlyName, rawOutputLdsBundle, null));
 
             Stu3PatientService mockedPatientService = patientServiceMock.Object;
@@ -120,12 +123,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     ddsProvider.FriendlyName,
                     ddsProvider.IsPrimary,
                     this.ddsFhirProviderMock.Object,
-                    cancellationToken,
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly),
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>(),
+                    cancellationToken),
                         Times.Once());
 
             patientServiceMock.Verify(service =>
@@ -133,15 +137,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     ldsProvider.FriendlyName,
                     ldsProvider.IsPrimary,
                     this.ldsFhirProviderMock.Object,
-                    cancellationToken,
                     correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
-                    inputActivePatientsOnly),
+                    inputActivePatientsOnly,
+                    It.IsAny<Guid?>(),
+                    cancellationToken),
                         Times.Once());
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Foundation Service Request Submitted",
@@ -150,7 +155,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     "Parallel Provider Execution Started",
@@ -159,7 +164,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
@@ -168,7 +173,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
                     auditType,
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
@@ -177,8 +182,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId.ToString()),
                         Times.Once);
 
+            AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
-            this.auditBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();

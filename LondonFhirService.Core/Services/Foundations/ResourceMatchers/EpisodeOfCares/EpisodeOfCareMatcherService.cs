@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares
 {
-    public partial class EpisodeOfCareMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class EpisodeOfCareMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public EpisodeOfCareMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
