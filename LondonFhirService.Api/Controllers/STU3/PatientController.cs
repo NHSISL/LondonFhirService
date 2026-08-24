@@ -56,12 +56,6 @@ namespace LondonFhirService.Api.Controllers.STU3
                 return Content(json, "application/fhir+json");
             }
             catch (PatientCoordinationValidationException patientCoordinationValidationException)
-                when (patientCoordinationValidationException.InnerException
-                    is NotFoundFhirReconciliationOrchestrationException)
-            {
-                return InternalServerError(patientCoordinationValidationException.InnerException);
-            }
-            catch (PatientCoordinationValidationException patientCoordinationValidationException)
             {
                 return NotFound(patientCoordinationValidationException.InnerException);
             }

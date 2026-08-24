@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -96,11 +96,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 $"demographicsOnly = \"{inputDemographicsOnly}\", " +
                 $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
-            IQueryable<Provider> allProviders = new List<Provider>
+            List<Provider> allProviders = new List<Provider>
             {
                 randomInactiveProvider,
                 randomActiveProvider,
-            }.AsQueryable();
+            };
 
             Stu3PatientOrchestrationService orchestrationService =
                 CreateOrchestrationService(new AccessConfigurations { CheckAccessPermissions = false });
@@ -108,7 +108,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             string accessMessage = $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\" }}";
 
             this.providerServiceMock.Setup(service =>
-                service.RetrieveAllProvidersAsync())
+                service.RetrieveAllProvidersAsListAsync())
                     .ReturnsAsync(allProviders);
 
             var invalidPrimaryProviderPatientOrchestrationException =
@@ -140,7 +140,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 .BeEquivalentTo(expectedPatientOrchestrationValidationException);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsync(),
+                service.RetrieveAllProvidersAsListAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -206,11 +206,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 $"demographicsOnly = \"{inputDemographicsOnly}\", " +
                 $"includeInactivePatients = \"{inputActivePatientsOnly}\" }}";
 
-            IQueryable<Provider> allProviders = new List<Provider>
+            List<Provider> allProviders = new List<Provider>
             {
                 randomPrimaryProvider,
                 anotherRandomPrimaryProvider,
-            }.AsQueryable();
+            };
 
             Stu3PatientOrchestrationService orchestrationService =
                 CreateOrchestrationService(new AccessConfigurations { CheckAccessPermissions = false });
@@ -218,7 +218,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             string accessMessage = $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\" }}";
 
             this.providerServiceMock.Setup(service =>
-                service.RetrieveAllProvidersAsync())
+                service.RetrieveAllProvidersAsListAsync())
                     .ReturnsAsync(allProviders);
 
             var invalidPrimaryProviderPatientOrchestrationException =
@@ -253,7 +253,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 .BeEquivalentTo(expectedPatientOrchestrationValidationException);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsync(),
+                service.RetrieveAllProvidersAsListAsync(),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>

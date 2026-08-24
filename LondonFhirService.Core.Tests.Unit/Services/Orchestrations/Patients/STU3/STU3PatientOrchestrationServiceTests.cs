@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -61,6 +61,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             {
                 CheckAccessPermissions = true
             };
+
+            // The provider activation window is now evaluated against the injected clock rather
+            // than the wall clock, so the default has to sit inside the window the provider
+            // fixtures build. Tests that care about a specific instant override this and pass the
+            // same instant to CreateProviderFiller.
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(DateTimeOffset.Now);
 
             this.patientOrchestrationService = CreateOrchestrationService(this.accessConfigurations);
         }
@@ -183,25 +191,38 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             return serializer.SerializeToString(bundle);
         }
 
-        private static Provider CreateRandomActiveProvider() =>
-            CreateProviderFiller(isActive: true).Create();
+        private static Provider CreateRandomActiveProvider(DateTimeOffset? now = null) =>
+            CreateProviderFiller(isActive: true, now: now).Create();
 
-        private static Provider CreateRandomPrimaryProvider() =>
-            CreateProviderFiller(isActive: true, isPrimary: true).Create();
+        private static Provider CreateRandomPrimaryProvider(DateTimeOffset? now = null) =>
+            CreateProviderFiller(isActive: true, isPrimary: true, now: now).Create();
 
-        private static Provider CreateRandomInactiveProvider() =>
-            CreateProviderFiller().Create();
+        private static Provider CreateRandomInactiveProvider(DateTimeOffset? now = null) =>
+            CreateProviderFiller(now: now).Create();
 
-        private static Filler<Provider> CreateProviderFiller(bool isActive = false, bool isPrimary = false)
+        /// <summary>
+        /// The activation window is built around a reference instant. It defaults to the wall
+        /// clock, but a test that pins the dateTime broker must pass the same instant here or the
+        /// provider it builds will fall outside its own window.
+        /// </summary>
+        private static Filler<Provider> CreateProviderFiller(
+            bool isActive = false,
+            bool isPrimary = false,
+            DateTimeOffset? now = null)
         {
-            DateTimeOffset now = DateTimeOffset.Now;
+            DateTimeOffset referenceInstant = now ?? DateTimeOffset.Now;
             var filler = new Filler<Provider>();
 
-            DateTimeOffset activeFrom = isActive ? now.AddDays(-30) : now.AddDays(-60);
-            DateTimeOffset activeTo = isActive ? now.AddDays(30) : now.AddDays(-30);
+            DateTimeOffset activeFrom = isActive
+                ? referenceInstant.AddDays(-30)
+                : referenceInstant.AddDays(-60);
+
+            DateTimeOffset activeTo = isActive
+                ? referenceInstant.AddDays(30)
+                : referenceInstant.AddDays(-30);
 
             filler.Setup()
-                .OnType<DateTimeOffset>().Use(now)
+                .OnType<DateTimeOffset>().Use(referenceInstant)
                 .OnProperty(provider => provider.FullyQualifiedName).Use(GetRandomStringWithLengthOf(500))
                 .OnProperty(provider => provider.FhirVersion).Use("STU3")
                 .OnProperty(provider => provider.IsActive).Use(isActive)

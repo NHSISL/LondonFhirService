@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -60,12 +60,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             string currentUserJson = JsonSerializer.Serialize(outputUser, options);
 
-            IQueryable<Provider> allProviders = new List<Provider>
+            List<Provider> allProviders = new List<Provider>
             {
                 randomInactiveProvider,
                 randomActiveProvider,
                 randomPrimaryProvider
-            }.AsQueryable();
+            };
 
             this.securityBrokerMock.Setup(broker =>
                 broker.GetCurrentUserAsync())
@@ -78,7 +78,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         .ReturnsAsync(returnedConsumerAccess);
 
             this.providerServiceMock.Setup(service =>
-                service.RetrieveAllProvidersAsync())
+                service.RetrieveAllProvidersAsListAsync())
                     .ReturnsAsync(allProviders);
 
             List<Provider> activeProviders = new List<Provider>
@@ -125,7 +125,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         Times.Once);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsync(),
+                service.RetrieveAllProvidersAsListAsync(),
                     Times.Once);
 
             this.patientServiceMock.Verify(service =>

@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -17,6 +17,15 @@ namespace LondonFhirService.Core.Brokers.Securities
     /// </summary>
     public class SecurityAuditBroker : ISecurityAuditBroker
     {
+        /// <summary>
+        /// Shared for the same reason as <see cref="SecurityBroker"/>: constructing a
+        /// SecurityClient builds and abandons a DI container, and this transient broker is
+        /// resolved several times per patient request. The client holds no per-caller state -
+        /// every method takes the ClaimsPrincipal as a parameter - so sharing one is safe, and the
+        /// per-request ClaimsPrincipal capture below is unchanged.
+        /// </summary>
+        private static readonly ISecurityClient SharedSecurityClient = new SecurityClient();
+
         private readonly ClaimsPrincipal claimsPrincipal;
         private readonly ISecurityClient securityClient;
         private readonly SecurityConfigurations securityConfigurations;
@@ -32,7 +41,7 @@ namespace LondonFhirService.Core.Brokers.Securities
             SecurityConfigurations securityConfigurations)
         {
             claimsPrincipal = httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal();
-            securityClient = new SecurityClient();
+            securityClient = SharedSecurityClient;
             this.securityConfigurations = securityConfigurations;
         }
 
@@ -45,7 +54,7 @@ namespace LondonFhirService.Core.Brokers.Securities
         public SecurityAuditBroker(string accessToken, SecurityConfigurations securityConfigurations)
         {
             claimsPrincipal = GetClaimsPrincipalFromToken(accessToken);
-            securityClient = new SecurityClient();
+            securityClient = SharedSecurityClient;
             this.securityConfigurations = securityConfigurations;
         }
 
@@ -60,7 +69,7 @@ namespace LondonFhirService.Core.Brokers.Securities
         {
             this.claimsPrincipal = claimsPrincipal;
             this.securityConfigurations = securityConfigurations;
-            securityClient = new SecurityClient();
+            securityClient = SharedSecurityClient;
         }
 
         /// <summary>

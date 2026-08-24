@@ -27,6 +27,8 @@ namespace LondonFhirService.Api.Dispatchers
     {
         private readonly Channel<Func<CancellationToken, ValueTask>> channel;
         private long droppedCount;
+        private long refusedAfterCloseCount;
+        private bool isCompleted;
 
         public AuditAndMetricsDispatcher(IOptions<AuditAndMetricsDispatcherSettings> settings)
         {
@@ -48,11 +50,26 @@ namespace LondonFhirService.Api.Dispatchers
 
         public long DroppedCount => Interlocked.Read(ref this.droppedCount);
 
+        /// <summary>
+        /// Refusals after shutdown has closed the queue, counted apart from capacity refusals.
+        /// Both look identical to TryWrite, but only one of them means the queue is too small -
+        /// conflating them made the loss signal untrustworthy during a deploy, which is exactly
+        /// when it gets read.
+        /// </summary>
+        public long RefusedAfterCloseCount => Interlocked.Read(ref this.refusedAfterCloseCount);
+
         public bool TryDispatch(Func<CancellationToken, ValueTask> work)
         {
             if (this.channel.Writer.TryWrite(work))
             {
                 return true;
+            }
+
+            if (Volatile.Read(ref this.isCompleted))
+            {
+                Interlocked.Increment(ref this.refusedAfterCloseCount);
+
+                return false;
             }
 
             Interlocked.Increment(ref this.droppedCount);
@@ -61,7 +78,10 @@ namespace LondonFhirService.Api.Dispatchers
         }
 
         /// <summary>Stops accepting work so the worker can drain what is left and finish.</summary>
-        public void Complete() =>
+        public void Complete()
+        {
+            Volatile.Write(ref this.isCompleted, true);
             this.channel.Writer.TryComplete();
+        }
     }
 }

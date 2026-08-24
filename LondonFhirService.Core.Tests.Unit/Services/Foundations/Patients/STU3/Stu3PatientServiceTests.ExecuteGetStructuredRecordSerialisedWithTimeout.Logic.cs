@@ -9,7 +9,9 @@ using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 using Task = System.Threading.Tasks.Task;
 
@@ -112,15 +114,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(
-                    $"{auditType}-DATA",
-                    $"{fhirProvider.DisplayName} - DATA ({inputFhirProviderName})",
-                    rawOutputJson,
-                    null,
-                    correlationId.ToString()),
-                        Times.Once);
-
-            this.auditAndMetricBrokerMock.Verify(broker =>
-                broker.LogInformationAsync(
                     auditType,
                     It.Is<string>(s => s.StartsWith($"{fhirProvider.DisplayName} Provider Execution Completed")),
                     message,
@@ -152,6 +145,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 factory.DisposeAsync(),
                     Times.Once);
 
+            // The Persist span goes through the metric broker so it keeps its validation, the
+            // kill switch, and the ActivitySource the telemetry publisher subscribes to.
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogMetricAsync(
+                    It.Is<Metric>(metric =>
+                        metric.Type == MetricType.Persist
+                            && metric.Status == MetricStatus.Succeeded),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.dispatcherMock.Verify(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()),
+                    Times.Once);
+
             AcceptMetricSpans();
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.ddsFhirProviderMock.VerifyNoOtherCalls();
@@ -160,6 +167,147 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerFactoryMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
+            this.dispatcherMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldPersistThePayloadWithoutWritingItToTheAuditTrailAsync()
+        {
+            // given
+            // The bundle belongs in FhirRecords, which is what the comparison pipeline reads. It
+            // is deliberately not copied into the audit trail as well - that was a second
+            // untruncated store of the same patient data, one row per provider per request.
+            Bundle randomBundle = CreateRandomBundle();
+            string rawOutputJson = this.fhirJsonSerializer.SerializeToString(randomBundle);
+            string inputNhsNumber = GetRandomString();
+            string inputFhirProviderName = "DDS Test Provider";
+            Guid correlationId = Guid.NewGuid();
+            var fhirProvider = this.ddsFhirProviderMock.Object;
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(Guid.NewGuid());
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<FhirRecord>()))
+                    .ReturnsAsync((FhirRecord record) => record);
+
+            this.ddsFhirProviderMock.Setup(provider => provider.Patients.GetStructuredRecordSerialisedAsync(
+                inputNhsNumber,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(rawOutputJson);
+
+            // when
+            (string Provider, string Json, Exception Exception) actualResult =
+                await this.patientService.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    inputFhirProviderName,
+                    isPrimaryProvider: true,
+                    fhirProvider,
+                    correlationId,
+                    inputNhsNumber,
+                    null,
+                    null,
+                    null,
+                    parentId: null,
+                    globalToken: default);
+
+            // then
+            actualResult.Json.Should().Be(rawOutputJson);
+
+            // No audit entry carries the payload, under the "-DATA" type or any other.
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.Is<string>(auditMessage => auditMessage == rawOutputJson),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()),
+                        Times.Never);
+
+            // The payload is persisted instead, which is where the comparison pipeline reads it.
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertFhirRecordAsync(
+                    It.Is<FhirRecord>(fhirRecord => fhirRecord.JsonPayload == rawOutputJson)),
+                        Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldLogWarningAndStillReturnJsonWhenPersistenceDispatchIsRefused()
+        {
+            // given
+            Bundle randomBundle = CreateRandomBundle();
+            bool inputFhirProviderIsPrimary = true;
+            var fhirProvider = this.ddsFhirProviderMock.Object;
+            Bundle outputBundle = randomBundle.DeepClone();
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
+            string inputFhirProviderName = "DDS Test Provider";
+            CancellationToken cancellationToken = CancellationToken.None;
+            Guid correlationId = Guid.NewGuid();
+            Guid identifier = Guid.NewGuid();
+            string rawOutputJson = this.fhirJsonSerializer.SerializeToString(outputBundle);
+
+            (string Provider, string Json, Exception Exception) expectedResult =
+                (inputFhirProviderName, rawOutputJson, null);
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(identifier);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.ApplyAddAuditValuesAsync(It.IsAny<FhirRecord>()))
+                    .ReturnsAsync((FhirRecord record) => record);
+
+            this.dispatcherMock.Setup(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()))
+                    .Returns(false);
+
+            this.ddsFhirProviderMock.Setup(p => p.Patients.GetStructuredRecordSerialisedAsync(
+                inputNhsNumber,
+                null,
+                null,
+                null,
+                It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(rawOutputJson);
+
+            // when
+            (string Provider, string Json, Exception Exception) actualResult =
+                await this.patientService.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
+                    inputFhirProviderName,
+                    inputFhirProviderIsPrimary,
+                    fhirProvider,
+                    correlationId,
+                    inputNhsNumber,
+                    null,
+                    null,
+                    null,
+                    parentId: null,
+                    cancellationToken);
+
+            // then
+            actualResult.Should().BeEquivalentTo(expectedResult);
+
+            this.dispatcherMock.Verify(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogWarningAsync(It.Is<string>(message =>
+                    message.Contains("dispatch queue was full") &&
+                    message.Contains(correlationId.ToString()))),
+                        Times.Once);
+
+            this.storageBrokerFactoryMock.Verify(factory =>
+                factory.CreateStorageBrokerAsync(),
+                    Times.Never);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertFhirRecordAsync(It.IsAny<FhirRecord>()),
+                    Times.Never);
         }
 
         [Fact]

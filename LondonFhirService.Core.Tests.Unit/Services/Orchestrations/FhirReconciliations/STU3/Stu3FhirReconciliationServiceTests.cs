@@ -64,7 +64,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconcil
             return items;
         }
 
-        private static Provider CreateRandomProvider()
+        /// <summary>
+        /// The friendly name is what a bundle carries as its provider, so a test that cares which
+        /// provider's record came back has to be able to pin it.
+        /// </summary>
+        private static Provider CreateRandomProvider(string friendlyName = null)
         {
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             var filler = new Filler<Provider>();
@@ -73,7 +77,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconcil
                 .OnType<DateTimeOffset>().Use(randomDateTimeOffset)
                 .OnType<DateTimeOffset?>().Use(randomDateTimeOffset);
 
-            return filler.Create();
+            Provider provider = filler.Create();
+
+            if (friendlyName is not null)
+            {
+                provider.FriendlyName = friendlyName;
+            }
+
+            return provider;
         }
     }
 }
