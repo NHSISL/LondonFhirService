@@ -1,13 +1,13 @@
 ---
 name: update-dependency-graph
-description: Re-scan the solution and regenerate Documentation/DependencyGraph/graph-data.js so the interactive dependency graph matches the current source. Use when services, brokers, controllers, workers, client libraries, or cross-project wiring have changed, or when the user asks to refresh/rebuild the dependency graph.
+description: Re-scan the solution and regenerate the dependency graph data files (Documentation/DependencyGraph/graph.yml + projects/*.yml) so the interactive dependency graph matches the current source. Use when services, brokers, controllers, workers, client libraries, or cross-project wiring have changed, or when the user asks to refresh/rebuild the dependency graph.
 version: 0.1.0
 ---
 
 # Update Solution Dependency Graph
 
-Regenerate `Documentation/DependencyGraph/graph-data.js` from the current
-source. `index.html` is the renderer — do not change it unless a new concept
+Regenerate the data files — `Documentation/DependencyGraph/graph.yml` and
+`projects/*.yml` — from the current source. `index.html` is the renderer — do not change it unless a new concept
 cannot be expressed in data (new edge kind, new layer). It carries BOTH views
 behind `state.view`: `buildSingleCopyInstances` + `layoutBands` (the default)
 and `buildDuplicatedInstances` + `layoutTrees`. Anything you change in one
@@ -15,8 +15,9 @@ builder usually needs the mirror change in the other.
 
 ## 1/ Load the current model
 
-Read `Documentation/DependencyGraph/README.md` and `graph-data.js` first.
-The data file is the previous scan's snapshot; your job is a diff-and-update,
+Read `Documentation/DependencyGraph/README.md`, then `graph.yml` and the
+`projects/*.yml` files it lists. The data files are the previous scan's
+snapshot; your job is a diff-and-update,
 not a rewrite. Preserve its modelling rules:
 
 - Per-consumer duplication is done by the renderer — declare each component
@@ -32,12 +33,17 @@ not a rewrite. Preserve its modelling rules:
 - Private helpers are attributed to the public method that reaches them.
 - Interface dispatch on an instance resolved at runtime is not an edge; DI
   fan-in is.
-- This solution has no event bus — `events` is empty, `eventBrokerId` is
-  `null`, and every edge is `kind: "direct"`. If an EventBroker ever lands,
-  the renderer already supports `P(...)` / `S(...)` and automatic
-  circular-flow detection; do not hand-colour anything.
-- Column map (0–12) is documented at the top of `graph-data.js` — keep new
-  components consistent with it.
+- This solution has no event bus — `events` is empty, `eventBroker` is
+  `null`, and every flow is a `calls` entry. If an EventBroker ever lands,
+  the data supports `publishes` / `subscribes` per component and the renderer
+  detects circular flows automatically; do not hand-colour anything.
+- Column map (0–12) is documented in `graph.yml` — keep new components
+  consistent with it.
+- The historical CRUD template knowledge (variants A/B/C below) guides the
+  SCAN; the data itself is fully expanded YAML with no generators. When a
+  change touches many components the same way (a new broker call in every
+  CRUD service, a new entity's StorageBroker rows), write a throwaway script
+  against the YAML rather than hand-editing dozens of entries.
 
 ## 2/ Re-scan the source
 
@@ -74,38 +80,48 @@ codebase wrap across lines).
    the same stack). Then `LondonFhirService.Manage.Client\src`: components →
    `services\foundations\*` → `brokers\*` → the host endpoints they call.
 
-## 3/ Update graph-data.js
+## 3/ Update the data files
 
-- New/changed uniform CRUD service → edit the `CRUD_ENTITIES` config (usually
-  one line: entity name + plural + variant). It extends the `StorageBroker`
-  surface and its `EFCoreClient` edges automatically. A structural deviation
-  from the template → extend the generator or declare it explicitly next to
-  `AuditService`, whichever is smaller.
-- New matcher / ignore rule / REST controller / FHIR accessor → add a line to
-  `MATCHERS`, `IGNORE_RULES`, `restControllers` or `FHIR_RESOURCES`.
-- Everything else → explicit declarations: `C({...})` components and
-  `D(from, to)` direct edges (`null` method = header-level link).
-- Add new roots to the `roots` list in project order (it controls layout).
-- External / library components' method rows are DERIVED from the edges at the
-  bottom of the file — add the id to that loop rather than hand-listing rows.
+The YAML schema is documented in the README's "The data files" section —
+components live in `projects/<project>.yml`, each with `methods` and its
+outbound `calls` (`from: null` = header-level link); manifest-level lists
+(`projects`, `roots`, `events`) live in `graph.yml`.
+
+- A new component → add it to its project's file AND to `roots` in
+  `graph.yml` (project order; `shared` components must be roots).
+- A new uniform CRUD service → replicate an existing sibling's block (the
+  variant patterns above say which broker calls it makes), and add the
+  entity's five StorageBroker rows + their `LIB.EFCoreClient` calls to the
+  StorageBroker component in the core file.
+- Externals / library exposers with `deriveMethods: true` get their rows
+  derived from inbound edges at load time — never hand-list rows on them.
+- Strings with characters beyond letters, digits, spaces and `_.-/()` must be
+  double-quoted JSON strings; the renderer parses a small YAML subset
+  (single-line scalars only, no anchors, no multi-line blocks).
+- Sanity-check your edits parse before opening the browser:
+  `node -e "eval(...)"` is gone — instead fetch-and-parse via any quick
+  script that mirrors index.html's `parseYaml`, or just load the page and
+  watch for its "graph data did not load" panel, which prints the error.
 
 ## 4/ Verify in the browser
 
-Both views read the same data. Serve the folder over HTTP — a `file://` load
-blocks `graph-data.js` as a sub-resource and the page renders empty:
+Both views read the same data. Serve the folder over HTTP — the page fetches graph.yml and the project
+files, and browsers block those fetches from file:// pages:
 
 ```bash
 python -m http.server 8731 --bind 127.0.0.1
 ```
 
-Verify BOTH views — the header toggle, or `setView("single")` /
-`setView("duplicated")` from `javascript_tool`. Confirm:
+Verify BOTH views — the header toggle, or `window.__graph.setView("single")` /
+`window.__graph.setView("duplicated")` from `javascript_tool` (the renderer
+exposes `window.__graph` = { state, setView, select, selectRow,
+clearSelection, rebuild, fit, tracePath }). Confirm:
 
 - No console errors; the header count is in the expected range (last scan:
   81 components · 388 flows single-copy; 334 nodes · 995 flows per consumer,
   420 · 1110 with utility brokers on).
-- No node-rect overlaps and no project-box overlaps — query `state.instances`
-  and `state.projBoxes` with `javascript_tool` and intersect pairwise, in each
+- No node-rect overlaps and no project-box overlaps — query `window.__graph.state.instances`
+  and `.projBoxes` with `javascript_tool` and intersect pairwise, in each
   view, with the utility toggle both off and on.
 - Switching view preserves the selection (by component id) and both views
   agree on the edge-kind counts they share.

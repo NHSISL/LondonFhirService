@@ -1,0 +1,124 @@
+# LondonFhirService.Api — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: api
+components:
+  - id: API.Audits
+    name: AuditsController
+    layer: exposer
+    col: 3
+    description: "RESTFulController over Audit. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service. Writes are marked [InvisibleApi]. Xeption types are mapped one-for-one onto RFC problem responses."
+    methods:
+      - POST /api/Audits
+      - GET /api/Audits
+      - "GET /api/Audits/{auditId}"
+      - PUT /api/Audits
+      - "DELETE /api/Audits/{auditId}"
+    calls:
+      - from: POST /api/Audits
+        to: FS.Audit
+        method: AddAuditAsync(audit)
+      - from: GET /api/Audits
+        to: FS.Audit
+        method: RetrieveAllAuditsAsync
+      - from: "GET /api/Audits/{auditId}"
+        to: FS.Audit
+        method: RetrieveAuditByIdAsync
+      - from: PUT /api/Audits
+        to: FS.Audit
+        method: ModifyAuditAsync
+      - from: "DELETE /api/Audits/{auditId}"
+        to: FS.Audit
+        method: RemoveAuditByIdAsync
+  - id: API.FhirRecords
+    name: FhirRecordsController
+    layer: exposer
+    col: 3
+    description: "RESTFulController over FhirRecord. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service. Writes are marked [InvisibleApi]. Xeption types are mapped one-for-one onto RFC problem responses."
+    methods:
+      - POST /api/FhirRecords
+      - GET /api/FhirRecords
+      - "GET /api/FhirRecords/{fhirRecordId}"
+      - PUT /api/FhirRecords
+      - "DELETE /api/FhirRecords/{fhirRecordId}"
+    calls:
+      - from: POST /api/FhirRecords
+        to: FS.FhirRecord
+        method: AddFhirRecordAsync
+      - from: GET /api/FhirRecords
+        to: FS.FhirRecord
+        method: RetrieveAllFhirRecordsAsync
+      - from: "GET /api/FhirRecords/{fhirRecordId}"
+        to: FS.FhirRecord
+        method: RetrieveFhirRecordByIdAsync
+      - from: PUT /api/FhirRecords
+        to: FS.FhirRecord
+        method: ModifyFhirRecordAsync
+      - from: "DELETE /api/FhirRecords/{fhirRecordId}"
+        to: FS.FhirRecord
+        method: RemoveFhirRecordByIdAsync
+  - id: API.FhirRecordDifferences
+    name: FhirRecordDifferencesController
+    layer: exposer
+    col: 3
+    description: "RESTFulController over FhirRecordDifference. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service. Writes are marked [InvisibleApi]. Xeption types are mapped one-for-one onto RFC problem responses."
+    methods:
+      - POST /api/FhirRecordDifferences
+      - GET /api/FhirRecordDifferences
+      - "GET /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
+      - PUT /api/FhirRecordDifferences
+      - "DELETE /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
+    calls:
+      - from: POST /api/FhirRecordDifferences
+        to: FS.FhirRecordDifference
+        method: AddFhirRecordDifferenceAsync
+      - from: GET /api/FhirRecordDifferences
+        to: FS.FhirRecordDifference
+        method: RetrieveAllFhirRecordDifferencesAsync
+      - from: "GET /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
+        to: FS.FhirRecordDifference
+        method: RetrieveFhirRecordDifferenceByIdAsync
+      - from: PUT /api/FhirRecordDifferences
+        to: FS.FhirRecordDifference
+        method: ModifyFhirRecordDifferenceAsync
+      - from: "DELETE /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
+        to: FS.FhirRecordDifference
+        method: RemoveFhirRecordDifferenceByIdAsync
+  - id: API.Patient
+    name: PatientController (STU3)
+    layer: exposer
+    col: 3
+    description: "The solution's headline endpoint. Accepts a FHIR Parameters body (custom FhirJson input/output formatters) and returns the reconciled STU3 bundle. Wrapped in a 130-second request-timeout policy."
+    methods:
+      - "POST /api/STU3/Patient/$getstructuredrecord"
+    calls:
+      - from: "POST /api/STU3/Patient/$getstructuredrecord"
+        to: CO.Stu3Patient
+        method: GetStructuredRecordSerialisedAsync
+  - id: API.ComparisonWorker
+    name: ComparisonWorker
+    layer: exposer
+    col: 3
+    description: "BackgroundService registered by AddBackgroundWorkers. Creates a DI scope per pass, drains the compare queue, then sleeps ComparisonWorkerSettings.SleepIntervalSeconds. This is the only entry point into the comparison half of the solution."
+    methods:
+      - ExecuteAsync
+    calls:
+      - from: ExecuteAsync
+        to: CO.Comparison
+        method: ProcessFhirRecordsAsync
+  - id: API.Features
+    name: FeaturesController
+    layer: exposer
+    col: 3
+    description: Reads the Features array straight from IConfiguration. No Core dependency.
+    methods:
+      - GET /api/Features
+  - id: API.FrontendConfigurations
+    name: FrontendConfigurationsController
+    layer: exposer
+    col: 3
+    description: Anonymous endpoint returning the FrontendConfiguration section (clientId / authority / scopes) so a SPA can build its MSAL config before sign-in. No Core dependency.
+    methods:
+      - GET /api/FrontendConfigurations
