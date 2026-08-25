@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -22,12 +22,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
     /// </summary>
     public class AuditAndMetricsClientTests
     {
-        private readonly Mock<IAuditAndMetricsStorageBroker> storageBrokerMock;
+        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IMetricBroker> metricBrokerMock;
         private readonly Mock<IAuditUserBroker> auditUserBrokerMock;
 
         public AuditAndMetricsClientTests()
         {
-            this.storageBrokerMock = new Mock<IAuditAndMetricsStorageBroker>();
+            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.metricBrokerMock = new Mock<IMetricBroker>();
             this.auditUserBrokerMock = new Mock<IAuditUserBroker>();
         }
 
@@ -39,7 +41,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
 
             // when
             var auditAndMetricsClient = new AuditAndMetricsClient(
-                this.storageBrokerMock.Object,
+                this.auditBrokerMock.Object,
+                this.metricBrokerMock.Object,
                 this.auditUserBrokerMock.Object,
                 configurations);
 
@@ -62,7 +65,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
 
             // when
             var auditAndMetricsClient = new AuditAndMetricsClient(
-                this.storageBrokerMock.Object,
+                this.auditBrokerMock.Object,
+                this.metricBrokerMock.Object,
                 this.auditUserBrokerMock.Object,
                 new AuditAndMetricsConfigurations(),
                 loggerFactoryMock.Object);
@@ -82,7 +86,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
         {
             // given, when
             var auditAndMetricsClient = new AuditAndMetricsClient(
-                this.storageBrokerMock.Object,
+                this.auditBrokerMock.Object,
+                this.metricBrokerMock.Object,
                 this.auditUserBrokerMock.Object,
                 new AuditAndMetricsConfigurations(),
                 loggerFactory: null);

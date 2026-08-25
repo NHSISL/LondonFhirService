@@ -23,7 +23,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 {
     public partial class AuditServiceTests
     {
-        private readonly Mock<IAuditAndMetricsStorageBroker> storageBrokerMock;
+        private readonly Mock<IAuditBroker> auditBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
@@ -33,7 +33,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
         public AuditServiceTests()
         {
-            this.storageBrokerMock = new Mock<IAuditAndMetricsStorageBroker>();
+            this.auditBrokerMock = new Mock<IAuditBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
@@ -54,11 +54,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // The library holds no implementation of IAudit, so the entity it builds comes back
             // through the port - exactly as it does from the hosting application at runtime.
-            this.storageBrokerMock.Setup(broker => broker.CreateAudit())
+            this.auditBrokerMock.Setup(broker => broker.CreateAudit())
                 .Returns(() => new TestAudit());
 
             this.auditService = new AuditService(
-                storageBroker: this.storageBrokerMock.Object,
+                auditBroker: this.auditBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,

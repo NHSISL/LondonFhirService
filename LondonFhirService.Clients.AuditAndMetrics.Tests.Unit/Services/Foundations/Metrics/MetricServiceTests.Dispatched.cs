@@ -62,7 +62,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // cancelled the moment the response is sent. Keying this setup on the ambient test
             // token instead would never match, the write would never fail, and the test would
             // pass while proving nothing.
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.InsertMetricAsync(randomMetric, CancellationToken.None))
                     .ThrowsAsync(storageException);
 

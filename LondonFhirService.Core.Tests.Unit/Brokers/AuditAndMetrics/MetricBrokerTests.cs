@@ -4,19 +4,19 @@
 
 using System;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Core.Services.Foundations.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using Moq;
 using Tynamix.ObjectFiller;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
+namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
 {
-    public partial class AuditAndMetricsStorageServiceTests
+    public partial class MetricBrokerTests
     {
         private readonly Mock<IStorageBrokerFactory> storageBrokerFactoryMock;
         private readonly Mock<IStorageBroker> storageBrokerMock;
-        private readonly AuditAndMetricsStorageService auditAndMetricsStorageService;
+        private readonly MetricBroker metricBroker;
 
-        public AuditAndMetricsStorageServiceTests()
+        public MetricBrokerTests()
         {
             this.storageBrokerFactoryMock = new Mock<IStorageBrokerFactory>();
             this.storageBrokerMock = new Mock<IStorageBroker>();
@@ -26,7 +26,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
             this.storageBrokerFactoryMock.Setup(factory => factory.CreateStorageBrokerAsync())
                 .ReturnsAsync(this.storageBrokerMock.Object);
 
-            this.auditAndMetricsStorageService = new AuditAndMetricsStorageService(
+            this.metricBroker = new MetricBroker(
                 storageBrokerFactory: this.storageBrokerFactoryMock.Object,
                 storageBroker: this.storageBrokerMock.Object);
         }

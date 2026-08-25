@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -12,6 +12,8 @@ using LondonFhirService.Clients.AuditAndMetrics.Brokers.DateTimes;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
 using LondonFhirService.Core.Abstractions.Brokers;
+using CoreBrokers = LondonFhirService.Core.Abstractions.Brokers;
+using TelemetryBrokers = LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
 using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics;
@@ -24,8 +26,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 {
     public partial class MetricServiceTests
     {
-        private readonly Mock<IAuditAndMetricsStorageBroker> storageBrokerMock;
-        private readonly Mock<IMetricBroker> metricBrokerMock;
+        private readonly Mock<CoreBrokers.IMetricBroker> metricBrokerMock;
+        private readonly Mock<TelemetryBrokers.IMetricBroker> metricTelemetryBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly Mock<IAuditAndMetricsDispatcher> dispatcherMock;
@@ -34,8 +36,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
         public MetricServiceTests()
         {
-            this.storageBrokerMock = new Mock<IAuditAndMetricsStorageBroker>();
-            this.metricBrokerMock = new Mock<IMetricBroker>();
+            this.metricBrokerMock = new Mock<CoreBrokers.IMetricBroker>();
+            this.metricTelemetryBrokerMock = new Mock<TelemetryBrokers.IMetricBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.dispatcherMock = new Mock<IAuditAndMetricsDispatcher>();
@@ -61,8 +63,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             };
 
             this.metricService = new MetricService(
-                storageBroker: this.storageBrokerMock.Object,
                 metricBroker: this.metricBrokerMock.Object,
+                metricTelemetryBroker: this.metricTelemetryBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 metricServiceConfigurations: this.metricServiceConfigurations,
@@ -71,8 +73,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
         private void VerifyNoOtherCallsOnAllBrokers()
         {
-            this.storageBrokerMock.VerifyNoOtherCalls();
             this.metricBrokerMock.VerifyNoOtherCalls();
+            this.metricTelemetryBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }

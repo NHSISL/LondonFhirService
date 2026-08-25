@@ -28,7 +28,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -45,14 +45,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // The cut off is derived from the retention period, and the delete runs in the
             // database rather than over a materialised candidate list.
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     expectedCutOffDate,
                     batchSize,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -85,7 +85,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.storageBrokerMock.SetupSequence(broker =>
+            this.metricBrokerMock.SetupSequence(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -104,7 +104,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // window is exhausted. The total is the sum the database actually reported.
             actualPurgedCount.Should().Be(expectedTotal);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     expectedCutOffDate,
                     batchSize,
@@ -139,7 +139,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualPurgedCount.Should().Be(0);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -186,7 +186,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -201,7 +201,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualPurgedCount.Should().Be(0);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),

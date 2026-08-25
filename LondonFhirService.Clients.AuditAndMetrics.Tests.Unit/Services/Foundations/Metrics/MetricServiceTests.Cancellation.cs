@@ -35,7 +35,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.InsertMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
@@ -43,11 +43,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await this.metricService.AddMetricAsync(randomMetric, cancellationToken);
 
             // then
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(randomMetric, cancellationToken),
                     Times.Once);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricTelemetryBrokerMock.Verify(broker =>
                 broker.RecordAsync(storageMetric, cancellationToken),
                     Times.Once);
 
@@ -75,11 +75,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await this.metricService.AddMetricsAsync(randomMetrics, cancellationToken);
 
             // then
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(randomMetrics, cancellationToken),
                     Times.Once);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricTelemetryBrokerMock.Verify(broker =>
                 broker.RecordAsync(randomMetrics, cancellationToken),
                     Times.Once);
 
@@ -98,7 +98,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IQueryable<IMetric> storageMetrics = CreateRandomMetricsQueryable();
 
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
@@ -106,7 +106,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await this.metricService.RetrieveAllMetricsAsync(cancellationToken);
 
             // then
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(cancellationToken),
                     Times.Once);
 
@@ -121,7 +121,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IMetric randomMetric = CreateRandomMetric();
 
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(randomMetric);
 
@@ -129,7 +129,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await this.metricService.RetrieveMetricByIdAsync(randomMetric.Id, cancellationToken);
 
             // then
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(randomMetric.Id, cancellationToken),
                     Times.Once);
 
@@ -144,11 +144,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IMetric randomMetric = CreateRandomMetric();
 
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(randomMetric);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.DeleteMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(randomMetric);
 
@@ -156,11 +156,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await this.metricService.RemoveMetricByIdAsync(randomMetric.Id, cancellationToken);
 
             // then
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(randomMetric.Id, cancellationToken),
                     Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.DeleteMetricAsync(randomMetric, cancellationToken),
                     Times.Once);
 
@@ -183,7 +183,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.metricBrokerMock.Setup(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -194,7 +194,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await this.metricService.PurgeMetricsOlderThanRetentionPeriodAsync(cancellationToken);
 
             // then
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     currentDateTimeOffset.AddDays(-retentionPeriodInDays),
                     batchSize,
@@ -239,11 +239,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // Nothing is written and the clock is never read - a token cancelled on the way in
             // stops the work before any broker is touched.
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricTelemetryBrokerMock.Verify(broker =>
                 broker.RecordAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -280,11 +280,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.LogErrorAsync(It.IsAny<Exception>()),
                     Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricTelemetryBrokerMock.Verify(broker =>
                 broker.RecordAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -345,7 +345,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.LogErrorAsync(It.IsAny<Exception>()),
                     Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -375,7 +375,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.LogErrorAsync(It.IsAny<Exception>()),
                     Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -405,11 +405,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.LogErrorAsync(It.IsAny<Exception>()),
                     Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.DeleteMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -439,11 +439,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     Times.Once);
 
             // Nothing is read and nothing is deleted.
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),

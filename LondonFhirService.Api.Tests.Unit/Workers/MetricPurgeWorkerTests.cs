@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Api.Workers;
-using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Services.Foundations.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,7 +25,7 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
         private readonly Mock<IServiceScopeFactory> serviceScopeFactoryMock;
         private readonly Mock<IServiceScope> serviceScopeMock;
         private readonly Mock<IServiceProvider> serviceProviderMock;
-        private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
+        private readonly Mock<IMetricService> metricServiceMock;
         private readonly Mock<ILogger<MetricPurgeWorker>> loggerMock;
         private readonly TestableMetricPurgeWorker worker;
 
@@ -34,7 +34,7 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
             this.serviceScopeFactoryMock = new Mock<IServiceScopeFactory>();
             this.serviceScopeMock = new Mock<IServiceScope>();
             this.serviceProviderMock = new Mock<IServiceProvider>();
-            this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
+            this.metricServiceMock = new Mock<IMetricService>();
             this.loggerMock = new Mock<ILogger<MetricPurgeWorker>>();
 
             this.serviceScopeFactoryMock.Setup(factory => factory.CreateScope())
@@ -43,8 +43,8 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
             this.serviceScopeMock.Setup(scope => scope.ServiceProvider)
                 .Returns(this.serviceProviderMock.Object);
 
-            this.serviceProviderMock.Setup(provider => provider.GetService(typeof(IAuditAndMetricBroker)))
-                .Returns(this.auditAndMetricBrokerMock.Object);
+            this.serviceProviderMock.Setup(provider => provider.GetService(typeof(IMetricService)))
+                .Returns(this.metricServiceMock.Object);
 
             IOptions<MetricPurgeWorkerSettings> settings = Options.Create(
                 new MetricPurgeWorkerSettings { SweepIntervalHours = 0, InitialDelayMinutes = 0 });
@@ -62,8 +62,8 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
             using var cancellationTokenSource = new CancellationTokenSource();
             int purgedCount = 17;
 
-            this.auditAndMetricBrokerMock.Setup(broker =>
-                broker.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()))
+            this.metricServiceMock.Setup(service =>
+                service.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(purgedCount)
                     .Callback(() => cancellationTokenSource.Cancel());
 
@@ -71,8 +71,8 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
             await this.worker.RunAsync(cancellationTokenSource.Token);
 
             // then
-            this.auditAndMetricBrokerMock.Verify(broker =>
-                broker.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()),
+            this.metricServiceMock.Verify(service =>
+                service.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()),
                     Times.AtLeastOnce);
         }
 
@@ -83,8 +83,8 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
             using var cancellationTokenSource = new CancellationTokenSource();
             int attempts = 0;
 
-            this.auditAndMetricBrokerMock.Setup(broker =>
-                broker.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()))
+            this.metricServiceMock.Setup(service =>
+                service.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()))
                     .Callback(() =>
                     {
                         attempts++;
@@ -118,8 +118,8 @@ namespace LondonFhirService.Api.Tests.Unit.Workers
             // then
             // Starting a bulk delete against a host that is going away would leave a transaction
             // to be rolled back for nothing.
-            this.auditAndMetricBrokerMock.Verify(broker =>
-                broker.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()),
+            this.metricServiceMock.Verify(service =>
+                service.PurgeMetricsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
         }
 

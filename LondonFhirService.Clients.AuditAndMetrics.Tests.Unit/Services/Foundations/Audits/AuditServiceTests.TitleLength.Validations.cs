@@ -46,7 +46,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.auditUserBrokerMock.Setup(broker => broker.GetCurrentUserIdAsync())
                 .ReturnsAsync(randomUserId);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.auditBrokerMock.Setup(broker =>
                 broker.InsertAuditAsync(audit, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(audit);
 
@@ -68,7 +68,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentUserIdAsync(),
                     Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(audit, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -76,7 +76,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.LogErrorAsync(It.IsAny<Exception>()),
                     Times.Never);
 
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.auditUserBrokerMock.VerifyNoOtherCalls();
@@ -138,11 +138,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     expectedAuditValidationException))),
                         Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(It.IsAny<IAudit>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.auditUserBrokerMock.VerifyNoOtherCalls();
@@ -168,11 +168,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
                 .ReturnsAsync(randomDateTimeOffset);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.auditBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(storedAudit.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storedAudit);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.auditBrokerMock.Setup(broker =>
                 broker.UpdateAuditAsync(inputAudit, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(inputAudit);
 
@@ -190,11 +190,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.SelectAuditByIdAsync(storedAudit.Id, It.IsAny<CancellationToken>()),
                     Times.Once);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.UpdateAuditAsync(inputAudit, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -202,7 +202,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.LogErrorAsync(It.IsAny<Exception>()),
                     Times.Never);
 
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.auditUserBrokerMock.VerifyNoOtherCalls();
@@ -255,15 +255,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // Rejected before the row is even read, so an over-length edit costs no round trip and
             // leaves the stored entry untouched.
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.SelectAuditByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.UpdateAuditAsync(It.IsAny<IAudit>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.auditUserBrokerMock.VerifyNoOtherCalls();
@@ -289,7 +289,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.auditUserBrokerMock.Setup(broker => broker.GetCurrentUserIdAsync())
                 .ReturnsAsync(randomUserId);
 
-            this.storageBrokerMock.Setup(broker =>
+            this.auditBrokerMock.Setup(broker =>
                 broker.InsertAuditAsync(audit, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(audit);
 
@@ -304,7 +304,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             actualAudit.Should().BeSameAs(audit);
             actualAudit.Title.Should().Be(missingTitle);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(audit, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -320,7 +320,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.LogErrorAsync(It.IsAny<Exception>()),
                     Times.Never);
 
-            this.storageBrokerMock.VerifyNoOtherCalls();
+            this.auditBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.identifierBrokerMock.VerifyNoOtherCalls();
             this.auditUserBrokerMock.VerifyNoOtherCalls();

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -11,6 +11,11 @@ using LondonFhirService.Clients.AuditAndMetrics.Brokers.DateTimes;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
 using LondonFhirService.Core.Abstractions.Brokers;
+// Both namespaces declare an IMetricBroker: the port this library persists through, and
+// this library's own telemetry sink. Two destinations for the same span, so the names are
+// right on both sides - the alias is only here to tell the compiler which one is meant.
+using CoreBrokers = LondonFhirService.Core.Abstractions.Brokers;
+using TelemetryBrokers = LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
 using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 
@@ -20,23 +25,23 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 {
     internal partial class MetricService : IMetricService
     {
-        private readonly IAuditAndMetricsStorageBroker storageBroker;
-        private readonly IMetricBroker metricBroker;
+        private readonly CoreBrokers.IMetricBroker metricBroker;
+        private readonly TelemetryBrokers.IMetricBroker metricTelemetryBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly AuditAndMetricsConfigurations metricServiceConfigurations;
         private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public MetricService(
-            IAuditAndMetricsStorageBroker storageBroker,
-            IMetricBroker metricBroker,
+            CoreBrokers.IMetricBroker metricBroker,
+            TelemetryBrokers.IMetricBroker metricTelemetryBroker,
             IDateTimeBroker dateTimeBroker,
             ILoggingBroker loggingBroker,
             AuditAndMetricsConfigurations metricServiceConfigurations,
             IAuditAndMetricsDispatcher dispatcher)
         {
-            this.storageBroker = storageBroker;
             this.metricBroker = metricBroker;
+            this.metricTelemetryBroker = metricTelemetryBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.loggingBroker = loggingBroker;
             this.metricServiceConfigurations = metricServiceConfigurations;
@@ -56,8 +61,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             ValidateMetricIsNotNull(metric);
             metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
             ValidateMetricOnAdd(metric);
-            IMetric addedMetric = await this.storageBroker.InsertMetricAsync(metric, cancellationToken);
-            await this.metricBroker.RecordAsync(addedMetric, cancellationToken);
+            IMetric addedMetric = await this.metricBroker.InsertMetricAsync(metric, cancellationToken);
+            await this.metricTelemetryBroker.RecordAsync(addedMetric, cancellationToken);
 
             return addedMetric;
         });
@@ -88,8 +93,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
                 ValidateMetricOnAdd(metric);
             }
 
-            await this.storageBroker.BulkInsertMetricsAsync(metrics, cancellationToken);
-            await this.metricBroker.RecordAsync(metrics, cancellationToken);
+            await this.metricBroker.BulkInsertMetricsAsync(metrics, cancellationToken);
+            await this.metricTelemetryBroker.RecordAsync(metrics, cancellationToken);
         });
 
         public ValueTask LogMetricAsync(IMetric metric, CancellationToken cancellationToken = default) =>
@@ -108,8 +113,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 
             Dispatch(async token =>
             {
-                IMetric addedMetric = await this.storageBroker.InsertMetricAsync(metric, token);
-                await this.metricBroker.RecordAsync(addedMetric, token);
+                IMetric addedMetric = await this.metricBroker.InsertMetricAsync(metric, token);
+                await this.metricTelemetryBroker.RecordAsync(addedMetric, token);
             });
         }));
 
@@ -147,8 +152,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 
             Dispatch(async token =>
             {
-                await this.storageBroker.BulkInsertMetricsAsync(snapshot, token);
-                await this.metricBroker.RecordAsync(snapshot, token);
+                await this.metricBroker.BulkInsertMetricsAsync(snapshot, token);
+                await this.metricTelemetryBroker.RecordAsync(snapshot, token);
             });
         }));
 
@@ -198,7 +203,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await this.storageBroker.SelectAllMetricsAsync(cancellationToken);
+            return await this.metricBroker.SelectAllMetricsAsync(cancellationToken);
         });
 
         public ValueTask<IMetric> RetrieveMetricByIdAsync(
@@ -208,7 +213,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateMetricId(metricId);
-            IMetric maybeMetric = await this.storageBroker.SelectMetricByIdAsync(metricId, cancellationToken);
+            IMetric maybeMetric = await this.metricBroker.SelectMetricByIdAsync(metricId, cancellationToken);
             ValidateStorageMetric(maybeMetric, metricId);
 
             return maybeMetric;
@@ -221,10 +226,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateMetricId(metricId);
-            IMetric maybeMetric = await this.storageBroker.SelectMetricByIdAsync(metricId, cancellationToken);
+            IMetric maybeMetric = await this.metricBroker.SelectMetricByIdAsync(metricId, cancellationToken);
             ValidateStorageMetric(maybeMetric, metricId);
 
-            return await this.storageBroker.DeleteMetricAsync(maybeMetric, cancellationToken);
+            return await this.metricBroker.DeleteMetricAsync(maybeMetric, cancellationToken);
         });
 
         public ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(
@@ -260,7 +265,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                deletedInBatch = await this.storageBroker.DeleteMetricsOlderThanAsync(
+                deletedInBatch = await this.metricBroker.DeleteMetricsOlderThanAsync(
                     cutOffDate,
                     batchSize,
                     cancellationToken);

@@ -31,7 +31,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             Guid auditId = GetRandomGuid();
             var audit = new TestAudit();
 
-            this.storageBrokerMock.Setup(broker => broker.CreateAudit())
+            this.auditBrokerMock.Setup(broker => broker.CreateAudit())
                 .Returns(audit);
 
             this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
@@ -78,7 +78,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             string currentUserId = GetRandomString();
             var audit = new TestAudit();
 
-            this.storageBrokerMock.Setup(broker => broker.CreateAudit())
+            this.auditBrokerMock.Setup(broker => broker.CreateAudit())
                 .Returns(audit);
 
             this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
@@ -101,7 +101,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // then
             // The awaited path stamps identically. Only the waiting differs.
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(
                     It.Is<IAudit>(inserted =>
                         inserted.CreatedDate == createdDate
@@ -135,7 +135,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             audit.CreatedBy.Should().Be(currentUserId);
             audit.UpdatedBy.Should().Be(currentUserId);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.InsertAuditAsync(audit, It.IsAny<CancellationToken>()),
                     Times.Once);
         }
@@ -214,7 +214,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.LogWarningAsync(It.IsAny<string>()),
                     Times.Never);
 
-            this.storageBrokerMock.Verify(broker =>
+            this.auditBrokerMock.Verify(broker =>
                 broker.BulkInsertAuditsAsync(It.IsAny<List<IAudit>>(), It.IsAny<CancellationToken>()),
                     Times.Once);
         }

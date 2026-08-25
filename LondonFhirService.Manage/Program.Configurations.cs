@@ -12,7 +12,7 @@ using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Clients.AuditAndMetrics.Clients;
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
-using LondonFhirService.Core.Services.Foundations.AuditAndMetrics;
+using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -200,7 +200,8 @@ public partial class Program
 
         services.AddSingleton(securityConfigurations);
         services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
-        services.AddScoped<IAuditAndMetricsStorageBroker, AuditAndMetricsStorageService>();
+        services.AddScoped<IAuditBroker, AuditBroker>();
+        services.AddScoped<IMetricBroker, MetricBroker>();
         services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IIdentifierBroker, IdentifierBroker>();
@@ -217,6 +218,7 @@ public partial class Program
     private static void AddFoundationServices(IServiceCollection services)
     {
         services.AddTransient<IAuditService, AuditService>();
+        services.AddTransient<IMetricService, MetricService>();
         services.AddTransient<IProviderService, ProviderService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
@@ -243,7 +245,8 @@ public partial class Program
         // capture a DbContext past the scope that owns it.
         services.AddScoped<IAuditAndMetricsClient>(serviceProvider =>
             new AuditAndMetricsClient(
-                serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
+                serviceProvider.GetRequiredService<IAuditBroker>(),
+                serviceProvider.GetRequiredService<IMetricBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
                 configuration,
                 serviceProvider.GetRequiredService<ILoggerFactory>()));

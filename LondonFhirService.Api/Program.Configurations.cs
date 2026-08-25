@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -20,7 +20,7 @@ using Microsoft.ApplicationInsights;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
-using LondonFhirService.Core.Services.Foundations.AuditAndMetrics;
+using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
@@ -319,7 +319,8 @@ public partial class Program
         services.AddSingleton<TokenCredential>(new DefaultAzureCredential());
         services.AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>();
         services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
-        services.AddScoped<IAuditAndMetricsStorageBroker, AuditAndMetricsStorageService>();
+        services.AddScoped<IAuditBroker, AuditBroker>();
+        services.AddScoped<IMetricBroker, MetricBroker>();
         services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
@@ -337,6 +338,7 @@ public partial class Program
     private static void AddFoundationServices(IServiceCollection services)
     {
         services.AddTransient<IAuditService, AuditService>();
+        services.AddTransient<IMetricService, MetricService>();
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
@@ -398,7 +400,8 @@ public partial class Program
         // capture a DbContext past the scope that owns it.
         services.AddScoped<IAuditAndMetricsClient>(serviceProvider =>
             new AuditAndMetricsClient(
-                serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
+                serviceProvider.GetRequiredService<IAuditBroker>(),
+                serviceProvider.GetRequiredService<IMetricBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
                 configuration,
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
