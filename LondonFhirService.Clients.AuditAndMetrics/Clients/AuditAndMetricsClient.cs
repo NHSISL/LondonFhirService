@@ -32,15 +32,13 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
         public const string ConfigurationSectionName = "AuditAndMetricsConfigurations";
 
         public AuditAndMetricsClient(
-            IAuditStorageBroker auditStorageBroker,
-            IMetricStorageBroker metricStorageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
             IConfiguration configuration,
             ILoggerFactory loggerFactory = null,
             IAuditAndMetricsDispatcher dispatcher = null)
             : this(
-                auditStorageBroker,
-                metricStorageBroker,
+                storageBroker,
                 auditUserBroker,
                 BindConfigurations(configuration),
                 loggerFactory,
@@ -48,16 +46,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
         { }
 
         public AuditAndMetricsClient(
-            IAuditStorageBroker auditStorageBroker,
-            IMetricStorageBroker metricStorageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
             ILoggerFactory loggerFactory = null,
             IAuditAndMetricsDispatcher dispatcher = null)
         {
             IServiceProvider serviceProvider = RegisterServices(
-                auditStorageBroker,
-                metricStorageBroker,
+                storageBroker,
                 auditUserBroker,
                 configurations,
                 loggerFactory,
@@ -76,8 +72,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
         }
 
         private static IServiceProvider RegisterServices(
-            IAuditStorageBroker auditStorageBroker,
-            IMetricStorageBroker metricStorageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
             ILoggerFactory loggerFactory,
@@ -90,8 +85,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             // MetricService cannot reach audit storage. A single combined port gave each of
             // them the other's write surface for no reason.
             IServiceCollection serviceCollection = new ServiceCollection()
-                .AddSingleton(auditStorageBroker)
-                .AddSingleton(metricStorageBroker)
+                .AddSingleton(storageBroker)
                 .AddSingleton(auditUserBroker)
                 .AddSingleton(configurations)
 

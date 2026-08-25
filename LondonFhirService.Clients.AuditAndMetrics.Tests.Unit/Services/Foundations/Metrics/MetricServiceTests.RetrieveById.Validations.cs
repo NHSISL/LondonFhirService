@@ -49,7 +49,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     expectedMetricValidationException))),
                         Times.Once);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -72,7 +72,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     message: "Metric validation errors occurred, please try again.",
                     innerException: notFoundMetricException);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(noMetric);
 
@@ -86,7 +86,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricValidationException.Should().BeEquivalentTo(expectedMetricValidationException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(someMetricId, It.IsAny<CancellationToken>()),
                     Times.Once);
 

@@ -24,7 +24,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 {
     public partial class MetricServiceTests
     {
-        private readonly Mock<IMetricStorageBroker> metricStorageBrokerMock;
+        private readonly Mock<IAuditAndMetricStorageBroker> storageBrokerMock;
         private readonly Mock<IMetricBroker> metricBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
@@ -34,7 +34,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
         public MetricServiceTests()
         {
-            this.metricStorageBrokerMock = new Mock<IMetricStorageBroker>();
+            this.storageBrokerMock = new Mock<IAuditAndMetricStorageBroker>();
             this.metricBrokerMock = new Mock<IMetricBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
@@ -61,7 +61,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             };
 
             this.metricService = new MetricService(
-                metricStorageBroker: this.metricStorageBrokerMock.Object,
+                storageBroker: this.storageBrokerMock.Object,
                 metricBroker: this.metricBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
@@ -71,7 +71,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
         private void VerifyNoOtherCallsOnAllBrokers()
         {
-            this.metricStorageBrokerMock.VerifyNoOtherCalls();
+            this.storageBrokerMock.VerifyNoOtherCalls();
             this.metricBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();

@@ -200,8 +200,7 @@ public partial class Program
 
         services.AddSingleton(securityConfigurations);
         services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
-        services.AddScoped<IAuditStorageBroker, AuditStorageBroker>();
-        services.AddScoped<IMetricStorageBroker, MetricStorageBroker>();
+        services.AddScoped<IAuditAndMetricStorageBroker, AuditAndMetricStorageBroker>();
         services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IIdentifierBroker, IdentifierBroker>();
@@ -245,8 +244,7 @@ public partial class Program
         // capture a DbContext past the scope that owns it.
         services.AddScoped<IAuditAndMetricsClient>(serviceProvider =>
             new AuditAndMetricsClient(
-                serviceProvider.GetRequiredService<IAuditStorageBroker>(),
-                serviceProvider.GetRequiredService<IMetricStorageBroker>(),
+                serviceProvider.GetRequiredService<IAuditAndMetricStorageBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
                 configuration,
                 serviceProvider.GetRequiredService<ILoggerFactory>()));

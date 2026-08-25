@@ -33,7 +33,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     message: "Metric dependency error occurred, contact support.",
                     innerException: failedStorageMetricException);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ThrowsAsync(failedStorageMetricException);
 
@@ -47,7 +47,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -76,7 +76,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     message: "Metric dependency error occurred, contact support.",
                     innerException: timedOutMetricException);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ThrowsAsync(timeoutException);
 
@@ -90,7 +90,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -119,7 +119,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     message: "Metric dependency error occurred, contact support.",
                     innerException: cancelledMetricException);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ThrowsAsync(cancellationException);
 
@@ -133,7 +133,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -162,7 +162,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     message: "Metric service error occurred, contact support.",
                     innerException: failedMetricServiceException);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ThrowsAsync(serviceException);
 
@@ -176,7 +176,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricServiceException.Should().BeEquivalentTo(expectedMetricServiceException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 

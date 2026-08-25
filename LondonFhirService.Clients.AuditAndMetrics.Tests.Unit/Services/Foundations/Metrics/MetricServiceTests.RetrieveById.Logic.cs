@@ -21,7 +21,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             IMetric storageMetric = randomMetric;
             IMetric expectedMetric = storageMetric.DeepClone();
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.SelectMetricByIdAsync(randomMetric.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
@@ -33,7 +33,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetric.Should().BeEquivalentTo(expectedMetric);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(randomMetric.Id, It.IsAny<CancellationToken>()),
                     Times.Once);
 

@@ -17,7 +17,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
 {
     internal partial class AuditService : IAuditService
     {
-        private readonly IAuditStorageBroker auditStorageBroker;
+        private readonly IAuditAndMetricStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
@@ -25,14 +25,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public AuditService(
-            IAuditStorageBroker auditStorageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IDateTimeBroker dateTimeBroker,
             IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker,
             IAuditUserBroker auditUserBroker,
             IAuditAndMetricsDispatcher dispatcher)
         {
-            this.auditStorageBroker = auditStorageBroker;
+            this.storageBroker = storageBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
@@ -60,7 +60,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             // Only the write is deferred. Everything above ran on the caller's thread, so the
             // entry carries the time and user of the moment it happened rather than of whenever
             // the write got round to running.
-            Dispatch(async token => await this.auditStorageBroker.InsertAuditAsync(audit, token));
+            Dispatch(async token => await this.storageBroker.InsertAuditAsync(audit, token));
         }));
 
         public ValueTask<IAudit> RecordAuditAsync(
@@ -80,7 +80,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
 
             ValidateAuditOnAdd(audit);
 
-            return await this.auditStorageBroker.InsertAuditAsync(audit, cancellationToken);
+            return await this.storageBroker.InsertAuditAsync(audit, cancellationToken);
         });
 
         public ValueTask<IAudit> AddAuditAsync(IAudit audit, CancellationToken cancellationToken = default) =>
@@ -91,7 +91,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             await StampAsync(audit);
             ValidateAuditOnAdd(audit);
 
-            return await this.auditStorageBroker.InsertAuditAsync(audit, cancellationToken);
+            return await this.storageBroker.InsertAuditAsync(audit, cancellationToken);
         });
 
         public ValueTask LogAuditAsync(IAudit audit, CancellationToken cancellationToken = default) =>
@@ -103,7 +103,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             ValidateAuditOnAdd(audit);
 
             // Validated and stamped on the caller's thread; only the write is deferred.
-            Dispatch(async token => await this.auditStorageBroker.InsertAuditAsync(audit, token));
+            Dispatch(async token => await this.storageBroker.InsertAuditAsync(audit, token));
         }));
 
         public ValueTask BulkLogAuditsAsync(
@@ -126,7 +126,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             for (int index = 0; index < audits.Count; index += batchSize)
             {
                 List<IAudit> batch = audits.Skip(index).Take(batchSize).ToList();
-                Dispatch(token => this.auditStorageBroker.BulkInsertAuditsAsync(batch, token));
+                Dispatch(token => this.storageBroker.BulkInsertAuditsAsync(batch, token));
             }
         }));
 
@@ -152,7 +152,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
                 cancellationToken.ThrowIfCancellationRequested();
 
                 List<IAudit> batch = audits.Skip(index).Take(batchSize).ToList();
-                await this.auditStorageBroker.BulkInsertAuditsAsync(batch, cancellationToken);
+                await this.storageBroker.BulkInsertAuditsAsync(batch, cancellationToken);
             }
         });
 
@@ -161,7 +161,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return await this.auditStorageBroker.SelectAllAuditsAsync(cancellationToken);
+            return await this.storageBroker.SelectAllAuditsAsync(cancellationToken);
         });
 
         public ValueTask<IAudit> RetrieveAuditByIdAsync(
@@ -171,7 +171,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateAuditId(auditId);
-            IAudit maybeAudit = await this.auditStorageBroker.SelectAuditByIdAsync(auditId, cancellationToken);
+            IAudit maybeAudit = await this.storageBroker.SelectAuditByIdAsync(auditId, cancellationToken);
             ValidateStorageAudit(maybeAudit, auditId);
 
             return maybeAudit;
@@ -184,11 +184,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             ValidateAuditIsNotNull(audit);
             audit.UpdatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
             ValidateAuditOnModify(audit);
-            IAudit maybeAudit = await this.auditStorageBroker.SelectAuditByIdAsync(audit.Id, cancellationToken);
+            IAudit maybeAudit = await this.storageBroker.SelectAuditByIdAsync(audit.Id, cancellationToken);
             ValidateStorageAudit(maybeAudit, audit.Id);
             ValidateAgainstStorageAuditOnModify(inputAudit: audit, storageAudit: maybeAudit);
 
-            return await this.auditStorageBroker.UpdateAuditAsync(audit, cancellationToken);
+            return await this.storageBroker.UpdateAuditAsync(audit, cancellationToken);
         });
 
         public ValueTask<IAudit> RemoveAuditByIdAsync(
@@ -198,10 +198,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         {
             cancellationToken.ThrowIfCancellationRequested();
             ValidateAuditId(auditId);
-            IAudit maybeAudit = await this.auditStorageBroker.SelectAuditByIdAsync(auditId, cancellationToken);
+            IAudit maybeAudit = await this.storageBroker.SelectAuditByIdAsync(auditId, cancellationToken);
             ValidateStorageAudit(maybeAudit, auditId);
 
-            return await this.auditStorageBroker.DeleteAuditAsync(maybeAudit, cancellationToken);
+            return await this.storageBroker.DeleteAuditAsync(maybeAudit, cancellationToken);
         });
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             DateTimeOffset createdDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
             string currentUserId = await this.auditUserBroker.GetCurrentUserIdAsync();
 
-            IAudit audit = this.auditStorageBroker.CreateAudit();
+            IAudit audit = this.storageBroker.CreateAudit();
             audit.Id = await this.identifierBroker.GetIdentifierAsync();
             audit.AuditType = auditType;
             audit.Title = title;

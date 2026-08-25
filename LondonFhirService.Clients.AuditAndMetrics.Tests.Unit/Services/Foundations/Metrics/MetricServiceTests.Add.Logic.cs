@@ -28,7 +28,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
@@ -43,7 +43,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -68,7 +68,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
@@ -84,7 +84,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // The exact metric, so a service that persisted a different instance could not
             // pass on the timestamp predicate alone.
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -111,7 +111,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetric.Should().BeEquivalentTo(expectedMetric);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 

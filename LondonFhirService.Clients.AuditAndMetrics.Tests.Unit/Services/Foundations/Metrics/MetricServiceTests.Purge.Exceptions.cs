@@ -39,7 +39,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -56,7 +56,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -97,7 +97,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -114,7 +114,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -156,7 +156,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -173,7 +173,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricDependencyException.Should().BeEquivalentTo(expectedMetricDependencyException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -214,7 +214,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -232,14 +232,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             actualMetricDependencyValidationException.Should()
                 .BeEquivalentTo(expectedMetricDependencyValidationException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -279,7 +279,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -296,7 +296,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricServiceException.Should().BeEquivalentTo(expectedMetricServiceException);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),

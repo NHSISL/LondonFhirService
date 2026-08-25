@@ -21,7 +21,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             IQueryable<IMetric> storageMetrics = randomMetrics;
             IQueryable<IMetric> expectedMetrics = storageMetrics;
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
@@ -32,7 +32,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetrics.Should().BeEquivalentTo(expectedMetrics);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -48,7 +48,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             IQueryable<IMetric> expectedMetrics = storageMetrics;
             this.metricServiceConfigurations.IsEnabled = false;
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
@@ -61,7 +61,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // queryable while recording is turned off.
             actualMetrics.Should().BeEquivalentTo(expectedMetrics);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 

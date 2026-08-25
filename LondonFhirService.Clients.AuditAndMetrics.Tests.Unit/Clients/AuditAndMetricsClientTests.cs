@@ -22,14 +22,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
     /// </summary>
     public class AuditAndMetricsClientTests
     {
-        private readonly Mock<IAuditStorageBroker> auditStorageBrokerMock;
-        private readonly Mock<IMetricStorageBroker> metricStorageBrokerMock;
+        private readonly Mock<IAuditAndMetricStorageBroker> storageBrokerMock;
         private readonly Mock<IAuditUserBroker> auditUserBrokerMock;
 
         public AuditAndMetricsClientTests()
         {
-            this.auditStorageBrokerMock = new Mock<IAuditStorageBroker>();
-            this.metricStorageBrokerMock = new Mock<IMetricStorageBroker>();
+            this.storageBrokerMock = new Mock<IAuditAndMetricStorageBroker>();
             this.auditUserBrokerMock = new Mock<IAuditUserBroker>();
         }
 
@@ -41,8 +39,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
 
             // when
             var auditAndMetricsClient = new AuditAndMetricsClient(
-                this.auditStorageBrokerMock.Object,
-                this.metricStorageBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.auditUserBrokerMock.Object,
                 configurations);
 
@@ -65,8 +62,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
 
             // when
             var auditAndMetricsClient = new AuditAndMetricsClient(
-                this.auditStorageBrokerMock.Object,
-                this.metricStorageBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.auditUserBrokerMock.Object,
                 new AuditAndMetricsConfigurations(),
                 loggerFactoryMock.Object);
@@ -86,8 +82,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
         {
             // given, when
             var auditAndMetricsClient = new AuditAndMetricsClient(
-                this.auditStorageBrokerMock.Object,
-                this.metricStorageBrokerMock.Object,
+                this.storageBrokerMock.Object,
                 this.auditUserBrokerMock.Object,
                 new AuditAndMetricsConfigurations(),
                 loggerFactory: null);

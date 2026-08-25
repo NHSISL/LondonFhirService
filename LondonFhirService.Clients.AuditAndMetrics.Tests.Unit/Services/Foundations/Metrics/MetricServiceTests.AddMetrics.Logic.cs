@@ -35,7 +35,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(inputMetrics, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -71,7 +71,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(inputMetrics, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -94,7 +94,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await this.metricService.AddMetricsAsync(randomMetrics, TestContext.Current.CancellationToken);
 
             // then
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -119,7 +119,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await this.metricService.AddMetricsAsync(emptyMetrics, TestContext.Current.CancellationToken);
 
             // then
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -146,7 +146,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.metricStorageBrokerMock.Setup(broker =>
+            this.storageBrokerMock.Setup(broker =>
                 broker.BulkInsertMetricsAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()))
                     .Callback(() => callOrder.Add("storage"));
 
@@ -164,7 +164,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.metricStorageBrokerMock.Verify(broker =>
+            this.storageBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(randomMetrics, It.IsAny<CancellationToken>()),
                     Times.Once);
 

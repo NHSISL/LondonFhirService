@@ -14,6 +14,6 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
     /// ports, which is what lets the standalone library share this broker without Core having to
     /// hand it a concrete type.
     /// </summary>
-    public partial interface IStorageBroker : IAsyncDisposable, IAuditStorageBroker, IMetricStorageBroker
+    public partial interface IStorageBroker : IAsyncDisposable, IAuditAndMetricStorageBroker
     { }
 }
