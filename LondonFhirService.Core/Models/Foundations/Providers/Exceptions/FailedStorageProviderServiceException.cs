@@ -7,7 +7,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.Providers.Exceptions
 {
-    public class FailedStorageProviderServiceException : Xeption
+    internal class FailedStorageProviderServiceException : Xeption
     {
         public FailedStorageProviderServiceException(string message, Exception innerException)
             : base(message, innerException)

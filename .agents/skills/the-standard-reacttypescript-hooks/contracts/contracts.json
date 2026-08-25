@@ -1,0 +1,1 @@
+{"skill":"the-standard-reacttypescript-hooks","version":"1.0.0","hook_structure":{"directory":"src/hooks/","file_pattern":"use{Purpose}.ts","export_style":"named"},"hook_rules":{"call_view_services":true,"manage_state":true,"handle_effects":true,"return_pattern":"{data,loading,error,handlers}"}}

@@ -16,7 +16,7 @@ using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
-    public partial class ComparisonCoordinationService : IComparisonCoordinationService
+    internal partial class ComparisonCoordinationService : IComparisonCoordinationService
     {
         private readonly ICompareQueueOrchestrationService compareQueueOrchestrationService;
         private readonly IComparisonOrchestrationService comparisonOrchestrationService;
@@ -53,7 +53,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                             await this.loggingBroker.LogWarningAsync(
                                 $"CompareQueueItem with CorrelationId: " +
                                 $"{compareQueueItem.SecondaryFhirRecord.CorrelationId} does not have " +
-                                $"a primary record. Marking as completed without comparison.");
+                                $"a primary record. Marking as failed without comparison.");
 
                             await this.compareQueueOrchestrationService
                                 .ChangeFhirRecordStatusAsync(

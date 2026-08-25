@@ -2,19 +2,23 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
+using System;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Models.Orchestrations.Accesses;
-using LondonFhirService.Core.Models.Orchestrations.Accesses.Exceptions;
+using LondonFhirService.Core.Models.Foundations.Providers;
+using LondonFhirService.Core.Models.Orchestrations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
-using LondonFhirService.Core.Services.Orchestrations.Accesses;
+using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
+using System.Threading;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
@@ -23,36 +27,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 {
     public partial class Stu3PatientCoordinationServiceTests
     {
-        private readonly Mock<IAccessOrchestrationService> accessOrchestrationServiceMock;
         private readonly Mock<IStu3PatientOrchestrationService> patientOrchestrationServiceMock;
+        private readonly Mock<IStu3FhirReconciliationService> fhirReconciliationServiceMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
-        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IAuditAndMetricBroker> auditAndMetricBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
+        private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly IStu3PatientCoordinationService patientCoordinationService;
-        private readonly AccessConfigurations accessConfigurations;
 
         public Stu3PatientCoordinationServiceTests()
         {
-            this.accessOrchestrationServiceMock = new Mock<IAccessOrchestrationService>();
             this.patientOrchestrationServiceMock = new Mock<IStu3PatientOrchestrationService>();
+            this.fhirReconciliationServiceMock = new Mock<IStu3FhirReconciliationService>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
-            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.auditAndMetricBrokerMock = new Mock<IAuditAndMetricBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
-
-            this.accessConfigurations = new AccessConfigurations
-            {
-                UseHashedNhsNumber = true,
-                HashPepper = GetRandomStringWithLength(100),
-                CheckAccessPermissions = true
-            };
+            this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
 
             this.patientCoordinationService = new Stu3PatientCoordinationService(
-                accessOrchestrationService: accessOrchestrationServiceMock.Object,
                 patientOrchestrationService: patientOrchestrationServiceMock.Object,
+                fhirReconciliationService: fhirReconciliationServiceMock.Object,
                 loggingBroker: loggingBrokerMock.Object,
-                auditBroker: auditBrokerMock.Object,
+                auditAndMetricBroker: auditAndMetricBrokerMock.Object,
                 identifierBroker: identifierBrokerMock.Object,
-                accessConfigurations: this.accessConfigurations);
+                dateTimeBroker: dateTimeBrokerMock.Object);
         }
 
         private static string GetRandomStringWithLength(int length)
@@ -91,6 +89,30 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             return serializer.SerializeToString(bundle);
         }
 
+        private static List<(string Provider, string Json)> CreateRandomBundles()
+        {
+            var items = new List<(string Provider, string Json)>();
+
+            for (int index = 0; index < GetRandomNumber(); index++)
+            {
+                items.Add((GetRandomString(), SerializeBundle(CreateRandomBundle())));
+            }
+
+            return items;
+        }
+
+        private static Provider CreateRandomProvider()
+        {
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            var filler = new Filler<Provider>();
+
+            filler.Setup()
+                .OnType<DateTimeOffset>().Use(randomDateTimeOffset)
+                .OnType<DateTimeOffset?>().Use(randomDateTimeOffset);
+
+            return filler.Create();
+        }
+
         public static TheoryData<Xeption> DependencyValidationExceptions()
         {
             string randomMessage = GetRandomString();
@@ -99,14 +121,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             return new TheoryData<Xeption>
             {
-                new AccessOrchestrationValidationException(
-                    message: "Access orchestration validation error occurred, please try again",
-                    innerException),
-
-                new AccessOrchestrationDependencyValidationException(
-                    message: "Access orchestration dependency validation error occurred, please try again.",
-                    innerException),
-
                 new PatientOrchestrationValidationException(
                     message: "Patient orchestration validation error occurred, please try again.",
                     innerException),
@@ -114,6 +128,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                 new PatientOrchestrationDependencyValidationException(
                     message: "Patient orchestration dependency validation error occurred, please try again.",
                     innerException),
+
+                new FhirReconciliationOrchestrationValidationException(
+                    message: "FHIR reconciliation orchestration validation error occurred, please try again.",
+                    innerException),
+
+                new FhirReconciliationOrchestrationDependencyValidationException(
+                    message: "FHIR reconciliation orchestration dependency validation error occurred, please try again.",
+                    innerException)
             };
         }
 
@@ -125,22 +147,44 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             return new TheoryData<Xeption>
             {
-                new AccessOrchestrationDependencyException(
-                    message: "Access orchestration dependency error occurred, please try again.",
-                    innerException),
-
-                new AccessOrchestrationServiceException(
-                    message: "Access orchestration service error occurred, please contact support.",
-                    innerException),
-
                 new PatientOrchestrationDependencyException(
                     message: "Patient orchestration dependency error occurred, please try again.",
                     innerException),
 
                 new PatientOrchestrationServiceException(
                     message: "Patient orchestration service error occurred, please contact support.",
+                    innerException),
+
+                new FhirReconciliationOrchestrationDependencyException(
+                    message: "FHIR reconciliation orchestration dependency error occurred, fix the errors and try again.",
+                    innerException),
+
+                new FhirReconciliationOrchestrationServiceException(
+                    message: "FHIR reconciliation orchestration service error occurred, please contact support.",
                     innerException)
             };
         }
+
+        /// <summary>
+        /// Metric spans are cross cutting - every path through this service records them, and
+        /// asserting on each one in every behavioural test would bury what the test is actually
+        /// about. Marking them verified here keeps VerifyNoOtherCalls meaningful for everything
+        /// else, while the span tree itself is covered by the Metrics tests.
+        /// </summary>
+        private void AcceptMetricSpans()
+        {
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Between(0, int.MaxValue, Moq.Range.Inclusive));
+        }
+
     }
 }

@@ -1,0 +1,10 @@
+{
+  "skill": "the-standard-csharp-directives",
+  "rules": [
+    { "id": "tsc-csharp-directives-001", "severity": "ERROR", "category": "Placement", "rule": "All using directives must be placed at the top of the file, outside any namespace block." },
+    { "id": "tsc-csharp-directives-002", "severity": "ERROR", "category": "Ordering and Grouping", "rule": "using directives must be ordered in groups: (1) System, (2) Microsoft, (3) third-party, (4) project-local." },
+    { "id": "tsc-csharp-directives-003", "severity": "ERROR", "category": "Ordering and Grouping", "rule": "Each using group must be separated from the next by exactly one blank line." },
+    { "id": "tsc-csharp-directives-004", "severity": "WARN",  "category": "Ordering and Grouping", "rule": "Directives within each group must be sorted alphabetically." },
+    { "id": "tsc-csharp-directives-005", "severity": "ERROR", "category": "Cleanliness", "rule": "Unused using directives must be removed from the file." }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "skill": "the-standard-reacttypescript-brokers",
+  "version": "1.0.0",
+  "broker_types": {
+    "apis": "src/brokers/apis/",
+    "storages": "src/brokers/storages/",
+    "loggings": "src/brokers/loggings/",
+    "datetimes": "src/brokers/datetimes/"
+  },
+  "naming": {
+    "class_pattern": "{Entity}{Type}Broker",
+    "method_pattern": "{verb}{Entity}Async",
+    "interface_pattern": "I{Entity}{Type}Broker"
+  },
+  "http_verbs": {
+    "get": "Retrieve single or multiple entities",
+    "post": "Create new entity",
+    "put": "Update entire entity",
+    "patch": "Partially update entity",
+    "delete": "Remove entity"
+  },
+  "method_signatures": {
+    "get_all": "async getAll{Entity}Async(signal?: AbortSignal): Promise<{Entity}[]>",
+    "get_by_id": "async get{Entity}ByIdAsync(id: string, signal?: AbortSignal): Promise<{Entity}>",
+    "post": "async post{Entity}Async(entity: {Entity}, signal?: AbortSignal): Promise<{Entity}>",
+    "put": "async put{Entity}Async(entity: {Entity}, signal?: AbortSignal): Promise<{Entity}>",
+    "delete": "async delete{Entity}ByIdAsync(id: string, signal?: AbortSignal): Promise<void>"
+  },
+  "exception_handling": {
+    "catch_external": true,
+    "wrap_in_broker_exception": true,
+    "preserve_inner_exception": true,
+    "never_swallow": true
+  }
+}

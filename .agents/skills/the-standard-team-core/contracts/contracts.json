@@ -1,0 +1,13 @@
+{
+  "skill": "the-standard-team-core",
+  "version": "1.0.0",
+  "purpose_document": {
+    "required_sections": ["business_nature", "business_goals", "future_considerations"],
+    "all_sections_required": true
+  },
+  "scenario": {
+    "required_parts": ["GIVEN", "WHEN", "THEN"],
+    "actor_must_be": "end user or customer — not developer or system component",
+    "language": "non-technical unless the business is technical"
+  }
+}

@@ -1,8 +1,9 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EFxceptions.Models.Exceptions;
@@ -14,10 +15,11 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.Providers
 {
-    public partial class ProviderService
+    internal partial class ProviderService
     {
         private delegate ValueTask<Provider> ReturningProviderFunction();
         private delegate ValueTask<IQueryable<Provider>> ReturningProvidersFunction();
+        private delegate ValueTask<List<Provider>> ReturningProviderListFunction();
 
         private async ValueTask<Provider> TryCatch(ReturningProviderFunction returningProviderFunction)
         {
@@ -99,6 +101,34 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             try
             {
                 return await returningProvidersFunction();
+            }
+            catch (SqlException sqlException)
+            {
+                var failedStorageProviderServiceException =
+                    new FailedStorageProviderServiceException(
+                        message: "Failed provider storage error occurred, contact support.",
+                        innerException: sqlException);
+
+                throw await CreateAndLogCriticalDependencyException(failedStorageProviderServiceException);
+            }
+            catch (Exception exception)
+            {
+                var failedProviderServiceException =
+                    new FailedProviderServiceException(
+                        message: "Failed provider service occurred, please contact support",
+                        innerException: exception,
+                        data: exception.Data);
+
+                throw await CreateAndLogServiceException(failedProviderServiceException);
+            }
+        }
+
+        private async ValueTask<List<Provider>> TryCatch(
+            ReturningProviderListFunction returningProviderListFunction)
+        {
+            try
+            {
+                return await returningProviderListFunction();
             }
             catch (SqlException sqlException)
             {

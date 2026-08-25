@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists
 {
-    public partial class ListMatcherService
+    internal partial class ListMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 

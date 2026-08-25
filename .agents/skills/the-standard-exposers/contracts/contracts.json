@@ -1,0 +1,20 @@
+{
+  "skill": "the-standard-exposers",
+  "version": "1.0.0",
+  "http_verb_mapping": {
+    "POST": { "status_success": 201, "operation": "Add/Insert" },
+    "GET": { "status_success": 200, "operation": "Retrieve" },
+    "PUT": { "status_success": 200, "operation": "Modify/Update" },
+    "DELETE": { "status_success": 200, "operation": "Remove/Delete" }
+  },
+  "exception_to_http_mapping": {
+    "ValidationException": 400,
+    "DependencyValidationException (AlreadyExists)": 409,
+    "DependencyValidationException (NotFound)": 404,
+    "DependencyException": 424,
+    "ServiceException": 500
+  },
+  "required_attributes": ["[ApiController]", "[Route(\"api/[controller]\")]"],
+  "base_class_options": ["RESTFulController", "ControllerBase"],
+  "max_injected_services": 1
+}

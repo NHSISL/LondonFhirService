@@ -1,0 +1,17 @@
+{
+  "skill": "the-standard-csharp-comments",
+  "version": "1.0.0",
+  "copyright_block": {
+    "style": "single-line //",
+    "border": "// ---------------------------------------------------------------",
+    "required_lines": 2,
+    "pattern": [
+      "// ---------------------------------------------------------------",
+      "// Copyright (c) {Organization}",
+      "// {License Statement}",
+      "// ---------------------------------------------------------------"
+    ]
+  },
+  "method_documentation_sections": ["Purposing", "Incomes", "Outcomes", "Side Effects"],
+  "forbidden_comment_styles": ["/* */", "/** */", "<copyright>"]
+}

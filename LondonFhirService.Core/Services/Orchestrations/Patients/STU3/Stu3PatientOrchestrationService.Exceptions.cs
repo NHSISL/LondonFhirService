@@ -4,25 +4,27 @@
 
 using System;
 using System.Threading.Tasks;
-using Hl7.Fhir.Model;
-using LondonFhirService.Core.Models.Foundations.FhirReconciliations.Exceptions;
+using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
+using LondonFhirService.Core.Models.Orchestrations.Patients;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
-    public partial class Stu3PatientOrchestrationService
+    internal partial class Stu3PatientOrchestrationService
     {
-        private delegate ValueTask<Bundle> ReturningBundleFunction();
-        private delegate ValueTask<string> ReturningStringFunction();
+        private delegate ValueTask<StructuredRecordsResponse> ReturningStructuredRecordsResponseFunction();
 
-        private async ValueTask<Bundle> TryCatch(ReturningBundleFunction returningBundleFunction)
+        private delegate ValueTask ReturningNothingFunction();
+
+        private async ValueTask<StructuredRecordsResponse> TryCatch(
+            ReturningStructuredRecordsResponseFunction returningStructuredRecordsResponseFunction)
         {
             try
             {
-                return await returningBundleFunction();
+                return await returningStructuredRecordsResponseFunction();
             }
             catch (InvalidArgumentPatientOrchestrationException invalidArgumentPatientOrchestrationException)
             {
@@ -32,6 +34,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                    invalidPrimaryProviderPatientOrchestrationException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidPrimaryProviderPatientOrchestrationException);
+            }
+            catch (UnauthorizedPatientOrchestrationException unauthorizedPatientOrchestrationException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(unauthorizedPatientOrchestrationException);
+            }
+            catch (ForbiddenPatientOrchestrationException forbiddenPatientOrchestrationException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(forbiddenPatientOrchestrationException);
             }
             catch (ProviderServiceValidationException providerServiceValidationException)
             {
@@ -51,16 +61,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 throw await CreateAndLogDependencyValidationExceptionAsync(
                     patientServiceDependencyValidationException);
             }
-            catch (FhirReconciliationServiceValidationException fhirReconciliationServiceValidationException)
+            catch (ConsumerAccessServiceValidationException consumerAccessServiceValidationException)
             {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    fhirReconciliationServiceValidationException);
-            }
-            catch (FhirReconciliationServiceDependencyValidationException
-                   fhirReconciliationServiceDependencyValidationException)
-            {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    fhirReconciliationServiceDependencyValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(consumerAccessServiceValidationException);
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
@@ -78,13 +81,13 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             {
                 throw await CreateAndLogDependencyExceptionAsync(patientServiceException);
             }
-            catch (FhirReconciliationServiceDependencyException fhirReconciliationServiceDependencyException)
+            catch (ConsumerAccessServiceDependencyException consumerAccessServiceDependencyException)
             {
-                throw await CreateAndLogDependencyExceptionAsync(fhirReconciliationServiceDependencyException);
+                throw await CreateAndLogDependencyExceptionAsync(consumerAccessServiceDependencyException);
             }
-            catch (FhirReconciliationServiceException fhirReconciliationServiceException)
+            catch (ConsumerAccessServiceException consumerAccessServiceException)
             {
-                throw await CreateAndLogDependencyExceptionAsync(fhirReconciliationServiceException);
+                throw await CreateAndLogDependencyExceptionAsync(consumerAccessServiceException);
             }
             catch (Exception exception)
             {
@@ -98,73 +101,35 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             }
         }
 
-        private async ValueTask<string> TryCatch(ReturningStringFunction returningStringFunction)
+        private async ValueTask TryCatch(ReturningNothingFunction returningNothingFunction)
         {
             try
             {
-                return await returningStringFunction();
+                await returningNothingFunction();
             }
             catch (InvalidArgumentPatientOrchestrationException invalidArgumentPatientOrchestrationException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentPatientOrchestrationException);
             }
-            catch (InvalidPrimaryProviderPatientOrchestrationException
-                   invalidPrimaryProviderPatientOrchestrationException)
+            catch (UnauthorizedPatientOrchestrationException unauthorizedPatientOrchestrationException)
             {
-                throw await CreateAndLogValidationExceptionAsync(invalidPrimaryProviderPatientOrchestrationException);
+                throw await CreateAndLogValidationExceptionAsync(unauthorizedPatientOrchestrationException);
             }
-            catch (ProviderServiceValidationException providerServiceValidationException)
+            catch (ForbiddenPatientOrchestrationException forbiddenPatientOrchestrationException)
             {
-                throw await CreateAndLogDependencyValidationExceptionAsync(providerServiceValidationException);
+                throw await CreateAndLogValidationExceptionAsync(forbiddenPatientOrchestrationException);
             }
-            catch (ProviderServiceDependencyValidationException providerServiceDependencyValidationException)
+            catch (ConsumerAccessServiceValidationException consumerAccessServiceValidationException)
             {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    providerServiceDependencyValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(consumerAccessServiceValidationException);
             }
-            catch (PatientServiceValidationException patientServiceValidationException)
+            catch (ConsumerAccessServiceDependencyException consumerAccessServiceDependencyException)
             {
-                throw await CreateAndLogDependencyValidationExceptionAsync(patientServiceValidationException);
+                throw await CreateAndLogDependencyExceptionAsync(consumerAccessServiceDependencyException);
             }
-            catch (PatientServiceDependencyValidationException patientServiceDependencyValidationException)
+            catch (ConsumerAccessServiceException consumerAccessServiceException)
             {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    patientServiceDependencyValidationException);
-            }
-            catch (FhirReconciliationServiceValidationException fhirReconciliationServiceValidationException)
-            {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    fhirReconciliationServiceValidationException);
-            }
-            catch (FhirReconciliationServiceDependencyValidationException
-                   fhirReconciliationServiceDependencyValidationException)
-            {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    fhirReconciliationServiceDependencyValidationException);
-            }
-            catch (ProviderServiceDependencyException providerServiceDependencyException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(providerServiceDependencyException);
-            }
-            catch (ProviderServiceException providerServiceException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(providerServiceException);
-            }
-            catch (PatientServiceDependencyException patientServiceDependencyException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(patientServiceDependencyException);
-            }
-            catch (PatientServiceException patientServiceException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(patientServiceException);
-            }
-            catch (FhirReconciliationServiceDependencyException fhirReconciliationServiceDependencyException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(fhirReconciliationServiceDependencyException);
-            }
-            catch (FhirReconciliationServiceException fhirReconciliationServiceException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(fhirReconciliationServiceException);
+                throw await CreateAndLogDependencyExceptionAsync(consumerAccessServiceException);
             }
             catch (Exception exception)
             {

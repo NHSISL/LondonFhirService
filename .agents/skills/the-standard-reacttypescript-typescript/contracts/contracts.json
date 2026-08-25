@@ -1,0 +1,28 @@
+{
+  "skill": "the-standard-reacttypescript-typescript",
+  "version": "1.0.0",
+  "compiler_options": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true
+  },
+  "type_conventions": {
+    "data_shapes": "use type keyword",
+    "behavioral_contracts": "use interface keyword",
+    "unsafe_boundaries": "use unknown, never any",
+    "export_style": "prefer named exports",
+    "return_types": "explicit at boundaries"
+  },
+  "prohibited": {
+    "any_type": "never use",
+    "ts_ignore": "only with documented justification",
+    "unsafe_assertions": "require validation",
+    "generic_types": ["Function", "Object", "{}"]
+  }
+}

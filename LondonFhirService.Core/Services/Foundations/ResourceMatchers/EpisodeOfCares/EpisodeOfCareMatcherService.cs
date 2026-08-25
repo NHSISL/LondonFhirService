@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOfCares
 {
-    public partial class EpisodeOfCareMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class EpisodeOfCareMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public EpisodeOfCareMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
@@ -45,9 +45,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOf
                     Key = InternalGetMatchKey(resource, source1ResourceIndex)
                 })
                 .Where(keyedResource => keyedResource.Key != null)
-                .ToDictionary(
+                .ToDictionaryFirstWins(
                     keyedResource => keyedResource.Key!,
-                    keyedResource => keyedResource.Resource);
+                    keyedResource => keyedResource.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, true)));
 
             var source2ByKey = source2Resources
                 .Select(resource => new
@@ -56,9 +58,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.EpisodeOf
                     Key = InternalGetMatchKey(resource, source2ResourceIndex)
                 })
                 .Where(keyedResource => keyedResource.Key != null)
-                .ToDictionary(
+                .ToDictionaryFirstWins(
                     keyedResource => keyedResource.Key!,
-                    keyedResource => keyedResource.Resource);
+                    keyedResource => keyedResource.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, false)));
 
             var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
 

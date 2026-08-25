@@ -1,0 +1,18 @@
+{
+  "name": "the-standard-reacttypescript-files",
+  "version": "0.1.0",
+  "description": "Governs file naming, organization, and structural conventions for React TypeScript projects following The Standard",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": [
+    "React TypeScript project file structure",
+    "File naming patterns"
+  ],
+  "outputs": [
+    "Standard-compliant file organization",
+    "Clear architectural file naming",
+    "Review feedback on file structure violations"
+  ],
+  "dependencies": [],
+  "applies_to": ["src/**/*"]
+}

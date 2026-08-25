@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointments
 {
-    public partial class AppointmentMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class AppointmentMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public AppointmentMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
@@ -47,9 +47,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
                     Key = InternalGetMatchKey(resource, source1ResourceIndex)
                 })
                 .Where(keyedResource => keyedResource.Key != null)
-                .ToDictionary(
+                .ToDictionaryFirstWins(
                     keyedResource => keyedResource.Key!,
-                    keyedResource => keyedResource.Resource);
+                    keyedResource => keyedResource.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, true)));
 
             var source2ByKey = source2Resources
                 .Select(resource => new
@@ -58,9 +60,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
                     Key = InternalGetMatchKey(resource, source2ResourceIndex)
                 })
                 .Where(keyedResource => keyedResource.Key != null)
-                .ToDictionary(
+                .ToDictionaryFirstWins(
                     keyedResource => keyedResource.Key!,
-                    keyedResource => keyedResource.Resource);
+                    keyedResource => keyedResource.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, false)));
 
             var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
 

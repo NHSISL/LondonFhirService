@@ -16,21 +16,22 @@
 		<PackageReference Include="Attrify" Version="0.0.0.2" />
 		<PackageReference Include="Azure.Identity" Version="1.21.0" />
 		<PackageReference Include="FluentAssertions" Version="[7.2.2]" />
-		<PackageReference Include="Hl7.Fhir.STU3" Version="6.3.0" />
+		<PackageReference Include="Hl7.Fhir.STU3" Version="6.4.0" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService" Version="0.12.0" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.LondonDataService" Version="0.2.0" />
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.1.2" />
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.5.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
-		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.11" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+		<PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="10.0.11" />
 		<PackageReference Include="Microsoft.Identity.Web" Version="4.14.2" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.10" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.11" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\LondonFhirService.Core\LondonFhirService.Core.csproj" />
+		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -43,6 +44,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Unit" />
 		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Acceptance" />
 		<InternalsVisibleTo Include="LondonFhirService.Api.Tests.Integration" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />

@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-orchestrations",
+  "version": "0.1.0",
+  "description": "Enforces multi-entity coordination, dependency on processing services, and exception management for orchestration services.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# orchestration service source file (*OrchestrationService*.cs)"],
+  "outputs": ["Standard-compliant orchestration service code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core", "the-standard-processings"],
+  "applies_to": ["*OrchestrationService*.cs"]
+}

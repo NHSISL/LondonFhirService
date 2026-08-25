@@ -1,0 +1,101 @@
+{
+  "skill": "the-standard-reacttypescript-files",
+  "rules": [
+    {
+      "id": "tsr-files-001",
+      "severity": "ERROR",
+      "category": "File Responsibility",
+      "rule": "A file MUST contain one primary responsibility."
+    },
+    {
+      "id": "tsr-files-002",
+      "severity": "ERROR",
+      "category": "File Responsibility",
+      "rule": "File names MUST describe architectural role using standard patterns."
+    },
+    {
+      "id": "tsr-files-003",
+      "severity": "ERROR",
+      "category": "File Extensions",
+      "rule": "React component files MUST use `.tsx` extension."
+    },
+    {
+      "id": "tsr-files-004",
+      "severity": "ERROR",
+      "category": "File Extensions",
+      "rule": "Non-rendering TypeScript files MUST use `.ts` extension."
+    },
+    {
+      "id": "tsr-files-005",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "Broker files MUST follow pattern `{domain}{Kind}Broker.ts` (e.g., `patientApiBroker.ts`)."
+    },
+    {
+      "id": "tsr-files-006",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "Broker interface files MUST follow pattern `i{domain}{Kind}Broker.ts` (e.g., `iPatientApiBroker.ts`)."
+    },
+    {
+      "id": "tsr-files-007",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "Foundation service files MUST follow pattern `{domain}Service.ts` (e.g., `patientService.ts`)."
+    },
+    {
+      "id": "tsr-files-008",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "Service interface files MUST follow pattern `i{domain}Service.ts` (e.g., `iPatientService.ts`)."
+    },
+    {
+      "id": "tsr-files-009",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "View service files MUST follow pattern `{domain}ViewService.ts` (e.g., `dashboardViewService.ts`)."
+    },
+    {
+      "id": "tsr-files-010",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "Page files MUST follow pattern `{Domain}Page.tsx` (e.g., `DashboardPage.tsx`)."
+    },
+    {
+      "id": "tsr-files-011",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "Component files MUST follow pattern `{Domain}{Purpose}.tsx` (e.g., `PatientCard.tsx`)."
+    },
+    {
+      "id": "tsr-files-012",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "Hook files MUST follow pattern `use{Purpose}.ts` (e.g., `useDashboardPage.ts`)."
+    },
+    {
+      "id": "tsr-files-013",
+      "severity": "ERROR",
+      "category": "Naming Patterns",
+      "rule": "Model files MUST follow pattern `{Domain}.ts` or `{Domain}{Purpose}.ts` (e.g., `Patient.ts`, `PatientCardProps.ts`)."
+    },
+    {
+      "id": "tsr-files-014",
+      "severity": "ERROR",
+      "category": "Prohibited Patterns",
+      "rule": "Do NOT create generic `utils.ts`, `helpers.ts`, or `common.ts` files."
+    },
+    {
+      "id": "tsr-files-015",
+      "severity": "ERROR",
+      "category": "Prohibited Patterns",
+      "rule": "Do NOT use vague names like `stuff.tsx`, `temp.ts`, `misc.ts`."
+    },
+    {
+      "id": "tsr-files-016",
+      "severity": "WARN",
+      "category": "Organization",
+      "rule": "Avoid deeply nested directory structures beyond 4 levels unless architecturally justified."
+    }
+  ]
+}

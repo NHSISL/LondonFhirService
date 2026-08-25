@@ -1,0 +1,37 @@
+{
+  "skill": "the-standard-team-branching",
+  "version": "1.0.0",
+  "branch_pattern": "users/[username]/[category]-[entity]-[action]",
+  "segments": {
+    "username": "GitHub username of the contributor",
+    "category": "Lowercase category from approved list",
+    "entity": "Lowercase domain entity name",
+    "action": "Lowercase action descriptor"
+  },
+  "approved_categories": [
+    "infra", "provisions", "releases", "data", "migration",
+    "brokers", "foundations", "processings", "orchestrations",
+    "coordinations", "managements", "aggregations", "controllers",
+    "clients", "providers", "exposers", "views", "bases",
+    "components", "pages", "acceptance", "integration",
+    "code-rub", "fix", "documentation", "config", "review",
+    "standard", "design", "business", "import", "status",
+    "planning", "mentorship", "discussion"
+  ],
+  "forbidden_branch_names": ["fix", "test", "temp", "wip", "feature", "main", "master", "develop"],
+  "examples": {
+    "valid": [
+      "users/jsmith/foundations-student-add",
+      "users/jsmith/brokers-student-storage",
+      "users/jsmith/data-student-model",
+      "users/jsmith/controllers-student-post"
+    ],
+    "invalid": [
+      "fix-bug",
+      "feature",
+      "wip",
+      "jsmith/student-add",
+      "users/jsmith/FOUNDATIONS-student-add"
+    ]
+  }
+}

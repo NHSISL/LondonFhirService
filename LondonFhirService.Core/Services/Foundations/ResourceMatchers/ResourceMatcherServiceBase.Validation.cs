@@ -10,7 +10,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers
 {
-    public abstract partial class ResourceMatcherServiceBase
+    internal abstract partial class ResourceMatcherServiceBase
     {
         virtual internal void ValidateOnGetMatchKeyArguments(
             JsonElement resource,

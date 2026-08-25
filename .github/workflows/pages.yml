@@ -1,0 +1,54 @@
+name: Pages
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - Documentation/DependencyGraph/**
+    - .github/workflows/pages.yml
+  workflow_dispatch:
+
+# Publishes Documentation/DependencyGraph as a static site. The graph is
+# self-contained — index.html carries both views (single-copy and
+# per-consumer) and reads graph-data.js as a sibling file. There is nothing
+# to compile: no npm, no bundler, no .NET build.
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v4
+    - name: Stage the dependency graph
+      run: |
+        mkdir -p dist
+        cp Documentation/DependencyGraph/index.html dist/
+        cp Documentation/DependencyGraph/graph-data.js dist/
+    - name: Configure Pages
+      uses: actions/configure-pages@v5
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

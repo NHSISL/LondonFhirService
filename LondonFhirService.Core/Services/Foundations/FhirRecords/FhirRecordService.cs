@@ -13,7 +13,7 @@ using LondonFhirService.Core.Models.Foundations.FhirRecords;
 
 namespace LondonFhirService.Core.Services.Foundations.FhirRecords
 {
-    public partial class FhirRecordService : IFhirRecordService
+    internal partial class FhirRecordService : IFhirRecordService
     {
         private readonly IStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;
@@ -55,6 +55,28 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 ValidateStorageFhirRecord(maybeFhirRecord, fhirRecordId);
 
                 return maybeFhirRecord;
+            });
+
+        public ValueTask<bool> TryClaimFhirRecordAsync(
+            Guid fhirRecordId,
+            StatusType expectedStatus,
+            StatusType claimedStatus,
+            DateTimeOffset? notUpdatedAfter = null) =>
+            TryCatch(async () =>
+            {
+                ValidateFhirRecordId(fhirRecordId);
+
+                DateTimeOffset claimedDate =
+                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+                int claimedCount = await this.storageBroker.ClaimFhirRecordAsync(
+                    fhirRecordId,
+                    expectedStatus,
+                    claimedStatus,
+                    claimedDate,
+                    notUpdatedAfter);
+
+                return claimedCount == 1;
             });
 
         public ValueTask<FhirRecord> ModifyFhirRecordAsync(FhirRecord fhirRecord) =>

@@ -1,0 +1,15 @@
+{
+  "skill": "the-standard-orchestrations",
+  "version": "1.0.0",
+  "naming": {
+    "interface_pattern": "I{Purpose}OrchestrationService",
+    "concrete_pattern": "{Purpose}OrchestrationService"
+  },
+  "structure": {
+    "partial_class_required": true,
+    "calls_processing_services_only": true,
+    "can_call_foundation_service": false,
+    "can_call_broker": false,
+    "max_processing_services_per_operation_recommended": 3
+  }
+}

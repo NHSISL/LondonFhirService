@@ -23,7 +23,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 
         public async ValueTask<FhirRecordDifference> SelectFhirRecordDifferenceByIdAsync(
             Guid fhirRecordDifferenceId) =>
-                await SelectAsync<FhirRecordDifference>(fhirRecordDifferenceId);
+                await SelectAsync<FhirRecordDifference>(new object[] { fhirRecordDifferenceId });
 
         public async ValueTask<FhirRecordDifference> UpdateFhirRecordDifferenceAsync(
             FhirRecordDifference fhirRecordDifference) =>

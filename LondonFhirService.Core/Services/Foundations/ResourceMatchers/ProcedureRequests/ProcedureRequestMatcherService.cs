@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.ProcedureRequests
 {
-    public partial class ProcedureRequestMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class ProcedureRequestMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public ProcedureRequestMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
@@ -46,9 +46,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Procedure
                     Key = InternalGetMatchKey(resource, source1ResourceIndex)
                 })
                 .Where(keyedResource => keyedResource.Key != null)
-                .ToDictionary(
+                .ToDictionaryFirstWins(
                     keyedResource => keyedResource.Key!,
-                    keyedResource => keyedResource.Resource);
+                    keyedResource => keyedResource.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, true)));
 
             var source2ByKey = source2Resources
                 .Select(resource => new
@@ -57,9 +59,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Procedure
                     Key = InternalGetMatchKey(resource, source2ResourceIndex)
                 })
                 .Where(keyedResource => keyedResource.Key != null)
-                .ToDictionary(
+                .ToDictionaryFirstWins(
                     keyedResource => keyedResource.Key!,
-                    keyedResource => keyedResource.Resource);
+                    keyedResource => keyedResource.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, false)));
 
             var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
 

@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Conditions
 {
-    public partial class ConditionMatcherService
+    internal partial class ConditionMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 

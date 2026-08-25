@@ -1,0 +1,24 @@
+{
+  "name": "the-standard-reacttypescript-services",
+  "version": "0.1.0",
+  "description": "Foundation service layer for business logic and broker orchestration in React + TypeScript projects",
+  "the_standard_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": [
+    "Broker implementations",
+    "Domain models",
+    "Business rules and validation logic"
+  ],
+  "outputs": [
+    "Validated domain operations",
+    "Exception-mapped broker calls",
+    "Business logic layer",
+    "Testable service contracts"
+  ],
+  "dependencies": [
+    "the-standard-reacttypescript-typescript",
+    "the-standard-reacttypescript-models",
+    "the-standard-reacttypescript-brokers"
+  ],
+  "applies_to": ["src/services/foundations/**/*"]
+}

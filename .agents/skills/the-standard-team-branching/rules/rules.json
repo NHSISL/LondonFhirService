@@ -1,0 +1,19 @@
+{
+  "skill": "the-standard-team-branching",
+  "rules": [
+    { "id": "tst-branching-001", "severity": "ERROR", "category": "Forking", "rule": "Contributors must fork the target repository before contributing — never push feature branches directly to upstream." },
+    { "id": "tst-branching-002", "severity": "ERROR", "category": "Forking", "rule": "After forking, clone the personal fork to a local machine before creating branches." },
+    { "id": "tst-branching-003", "severity": "ERROR", "category": "Forking", "rule": "Branches must be pushed to the personal fork — never to the official/upstream repository." },
+    { "id": "tst-branching-004", "severity": "ERROR", "category": "Branch Naming", "rule": "Branch names must follow the pattern: users/[username]/[category]-[entity]-[action]." },
+    { "id": "tst-branching-005", "severity": "ERROR", "category": "Branch Naming", "rule": "The [username] segment must be the contributor's GitHub username." },
+    { "id": "tst-branching-006", "severity": "ERROR", "category": "Branch Naming", "rule": "The [category] segment must be taken from the approved category list." },
+    { "id": "tst-branching-007", "severity": "ERROR", "category": "Branch Naming", "rule": "The [entity] segment must identify the domain entity the work concerns." },
+    { "id": "tst-branching-008", "severity": "ERROR", "category": "Branch Naming", "rule": "The [action] segment must describe the action being performed." },
+    { "id": "tst-branching-009", "severity": "ERROR", "category": "Branch Naming", "rule": "All segments must be lowercase and hyphen-separated." },
+    { "id": "tst-branching-010", "severity": "ERROR", "category": "Branch Lifecycle", "rule": "Each branch must be focused on a single concern." },
+    { "id": "tst-branching-011", "severity": "ERROR", "category": "Branch Lifecycle", "rule": "Must not commit directly to main." },
+    { "id": "tst-branching-012", "severity": "ERROR", "category": "Branch Lifecycle", "rule": "Must not use generic branch names such as fix, test, temp, or wip." },
+    { "id": "tst-branching-013", "severity": "ERROR", "category": "Branch Lifecycle", "rule": "Must not reuse old branch names for new work." },
+    { "id": "tst-branching-014", "severity": "WARN",  "category": "Branch Lifecycle", "rule": "Remote branches should be deleted after merging." }
+  ]
+}

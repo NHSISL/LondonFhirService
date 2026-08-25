@@ -11,7 +11,7 @@ using LondonFhirService.Core.Models.Foundations.ResourceMatchers;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Locations
 {
-    public partial class LocationMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
+    internal partial class LocationMatcherService : ResourceMatcherServiceBase, IResourceMatcherService
     {
         public LocationMatcherService(ILoggingBroker loggingBroker)
             : base(loggingBroker)
@@ -46,9 +46,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Locations
                     Key = InternalGetMatchKey(resource, source1ResourceIndex)
                 })
                 .Where(keyedResource => keyedResource.Key != null)
-                .ToDictionary(
+                .ToDictionaryFirstWins(
                     keyedResource => keyedResource.Key!,
-                    keyedResource => keyedResource.Resource);
+                    keyedResource => keyedResource.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, true)));
 
             var source2ByKey = source2Resources
                 .Select(resource => new
@@ -57,9 +59,11 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Locations
                     Key = InternalGetMatchKey(resource, source2ResourceIndex)
                 })
                 .Where(keyedResource => keyedResource.Key != null)
-                .ToDictionary(
+                .ToDictionaryFirstWins(
                     keyedResource => keyedResource.Key!,
-                    keyedResource => keyedResource.Resource);
+                    keyedResource => keyedResource.Resource,
+                    onDuplicate: (key, resource) => resourceMatch.Unmatched.Add(
+                        new UnmatchedResource(resource, ResourceType, key, false)));
 
             var allKeys = source1ByKey.Keys.Union(source2ByKey.Keys).ToList();
 

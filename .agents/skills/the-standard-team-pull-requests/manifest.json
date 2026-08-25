@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-team-pull-requests",
+  "version": "0.1.0",
+  "description": "Enforces The Standard Team pull request title format, category rules, and issue linking conventions.",
+  "the_standard_team_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["Pull request title", "Pull request description"],
+  "outputs": ["Compliant PR title in [CATEGORY]: [Pascal Case Description] format", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-team-commits", "the-standard-team-branching"],
+  "applies_to": ["*", ".git/*"]
+}

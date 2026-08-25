@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.ListEntryComparisons;
 
-public partial class ListEntryComparisonProcessingService
+internal partial class ListEntryComparisonProcessingService
 {
     private delegate ValueTask<T> ReturningFunction<T>();
 

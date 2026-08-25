@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-processings",
+  "version": "0.1.0",
+  "description": "Enforces higher-order business logic combining foundation service calls for a single entity type.",
+  "the_standard_version": "v2.50.0",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# processing service source file (*ProcessingService*.cs)"],
+  "outputs": ["Standard-compliant processing service code", "Review feedback citing rule IDs"],
+  "dependencies": ["the-standard-core", "the-standard-foundations"],
+  "applies_to": ["*ProcessingService*.cs"]
+}

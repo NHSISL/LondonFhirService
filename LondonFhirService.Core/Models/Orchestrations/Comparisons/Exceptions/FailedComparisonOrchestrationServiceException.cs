@@ -8,7 +8,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Orchestrations.Comparisons.Exceptions
 {
-    public class FailedComparisonOrchestrationServiceException : Xeption
+    internal class FailedComparisonOrchestrationServiceException : Xeption
     {
         public FailedComparisonOrchestrationServiceException(
             string message,

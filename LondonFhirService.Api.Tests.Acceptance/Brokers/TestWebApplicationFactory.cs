@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using Attrify.InvisibleApi.Models;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
-using LondonFhirService.Core.Clients.Audits;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -20,12 +20,12 @@ using FhirStu3Abstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 {
-    // Non-generic – we always host Program
+    // Non-generic - we always host Program
     public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         static TestWebApplicationFactory()
         {
-            // Configure configuration *before* the app’s builder is used
+            // Configure configuration *before* the app's builder is used
             Program.TestConfigurationOverrides = builder =>
             {
                 var testProjectPath =
@@ -150,16 +150,20 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
 
         private static void MockExternalClientsForTesting(IServiceCollection services)
         {
-            var auditClientDescriptor = services
-               .FirstOrDefault(d => d.ServiceType == typeof(IAuditClient));
+            // Decorated rather than replaced. A bare mock would stub every audit read and write,
+            // not just the incidental tracing an acceptance run emits, so the decorator drops the
+            // background writes and delegates everything else to the real broker.
+            var auditAndMetricBrokerDescriptor = services
+               .FirstOrDefault(d => d.ServiceType == typeof(IAuditAndMetricBroker));
 
-            if (auditClientDescriptor != null)
+            if (auditAndMetricBrokerDescriptor != null)
             {
-                services.Remove(auditClientDescriptor);
+                services.Remove(auditAndMetricBrokerDescriptor);
             }
 
-            var mockAuditClient = new Mock<IAuditClient>();
-            services.AddTransient<IAuditClient>(_ => mockAuditClient.Object);
+            services.AddTransient<IAuditAndMetricBroker>(provider =>
+                new QuietAuditAndMetricBroker(
+                    ActivatorUtilities.CreateInstance<AuditAndMetricBroker>(provider)));
         }
     }
 }

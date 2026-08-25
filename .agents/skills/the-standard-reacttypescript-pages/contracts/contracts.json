@@ -1,0 +1,1 @@
+{"skill":"the-standard-reacttypescript-pages","version":"1.0.0","page_structure":{"directory":"src/pages/","file_pattern":"{Domain}Page.tsx","export_style":"named"},"page_rules":{"use_page_hook":true,"compose_components":true,"no_business_logic":true,"no_data_fetching":true}}

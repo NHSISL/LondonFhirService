@@ -1,0 +1,28 @@
+{
+  "skill": "the-standard-foundations",
+  "version": "1.0.0",
+  "naming": {
+    "interface_pattern": "I{Entity}Service",
+    "concrete_pattern": "{Entity}Service"
+  },
+  "structural_validation_checks": [
+    "null model",
+    "null required string properties",
+    "empty required string properties",
+    "whitespace-only required string properties",
+    "default Guid (Guid.Empty)",
+    "default DateTime (DateTime.MinValue)"
+  ],
+  "exception_mapping": {
+    "DbUpdateConcurrencyException": "Locked{Entity}Exception",
+    "SqlException": "Failed{Entity}StorageException",
+    "general_storage": "Failed{Entity}StorageException",
+    "invalid_model": "{Entity}ValidationException"
+  },
+  "structure": {
+    "partial_class_required": true,
+    "files_per_entity": ["Add", "Retrieve", "Modify", "Remove"],
+    "max_brokers_per_operation": 1,
+    "can_call_other_services": false
+  }
+}

@@ -7,7 +7,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions
 {
-    public class FailedResourceMatcherServiceException : Xeption
+    internal class FailedResourceMatcherServiceException : Xeption
     {
         public FailedResourceMatcherServiceException(string message, Exception innerException)
             : base(message, innerException)

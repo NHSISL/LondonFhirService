@@ -7,7 +7,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
-    public partial class ComparisonCoordinationService
+    internal partial class ComparisonCoordinationService
     {
         private static dynamic IsInvalid(Guid id) => new
         {

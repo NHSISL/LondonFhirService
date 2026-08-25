@@ -7,7 +7,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions
 {
-    public class FailedStorageFhirRecordException : Xeption
+    internal class FailedStorageFhirRecordException : Xeption
     {
         public FailedStorageFhirRecordException(string message, Exception innerException)
             : base(message, innerException)

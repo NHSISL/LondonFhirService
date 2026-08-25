@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
-using Attrify.InvisibleApi.Models;
 using Azure.Core;
 using Azure.Identity;
 using Hl7.Fhir.Serialization;
@@ -14,35 +13,34 @@ using ISL.Providers.Captcha.FakeCaptcha.Providers.FakeCaptcha;
 using ISL.Providers.Captcha.GoogleReCaptcha.Models.Brokers.GoogleReCaptcha;
 using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
+using LondonFhirService.Api.Dispatchers;
 using LondonFhirService.Api.Workers;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Clients;
+using Microsoft.ApplicationInsights;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
+using LondonFhirService.Core.Abstractions.Brokers;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Services.Foundations.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
-using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Core.Clients.Audits;
-using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
-using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
-using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.JsonElements;
-using LondonFhirService.Core.Services.Foundations.OdsDatas;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
-using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances;
@@ -66,7 +64,6 @@ using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Practitioners
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ProcedureRequests;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Procedures;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.ReferralRequests;
-using LondonFhirService.Core.Services.Orchestrations.Accesses;
 using LondonFhirService.Core.Services.Orchestrations.CompareQueue;
 using LondonFhirService.Core.Services.Orchestrations.Comparisons;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
@@ -80,15 +77,14 @@ using LondonFhirService.Providers.FHIR.STU3.LondonDataService.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
-using Microsoft.OData.Edm;
-using Microsoft.OData.ModelBuilder;
 using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
+using LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics;
+using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
 
 public partial class Program
 {
@@ -158,7 +154,7 @@ public partial class Program
         AddOrchestrationServices(builder.Services, configuration);
         AddProcessingServices(builder.Services);
         AddCoordinationServices(builder.Services, configuration);
-        AddClients(builder.Services);
+        AddClients(builder.Services, builder.Configuration);
         AddBackgroundWorkers(builder.Services, configuration);
 
         // IConfiguration registration (optional, but mirrors original)
@@ -166,13 +162,11 @@ public partial class Program
 
         JsonNamingPolicy jsonNamingPolicy = JsonNamingPolicy.CamelCase;
 
+        // No OData here. The Audits, FhirRecords and FhirRecordDifference entity sets used to be
+        // exposed from this host, which put whole patient payloads behind a queryable surface on
+        // the public API. They live on the internal management host instead.
         builder.Services
             .AddControllers()
-            .AddOData(options =>
-            {
-                options.AddRouteComponents("odata", GetEdmModel());
-                options.Select().Filter().Expand().OrderBy().Count().SetMaxTop(100);
-            })
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ForFhir(Hl7.Fhir.Model.ModelInfo.ModelInspector);
@@ -186,9 +180,6 @@ public partial class Program
 
     internal static void ConfigurePipeline(WebApplication app)
     {
-        // Resolve InvisibleApiKey from DI
-        var invisibleApiKey = app.Services.GetRequiredService<InvisibleApiKey>();
-
         app.MapGet("/", () => Results.Ok(new
         {
             Name = "London FHIR Service API",
@@ -221,19 +212,8 @@ public partial class Program
         app.UseRequestTimeouts();
         app.UseAuthentication();
         app.UseAuthorization();
-        //app.UseInvisibleApiMiddleware(invisibleApiKey);
         app.MapControllers();
         //app.MapFallbackToFile("/index.html");
-    }
-
-    private static IEdmModel GetEdmModel()
-    {
-        ODataConventionModelBuilder builder = new();
-        builder.EntitySet<Audit>("Audits");
-        builder.EntitySet<FhirRecord>("FhirRecords");
-        builder.EntitySet<FhirRecordDifference>("FhirRecordDifferences");
-        builder.EnableLowerCamelCase();
-        return builder.GetEdmModel();
     }
 
     private static void AddProviders(IServiceCollection services, IConfiguration configuration)
@@ -252,9 +232,20 @@ public partial class Program
             ?? throw new InvalidOperationException(
                 "LdsConfigurations is missing or invalid. Please check appsettings.json.");
 
+        // Guarded like LdsConfigurations above. Get<T> returns null for a section that is absent
+        // or has no children, and this section decides whether the per-patient consumer access
+        // check runs at all - so an absent one should stop startup rather than reach AddSingleton
+        // as a null and fail somewhere less obvious.
+        //
+        // The guard is about ABSENCE, not the value. checkAccessPermissions is deliberately false
+        // for now: the consumer access service is not yet in use, and the flag is the switch that
+        // turns it on when it is. A present section saying false is the intended state, not a
+        // misconfiguration.
         AccessConfigurations accessConfig = configuration
             .GetSection("AccessConfigurations")
-            .Get<AccessConfigurations>();
+            .Get<AccessConfigurations>()
+            ?? throw new InvalidOperationException(
+                "AccessConfigurations is missing or invalid. Please check appsettings.json.");
 
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);
@@ -303,13 +294,13 @@ public partial class Program
     {
         SecurityConfigurations securityConfigurations = new()
         {
-            CreatedByPropertyName = nameof(IAudit.CreatedBy),
+            CreatedByPropertyName = nameof(IAuditable.CreatedBy),
             CreatedByPropertyType = typeof(string),
-            CreatedWhenPropertyName = nameof(IAudit.CreatedDate),
+            CreatedWhenPropertyName = nameof(IAuditable.CreatedDate),
             CreatedWhenPropertyType = typeof(DateTimeOffset),
-            UpdatedByPropertyName = nameof(IAudit.UpdatedBy),
+            UpdatedByPropertyName = nameof(IAuditable.UpdatedBy),
             UpdatedByPropertyType = typeof(string),
-            UpdatedWhenPropertyName = nameof(IAudit.UpdatedDate),
+            UpdatedWhenPropertyName = nameof(IAuditable.UpdatedDate),
             UpdatedWhenPropertyType = typeof(DateTimeOffset),
             DeletedByPropertyName = "DeletedBy",
             DeletedByPropertyType = typeof(string),
@@ -327,7 +318,9 @@ public partial class Program
         services.AddSingleton(consumerAccessConfiguration);
         services.AddSingleton<TokenCredential>(new DefaultAzureCredential());
         services.AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>();
-        services.AddTransient<IAuditBroker, AuditBroker>();
+        services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
+        services.AddScoped<IAuditAndMetricsStorageBroker, AuditAndMetricsStorageService>();
+        services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
         services.AddTransient<IIdentifierBroker, IdentifierBroker>();
@@ -339,20 +332,15 @@ public partial class Program
             serviceProvider => serviceProvider.GetRequiredService<StorageBroker>());
 
         services.AddScoped<IStorageBrokerFactory, StorageBrokerFactory>();
-        services.AddTransient<IHashBroker, HashBroker>();
     }
 
     private static void AddFoundationServices(IServiceCollection services)
     {
         services.AddTransient<IAuditService, AuditService>();
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
-        services.AddTransient<IConsumerService, ConsumerService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
-        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
-        services.AddTransient<IOdsDataService, OdsDataService>();
         services.AddTransient<IStu3PatientService, Stu3PatientService>();
-        services.AddTransient<IPdsDataService, PdsDataService>();
         services.AddTransient<IProviderService, ProviderService>();
         services.AddSingleton<IJsonElementService, JsonElementService>();
         services.AddTransient<IResourceMatcherService, AllergyIntoleranceMatcherService>();
@@ -390,8 +378,8 @@ public partial class Program
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IAccessOrchestrationService, AccessOrchestrationService>();
         services.AddTransient<IStu3PatientOrchestrationService, Stu3PatientOrchestrationService>();
+        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
         services.AddTransient<ICompareQueueOrchestrationService, CompareQueueOrchestrationService>();
         services.AddTransient<IComparisonOrchestrationService, ComparisonOrchestrationService>();
     }
@@ -402,14 +390,58 @@ public partial class Program
         services.AddTransient<IComparisonCoordinationService, ComparisonCoordinationService>();
     }
 
-    private static void AddClients(IServiceCollection services)
+    private static void AddClients(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IAuditClient, AuditClient>();
+        // Scoped, and it has to stay that way. SecurityAuditBroker captures the ClaimsPrincipal
+        // in its constructor, so a singleton client would hold the first request's identity and
+        // stamp every audit entry after that with the wrong user - silently. It would also
+        // capture a DbContext past the scope that owns it.
+        services.AddScoped<IAuditAndMetricsClient>(serviceProvider =>
+            new AuditAndMetricsClient(
+                serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
+                serviceProvider.GetRequiredService<IAuditUserBroker>(),
+                configuration,
+                serviceProvider.GetRequiredService<ILoggerFactory>(),
+                serviceProvider.GetRequiredService<IAuditAndMetricsDispatcher>()));
     }
 
     private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<ComparisonWorkerSettings>(configuration.GetSection("ComparisonWorkerSettings"));
         services.AddHostedService<ComparisonWorker>();
+
+        // The retention sweep had no caller, so the metrics table only ever grew - and it takes a
+        // row per span rather than per request. Whether anything is deleted is still decided by
+        // IsPurgingAllowed and RetentionPeriodInDays.
+        services.Configure<MetricPurgeWorkerSettings>(
+            configuration.GetSection("MetricPurgeWorkerSettings"));
+
+        services.AddHostedService<MetricPurgeWorker>();
+
+        // Deferred audit and metric writes go through a bounded queue rather than a thread pool
+        // item each. Singleton, and shared with the worker that drains it.
+        services.Configure<AuditAndMetricsDispatcherSettings>(
+            configuration.GetSection("AuditAndMetricsDispatcherSettings"));
+
+        services.AddSingleton<AuditAndMetricsDispatcher>();
+
+        services.AddSingleton<IAuditAndMetricsDispatcher>(serviceProvider =>
+            serviceProvider.GetRequiredService<AuditAndMetricsDispatcher>());
+
+        services.AddHostedService<AuditAndMetricsDispatchWorker>();
+
+        // Nothing was subscribed to the metric library's ActivitySource, so every span it
+        // published was dropped before it reached Application Insights.
+        AuditAndMetricsConfigurations auditAndMetricsConfigurations =
+            configuration
+                .GetSection(AuditAndMetricsClient.ConfigurationSectionName)
+                .Get<AuditAndMetricsConfigurations>()
+                    ?? new AuditAndMetricsConfigurations();
+
+        services.AddHostedService(serviceProvider =>
+            new MetricTelemetryPublisher(
+                serviceProvider.GetService<TelemetryClient>(),
+                serviceProvider.GetRequiredService<ILogger<MetricTelemetryPublisher>>(),
+                auditAndMetricsConfigurations.ActivitySourceName));
     }
 }

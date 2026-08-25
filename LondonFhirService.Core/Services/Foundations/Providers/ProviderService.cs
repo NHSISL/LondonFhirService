@@ -1,8 +1,9 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
@@ -13,7 +14,7 @@ using LondonFhirService.Core.Models.Foundations.Providers;
 
 namespace LondonFhirService.Core.Services.Foundations.Providers
 {
-    public partial class ProviderService : IProviderService
+    internal partial class ProviderService : IProviderService
     {
         private readonly IStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;
@@ -43,6 +44,9 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
         public ValueTask<IQueryable<Provider>> RetrieveAllProvidersAsync() =>
             TryCatch(async () => await this.storageBroker.SelectAllProvidersAsync());
+
+        public ValueTask<List<Provider>> RetrieveAllProvidersAsListAsync() =>
+            TryCatch(async () => await this.storageBroker.SelectAllProvidersAsListAsync());
 
         public ValueTask<Provider> RetrieveProviderByIdAsync(Guid providerId) =>
             TryCatch(async () =>

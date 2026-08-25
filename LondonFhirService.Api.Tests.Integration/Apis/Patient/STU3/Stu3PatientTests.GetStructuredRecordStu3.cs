@@ -6,10 +6,6 @@ using System;
 using System.Linq;
 using FluentAssertions;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Models.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Models.Foundations.Consumers;
-using LondonFhirService.Core.Models.Foundations.OdsDatas;
-using LondonFhirService.Core.Models.Foundations.PdsDatas;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Task = System.Threading.Tasks.Task;
 
@@ -22,11 +18,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
         {
             // given
             string inputNhsNumber = "9435797881";
-            bool isHashed = this.accessConfigurations.UseHashedNhsNumber;
-            string pepper = this.accessConfigurations.HashPepper;
-            string orgCode = GetRandomStringWithLengthOf(15);
             DateTimeOffset now = DateTimeOffset.UtcNow;
-            string userId = TestAuthHandler.TestUserId;
             string providerName = "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService.Providers.DdsStu3Provider";
             string fhirVersion = "STU3";
 
@@ -39,16 +31,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
                 demographicsOnly: false);
 
             Provider provider = await CreateRandomActiveProvider(providerName, fhirVersion, now);
-            Consumer consumer = await CreateRandomConsumer(now, userId);
-            OdsData odsData = await CreateRandomOdsData(orgCode, now);
-
-            ConsumerAccess consumerAccess = await CreateRandomConsumerAccess(
-                consumer.Id,
-                orgCode,
-                now,
-                userId);
-
-            PdsData pdsData = await CreateRandomPdsData(inputNhsNumber, orgCode, now, isHashed, pepper);
 
             // when
             var (actualText, actualBundle) =
@@ -76,10 +58,6 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient.STU3
 
             nhsNumberIdentifier.Value.Should().Be(inputNhsNumber);
             patient.Meta.Should().NotBeNull();
-            await CleanupPdsDataAsync(pdsData);
-            await CleanupOdsDataAsync(odsData);
-            await CleanupConsumerAccessAsync(consumerAccess);
-            await CleanupConsumerAsync(consumer);
         }
     }
 }

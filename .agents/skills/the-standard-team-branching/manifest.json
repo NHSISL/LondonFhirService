@@ -1,0 +1,17 @@
+{
+  "name": "the-standard-team-branching",
+  "version": "0.1.0",
+  "description": "Enforces The Standard Team forking strategy and branch naming convention.",
+  "the_standard_team_version": "v0.1.0",
+  "skill_version": "v0.1.0",
+  "inputs": [
+    "Branch name",
+    "Repository contribution workflow"
+  ],
+  "outputs": [
+    "Compliant branch name following users/{username}/{category}-{entity}-{action}",
+    "Review feedback citing rule IDs"
+  ],
+  "dependencies": [],
+  "applies_to": ["*", ".git/*"]
+}

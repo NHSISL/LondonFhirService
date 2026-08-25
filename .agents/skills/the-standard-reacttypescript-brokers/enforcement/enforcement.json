@@ -1,0 +1,41 @@
+{
+  "skill": "the-standard-reacttypescript-brokers",
+  "enforcement": [
+    {
+      "rule_id": "tsr-brokers-008",
+      "check": "Brokers must not contain business logic (filter, map, reduce, validation)",
+      "action": "block",
+      "patterns": [
+        "\\.filter\\(",
+        "\\.map\\(",
+        "\\.reduce\\(",
+        "if.*\\{.*throw new.*ValidationException"
+      ],
+      "message": "Business logic detected in broker. Move filtering, mapping, or validation to service layer."
+    },
+    {
+      "rule_id": "tsr-brokers-012",
+      "check": "Broker class names must follow pattern {Entity}{Type}Broker",
+      "action": "warn",
+      "pattern": "class\\s+(?!.*Broker\\s*(?:implements|\\{))",
+      "message": "Broker class name should end with 'Broker' (e.g., PatientApiBroker, LocalStorageBroker)."
+    },
+    {
+      "rule_id": "tsr-brokers-017",
+      "check": "Exceptions must not be swallowed",
+      "action": "block",
+      "patterns": [
+        "catch.*\\{[^}]*console\\.(log|error|warn)[^}]*\\}(?!.*throw)",
+        "catch.*\\{[^}]*return\\s+(null|undefined|\\{\\}|\\[\\])"
+      ],
+      "message": "Exception caught but not rethrown. Brokers must propagate failures."
+    },
+    {
+      "rule_id": "tsr-brokers-019",
+      "check": "Brokers must not call other brokers",
+      "action": "block",
+      "pattern": "constructor\\([^)]*Broker[^)]*\\)",
+      "message": "Broker is injecting another broker. Composition happens in services, not brokers."
+    }
+  ]
+}

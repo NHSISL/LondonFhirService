@@ -1,0 +1,11 @@
+{
+  "skill": "the-standard-csharp-comments",
+  "rules": [
+    { "id": "tsc-csharp-comments-001", "severity": "ERROR", "category": "General Usage", "rule": "Comments must only be used to explain what the code itself cannot express." },
+    { "id": "tsc-csharp-comments-002", "severity": "ERROR", "category": "Copyright Blocks", "rule": "Copyright blocks must use the single-line // dashed-border style with exactly two content lines." },
+    { "id": "tsc-csharp-comments-003", "severity": "ERROR", "category": "Copyright Blocks", "rule": "Copyright blocks must not use /* */ block comment syntax." },
+    { "id": "tsc-csharp-comments-004", "severity": "ERROR", "category": "Copyright Blocks", "rule": "Copyright blocks must not use XML <copyright> tag syntax." },
+    { "id": "tsc-csharp-comments-005", "severity": "WARN",  "category": "Method Documentation", "rule": "Inaccessible or complex methods must document: Purposing, Incomes, Outcomes, and Side Effects." },
+    { "id": "tsc-csharp-comments-006", "severity": "ERROR", "category": "Redundant Comments", "rule": "Comments that simply restate what the code already says must be removed." }
+  ]
+}

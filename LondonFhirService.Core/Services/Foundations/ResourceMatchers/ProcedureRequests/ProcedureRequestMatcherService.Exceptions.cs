@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.ProcedureRequests
 {
-    public partial class ProcedureRequestMatcherService
+    internal partial class ProcedureRequestMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 

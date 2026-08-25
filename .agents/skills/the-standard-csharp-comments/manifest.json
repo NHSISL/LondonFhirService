@@ -1,0 +1,11 @@
+{
+  "name": "the-standard-csharp-comments",
+  "version": "0.1.0",
+  "description": "Enforces C# comment conventions: when to comment, copyright block style, and method documentation structure.",
+  "the_standard_version": "v0.8",
+  "skill_version": "v0.1.0",
+  "inputs": ["C# source file"],
+  "outputs": ["Standard-compliant comment feedback"],
+  "dependencies": [],
+  "applies_to": ["*.cs"]
+}

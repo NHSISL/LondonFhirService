@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>London FHIR Service — Solution Dependency Graph</title>
+<style>
+  :root {
+    --bg: #101318;
+    --bg-grid: #1b2029;
+    --panel: #171c24;
+    --panel-border: #2a3140;
+    --text: #e8ecf2;
+    --text-dim: #8b95a7;
+    --text-faint: #5c6678;
+    --node-fill: #1a202b;
+    --node-fill-hi: #232b3a;
+    --row-line: #262e3d;
+    --edge-direct: #4f9cf9;
+    --edge-publish: #34c26b;
+    --edge-subscribe: #b06af5;
+    --edge-circular: #f05252;
+    --edge-dim: #333c4d;
+    --sel: #ffd24a;
+    --sel-soft: rgba(255,210,74,0.20);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+  #app { display: flex; flex-direction: column; height: 100vh; }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 12px 20px; border-bottom: 1px solid var(--panel-border);
+    background: var(--panel); flex-shrink: 0; z-index: 5;
+  }
+  header h1 {
+    font-family: Consolas, "JetBrains Mono", monospace;
+    font-size: 16px; margin: 0; letter-spacing: 0.3px;
+  }
+  header .sub {
+    font-family: Consolas, monospace; font-size: 11px; color: var(--text-dim); margin-top: 2px;
+  }
+  header .sub a { color: var(--edge-direct); text-decoration: none; }
+  header .sub a:hover { text-decoration: underline; }
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-family: Consolas, monospace; font-size: 10.5px; color: var(--text-dim);
+    background: var(--bg); border: 1px solid var(--panel-border);
+    border-radius: 20px; padding: 3px 10px;
+  }
+  .legend-swatch { width: 18px; height: 3px; border-radius: 2px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .controls { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .seg { display: flex; border: 1px solid var(--panel-border); border-radius: 6px; overflow: hidden; }
+  .seg button {
+    font-family: Consolas, monospace; font-size: 10.5px; color: var(--text-dim);
+    background: var(--bg); border: 0; padding: 6px 11px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--panel-border); }
+  .seg button:hover { color: var(--text); }
+  .seg button.active { background: var(--node-fill-hi); color: var(--text); }
+  .controls label {
+    display: flex; align-items: center; gap: 6px;
+    font-family: Consolas, monospace; font-size: 11px; color: var(--text-dim); cursor: pointer;
+    user-select: none;
+  }
+  .controls input[type="checkbox"] { accent-color: var(--edge-direct); }
+  #search {
+    font-family: Consolas, monospace; font-size: 12px; color: var(--text);
+    background: var(--bg); border: 1px solid var(--panel-border);
+    border-radius: 6px; padding: 6px 10px; width: 190px; outline: none;
+  }
+  #search:focus { border-color: var(--edge-direct); }
+  button.hbtn {
+    font-family: Consolas, monospace; font-size: 11.5px; color: var(--text);
+    background: #222937; border: 1px solid #384153; border-radius: 6px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  button.hbtn:hover { background: #2b3446; }
+  #count { font-family: Consolas, monospace; font-size: 11px; color: var(--text-faint); }
+
+  /* ---------- graph ---------- */
+  #graph-wrap { position: relative; flex: 1; overflow: hidden; }
+  svg#graph {
+    display: block; width: 100%; height: 100%;
+    background-color: var(--bg);
+    background-image: radial-gradient(var(--bg-grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  svg text { user-select: none; }
+  .node text { pointer-events: none; }
+  .row-hit { cursor: pointer; }
+  .row-hit:hover { fill: rgba(255,255,255,0.07) !important; }
+  .node { cursor: pointer; }
+  .node rect.body { transition: opacity 0.15s ease; }
+  .proj-box { pointer-events: none; }
+  .edge { transition: opacity 0.15s ease; pointer-events: none; }
+
+  /* ---------- side panel ---------- */
+  #panel {
+    position: absolute; top: 0; right: 0; height: 100%; width: 400px;
+    background: var(--panel); border-left: 1px solid var(--panel-border);
+    box-shadow: -8px 0 24px rgba(0,0,0,0.45);
+    padding: 20px 20px 30px; overflow-y: auto;
+    transform: translateX(100%); transition: transform 0.2s ease;
+  }
+  #panel.open { transform: translateX(0); }
+  #panel h2 { font-family: Consolas, monospace; font-size: 17px; margin: 0 0 4px; word-break: break-word; padding-right: 28px; }
+  #panel .close {
+    position: absolute; top: 14px; right: 14px; background: none; border: none;
+    color: var(--text-dim); font-size: 18px; cursor: pointer;
+  }
+  #panel .close:hover { color: var(--text); }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 2px; }
+  .chip {
+    font-family: Consolas, monospace; font-size: 10.5px; padding: 3px 10px;
+    border-radius: 20px; border: 1px solid; background: var(--bg);
+  }
+  #panel h3 {
+    font-family: Consolas, monospace; font-size: 11px; letter-spacing: 0.8px;
+    text-transform: uppercase; color: var(--text-faint); margin: 20px 0 8px;
+  }
+  .flow-row {
+    display: flex; align-items: baseline; gap: 8px; padding: 5px 0;
+    border-bottom: 1px solid var(--row-line);
+    font-family: Consolas, monospace; font-size: 11.5px;
+  }
+  .flow-kind { flex-shrink: 0; width: 66px; font-size: 10px; text-align: center; border-radius: 4px; padding: 1px 0; }
+  .flow-text { color: var(--text); word-break: break-word; line-height: 1.45; }
+  .flow-text .via { color: var(--text-faint); }
+  .method-li { font-family: Consolas, monospace; font-size: 11.5px; padding: 3px 0; color: #c5cddb; word-break: break-word; }
+  .note { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* search dropdown */
+  #search-box { position: relative; }
+  #search-results {
+    position: absolute; top: calc(100% + 6px); right: 0; width: 300px;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5); overflow: hidden; z-index: 20; display: none;
+  }
+  #search-results .sr {
+    padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--row-line);
+    font-family: Consolas, monospace; font-size: 12px;
+  }
+  #search-results .sr:hover { background: var(--node-fill-hi); }
+  #search-results .sr .sub { font-size: 10px; color: var(--text-faint); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <h1>London FHIR Service — Solution Dependency Graph</h1>
+      <div class="sub">click a method to trace that method's path · click a header to trace the whole component · switch view top-right</div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="controls">
+      <div class="seg" id="view-toggle">
+        <button data-view="single" title="Every component drawn once with its full method surface — all consumers converge on it">single copy</button>
+        <button data-view="duplicated" title="Dependencies duplicated per consumer; each copy shows only the method rows that consumer uses">per consumer</button>
+      </div>
+      <label title="DateTime / Identifier / Logging / Hash brokers">
+        <input type="checkbox" id="toggle-utility"> utility brokers
+      </label>
+      <div id="search-box">
+        <input id="search" type="text" placeholder="search components…" autocomplete="off">
+        <div id="search-results"></div>
+      </div>
+      <button class="hbtn" id="btn-fit">Fit</button>
+      <button class="hbtn" id="btn-reset">Reset</button>
+      <span id="count"></span>
+    </div>
+  </header>
+  <div id="graph-wrap">
+    <svg id="graph"></svg>
+    <div id="panel">
+      <button class="close" id="panel-close">✕</button>
+      <div id="panel-content"></div>
+    </div>
+  </div>
+</div>
+
+<script src="./graph-data.js"></script>
+<script>
+"use strict";
+
+/* =====================================================================
+   London FHIR Service solution dependency graph renderer.
+
+   Reads window.LFS_DATA (see graph-data.js) and renders a left-to-right
+   layered graph: exposers → view/orchestration services → foundations →
+   brokers → client libraries → external services, with dashed project
+   boundary boxes.
+
+   Readability rule (mirrors Documentation\London FHIR Service.drawio): a
+   component's dependencies are DUPLICATED per consumer — one copy of
+   e.g. StorageBroker per consuming service, showing only the method
+   rows that consumer uses — instead of many lines converging on one
+   shared node. Components flagged `shared: true` (client-library and
+   external exposers) are the exception: consumers link to a single
+   copy, showing only the library's public surface.
+
+   Edge colours: blue = direct call, green = event publish,
+   purple = event subscribe, red = publish/subscribe participating in a
+   circular event flow.
+   ===================================================================== */
+
+const DATA = window.LFS_DATA;
+
+/* graph-data.js is a sibling <script src>. If a viewer (or a sandboxed
+   preview pane) blocks it, say so on the page instead of rendering a
+   blank canvas and a console error nobody sees. */
+if (!DATA) {
+  document.getElementById("graph-wrap").innerHTML =
+    '<div style="max-width:640px;margin:80px auto;padding:24px 28px;' +
+    'border:1px solid var(--panel-border);border-radius:10px;' +
+    'background:var(--panel);font-family:Consolas,monospace;font-size:13px;' +
+    'line-height:1.7;color:var(--text-dim)">' +
+    '<div style="color:var(--edge-circular);font-weight:700;margin-bottom:10px">' +
+    'graph-data.js did not load</div>' +
+    'This page reads <code>window.LFS_DATA</code> from <code>./graph-data.js</code> ' +
+    'next to it. Open both files from the same folder — and if your viewer ' +
+    'blocks sibling scripts, serve the folder instead:' +
+    '<pre style="margin:14px 0 0;color:var(--text)">python -m http.server 8731 ' +
+    '--bind 127.0.0.1</pre>' +
+    '<div style="margin-top:6px">then open ' +
+    '<code>http://127.0.0.1:8731/</code></div></div>';
+  throw new Error("LFS_DATA is not defined — graph-data.js failed to load");
+}
+
+const EDGE_COLORS = {
+  direct: cssVar("--edge-direct"),
+  publish: cssVar("--edge-publish"),
+  subscribe: cssVar("--edge-subscribe"),
+  circular: cssVar("--edge-circular"),
+};
+
+const LAYERS = {
+  exposer:       { label: "Exposer",        color: "#4dd0c4" },
+  view:          { label: "View Service",   color: "#7fd7a0" },
+  coordination:  { label: "Coordination",   color: "#f2b64c" },
+  orchestration: { label: "Orchestration",  color: "#f2954c" },
+  processing:    { label: "Processing",     color: "#e8c545" },
+  foundation:    { label: "Foundation",     color: "#5aa9f7" },
+  broker:        { label: "Broker",         color: "#9aa7bd" },
+  client:        { label: "Client Library", color: "#ef86b5" },
+  external:      { label: "External",       color: "#7f8ca1" },
+  registration:  { label: "Registration",   color: "#4dd0c4" },
+};
+
+const PROJECT_COLORS = ["#8fb7e8", "#b7e08f", "#e8c98f", "#e88fa8", "#8fe0d4", "#c39fe8", "#dfe08f", "#a7b3c9"];
+
+const HEADER_H = 40;
+const ROW_H = 21;
+const NODE_PAD_BOTTOM = 6;
+const COL_GAP = 120;
+const V_GAP = 26;
+const SUBTREE_GAP = 60;
+const PROJECT_GAP = 110;
+const PROJ_PAD = 30;
+
+const compById = Object.fromEntries(DATA.components.map(c => [c.id, c]));
+const eventById = Object.fromEntries((DATA.events || []).map(e => [e.id, e]));
+const projById = Object.fromEntries(DATA.projects.map(p => [p.id, p]));
+
+/* ---------------- state ---------------- */
+const state = {
+  showUtility: false,
+  selected: null,      // instance id — whole-component trace
+  selectedRow: null,   // { instId, row } — single-method path trace
+  view: "single",      // "single" = one copy per component | "duplicated" = one per consumer
+  zoom: 1, tx: 60, ty: 40,
+  dragging: false, lastX: 0, lastY: 0, moved: false,
+  instances: [], edges: [], projBoxes: [],
+  decorations: [],     // undo closures for the current selection's styling
+};
+
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+/* =====================================================================
+   1. Circular-event detection (component level).
+   publisher →(event)→ subscriber edges; Tarjan SCC; a pub/sub pair
+   whose publisher & subscriber share a cyclic SCC is circular.
+   ===================================================================== */
+function computeCircularPairs() {
+  const publishersByEvent = {}, subscribersByEvent = {};
+  for (const e of DATA.edges) {
+    if (e.kind === "publish") (publishersByEvent[e.event] ||= new Set()).add(e.from[0]);
+    if (e.kind === "subscribe") (subscribersByEvent[e.event] ||= new Set()).add(e.to[0]);
+  }
+  const adj = {};
+  const nodes = new Set();
+  for (const ev of Object.keys(publishersByEvent)) {
+    for (const p of publishersByEvent[ev]) {
+      nodes.add(p);
+      for (const s of (subscribersByEvent[ev] || [])) {
+        nodes.add(s);
+        (adj[p] ||= new Set()).add(s);
+      }
+    }
+  }
+  let idx = 0;
+  const index = {}, low = {}, onStack = {}, stack = [], sccOf = {};
+  let sccId = 0;
+  function strong(v) {
+    index[v] = low[v] = idx++; stack.push(v); onStack[v] = true;
+    for (const w of (adj[v] || [])) {
+      if (index[w] === undefined) { strong(w); low[v] = Math.min(low[v], low[w]); }
+      else if (onStack[w]) low[v] = Math.min(low[v], index[w]);
+    }
+    if (low[v] === index[v]) {
+      let w;
+      do { w = stack.pop(); onStack[w] = false; sccOf[w] = sccId; } while (w !== v);
+      sccId++;
+    }
+  }
+  for (const v of nodes) if (index[v] === undefined) strong(v);
+
+  const selfLoop = new Set();
+  for (const v of Object.keys(adj)) if (adj[v].has(v)) selfLoop.add(v);
+  const sccSize = {};
+  for (const v of Object.keys(sccOf)) sccSize[sccOf[v]] = (sccSize[sccOf[v]] || 0) + 1;
+
+  const circular = new Set(); // "publisher|subscriber|event"
+  for (const ev of Object.keys(publishersByEvent)) {
+    for (const p of publishersByEvent[ev]) {
+      for (const s of (subscribersByEvent[ev] || [])) {
+        const cyc = (p === s) || (sccOf[p] !== undefined && sccOf[p] === sccOf[s] &&
+                    (sccSize[sccOf[p]] > 1 || selfLoop.has(p)));
+        if (cyc) circular.add(p + "|" + s + "|" + ev);
+      }
+    }
+  }
+  return circular;
+}
+
+/* =====================================================================
+   2. Instance expansion — duplicate dependencies per consumer,
+   link shared (library/external) targets to a single copy.
+   ===================================================================== */
+function isVisibleComp(c) {
+  return state.showUtility || !c.utility;
+}
+
+function nodeWidth(comp, rows) {
+  const titleW = comp.name.length * 8 + 30;
+  const rowW = Math.max(0, ...rows.map(r => r.length)) * 6.6 + 30;
+  return Math.max(230, Math.min(470, Math.max(titleW, rowW)));
+}
+
+function buildDuplicatedInstances() {
+  const instances = [];
+  const visEdges = [];
+  const deferredShared = []; // cross-project edges resolved after all roots exist
+  let seq = 0;
+
+  const subscribeEdges = DATA.edges.filter(e => e.kind === "subscribe" && isVisibleComp(compById[e.to[0]]));
+  const circular = computeCircularPairs();
+
+  const consumed = new Set(DATA.edges.filter(e => e.kind === "direct").map(e => e.to[0]));
+  const rootIds = (DATA.roots && DATA.roots.length)
+    ? DATA.roots.slice()
+    : DATA.components.filter(c => !consumed.has(c.id) && !c.utility).map(c => c.id);
+
+  // compId -> canonical instance; shared edges + subscribe handlers land
+  // here. Root instances win over per-consumer copies.
+  const primaryInstance = {};
+
+  function newInstance(comp, rows, consumerInst) {
+    const inst = {
+      id: "i" + (seq++),
+      comp,
+      rows: rows.slice(),
+      consumer: consumerInst ? consumerInst.id : null,
+      children: [],
+      x: 0, y: 0, w: 0, h: 0,
+    };
+    instances.push(inst);
+    if (!consumerInst || !primaryInstance[comp.id]) primaryInstance[comp.id] = inst;
+    if (consumerInst) consumerInst.children.push(inst);
+    return inst;
+  }
+
+  function orderedRows(comp, wanted) {
+    const set = new Set(wanted);
+    const known = comp.methods.filter(m => set.has(m));
+    const unknown = wanted.filter(m => m && !comp.methods.includes(m));
+    return known.concat(unknown);
+  }
+
+  function expand(inst, path) {
+    const comp = inst.comp;
+
+    // -- direct dependencies grouped per target component
+    const groups = new Map();
+    for (const e of DATA.edges) {
+      if (e.kind !== "direct" || e.from[0] !== comp.id) continue;
+      if (e.from[1] !== null && !inst.rows.includes(e.from[1])) continue;
+      const target = compById[e.to[0]];
+      if (!target || !isVisibleComp(target)) continue;
+      const g = groups.get(target.id) || { methods: [], edges: [] };
+      if (e.to[1] && !g.methods.includes(e.to[1])) g.methods.push(e.to[1]);
+      g.edges.push(e);
+      groups.set(target.id, g);
+    }
+
+    for (const [targetId, g] of groups) {
+      const target = compById[targetId];
+      if (target.shared) {
+        deferredShared.push({ fromInst: inst, targetId, group: g });
+        continue;
+      }
+      if (path.includes(targetId)) {
+        const anc = instances.find(i => i.comp.id === targetId);
+        for (const e of g.edges) visEdges.push({ from: inst, fromRow: e.from[1], to: anc, toRow: e.to[1], kind: "direct", data: e });
+        continue;
+      }
+      // A header-level link (no target method named) shows the target's
+      // full surface so its own dependencies still expand beneath it.
+      const childRows = g.methods.length ? orderedRows(target, g.methods) : target.methods.slice();
+      const child = newInstance(target, childRows, inst);
+      for (const e of g.edges) visEdges.push({ from: inst, fromRow: e.from[1], to: child, toRow: e.to[1], kind: "direct", data: e });
+      expand(child, path.concat(targetId));
+    }
+
+    // -- event publishes → this instance's own EventBroker copy
+    const pubs = DATA.edges.filter(e => e.kind === "publish" && e.from[0] === comp.id && inst.rows.includes(e.from[1]));
+    if (pubs.length) {
+      const eb = getEventBrokerCopy(inst);
+      for (const e of pubs) {
+        const ev = eventById[e.event];
+        if (!ev) continue;
+        if (!eb.rows.includes(ev.publish)) eb.rows.push(ev.publish);
+        (eb.publishesEvents ||= []).push(e.event);
+        const isCirc = [...circular].some(k => k.startsWith(comp.id + "|") && k.endsWith("|" + e.event));
+        visEdges.push({ from: inst, fromRow: e.from[1], to: eb, toRow: ev.publish, kind: "publish", circular: isCirc, data: e });
+      }
+    }
+  }
+
+  function getEventBrokerCopy(inst) {
+    let eb = inst.children.find(c => c.isEventBrokerCopy);
+    if (!eb) {
+      const ebComp = compById[DATA.eventBrokerId || "EventBroker"];
+      eb = newInstance(ebComp, [], inst);
+      eb.isEventBrokerCopy = true;
+      // transport (EventHighway) links are wired after ALL pub/sub rows
+      // are final — see the pass after the subscriptions loop
+    }
+    return eb;
+  }
+
+  // ---- build all root trees
+  for (const rootId of rootIds) {
+    const comp = compById[rootId];
+    if (!comp || !isVisibleComp(comp)) continue;
+    const handlerRows = subscribeEdges.filter(e => e.to[0] === rootId).map(e => e.to[1]);
+    const rows = comp.methods.slice();
+    for (const h of handlerRows) if (h && !rows.includes(h)) rows.push(h);
+    const inst = newInstance(comp, rows, null);
+    inst.isRoot = true;
+    expand(inst, [rootId]);
+  }
+
+  // ---- subscriptions: subscriber's own EventBroker copy → handler rows (purple)
+  for (const se of subscribeEdges) {
+    const ev = eventById[se.event];
+    if (!ev) continue;
+    const subscriberInst = primaryInstance[se.to[0]];
+    if (!subscriberInst) continue;
+    const eb = getEventBrokerCopy(subscriberInst);
+    if (!eb.rows.includes(ev.subscribe)) eb.rows.push(ev.subscribe);
+    // circular when some publisher of this event is in a cycle with this subscriber
+    const isCirc = [...circular].some(k => {
+      const [p, s, evId] = k.split("|");
+      return s === se.to[0] && evId === se.event;
+    });
+    visEdges.push({ from: eb, fromRow: ev.subscribe, to: subscriberInst, toRow: se.to[1], kind: "subscribe", circular: isCirc, data: se });
+  }
+
+  // ---- EventBroker copies talk to their transport; wire these only now
+  // that every copy's publish/subscribe rows are final, so each copy links
+  // exactly the transport methods its own rows use.
+  const ebCompId = DATA.eventBrokerId || "EventBroker";
+  for (const eb of instances.filter(i => i.isEventBrokerCopy)) {
+    const groups = new Map();
+    for (const e of DATA.edges) {
+      if (e.kind !== "direct" || e.from[0] !== ebCompId) continue;
+      if (e.from[1] !== null && !eb.rows.includes(e.from[1])) continue;
+      const target = compById[e.to[0]];
+      if (!target || !target.shared || !isVisibleComp(target)) continue;
+      const g = groups.get(target.id) || { methods: [], edges: [] };
+      if (e.to[1] && !g.methods.includes(e.to[1])) g.methods.push(e.to[1]);
+      g.edges.push(e);
+      groups.set(target.id, g);
+    }
+    for (const [targetId, g] of groups) deferredShared.push({ fromInst: eb, targetId, group: g });
+  }
+
+  // ---- resolve shared (library / external) targets to their single copy.
+  // Every call that names a method on the target's surface gets its own
+  // row-anchored edge; only calls that cannot be mapped to a row collapse
+  // into one header-level edge carrying the method list for the panel.
+  for (const d of deferredShared) {
+    const target = primaryInstance[d.targetId];
+    if (!target) continue;
+    const unresolved = [];
+    for (const e of d.group.edges) {
+      const toRow = e.to[1] && target.rows.includes(e.to[1]) ? e.to[1] : null;
+      if (toRow) {
+        visEdges.push({ from: d.fromInst, fromRow: e.from[1], to: target, toRow, kind: "direct", data: e });
+      } else if (e.to[1]) {
+        if (!unresolved.includes(e.to[1])) unresolved.push(e.to[1]);
+      } else {
+        visEdges.push({ from: d.fromInst, fromRow: e.from[1], to: target, toRow: null, kind: "direct", data: e });
+      }
+    }
+    if (unresolved.length) {
+      visEdges.push({ from: d.fromInst, fromRow: null, to: target, toRow: null, kind: "direct", methods: unresolved, data: d.group.edges[0] });
+    }
+  }
+
+  // ---- size nodes
+  for (const inst of instances) {
+    inst.w = nodeWidth(inst.comp, inst.rows);
+    inst.h = HEADER_H + inst.rows.length * ROW_H + (inst.rows.length ? NODE_PAD_BOTTOM : 0);
+  }
+  return { instances, edges: visEdges };
+}
+
+/* ---------------------------------------------------------------------
+   SINGLE-COPY builder: no duplication at all. Every component is drawn
+   once with its full method surface and every consumer's flow converges
+   on that one copy, so `shared` in the data is irrelevant here —
+   everything behaves as shared.
+   --------------------------------------------------------------------- */
+function buildSingleCopyInstances() {
+  const instances = [];
+  const visEdges = [];
+  const instByComp = {};
+  const circular = computeCircularPairs();
+  const vis = (id) => { const c = compById[id]; return c && isVisibleComp(c); };
+
+  for (const comp of DATA.components) {
+    if (!isVisibleComp(comp)) continue;
+    const inst = { id: "c_" + comp.id, comp, rows: comp.methods.slice(), x: 0, y: 0, w: 0, h: 0 };
+    instances.push(inst);
+    instByComp[comp.id] = inst;
+  }
+  const ensureRow = (inst, row) => { if (row && !inst.rows.includes(row)) inst.rows.push(row); };
+
+  const eb = instByComp[DATA.eventBrokerId || "EventBroker"];
+
+  // publishes → the single EventBroker's publish rows
+  for (const e of DATA.edges) {
+    if (e.kind !== "publish" || !eb || !vis(e.from[0])) continue;
+    const ev = eventById[e.event];
+    if (!ev) continue;
+    const from = instByComp[e.from[0]];
+    ensureRow(from, e.from[1]);
+    ensureRow(eb, ev.publish);
+    const isCirc = [...circular].some(k => k.startsWith(e.from[0] + "|") && k.endsWith("|" + e.event));
+    visEdges.push({ from, fromRow: e.from[1], to: eb, toRow: ev.publish, kind: "publish", circular: isCirc, data: e });
+  }
+
+  // subscriptions → from the single EventBroker's subscribe rows to handlers
+  for (const e of DATA.edges) {
+    if (e.kind !== "subscribe" || !eb || !vis(e.to[0])) continue;
+    const ev = eventById[e.event];
+    if (!ev) continue;
+    const to = instByComp[e.to[0]];
+    ensureRow(eb, ev.subscribe);
+    ensureRow(to, e.to[1]);
+    const isCirc = [...circular].some(k => {
+      const [p, s, evId] = k.split("|");
+      return s === e.to[0] && evId === e.event;
+    });
+    visEdges.push({ from: eb, fromRow: ev.subscribe, to, toRow: e.to[1], kind: "subscribe", circular: isCirc, data: e });
+  }
+
+  // direct calls — one line per declared call, method row to method row
+  const seen = new Set();
+  for (const e of DATA.edges) {
+    if (e.kind !== "direct" || !vis(e.from[0]) || !vis(e.to[0])) continue;
+    const key = e.from[0] + "|" + (e.from[1] ?? "") + "→" + e.to[0] + "|" + (e.to[1] ?? "");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const from = instByComp[e.from[0]], to = instByComp[e.to[0]];
+    ensureRow(from, e.from[1]);
+    ensureRow(to, e.to[1]);
+    visEdges.push({ from, fromRow: e.from[1], to, toRow: e.to[1], kind: "direct", data: e });
+  }
+
+  for (const inst of instances) {
+    inst.w = nodeWidth(inst.comp, inst.rows);
+    inst.h = HEADER_H + inst.rows.length * ROW_H + (inst.rows.length ? NODE_PAD_BOTTOM : 0);
+  }
+  return { instances, edges: visEdges };
+}
+
+/* =====================================================================
+   3. Layout — explicit columns, per-column cursors, parents centred
+   on their children.
+   ===================================================================== */
+function colOf(comp) {
+  return comp.col !== undefined ? comp.col : 0;
+}
+
+function layoutTrees(instances) {
+  const usedCols = [...new Set(instances.map(i => colOf(i.comp)))].sort((a, b) => a - b);
+  const colX = {}, colW = {};
+  for (const c of usedCols) colW[c] = Math.max(...instances.filter(i => colOf(i.comp) === c).map(i => i.w));
+  let x = 0;
+  for (const c of usedCols) { colX[c] = x; x += colW[c] + COL_GAP; }
+
+  const cursor = {};
+  for (const c of usedCols) cursor[c] = 0;
+
+  function place(inst) {
+    const col = colOf(inst.comp);
+    inst.x = colX[col];
+    for (const ch of inst.children) place(ch);
+    if (inst.children.length) {
+      const top = Math.min(...inst.children.map(c => c.y));
+      const bottom = Math.max(...inst.children.map(c => c.y + c.h));
+      inst.y = Math.max((top + bottom) / 2 - inst.h / 2, cursor[col]);
+    } else {
+      inst.y = cursor[col];
+    }
+    cursor[col] = inst.y + inst.h + V_GAP;
+  }
+
+  function subtreeCols(inst, set) {
+    set.add(colOf(inst.comp));
+    for (const ch of inst.children) subtreeCols(ch, set);
+    return set;
+  }
+
+  function subtreeInstances(inst, arr) {
+    arr.push(inst);
+    for (const ch of inst.children) subtreeInstances(ch, arr);
+    return arr;
+  }
+
+  // Different projects can share columns (e.g. the client libraries all
+  // start at the same column). A project's dashed box spans its full
+  // column RANGE, so before a project's run of trees begins, align every
+  // column in that range to a common baseline with headroom — and after
+  // placing the run, seal the range so nothing later can be placed inside
+  // the finished box's vertical extent.
+  const rootList = instances.filter(i => i.isRoot);
+  let idx2 = 0;
+  while (idx2 < rootList.length) {
+    const project = rootList[idx2].comp.project;
+    const run = [];
+    while (idx2 < rootList.length && rootList[idx2].comp.project === project) run.push(rootList[idx2++]);
+    const cols = new Set();
+    for (const root of run) subtreeCols(root, cols);
+    const minC = Math.min(...cols), maxC = Math.max(...cols);
+    const rangeCols = usedCols.filter(c => c >= minC && c <= maxC);
+    const baseline = Math.max(...rangeCols.map(c => cursor[c]));
+    for (const c of rangeCols) cursor[c] = baseline > 0 ? baseline + PROJECT_GAP : baseline;
+    for (const root of run) {
+      place(root);
+      cursor[colOf(root.comp)] += SUBTREE_GAP - V_GAP;
+    }
+    const runInsts = [];
+    for (const root of run) subtreeInstances(root, runInsts);
+    const runBottom = Math.max(...runInsts.map(i => i.y + i.h));
+    for (const c of rangeCols) cursor[c] = Math.max(cursor[c], runBottom + V_GAP);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   SINGLE-COPY layout: projects become vertical bands in DATA.projects
+   order, and inside a column components sort by the barycenter of their
+   already-placed callers to keep the converging lines from crossing.
+   --------------------------------------------------------------------- */
+function layoutBands(instances, edges) {
+  const usedCols = [...new Set(instances.map(i => colOf(i.comp)))].sort((a, b) => a - b);
+  const colX = {}, colW = {};
+  for (const c of usedCols) colW[c] = Math.max(...instances.filter(i => colOf(i.comp) === c).map(i => i.w));
+  let x = 0;
+  for (const c of usedCols) { colX[c] = x; x += colW[c] + COL_GAP; }
+
+  const cursor = {};
+  for (const c of usedCols) cursor[c] = 0;
+
+  const placed = new Set();
+  const inEdges = new Map();
+  for (const e of edges) {
+    if (!inEdges.has(e.to.id)) inEdges.set(e.to.id, []);
+    inEdges.get(e.to.id).push(e);
+  }
+  const declIndex = new Map(instances.map((inst, n) => [inst.id, n]));
+
+  for (const proj of DATA.projects) {
+    const members = instances.filter(i => i.comp.project === proj.id);
+    if (!members.length) continue;
+    const cols = [...new Set(members.map(i => colOf(i.comp)))].sort((a, b) => a - b);
+    const rangeCols = usedCols.filter(c => c >= cols[0] && c <= cols[cols.length - 1]);
+    const baseline = Math.max(...rangeCols.map(c => cursor[c]));
+    for (const c of rangeCols) cursor[c] = baseline > 0 ? baseline + PROJECT_GAP : baseline;
+
+    for (const c of cols) {
+      const colMembers = members.filter(i => colOf(i.comp) === c);
+      const bary = new Map();
+      for (const m of colMembers) {
+        const ys = (inEdges.get(m.id) || [])
+          .filter(e => placed.has(e.from.id))
+          .map(e => rowY(e.from, e.fromRow));
+        if (ys.length) bary.set(m.id, ys.reduce((a, b) => a + b, 0) / ys.length);
+      }
+      colMembers.sort((a, b) => {
+        const ba = bary.get(a.id), bb = bary.get(b.id);
+        if (ba !== undefined && bb !== undefined) return ba - bb;
+        if (ba !== undefined) return -1;
+        if (bb !== undefined) return 1;
+        return declIndex.get(a.id) - declIndex.get(b.id);
+      });
+      for (const m of colMembers) {
+        m.x = colX[c];
+        m.y = cursor[c];
+        cursor[c] = m.y + m.h + V_GAP;
+        placed.add(m.id);
+      }
+    }
+    // seal the project's column range so the next project's band starts
+    // below this box
+    const bottom = Math.max(...members.map(i => i.y + i.h));
+    for (const c of rangeCols) cursor[c] = Math.max(cursor[c], bottom + V_GAP);
+  }
+}
+
+/* =====================================================================
+   4. Project boundary boxes — one dashed box per vertically contiguous
+   cluster of instances belonging to the same project.
+   ===================================================================== */
+function computeProjectBoxes(instances) {
+  const boxes = [];
+  const byProj = new Map();
+  for (const i of instances) {
+    if (!byProj.has(i.comp.project)) byProj.set(i.comp.project, []);
+    byProj.get(i.comp.project).push(i);
+  }
+  let colorIdx = 0;
+  for (const [projId, members] of byProj) {
+    const proj = projById[projId];
+    if (!proj) continue;
+    const color = PROJECT_COLORS[colorIdx++ % PROJECT_COLORS.length];
+    const sorted = members.slice().sort((a, b) => a.y - b.y);
+    const clusters = [];
+    for (const m of sorted) {
+      const last = clusters[clusters.length - 1];
+      if (last && m.y - last.maxY < 300) {
+        last.members.push(m);
+        last.maxY = Math.max(last.maxY, m.y + m.h);
+      } else {
+        clusters.push({ members: [m], maxY: m.y + m.h });
+      }
+    }
+    for (const cl of clusters) {
+      const minX = Math.min(...cl.members.map(m => m.x)) - PROJ_PAD;
+      const maxX = Math.max(...cl.members.map(m => m.x + m.w)) + PROJ_PAD;
+      const minY = Math.min(...cl.members.map(m => m.y)) - PROJ_PAD - 10;
+      const maxY = Math.max(...cl.members.map(m => m.y + m.h)) + PROJ_PAD;
+      boxes.push({ proj, color, x: minX, y: minY, w: maxX - minX, h: maxY - minY });
+    }
+  }
+  return boxes;
+}
+
+/* =====================================================================
+   5. Rendering (plain SVG DOM)
+   ===================================================================== */
+const svg = document.getElementById("graph");
+const SVGNS = "http://www.w3.org/2000/svg";
+
+function el(name, attrs, parent) {
+  const n = document.createElementNS(SVGNS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+function rowY(inst, row) {
+  if (!row) return inst.y + HEADER_H / 2;
+  const idx = inst.rows.indexOf(row);
+  if (idx < 0) return inst.y + HEADER_H / 2;
+  return inst.y + HEADER_H + idx * ROW_H + ROW_H / 2;
+}
+
+function edgePath(e) {
+  const x1 = e.from.x + e.from.w, y1 = rowY(e.from, e.fromRow);
+  const x2 = e.to.x, y2 = rowY(e.to, e.toRow);
+  if (x2 >= x1 + 20) {
+    const dx = Math.max(40, (x2 - x1) * 0.42);
+    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+  }
+  // backward / same-column edge: arc out and back
+  return `M ${x1} ${y1} C ${x1 + 110} ${y1}, ${x2 - 110} ${y2}, ${x2} ${y2}`;
+}
+
+function edgeColor(e) {
+  if (e.circular) return EDGE_COLORS.circular;
+  return EDGE_COLORS[e.kind];
+}
+function edgeMarker(e) {
+  return `url(#arrow-${e.circular ? "circular" : e.kind})`;
+}
+
+let gMain;
+
+function render() {
+  svg.innerHTML = "";
+  state.decorations = [];   // the elements they point at are about to go
+  const defs = el("defs", {}, svg);
+  for (const [key, color] of Object.entries(EDGE_COLORS)) {
+    const m = el("marker", { id: "arrow-" + key, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6.5, markerHeight: 6.5, orient: "auto-start-reverse" }, defs);
+    el("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: color }, m);
+  }
+  const mDim = el("marker", { id: "arrow-dim", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 6.5, markerHeight: 6.5, orient: "auto-start-reverse" }, defs);
+  el("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: cssVar("--edge-dim") }, mDim);
+
+  gMain = el("g", { transform: panZoom() }, svg);
+
+  for (const b of state.projBoxes) {
+    const g = el("g", { class: "proj-box" }, gMain);
+    el("rect", {
+      x: b.x, y: b.y, width: b.w, height: b.h, rx: 14,
+      fill: b.color + "08", stroke: b.color, "stroke-width": 1.4,
+      "stroke-dasharray": "10 7", opacity: 0.8,
+    }, g);
+    const label = el("text", {
+      x: b.x + 16, y: b.y + 24, fill: b.color, "font-size": 14,
+      "font-family": "Consolas, monospace", "font-weight": "700", opacity: 0.95,
+    }, g);
+    label.textContent = b.proj.name + (b.proj.kind === "external" ? "  ·  external" : b.proj.kind === "library" ? "  ·  library" : "");
+  }
+
+  const gEdges = el("g", {}, gMain);
+  for (const e of state.edges) {
+    e.el = el("path", {
+      class: "edge", d: edgePath(e), fill: "none",
+      stroke: edgeColor(e), "stroke-width": 1.8, opacity: 0.8,
+      "marker-end": edgeMarker(e),
+    }, gEdges);
+  }
+
+  for (const inst of state.instances) {
+    const layer = LAYERS[inst.comp.layer] || LAYERS.broker;
+    const g = el("g", { class: "node", "data-id": inst.id }, gMain);
+    inst.el = g;
+    inst.bodyEl = el("rect", {
+      class: "body", x: inst.x, y: inst.y, width: inst.w, height: inst.h, rx: 8,
+      fill: "var(--node-fill)", stroke: layer.color, "stroke-width": 1.5,
+    }, g);
+    const title = el("text", {
+      x: inst.x + 12, y: inst.y + 17, fill: "var(--text)", "font-size": 12.5,
+      "font-family": "Consolas, monospace", "font-weight": 700,
+    }, g);
+    title.textContent = truncate(inst.comp.name, inst.w - 24, 12.5);
+    inst.titleEl = title;
+    const sub = el("text", {
+      x: inst.x + 12, y: inst.y + 31, fill: layer.color, "font-size": 9.5,
+      "font-family": "Consolas, monospace",
+    }, g);
+    const projName = projById[inst.comp.project] ? projById[inst.comp.project].name : inst.comp.project;
+    sub.textContent = layer.label + " · " + projName;
+    if (inst.rows.length) {
+      el("line", { x1: inst.x, y1: inst.y + HEADER_H - 2, x2: inst.x + inst.w, y2: inst.y + HEADER_H - 2, stroke: "var(--row-line)", "stroke-width": 1 }, g);
+    }
+    inst.rowHits = {};
+    inst.rowTexts = {};
+    inst.rows.forEach((row, i) => {
+      const y = inst.y + HEADER_H + i * ROW_H;
+      if (i > 0) el("line", { x1: inst.x + 8, y1: y, x2: inst.x + inst.w - 8, y2: y, stroke: "var(--row-line)", "stroke-width": 0.7 }, g);
+      const t = el("text", {
+        x: inst.x + 14, y: y + ROW_H / 2 + 3.5, fill: "#c5cddb",
+        "font-size": 10.5, "font-family": "Consolas, monospace",
+      }, g);
+      t.textContent = truncate(row, inst.w - 28, 10.5);
+      inst.rowTexts[row] = t;
+      // invisible full-width hit target so a click selects the METHOD,
+      // not the whole component
+      const hit = el("rect", { class: "row-hit", x: inst.x + 1, y, width: inst.w - 2, height: ROW_H, fill: "transparent" }, g);
+      const tt = el("title", {}, hit);
+      tt.textContent = row + "  (click to trace this method)";
+      hit.addEventListener("click", (ev) => { ev.stopPropagation(); selectRow(inst.id, row); });
+      inst.rowHits[row] = hit;
+    });
+    g.addEventListener("click", (ev) => { ev.stopPropagation(); select(inst.id); });
+  }
+
+  applyHighlight();
+}
+
+function truncate(text, maxPx, fontSize) {
+  const charW = fontSize * 0.62;
+  const maxChars = Math.floor(maxPx / charW);
+  if (text.length <= maxChars) return text;
+  return text.slice(0, maxChars - 1) + "…";
+}
+
+function panZoom() {
+  return `translate(${state.tx},${state.ty}) scale(${state.zoom})`;
+}
+function applyTransform() {
+  if (gMain) gMain.setAttribute("transform", panZoom());
+}
+
+/* ---------------- highlight & selection ---------------- */
+/* Forward + backward slice from one method row.
+   Downstream: follow edges leaving the row (a header-level edge — no
+   named row — is followed conservatively, since collapsed shared links
+   lose method fidelity). Upstream: follow edges arriving at the row.
+   Returns the Set of edges on the traced path. */
+function tracePath(instId, row) {
+  const outBy = new Map(), inBy = new Map();
+  for (const e of state.edges) {
+    if (!outBy.has(e.from.id)) outBy.set(e.from.id, []);
+    outBy.get(e.from.id).push(e);
+    if (!inBy.has(e.to.id)) inBy.set(e.to.id, []);
+    inBy.get(e.to.id).push(e);
+  }
+  const key = (id, r) => id + "␟" + (r ?? "");
+  const pathEdges = new Set();
+
+  const seenDown = new Set();
+  const downQ = [[instId, row]];
+  while (downQ.length) {
+    const [id, r] = downQ.pop();
+    const k = key(id, r);
+    if (seenDown.has(k)) continue;
+    seenDown.add(k);
+    for (const e of (outBy.get(id) || [])) {
+      if (r !== null && e.fromRow !== null && e.fromRow !== r) continue;
+      pathEdges.add(e);
+      downQ.push([e.to.id, e.toRow ?? null]);
+    }
+  }
+
+  const seenUp = new Set();
+  const upQ = [[instId, row]];
+  while (upQ.length) {
+    const [id, r] = upQ.pop();
+    const k = key(id, r);
+    if (seenUp.has(k)) continue;
+    seenUp.add(k);
+    for (const e of (inBy.get(id) || [])) {
+      if (r !== null && e.toRow !== null && e.toRow !== r) continue;
+      pathEdges.add(e);
+      upQ.push([e.from.id, e.fromRow ?? null]);
+    }
+  }
+  return pathEdges;
+}
+
+function styleEdges(isOn) {
+  for (const e of state.edges) {
+    const on = isOn(e);
+    e.el.setAttribute("opacity", on ? 1 : 0.07);
+    e.el.setAttribute("stroke-width", on ? 2.6 : 1.4);
+    e.el.setAttribute("stroke", on ? edgeColor(e) : cssVar("--edge-dim"));
+    e.el.setAttribute("marker-end", on ? edgeMarker(e) : "url(#arrow-dim)");
+  }
+}
+
+/* ---- selection decorations -------------------------------------------
+   Extra styling layered on top of the base render for the current
+   selection. Every change records its own undo, so clearing is
+   O(decorated) rather than O(every row) — the duplicated view can hold
+   several thousand rows and this runs on each click.
+   --------------------------------------------------------------------- */
+function clearDecorations() {
+  // LIFO. A row can be decorated twice — the path tint, then the selection
+  // band on top — and the later undo captured the earlier one's value.
+  for (let i = state.decorations.length - 1; i >= 0; i--) state.decorations[i]();
+  state.decorations = [];
+}
+
+function decorate(elm, attrs, text) {
+  const prev = {};
+  for (const k in attrs) prev[k] = elm.getAttribute(k);
+  const prevText = text === undefined ? undefined : elm.textContent;
+  for (const k in attrs) elm.setAttribute(k, attrs[k]);
+  if (text !== undefined) elm.textContent = text;
+  state.decorations.push(() => {
+    for (const k in prev) {
+      if (prev[k] === null) elm.removeAttribute(k);
+      else elm.setAttribute(k, prev[k]);
+    }
+    if (prevText !== undefined) elm.textContent = prevText;
+  });
+}
+
+/* faint tint on every method row the traced path passes through */
+function tintPathRows(pathEdges) {
+  for (const e of pathEdges) {
+    const f = e.fromRow && e.from.rowHits && e.from.rowHits[e.fromRow];
+    if (f) decorate(f, { fill: "rgba(79,156,249,0.10)" });
+    const t = e.toRow && e.to.rowHits && e.to.rowHits[e.toRow];
+    if (t) decorate(t, { fill: "rgba(79,156,249,0.10)" });
+  }
+}
+
+/* the selected node — amber outline and lifted fill; amber title too when
+   the whole component (rather than one of its rows) is what is selected */
+function markSelectedNode(inst, emphasiseTitle) {
+  if (!inst || !inst.bodyEl) return;
+  decorate(inst.bodyEl, {
+    stroke: cssVar("--sel"), "stroke-width": 3, fill: "var(--node-fill-hi)",
+  });
+  if (emphasiseTitle && inst.titleEl) {
+    decorate(inst.titleEl,
+      { fill: cssVar("--sel"), "font-size": 14.5, "font-weight": 800 },
+      truncate(inst.comp.name, inst.w - 24, 14.5));
+  }
+}
+
+/* the selected method row — amber, bigger, bolder, on an amber band */
+function markSelectedRow(inst, row) {
+  if (!inst) return;
+  const hit = inst.rowHits && inst.rowHits[row];
+  if (hit) decorate(hit, { fill: cssVar("--sel-soft") });
+  const txt = inst.rowTexts && inst.rowTexts[row];
+  if (txt) decorate(txt,
+    { fill: cssVar("--sel"), "font-size": 12.5, "font-weight": 700 },
+    truncate(row, inst.w - 28, 12.5));
+}
+
+function applyHighlight() {
+  clearDecorations();
+
+  // ---- single-method path trace
+  if (state.selectedRow) {
+    const { instId, row } = state.selectedRow;
+    const pathEdges = tracePath(instId, row);
+    const lit = new Set([instId]);
+    for (const e of pathEdges) { lit.add(e.from.id); lit.add(e.to.id); }
+    styleEdges(e => pathEdges.has(e));
+    for (const i of state.instances) i.el.setAttribute("opacity", lit.has(i.id) ? 1 : 0.14);
+    tintPathRows(pathEdges);
+    const selInst = state.instances.find(i => i.id === instId);
+    markSelectedNode(selInst, false);
+    markSelectedRow(selInst, row);
+    return;
+  }
+
+  // ---- nothing selected: back to the plain view
+  const sel = state.selected ? state.instances.find(i => i.id === state.selected) : null;
+  if (!sel) {
+    for (const e of state.edges) {
+      e.el.setAttribute("opacity", 0.8);
+      e.el.setAttribute("stroke", edgeColor(e));
+      e.el.setAttribute("stroke-width", 1.8);
+      e.el.setAttribute("marker-end", edgeMarker(e));
+    }
+    for (const i of state.instances) i.el.setAttribute("opacity", 1);
+    return;
+  }
+
+  // ---- whole-component trace: the same forward + backward slice a method
+  // row gets, seeded from EVERY row of the selected copy at once (a null
+  // row makes tracePath follow them all). Selecting a header therefore
+  // lights the component's full fan-out, not just its first hop.
+  const pathEdges = tracePath(sel.id, null);
+  const lit = new Set([sel.id]);
+  for (const e of pathEdges) { lit.add(e.from.id); lit.add(e.to.id); }
+  const copies = new Set(state.instances.filter(i => i.comp.id === sel.comp.id).map(i => i.id));
+
+  styleEdges(e => pathEdges.has(e));
+  for (const i of state.instances) {
+    i.el.setAttribute("opacity", lit.has(i.id) ? 1 : (copies.has(i.id) ? 0.5 : 0.14));
+  }
+  tintPathRows(pathEdges);
+  markSelectedNode(sel, true);
+}
+
+function select(instId) {
+  state.selectedRow = null;
+  state.selected = state.selected === instId ? null : instId;
+  applyHighlight();
+  renderPanel();
+}
+
+function selectRow(instId, row) {
+  const cur = state.selectedRow;
+  if (cur && cur.instId === instId && cur.row === row) {
+    state.selectedRow = null;
+  } else {
+    state.selectedRow = { instId, row };
+    state.selected = null;
+  }
+  applyHighlight();
+  renderPanel();
+}
+
+function clearSelection() {
+  state.selected = null;
+  state.selectedRow = null;
+  applyHighlight();
+  renderPanel();
+}
+
+function renderPanel() {
+  const panel = document.getElementById("panel");
+  const content = document.getElementById("panel-content");
+
+  // ---- single-method panel
+  if (state.selectedRow) {
+    const { instId, row } = state.selectedRow;
+    const inst = state.instances.find(i => i.id === instId);
+    if (!inst) { panel.classList.remove("open"); return; }
+    const comp = inst.comp;
+    const layer = LAYERS[comp.layer] || LAYERS.broker;
+    const proj = projById[comp.project];
+    const pathEdges = tracePath(instId, row);
+    const pathComps = new Set();
+    for (const e of pathEdges) { pathComps.add(e.from.id); pathComps.add(e.to.id); }
+    const inFlows = state.edges.filter(e => e.to.id === instId && (e.toRow === row || e.toRow === null));
+    const outFlows = state.edges.filter(e => e.from.id === instId && (e.fromRow === row || e.fromRow === null));
+    const kindChip = (e) => {
+      const color = edgeColor(e);
+      return `<span class="flow-kind" style="color:${color};border:1px solid ${color}">${e.circular ? "circular" : e.kind}</span>`;
+    };
+    content.innerHTML = `
+      <h2>${esc(row)}</h2>
+      <div class="chips">
+        <span class="chip" style="color:${layer.color};border-color:${layer.color}">${esc(comp.name)}</span>
+        <span class="chip" style="color:var(--text-dim);border-color:var(--panel-border)">${esc(proj ? proj.name : comp.project)}</span>
+      </div>
+      <p class="note">Traced path: ${pathEdges.size} flows across ${pathComps.size} components (upstream + downstream of this method).</p>
+      <p class="note"><a href="#" id="panel-whole" style="color:var(--edge-direct)">Show the whole component instead</a></p>
+      <h3>Into this method (${inFlows.length})</h3>
+      ${inFlows.map(e => `<div class="flow-row">${kindChip(e)}<div class="flow-text">${esc(e.from.comp.name)}${e.fromRow ? "." + esc(e.fromRow) : ""}</div></div>`).join("") || `<div class="note">none</div>`}
+      <h3>Out of this method (${outFlows.length})</h3>
+      ${outFlows.map(e => `<div class="flow-row">${kindChip(e)}<div class="flow-text">${esc(e.to.comp.name)}${e.toRow ? "." + esc(e.toRow) : ""}${e.methods ? ` <span class="via">(${e.methods.map(esc).join(", ")})</span>` : ""}</div></div>`).join("") || `<div class="note">none</div>`}
+    `;
+    content.querySelector("#panel-whole").addEventListener("click", (ev) => { ev.preventDefault(); select(instId); });
+    panel.classList.add("open");
+    return;
+  }
+
+  const sel = state.selected ? state.instances.find(i => i.id === state.selected) : null;
+  if (!sel) { panel.classList.remove("open"); return; }
+  const comp = sel.comp;
+  const layer = LAYERS[comp.layer] || LAYERS.broker;
+  const proj = projById[comp.project];
+  const copies = state.instances.filter(i => i.comp.id === comp.id).length;
+
+  const inFlows = state.edges.filter(e => e.to.id === sel.id);
+  const outFlows = state.edges.filter(e => e.from.id === sel.id);
+  const tracedEdges = tracePath(sel.id, null);
+  const tracedNodes = new Set();
+  for (const e of tracedEdges) { tracedNodes.add(e.from.id); tracedNodes.add(e.to.id); }
+
+  const kindChip = (e) => {
+    const color = edgeColor(e);
+    const label = e.circular ? "circular" : e.kind;
+    return `<span class="flow-kind" style="color:${color};border:1px solid ${color}">${label}</span>`;
+  };
+  const flowRow = (e, dir) => {
+    const other = dir === "in" ? e.from : e.to;
+    const otherRow = dir === "in" ? e.fromRow : e.toRow;
+    const myRow = dir === "in" ? e.toRow : e.fromRow;
+    const methods = e.methods ? ` <span class="via">(${e.methods.map(esc).join(", ")})</span>` : "";
+    const left = dir === "in"
+      ? `${esc(other.comp.name)}${otherRow ? "." + esc(otherRow) : ""} <span class="via">→</span> ${myRow ? esc(myRow) : "·"}`
+      : `${myRow ? esc(myRow) : "·"} <span class="via">→</span> ${esc(other.comp.name)}${otherRow ? "." + esc(otherRow) : ""}`;
+    return `<div class="flow-row">${kindChip(e)}<div class="flow-text">${left}${methods}</div></div>`;
+  };
+
+  content.innerHTML = `
+    <h2>${esc(comp.name)}</h2>
+    <div class="chips">
+      <span class="chip" style="color:${layer.color};border-color:${layer.color}">${layer.label}</span>
+      <span class="chip" style="color:var(--text-dim);border-color:var(--panel-border)">${esc(proj ? proj.name : comp.project)}</span>
+      ${copies > 1 ? `<span class="chip" style="color:var(--text-dim);border-color:var(--panel-border)">${copies} copies in view</span>` : ""}
+      ${state.view === "duplicated" && comp.shared ? `<span class="chip" style="color:var(--text-dim);border-color:var(--panel-border)">shared — not duplicated</span>` : ""}
+    </div>
+    ${comp.description ? `<p class="note">${esc(comp.description)}</p>` : ""}
+    <p class="note">Traced path: ${tracedEdges.size} flows across ${tracedNodes.size} nodes (upstream + downstream of this component).</p>
+    <h3>Flows in (${inFlows.length})</h3>
+    ${inFlows.map(e => flowRow(e, "in")).join("") || `<div class="note">none</div>`}
+    <h3>Flows out (${outFlows.length})</h3>
+    ${outFlows.map(e => flowRow(e, "out")).join("") || `<div class="note">none</div>`}
+    <h3>Methods${state.view === "duplicated" ? " in this copy" : ""} (${sel.rows.length})</h3>
+    ${sel.rows.map(m => `<div class="method-li">${esc(m)}</div>`).join("") || `<div class="note">—</div>`}
+  `;
+  panel.classList.add("open");
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+/* ---------------- fit / rebuild ---------------- */
+function fit() {
+  const wrap = document.getElementById("graph-wrap");
+  const rect = wrap.getBoundingClientRect();
+  if (!state.instances.length) return;
+  const items = state.projBoxes.length ? state.projBoxes : state.instances;
+  const minX = Math.min(...items.map(b => b.x));
+  const maxX = Math.max(...items.map(b => b.x + b.w));
+  const minY = Math.min(...items.map(b => b.y));
+  const maxY = Math.max(...items.map(b => b.y + b.h));
+  const pad = 40;
+  const scale = Math.min((rect.width - pad * 2) / (maxX - minX), (rect.height - pad * 2) / (maxY - minY), 1.25);
+  state.zoom = Math.max(0.04, scale);
+  state.tx = rect.width / 2 - (minX + maxX) / 2 * state.zoom;
+  state.ty = rect.height / 2 - (minY + maxY) / 2 * state.zoom;
+  applyTransform();
+}
+
+function rebuild() {
+  const single = state.view === "single";
+  const { instances, edges } = single ? buildSingleCopyInstances() : buildDuplicatedInstances();
+  state.instances = instances;
+  state.edges = edges;
+  if (single) layoutBands(instances, edges); else layoutTrees(instances);
+  state.projBoxes = computeProjectBoxes(instances);
+  render();
+  document.getElementById("count").textContent =
+    `${instances.length} ${single ? "components" : "nodes"} · ${edges.length} flows`;
+}
+
+/* Switching view rebuilds from scratch, so instance ids change. Carry the
+   selection across by component id (and method row) rather than dropping
+   the reader back at the top of a 24 000px graph. */
+function setView(view) {
+  if (view === state.view) return;
+  const at = (id) => state.instances.find(i => i.id === id);
+  const keep = state.selectedRow
+    ? { compId: (at(state.selectedRow.instId) || {}).comp && at(state.selectedRow.instId).comp.id, row: state.selectedRow.row }
+    : state.selected
+      ? { compId: (at(state.selected) || {}).comp && at(state.selected).comp.id, row: null }
+      : null;
+
+  state.view = view;
+  state.selected = null;
+  state.selectedRow = null;
+  for (const b of document.querySelectorAll("#view-toggle button"))
+    b.classList.toggle("active", b.dataset.view === view);
+  if (location.hash.slice(1) !== view) history.replaceState(null, "", "#" + view);
+
+  rebuild();
+  buildLegend();
+  if (keep && keep.compId) {
+    const inst = state.instances.find(i => i.comp.id === keep.compId && i.isRoot)
+             || state.instances.find(i => i.comp.id === keep.compId);
+    if (inst) {
+      if (keep.row && inst.rows.includes(keep.row)) selectRow(inst.id, keep.row);
+      else select(inst.id);
+    }
+  }
+  renderPanel();
+  fit();
+}
+
+/* ---------------- legend ---------------- */
+function buildLegend() {
+  const legend = document.getElementById("legend");
+  const edgeKinds = [
+    ["direct call", EDGE_COLORS.direct],
+    ["event publish", EDGE_COLORS.publish],
+    ["event subscribe", EDGE_COLORS.subscribe],
+    ["circular event", EDGE_COLORS.circular],
+  ];
+  legend.innerHTML =
+    edgeKinds.map(([label, color]) =>
+      `<span class="legend-item"><span class="legend-swatch" style="background:${color}"></span>${label}</span>`).join("") +
+    [...new Set(state.instances.map(i => i.comp.layer))]
+      .filter(k => LAYERS[k])
+      .map(k => `<span class="legend-item"><span class="legend-dot" style="background:${LAYERS[k].color}"></span>${LAYERS[k].label}</span>`).join("");
+}
+
+/* ---------------- interactions ---------------- */
+svg.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const rect = svg.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  const zoom = Math.min(2.5, Math.max(0.03, state.zoom * delta));
+  const wx = (mx - state.tx) / state.zoom, wy = (my - state.ty) / state.zoom;
+  state.tx = mx - wx * zoom; state.ty = my - wy * zoom; state.zoom = zoom;
+  applyTransform();
+}, { passive: false });
+
+svg.addEventListener("mousedown", (e) => {
+  state.dragging = true; state.moved = false;
+  state.lastX = e.clientX; state.lastY = e.clientY;
+  svg.style.cursor = "grabbing";
+});
+window.addEventListener("mousemove", (e) => {
+  if (!state.dragging) return;
+  const dx = e.clientX - state.lastX, dy = e.clientY - state.lastY;
+  if (Math.abs(dx) + Math.abs(dy) > 2) state.moved = true;
+  state.tx += dx; state.ty += dy;
+  state.lastX = e.clientX; state.lastY = e.clientY;
+  applyTransform();
+});
+window.addEventListener("mouseup", () => { state.dragging = false; svg.style.cursor = "grab"; });
+svg.addEventListener("click", () => { if (!state.moved && (state.selected || state.selectedRow)) clearSelection(); });
+svg.style.cursor = "grab";
+
+document.getElementById("btn-fit").addEventListener("click", fit);
+document.getElementById("btn-reset").addEventListener("click", () => {
+  document.getElementById("search").value = "";
+  clearSelection(); fit();
+});
+document.getElementById("panel-close").addEventListener("click", clearSelection);
+document.getElementById("toggle-utility").addEventListener("change", (e) => {
+  state.showUtility = e.target.checked;
+  state.selected = null;
+  state.selectedRow = null;
+  rebuild(); buildLegend(); renderPanel(); fit();
+});
+
+document.getElementById("view-toggle").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-view]");
+  if (btn) setView(btn.dataset.view);
+});
+
+/* search */
+const searchInput = document.getElementById("search");
+const searchResults = document.getElementById("search-results");
+searchInput.addEventListener("input", () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) { searchResults.style.display = "none"; return; }
+  const comps = DATA.components.filter(c =>
+    c.name.toLowerCase().includes(q) ||
+    c.methods.some(m => m.toLowerCase().includes(q)));
+  const items = comps.slice(0, 10).map(c => {
+    const layer = LAYERS[c.layer] || LAYERS.broker;
+    const n = state.instances.filter(i => i.comp.id === c.id).length;
+    const sub = state.view === "duplicated"
+      ? `${n} cop${n === 1 ? "y" : "ies"} in view`
+      : esc(projById[c.project] ? projById[c.project].name : c.project);
+    return `<div class="sr" data-comp="${esc(c.id)}"><div>${esc(c.name)}</div><div class="sub">${layer.label} · ${sub}</div></div>`;
+  }).join("");
+  searchResults.innerHTML = items || `<div class="sr"><div class="sub">no matches</div></div>`;
+  searchResults.style.display = "block";
+});
+searchResults.addEventListener("mousedown", (e) => {
+  const target = e.target.closest(".sr");
+  if (!target || !target.dataset.comp) return;
+  const inst = state.instances.find(i => i.comp.id === target.dataset.comp);
+  if (inst) {
+    select(inst.id);
+    const wrap = document.getElementById("graph-wrap").getBoundingClientRect();
+    state.zoom = Math.max(state.zoom, 0.7);
+    state.tx = wrap.width / 2 - (inst.x + inst.w / 2) * state.zoom;
+    state.ty = wrap.height / 2 - (inst.y + inst.h / 2) * state.zoom;
+    applyTransform();
+  }
+  searchResults.style.display = "none";
+  searchInput.value = "";
+});
+searchInput.addEventListener("blur", () => setTimeout(() => searchResults.style.display = "none", 180));
+
+/* ---------------- boot ---------------- */
+if (location.hash.slice(1) === "duplicated") state.view = "duplicated";
+for (const b of document.querySelectorAll("#view-toggle button"))
+  b.classList.toggle("active", b.dataset.view === state.view);
+rebuild();
+buildLegend();
+fit();
+window.addEventListener("resize", fit);
+</script>
+</body>
+</html>

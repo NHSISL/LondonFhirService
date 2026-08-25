@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -9,26 +9,23 @@ using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
 using Hl7.Fhir.Serialization;
 using ISL.Security.Client.Models.Clients;
-using LondonFhirService.Core.Brokers.Audits;
+using LondonFhirService.Clients.AuditAndMetrics.Clients;
+using LondonFhirService.Core.Abstractions.Brokers;
+using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Services.Foundations.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.DateTimes;
-using LondonFhirService.Core.Brokers.Hashing;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Core.Clients.Audits;
-using LondonFhirService.Core.Models.Bases;
+using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.Audits;
-using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
-using LondonFhirService.Core.Services.Foundations.Consumers;
-using LondonFhirService.Core.Services.Foundations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
-using LondonFhirService.Core.Services.Foundations.OdsDatas;
-using LondonFhirService.Core.Services.Foundations.PdsDatas;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -36,10 +33,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
+using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
 
 public partial class Program
 {
@@ -101,7 +100,7 @@ public partial class Program
         AddOrchestrationServices(builder.Services, configuration);
         AddProcessingServices(builder.Services);
         AddCoordinationServices(builder.Services, configuration);
-        AddClients(builder.Services);
+        AddClients(builder.Services, builder.Configuration);
 
         // IConfiguration registration (optional, but mirrors original)
         builder.Services.AddSingleton<IConfiguration>(configuration);
@@ -185,13 +184,13 @@ public partial class Program
     {
         SecurityConfigurations securityConfigurations = new()
         {
-            CreatedByPropertyName = nameof(IAudit.CreatedBy),
+            CreatedByPropertyName = nameof(IAuditable.CreatedBy),
             CreatedByPropertyType = typeof(string),
-            CreatedWhenPropertyName = nameof(IAudit.CreatedDate),
+            CreatedWhenPropertyName = nameof(IAuditable.CreatedDate),
             CreatedWhenPropertyType = typeof(DateTimeOffset),
-            UpdatedByPropertyName = nameof(IAudit.UpdatedBy),
+            UpdatedByPropertyName = nameof(IAuditable.UpdatedBy),
             UpdatedByPropertyType = typeof(string),
-            UpdatedWhenPropertyName = nameof(IAudit.UpdatedDate),
+            UpdatedWhenPropertyName = nameof(IAuditable.UpdatedDate),
             UpdatedWhenPropertyType = typeof(DateTimeOffset),
             DeletedByPropertyName = "DeletedBy",
             DeletedByPropertyType = typeof(string),
@@ -200,7 +199,9 @@ public partial class Program
         };
 
         services.AddSingleton(securityConfigurations);
-        services.AddTransient<IAuditBroker, AuditBroker>();
+        services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
+        services.AddScoped<IAuditAndMetricsStorageBroker, AuditAndMetricsStorageService>();
+        services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IIdentifierBroker, IdentifierBroker>();
         services.AddTransient<ILoggingBroker, LoggingBroker>();
@@ -211,17 +212,11 @@ public partial class Program
             serviceProvider => serviceProvider.GetRequiredService<StorageBroker>());
 
         services.AddScoped<IStorageBrokerFactory, StorageBrokerFactory>();
-        services.AddTransient<IHashBroker, HashBroker>();
     }
 
     private static void AddFoundationServices(IServiceCollection services)
     {
         services.AddTransient<IAuditService, AuditService>();
-        services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
-        services.AddTransient<IConsumerService, ConsumerService>();
-        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
-        services.AddTransient<IOdsDataService, OdsDataService>();
-        services.AddTransient<IPdsDataService, PdsDataService>();
         services.AddTransient<IProviderService, ProviderService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
@@ -233,14 +228,24 @@ public partial class Program
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
     }
 
     private static void AddCoordinationServices(IServiceCollection services, IConfiguration configuration)
     {
     }
 
-    private static void AddClients(IServiceCollection services)
+    private static void AddClients(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<IAuditClient, AuditClient>();
+        // Scoped, and it has to stay that way. SecurityAuditBroker captures the ClaimsPrincipal
+        // in its constructor, so a singleton client would hold the first request's identity and
+        // stamp every audit entry after that with the wrong user - silently. It would also
+        // capture a DbContext past the scope that owns it.
+        services.AddScoped<IAuditAndMetricsClient>(serviceProvider =>
+            new AuditAndMetricsClient(
+                serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
+                serviceProvider.GetRequiredService<IAuditUserBroker>(),
+                configuration,
+                serviceProvider.GetRequiredService<ILoggerFactory>()));
     }
 }

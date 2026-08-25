@@ -9,8 +9,6 @@ on:
     - synchronize
     - reopened
     - closed
-    branches:
-    - main
 jobs:
   build:
     name: Build
@@ -19,11 +17,11 @@ jobs:
     - name: Enable long paths for Git
       run: git config --system core.longpaths true
     - name: Check out
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
     - name: Setup .Net
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: 10.x
     - name: Restore
       run: dotnet restore
     - name: Build
@@ -36,19 +34,36 @@ jobs:
       run: >-
         $projects = Get-ChildItem -Path . -Filter "*Tests.Unit*.csproj" -Recurse
 
+        $failed = @()
+
         foreach ($project in $projects) {
           Write-Host "Running tests for: $($project.FullName)"
           dotnet test $project.FullName --no-build --verbosity normal
+          if ($LASTEXITCODE -ne 0) { $failed += $project.Name }
+        }
+
+        if ($failed.Count -gt 0) {
+          Write-Host "::error::Test projects failed: $($failed -join ', ')"
+          exit 1
         }
       shell: pwsh
     - name: Run Acceptance Tests
       run: >-
         $projects = Get-ChildItem -Path . -Filter "*Tests.Acceptance*.csproj" -Recurse
 
+        $failed = @()
+
         foreach ($project in $projects) {
           Write-Host "Running tests for: $($project.FullName)"
           dotnet test $project.FullName --no-build --verbosity normal
+          if ($LASTEXITCODE -ne 0) { $failed += $project.Name }
         }
+
+        if ($failed.Count -gt 0) {
+          Write-Host "::error::Test projects failed: $($failed -join ', ')"
+          exit 1
+        }
+      shell: pwsh
     env:
       NOTIFICATIONCONFIGURATIONS__APIKEY: ${{ secrets.NOTIFICATIONCONFIGURATIONS__APIKEY }}
   add_tag:
@@ -68,7 +83,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'RELEASES')
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v5
       with:
         token: ${{ secrets.PAT_FOR_TAGGING }}
     - name: Configure Git

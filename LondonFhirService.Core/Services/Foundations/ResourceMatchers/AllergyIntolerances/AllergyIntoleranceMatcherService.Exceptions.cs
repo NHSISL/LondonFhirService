@@ -9,7 +9,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.AllergyIntolerances
 {
-    public partial class AllergyIntoleranceMatcherService
+    internal partial class AllergyIntoleranceMatcherService
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 

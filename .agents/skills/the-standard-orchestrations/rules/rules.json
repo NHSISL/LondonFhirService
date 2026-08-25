@@ -1,0 +1,10 @@
+{
+  "skill": "the-standard-orchestrations",
+  "rules": [
+    { "id": "ts-orchestrations-001", "severity": "ERROR", "category": "Dependency", "rule": "Orchestration services must depend only on processing services — never foundation services or brokers." },
+    { "id": "ts-orchestrations-002", "severity": "ERROR", "category": "Multi-Entity", "rule": "Orchestration services may coordinate multiple entity types, each through its own processing service." },
+    { "id": "ts-orchestrations-003", "severity": "ERROR", "category": "Exception Handling", "rule": "Orchestration services must wrap all downstream exceptions in orchestration-level exceptions." },
+    { "id": "ts-orchestrations-004", "severity": "ERROR", "category": "Naming", "rule": "Orchestration service interfaces must follow I{Purpose}OrchestrationService." },
+    { "id": "ts-orchestrations-005", "severity": "ERROR", "category": "Structure", "rule": "Orchestration services must be partial classes split by operation category." }
+  ]
+}

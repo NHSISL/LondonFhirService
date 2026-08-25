@@ -11,7 +11,7 @@ using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.JsonIgnoreRules
 {
-    public partial class ArrayOrderIgnoreProcessingRule
+    internal partial class ArrayOrderIgnoreProcessingRule
     {
         private delegate ValueTask<T> ReturningFunction<T>();
 

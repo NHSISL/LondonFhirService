@@ -1,0 +1,65 @@
+{
+  "skill": "the-standard-team-core",
+  "rules": [
+    {
+      "id": "tst-core-001",
+      "severity": "ERROR",
+      "category": "Purpose Definition",
+      "rule": "Every team and project must document its business nature — what the business is."
+    },
+    {
+      "id": "tst-core-002",
+      "severity": "ERROR",
+      "category": "Purpose Definition",
+      "rule": "Every team and project must document its business goals — the desired outcomes the business pursues."
+    },
+    {
+      "id": "tst-core-003",
+      "severity": "ERROR",
+      "category": "Purpose Definition",
+      "rule": "Every team and project must document its future considerations — growth plans and expansion scenarios."
+    },
+    {
+      "id": "tst-core-004",
+      "severity": "ERROR",
+      "category": "Purpose Definition",
+      "rule": "All three purpose elements (nature, goals, future considerations) must be present before engineering work begins."
+    },
+    {
+      "id": "tst-core-005",
+      "severity": "ERROR",
+      "category": "Scenarios",
+      "rule": "Scenarios must include an actor (Given), an interaction (When), and an outcome (Then)."
+    },
+    {
+      "id": "tst-core-006",
+      "severity": "ERROR",
+      "category": "Scenarios",
+      "rule": "Scenarios must be written in non-technical language unless the business itself is technical in nature."
+    },
+    {
+      "id": "tst-core-007",
+      "severity": "ERROR",
+      "category": "Scenarios",
+      "rule": "Scenario outcomes must be expressible as marketing copy understandable by non-technical stakeholders."
+    },
+    {
+      "id": "tst-core-008",
+      "severity": "WARN",
+      "category": "Scenarios",
+      "rule": "Scenarios may chain — each subsequent scenario may build on the established context of prior scenarios."
+    },
+    {
+      "id": "tst-core-009",
+      "severity": "ERROR",
+      "category": "Scenarios",
+      "rule": "Scenarios must represent the perspective of end users or customers — not developers or system components."
+    },
+    {
+      "id": "tst-core-010",
+      "severity": "WARN",
+      "category": "Scenarios",
+      "rule": "Multiple scenarios should be written to cover all primary actors and major use cases of the system."
+    }
+  ]
+}
