@@ -1,8 +1,10 @@
-﻿import { faHome, faUser } from '@fortawesome/free-solid-svg-icons';
+﻿import { faHome, faNetworkWired, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { ListGroup } from 'react-bootstrap';
-import { useLocation, useNavigate } from 'react-router-dom'; 
+import { useLocation, useNavigate } from 'react-router-dom';
+import { SecuredComponent } from '../securitys/securedComponents';
+import securityPoints from '../../securityMatrix';
 
 const MenuComponent: React.FC = () => {
     const location = useLocation();
@@ -20,6 +22,15 @@ const MenuComponent: React.FC = () => {
                 <FontAwesomeIcon icon={faHome} className="me-2 fa-icon" />
                 Home
             </ListGroup.Item>
+
+            <SecuredComponent allowedRoles={securityPoints.providers.view}>
+                <ListGroup.Item
+                    className={`bg-dark text-white ${location.pathname.startsWith('/providers') ? 'active' : ''}`}
+                    onClick={() => handleItemClick('/providers')}>
+                    <FontAwesomeIcon icon={faNetworkWired} className="me-2 fa-icon" />
+                    Providers
+                </ListGroup.Item>
+            </SecuredComponent>
 
             <ListGroup.Item
                 className={`bg-dark text-white ${location.pathname === '/testPage' ? 'active' : ''}`}
