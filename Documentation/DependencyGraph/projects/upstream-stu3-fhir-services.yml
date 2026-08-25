@@ -1,0 +1,23 @@
+# Upstream STU3 FHIR services — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-fhir-src
+components:
+  - id: EXT.DdsStu3
+    name: "DdsStu3Provider → Discovery Data Service"
+    layer: external
+    col: 12
+    shared: true
+    deriveMethods: true
+    description: "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService. One of the two IFhirProvider implementations registered in Program.Configurations.AddProviders."
+    methods: []
+  - id: EXT.LdsStu3
+    name: "LdsStu3Provider → London Data Service"
+    layer: external
+    col: 12
+    shared: true
+    deriveMethods: true
+    description: "LondonFhirService.Providers.FHIR.STU3.LondonDataService. The second registered IFhirProvider; constructed with IHttpContextAccessor so it can forward the caller's identity."
+    methods: []

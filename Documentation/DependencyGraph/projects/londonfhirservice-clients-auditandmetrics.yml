@@ -1,0 +1,235 @@
+# LondonFhirService.Clients.AuditAndMetrics — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: clients-am
+components:
+  - id: LIB.AMClient
+    name: AuditAndMetricsClient
+    layer: client
+    col: 10
+    shared: true
+    description: "Follows the SecurityClient shape: owns its own ServiceCollection, registers everything it needs, builds a provider and resolves its two sub-clients from it. The host hands in the things the library cannot supply itself — somewhere to persist to, who the caller is, its configuration, a logger factory and (optionally) a dispatcher. Registered Scoped in both hosts, and it has to stay that way: SecurityAuditBroker captures the ClaimsPrincipal in its constructor, so a singleton would stamp every audit after the first with the wrong user."
+    methods:
+      - AuditClient
+      - MetricClient
+      - BindConfigurations
+    calls:
+      - from: AuditClient
+        to: LIB.AM.AuditClient
+        method: null
+      - from: MetricClient
+        to: LIB.AM.MetricClient
+        method: null
+  - id: LIB.AM.AuditClient
+    name: AuditClient
+    layer: client
+    col: 11
+    description: "The outward-facing surface over the audit foundation service. Service exceptions are re-thrown as client exceptions so callers depend on the client's contract rather than the service layer's. A missing audit comes out as AuditClientNotFoundException so a caller can answer 404 without naming the library's internal categorization types. Cancellation is deliberately not translated."
+    methods:
+      - LogAuditAsync
+      - RecordAuditAsync
+      - AddAuditAsync
+      - BulkLogAuditsAsync
+      - BulkAddAuditsAsync
+      - RetrieveAllAuditsAsync
+      - RetrieveAuditByIdAsync
+      - ModifyAuditAsync
+      - RemoveAuditByIdAsync
+    calls:
+      - from: LogAuditAsync
+        to: LIB.AM.AuditService
+        method: LogAuditAsync
+      - from: RecordAuditAsync
+        to: LIB.AM.AuditService
+        method: RecordAuditAsync
+      - from: AddAuditAsync
+        to: LIB.AM.AuditService
+        method: AddAuditAsync
+      - from: BulkLogAuditsAsync
+        to: LIB.AM.AuditService
+        method: BulkLogAuditsAsync
+      - from: BulkAddAuditsAsync
+        to: LIB.AM.AuditService
+        method: BulkAddAuditsAsync
+      - from: RetrieveAllAuditsAsync
+        to: LIB.AM.AuditService
+        method: RetrieveAllAuditsAsync
+      - from: RetrieveAuditByIdAsync
+        to: LIB.AM.AuditService
+        method: RetrieveAuditByIdAsync
+      - from: ModifyAuditAsync
+        to: LIB.AM.AuditService
+        method: ModifyAuditAsync
+      - from: RemoveAuditByIdAsync
+        to: LIB.AM.AuditService
+        method: RemoveAuditByIdAsync
+  - id: LIB.AM.MetricClient
+    name: MetricClient
+    layer: client
+    col: 11
+    description: "The metric counterpart to AuditClient. Its TryCatch is written once rather than repeated per method. A missing span comes out as MetricClientNotFoundException — before that existed it was folded into MetricClientValidationException, whose inner NotFoundMetricException is internal to this library, so every miss reached callers as a 400."
+    methods:
+      - AddMetricAsync
+      - AddMetricsAsync
+      - LogMetricAsync
+      - LogMetricsAsync
+      - RetrieveAllMetricsAsync
+      - RetrieveMetricByIdAsync
+      - RemoveMetricByIdAsync
+      - PurgeMetricsOlderThanRetentionPeriodAsync
+    calls:
+      - from: AddMetricAsync
+        to: LIB.AM.MetricService
+        method: AddMetricAsync
+      - from: AddMetricsAsync
+        to: LIB.AM.MetricService
+        method: AddMetricsAsync
+      - from: LogMetricAsync
+        to: LIB.AM.MetricService
+        method: LogMetricAsync
+      - from: LogMetricsAsync
+        to: LIB.AM.MetricService
+        method: LogMetricsAsync
+      - from: RetrieveAllMetricsAsync
+        to: LIB.AM.MetricService
+        method: RetrieveAllMetricsAsync
+      - from: RetrieveMetricByIdAsync
+        to: LIB.AM.MetricService
+        method: RetrieveMetricByIdAsync
+      - from: RemoveMetricByIdAsync
+        to: LIB.AM.MetricService
+        method: RemoveMetricByIdAsync
+      - from: PurgeMetricsOlderThanRetentionPeriodAsync
+        to: LIB.AM.MetricService
+        method: PurgeMetricsOlderThanRetentionPeriodAsync
+  - id: LIB.AM.AuditService
+    name: AuditService
+    layer: foundation
+    col: 11
+    description: "Validates and stamps the entry, then persists through the storage port. The Log* verbs defer only the write — everything above it runs on the caller's thread, so an entry is stamped with the time the event happened rather than the time the queue drained. Record* and Add* are awaited, for entries that must not be lost."
+    methods:
+      - LogAuditAsync
+      - RecordAuditAsync
+      - AddAuditAsync
+      - BulkLogAuditsAsync
+      - BulkAddAuditsAsync
+      - RetrieveAllAuditsAsync
+      - RetrieveAuditByIdAsync
+      - ModifyAuditAsync
+      - RemoveAuditByIdAsync
+    calls:
+      - from: LogAuditAsync
+        to: AuditAndMetricStorageBroker
+        method: InsertAuditAsync
+      - from: RecordAuditAsync
+        to: AuditAndMetricStorageBroker
+        method: InsertAuditAsync
+      - from: AddAuditAsync
+        to: AuditAndMetricStorageBroker
+        method: InsertAuditAsync
+      - from: BulkLogAuditsAsync
+        to: AuditAndMetricStorageBroker
+        method: BulkInsertAuditsAsync
+      - from: BulkAddAuditsAsync
+        to: AuditAndMetricStorageBroker
+        method: BulkInsertAuditsAsync
+      - from: RetrieveAllAuditsAsync
+        to: AuditAndMetricStorageBroker
+        method: SelectAllAuditsAsync
+      - from: RetrieveAuditByIdAsync
+        to: AuditAndMetricStorageBroker
+        method: SelectAuditByIdAsync
+      - from: ModifyAuditAsync
+        to: AuditAndMetricStorageBroker
+        method: SelectAuditByIdAsync
+      - from: ModifyAuditAsync
+        to: AuditAndMetricStorageBroker
+        method: UpdateAuditAsync
+      - from: RemoveAuditByIdAsync
+        to: AuditAndMetricStorageBroker
+        method: SelectAuditByIdAsync
+      - from: RemoveAuditByIdAsync
+        to: AuditAndMetricStorageBroker
+        method: DeleteAuditAsync
+      - from: LogAuditAsync
+        to: AuditAndMetricStorageBroker
+        method: CreateAudit
+      - from: LogAuditAsync
+        to: AuditUserBroker
+        method: GetCurrentUserIdAsync
+      - from: LogAuditAsync
+        to: API.Dispatcher
+        method: TryDispatch
+      - from: BulkLogAuditsAsync
+        to: API.Dispatcher
+        method: TryDispatch
+  - id: LIB.AM.MetricService
+    name: MetricService
+    layer: foundation
+    col: 11
+    description: "The fan-out point: one span, two destinations. Every write persists through the storage port and then publishes the same span to the telemetry sink. Recording is governed by IsEnabled, and the retention sweep by IsPurgingAllowed / RetentionPeriodInDays / PurgeBatchSize. It holds both a metricStorageBroker and a metricBroker — the port it persists through and this library's own ActivitySource sink."
+    methods:
+      - AddMetricAsync
+      - AddMetricsAsync
+      - LogMetricAsync
+      - LogMetricsAsync
+      - RetrieveAllMetricsAsync
+      - RetrieveMetricByIdAsync
+      - RemoveMetricByIdAsync
+      - PurgeMetricsOlderThanRetentionPeriodAsync
+    calls:
+      - from: AddMetricAsync
+        to: AuditAndMetricStorageBroker
+        method: InsertMetricAsync
+      - from: LogMetricAsync
+        to: AuditAndMetricStorageBroker
+        method: InsertMetricAsync
+      - from: AddMetricsAsync
+        to: AuditAndMetricStorageBroker
+        method: BulkInsertMetricsAsync
+      - from: LogMetricsAsync
+        to: AuditAndMetricStorageBroker
+        method: BulkInsertMetricsAsync
+      - from: RetrieveAllMetricsAsync
+        to: AuditAndMetricStorageBroker
+        method: SelectAllMetricsAsync
+      - from: RetrieveMetricByIdAsync
+        to: AuditAndMetricStorageBroker
+        method: SelectMetricByIdAsync
+      - from: RemoveMetricByIdAsync
+        to: AuditAndMetricStorageBroker
+        method: SelectMetricByIdAsync
+      - from: RemoveMetricByIdAsync
+        to: AuditAndMetricStorageBroker
+        method: DeleteMetricAsync
+      - from: PurgeMetricsOlderThanRetentionPeriodAsync
+        to: AuditAndMetricStorageBroker
+        method: DeleteMetricsOlderThanAsync
+      - from: AddMetricAsync
+        to: LIB.AM.MetricBroker
+        method: RecordAsync
+      - from: AddMetricsAsync
+        to: LIB.AM.MetricBroker
+        method: RecordAsync
+      - from: LogMetricAsync
+        to: LIB.AM.MetricBroker
+        method: RecordAsync
+      - from: LogMetricsAsync
+        to: LIB.AM.MetricBroker
+        method: RecordAsync
+      - from: LogMetricsAsync
+        to: API.Dispatcher
+        method: TryDispatch
+  - id: LIB.AM.MetricBroker
+    name: MetricBroker (telemetry)
+    layer: broker
+    col: 11
+    description: "Emits completed spans to the telemetry pipeline — the second sink for the same spans the storage port persists. The ActivitySource is cached by name and shared across instances, because a source registers itself with the diagnostics subsystem for its lifetime and this broker is transient inside a scoped client. Recording is best effort and never affects the measured request. Named IMetricBroker in its own namespace; not to be confused with Core.Abstractions' IMetricStorageBroker-era naming."
+    methods:
+      - RecordAsync
+    calls:
+      - from: RecordAsync
+        to: EXT.ActivitySource
+        method: StartActivity / SetTag
