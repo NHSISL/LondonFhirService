@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -227,6 +227,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
         private class ForeignMetric : IMetric, IKey
         {
             public Guid Id { get; set; }
+            public string UserId { get; set; }
             public Guid? ParentId { get; set; }
             public Guid CorrelationId { get; set; }
             public string Method { get; set; }

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -21,6 +21,15 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
     public class Metric : IKey, IMetric
     {
         public Guid Id { get; set; }
+
+        /// <summary>
+        /// Who the request that produced this span belonged to, or empty when it was produced
+        /// outside a user request - a background worker or the retention sweep.
+        ///
+        /// An opaque account identifier only. Like every other column here it must never carry
+        /// patient identifiable data.
+        /// </summary>
+        public string UserId { get; set; }
 
         /// <summary>The enclosing span, or null for the root span of a request.</summary>
         public Guid? ParentId { get; set; }

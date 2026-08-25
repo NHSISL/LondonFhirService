@@ -10,6 +10,7 @@ namespace LondonFhirService.Core.Brokers.Securities
     public interface ISecurityBroker
     {
         ValueTask<User> GetCurrentUserAsync();
+        ValueTask<string> GetCurrentUserIdAsync();
         ValueTask<bool> IsCurrentUserAuthenticatedAsync();
         ValueTask<bool> IsInRoleAsync(string roleName);
         ValueTask<bool> HasClaimAsync(string claimType, string claimValue);

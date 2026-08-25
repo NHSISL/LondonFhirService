@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -309,9 +309,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             invalidMetric.Method = GetRandomStringWithLengthOf(256);
             invalidMetric.Name = GetRandomStringWithLengthOf(256);
             invalidMetric.Target = GetRandomStringWithLengthOf(256);
-            invalidMetric.Consumer = GetRandomStringWithLengthOf(256);
             invalidMetric.ErrorCode = GetRandomStringWithLengthOf(101);
             invalidMetric.Description = GetRandomStringWithLengthOf(1001);
+
+            // Consumer is not set on the metric here on purpose: the service stamps it from the
+            // caller's display name, overwriting whatever arrived. The max length rule still has
+            // to hold, so it is exercised through the value the service actually writes.
+            this.auditUserBrokerMock.Setup(broker =>
+                broker.GetCurrentUserDisplayNameAsync())
+                    .ReturnsAsync(GetRandomStringWithLengthOf(256));
 
             var invalidMetricException =
                 new InvalidMetricException(

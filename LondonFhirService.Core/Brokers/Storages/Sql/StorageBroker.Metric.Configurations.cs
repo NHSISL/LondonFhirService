@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -18,6 +18,14 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             model
                 .Property(metric => metric.Id)
                 .IsRequired();
+
+            // Optional rather than required: spans raised by the background workers and the
+            // retention sweep belong to no user, and a null says that more honestly than an
+            // empty string would.
+            model
+                .Property(metric => metric.UserId)
+                .HasMaxLength(255)
+                .IsRequired(false);
 
             model
                 .Property(metric => metric.ParentId)

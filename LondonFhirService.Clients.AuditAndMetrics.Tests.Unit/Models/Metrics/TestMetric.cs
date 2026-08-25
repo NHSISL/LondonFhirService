@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -15,6 +15,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Metrics
     internal class TestMetric : IMetric
     {
         public Guid Id { get; set; }
+        public string UserId { get; set; }
         public Guid? ParentId { get; set; }
         public Guid CorrelationId { get; set; }
         public string Method { get; set; }

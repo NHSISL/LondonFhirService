@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -18,5 +18,12 @@ namespace LondonFhirService.Core.Abstractions.Brokers
     public interface IAuditUserBroker
     {
         ValueTask<string> GetCurrentUserIdAsync();
+
+        /// <summary>
+        /// The caller in a form a person reading a dashboard can recognise, or an empty string
+        /// outside a user request. Kept separate from the id because a metric row carries both:
+        /// the id to join on, and this to read.
+        /// </summary>
+        ValueTask<string> GetCurrentUserDisplayNameAsync();
     }
 }
