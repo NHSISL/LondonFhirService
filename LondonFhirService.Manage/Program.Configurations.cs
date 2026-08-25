@@ -22,6 +22,7 @@ using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Metrics;
+using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.Audits;
@@ -173,6 +174,7 @@ public partial class Program
         ODataConventionModelBuilder builder = new();
         builder.EntitySet<Audit>("Audits");
         builder.EntitySet<Metric>("Metrics");
+        builder.EntitySet<Provider>("Providers");
         builder.EntitySet<FhirRecord>("FhirRecords");
         builder.EntitySet<FhirRecordDifference>("FhirRecordDifferences");
         builder.EnableLowerCamelCase();

@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Providers;
 
@@ -12,8 +13,12 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 {
     public partial interface IStorageBroker
     {
-        ValueTask<Provider> InsertProviderAsync(Provider provider);
-        ValueTask<IQueryable<Provider>> SelectAllProvidersAsync();
+        ValueTask<Provider> InsertProviderAsync(
+            Provider provider,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<IQueryable<Provider>> SelectAllProvidersAsync(
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Materialises the provider list asynchronously. SelectAllProvidersAsync returns a
@@ -21,9 +26,19 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
         /// thread; on the patient request path that parks a thread-pool worker inside synchronous
         /// reader I/O instead of yielding it.
         /// </summary>
-        ValueTask<List<Provider>> SelectAllProvidersAsListAsync();
-        ValueTask<Provider> SelectProviderByIdAsync(Guid providerId);
-        ValueTask<Provider> UpdateProviderAsync(Provider provider);
-        ValueTask<Provider> DeleteProviderAsync(Provider provider);
+        ValueTask<List<Provider>> SelectAllProvidersAsListAsync(
+            CancellationToken cancellationToken = default);
+
+        ValueTask<Provider> SelectProviderByIdAsync(
+            Guid providerId,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<Provider> UpdateProviderAsync(
+            Provider provider,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<Provider> DeleteProviderAsync(
+            Provider provider,
+            CancellationToken cancellationToken = default);
     }
 }
