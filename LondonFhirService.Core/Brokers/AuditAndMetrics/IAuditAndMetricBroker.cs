@@ -79,6 +79,16 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
         /// <summary>Dispatched to the background; see LogAuditAsync for the trade offs.</summary>
         ValueTask LogMetricsAsync(List<Metric> metrics, CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Awaited, unlike the logging verbs. This is the API surface, where a caller wants the
+        /// stored span back and needs to see failures.
+        /// </summary>
+        ValueTask<Metric> AddMetricAsync(Metric metric, CancellationToken cancellationToken = default);
+
+        ValueTask<IQueryable<Metric>> RetrieveAllMetricsAsync(CancellationToken cancellationToken = default);
+        ValueTask<Metric> RetrieveMetricByIdAsync(Guid metricId, CancellationToken cancellationToken = default);
+        ValueTask<Metric> RemoveMetricByIdAsync(Guid metricId, CancellationToken cancellationToken = default);
+
         ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(CancellationToken cancellationToken = default);
     }
 }

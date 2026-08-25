@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -32,25 +33,30 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<FhirRecord> AddFhirRecordAsync(FhirRecord fhirRecord) =>
+        public ValueTask<FhirRecord> AddFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
                 await ValidateFhirRecordOnAdd(fhirRecord);
 
-                return await this.storageBroker.InsertFhirRecordAsync(fhirRecord);
+                return await this.storageBroker.InsertFhirRecordAsync(fhirRecord, cancellationToken);
             });
 
-        public ValueTask<IQueryable<FhirRecord>> RetrieveAllFhirRecordsAsync() =>
-            TryCatch(async () => await this.storageBroker.SelectAllFhirRecordsAsync());
+        public ValueTask<IQueryable<FhirRecord>> RetrieveAllFhirRecordsAsync(
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () => await this.storageBroker.SelectAllFhirRecordsAsync(cancellationToken));
 
-        public ValueTask<FhirRecord> RetrieveFhirRecordByIdAsync(Guid fhirRecordId) =>
+        public ValueTask<FhirRecord> RetrieveFhirRecordByIdAsync(
+            Guid fhirRecordId,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateFhirRecordId(fhirRecordId);
 
                 FhirRecord maybeFhirRecord = await this.storageBroker
-                    .SelectFhirRecordByIdAsync(fhirRecordId);
+                    .SelectFhirRecordByIdAsync(fhirRecordId, cancellationToken);
 
                 ValidateStorageFhirRecord(maybeFhirRecord, fhirRecordId);
 
@@ -61,7 +67,8 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             Guid fhirRecordId,
             StatusType expectedStatus,
             StatusType claimedStatus,
-            DateTimeOffset? notUpdatedAfter = null) =>
+            DateTimeOffset? notUpdatedAfter = null,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateFhirRecordId(fhirRecordId);
@@ -74,12 +81,15 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                     expectedStatus,
                     claimedStatus,
                     claimedDate,
-                    notUpdatedAfter);
+                    notUpdatedAfter,
+                    cancellationToken);
 
                 return claimedCount == 1;
             });
 
-        public ValueTask<FhirRecord> ModifyFhirRecordAsync(FhirRecord fhirRecord) =>
+        public ValueTask<FhirRecord> ModifyFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 fhirRecord = await this.securityAuditBroker.ApplyModifyAuditValuesAsync(fhirRecord);
@@ -87,7 +97,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 await ValidateFhirRecordOnModify(fhirRecord);
 
                 FhirRecord maybeFhirRecord =
-                    await this.storageBroker.SelectFhirRecordByIdAsync(fhirRecord.Id);
+                    await this.storageBroker.SelectFhirRecordByIdAsync(fhirRecord.Id, cancellationToken);
 
                 ValidateStorageFhirRecord(maybeFhirRecord, fhirRecord.Id);
 
@@ -98,20 +108,22 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                     inputFhirRecord: fhirRecord,
                     storageFhirRecord: maybeFhirRecord);
 
-                return await this.storageBroker.UpdateFhirRecordAsync(fhirRecord);
+                return await this.storageBroker.UpdateFhirRecordAsync(fhirRecord, cancellationToken);
             });
 
-        public ValueTask<FhirRecord> RemoveFhirRecordByIdAsync(Guid fhirRecordId) =>
+        public ValueTask<FhirRecord> RemoveFhirRecordByIdAsync(
+            Guid fhirRecordId,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateFhirRecordId(fhirRecordId);
 
                 FhirRecord maybeFhirRecord = await this.storageBroker
-                    .SelectFhirRecordByIdAsync(fhirRecordId);
+                    .SelectFhirRecordByIdAsync(fhirRecordId, cancellationToken);
 
                 ValidateStorageFhirRecord(maybeFhirRecord, fhirRecordId);
 
-                return await this.storageBroker.DeleteFhirRecordAsync(maybeFhirRecord);
+                return await this.storageBroker.DeleteFhirRecordAsync(maybeFhirRecord, cancellationToken);
             });
     }
 }

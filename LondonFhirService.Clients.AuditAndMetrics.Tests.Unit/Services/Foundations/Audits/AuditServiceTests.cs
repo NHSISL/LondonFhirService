@@ -23,7 +23,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 {
     public partial class AuditServiceTests
     {
-        private readonly Mock<IAuditAndMetricsStorageBroker> storageBrokerMock;
+        private readonly Mock<IAuditAndMetricStorageBroker> storageBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
@@ -33,7 +33,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
         public AuditServiceTests()
         {
-            this.storageBrokerMock = new Mock<IAuditAndMetricsStorageBroker>();
+            this.storageBrokerMock = new Mock<IAuditAndMetricStorageBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();

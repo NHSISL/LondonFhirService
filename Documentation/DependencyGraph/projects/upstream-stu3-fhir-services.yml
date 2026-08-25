@@ -11,7 +11,7 @@ components:
     col: 12
     shared: true
     deriveMethods: true
-    description: LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService. One of the two IFhirProvider implementations registered in Program.Configurations.AddProviders.
+    description: "LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService. One of the two IFhirProvider implementations registered in Program.Configurations.AddProviders."
     methods: []
   - id: EXT.LdsStu3
     name: "LdsStu3Provider → London Data Service"

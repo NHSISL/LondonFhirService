@@ -1,0 +1,15 @@
+# System.Diagnostics / Application Insights — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-appinsights
+components:
+  - id: EXT.ActivitySource
+    name: "ActivitySource → Application Insights"
+    layer: external
+    col: 12
+    shared: true
+    deriveMethods: true
+    description: "System.Diagnostics.ActivitySource. The audit and metrics library publishes every completed span here as a second sink alongside the database. Nothing was subscribed until MetricTelemetryPublisher was added to the API host — every span published before that was dropped before it reached Application Insights."
+    methods: []

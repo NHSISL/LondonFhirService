@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -82,168 +82,127 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 $"demographicsOnly = \"{demographicsOnly}\", " +
                 $"includeInactivePatients = \"{includeInactivePatients}\" }}";
 
-            // The orchestration layer end to end - the figure the "Orchestration Service Request
-            // Completed in Nms" audit line used to carry. AccessCheck and ProviderRequests hang
-            // off this span rather than off the request root, so subtracting them from it gives
-            // orchestration overhead.
-            Guid orchestrationSpanId = await this.identifierBroker.GetIdentifierAsync();
+            // No Orchestration span is recorded. It measured this layer end to end, which is the
+            // Request span minus Consolidation, so it carried no figure that could not already be
+            // derived. AccessCheck and ProviderRequests now hang directly off the request root.
+            await this.auditAndMetricBroker.LogInformationAsync(
+                auditType,
+                title: $"Orchestration Service Request Submitted",
+                message,
+                fileName: null,
+                correlationId: correlationId.ToString());
 
-            DateTimeOffset orchestrationStarted =
+            await CheckAccessPermissionsAsync(
+                nhsNumber, correlationId, parentId, cancellationToken);
+
+            await this.auditAndMetricBroker.LogInformationAsync(
+                auditType,
+                title: $"Retrieve active providers and execute request",
+                message,
+                fileName: null,
+                correlationId: correlationId.ToString());
+
+            // ProviderRequests wraps discovery and the fan out together, so it is the single
+            // figure to set against AccessCheck. Discovery is measured again inside it, as a
+            // child, because a slow provider table is a different problem from slow
+            // providers.
+            Guid providerRequestsSpanId = await this.identifierBroker.GetIdentifierAsync();
+
+            DateTimeOffset providerRequestsStarted =
                 await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
-            // Recorded on both exits, so the child spans written underneath it are not left
-            // pointing at a parent row that never got inserted when the request fails.
-            async ValueTask RecordOrchestrationSpanAsync(MetricStatus status, string errorCode)
+            var providerRequestsStopwatch = Stopwatch.StartNew();
+
+            // Recorded on both exits, so the discovery and fan out spans written underneath
+            // it are not left pointing at a parent row that never got inserted when a
+            // provider call fails.
+            async ValueTask RecordSpanAsync(MetricStatus status, string errorCode)
             {
-                stopwatch.Stop();
+                providerRequestsStopwatch.Stop();
 
                 await this.auditAndMetricBroker.LogMetricAsync(new Metric
                 {
-                    Id = orchestrationSpanId,
+                    Id = providerRequestsSpanId,
                     ParentId = parentId,
                     CorrelationId = correlationId,
                     Method = auditType,
-                    Type = MetricType.Orchestration,
-                    Name = "Orchestration service request",
-                    Started = orchestrationStarted,
-                    Completed = orchestrationStarted.AddMilliseconds(stopwatch.Elapsed.TotalMilliseconds),
-                    DurationMs = stopwatch.Elapsed.TotalMilliseconds,
+                    Type = MetricType.ProviderRequests,
+                    Name = "Provider requests",
+                    Started = providerRequestsStarted,
+
+                    Completed = providerRequestsStarted
+                        .AddMilliseconds(providerRequestsStopwatch.Elapsed.TotalMilliseconds),
+
+                    DurationMs = providerRequestsStopwatch.Elapsed.TotalMilliseconds,
                     Status = status,
                     ErrorCode = errorCode
                 });
             }
 
+            Provider primaryProvider;
+            List<Provider> activeProviders;
+            List<(string Provider, string Json)> bundles;
+
             try
             {
-                await this.auditAndMetricBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Orchestration Service Request Submitted",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
+                Guid discoverySpanId = await this.identifierBroker.GetIdentifierAsync();
+                DateTimeOffset discoveryStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+                var discoveryStopwatch = Stopwatch.StartNew();
 
-                await CheckAccessPermissionsAsync(
-                    nhsNumber, correlationId, orchestrationSpanId, cancellationToken);
+                (primaryProvider, activeProviders) = await GetProviderInfo();
 
-                await this.auditAndMetricBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Retrieve active providers and execute request",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
+                discoveryStopwatch.Stop();
 
-                // ProviderRequests wraps discovery and the fan out together, so it is the single
-                // figure to set against AccessCheck. Discovery is measured again inside it, as a
-                // child, because a slow provider table is a different problem from slow
-                // providers.
-                Guid providerRequestsSpanId = await this.identifierBroker.GetIdentifierAsync();
-
-                DateTimeOffset providerRequestsStarted =
-                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-                var providerRequestsStopwatch = Stopwatch.StartNew();
-
-                // Recorded on both exits, so the discovery and fan out spans written underneath
-                // it are not left pointing at a parent row that never got inserted when a
-                // provider call fails.
-                async ValueTask RecordSpanAsync(MetricStatus status, string errorCode)
+                await this.auditAndMetricBroker.LogMetricAsync(new Metric
                 {
-                    providerRequestsStopwatch.Stop();
+                    Id = discoverySpanId,
+                    ParentId = providerRequestsSpanId,
+                    CorrelationId = correlationId,
+                    Method = auditType,
+                    Type = MetricType.ProviderDiscovery,
+                    Name = "Resolve active providers",
+                    Started = discoveryStarted,
+                    Completed = discoveryStarted.AddMilliseconds(discoveryStopwatch.Elapsed.TotalMilliseconds),
+                    DurationMs = discoveryStopwatch.Elapsed.TotalMilliseconds,
+                    Status = MetricStatus.Succeeded,
+                    Target = primaryProvider?.FullyQualifiedName,
+                    Description = $"{activeProviders.Count} active STU3 provider(s) resolved."
+                });
 
-                    await this.auditAndMetricBroker.LogMetricAsync(new Metric
-                    {
-                        Id = providerRequestsSpanId,
-                        ParentId = orchestrationSpanId,
-                        CorrelationId = correlationId,
-                        Method = auditType,
-                        Type = MetricType.ProviderRequests,
-                        Name = "Provider requests",
-                        Started = providerRequestsStarted,
+                bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
+                    activeProviders,
+                    correlationId,
+                    nhsNumber,
+                    dateOfBirth,
+                    demographicsOnly,
+                    includeInactivePatients,
+                    parentId: providerRequestsSpanId,
+                    cancellationToken);
 
-                        Completed = providerRequestsStarted
-                            .AddMilliseconds(providerRequestsStopwatch.Elapsed.TotalMilliseconds),
-
-                        DurationMs = providerRequestsStopwatch.Elapsed.TotalMilliseconds,
-                        Status = status,
-                        ErrorCode = errorCode
-                    });
-                }
-
-                Provider primaryProvider;
-                List<Provider> activeProviders;
-                List<(string Provider, string Json)> bundles;
-
-                try
-                {
-                    Guid discoverySpanId = await this.identifierBroker.GetIdentifierAsync();
-                    DateTimeOffset discoveryStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-                    var discoveryStopwatch = Stopwatch.StartNew();
-
-                    (primaryProvider, activeProviders) = await GetProviderInfo();
-
-                    discoveryStopwatch.Stop();
-
-                    await this.auditAndMetricBroker.LogMetricAsync(new Metric
-                    {
-                        Id = discoverySpanId,
-                        ParentId = providerRequestsSpanId,
-                        CorrelationId = correlationId,
-                        Method = auditType,
-                        Type = MetricType.ProviderDiscovery,
-                        Name = "Resolve active providers",
-                        Started = discoveryStarted,
-                        Completed = discoveryStarted.AddMilliseconds(discoveryStopwatch.Elapsed.TotalMilliseconds),
-                        DurationMs = discoveryStopwatch.Elapsed.TotalMilliseconds,
-                        Status = MetricStatus.Succeeded,
-                        Target = primaryProvider?.FullyQualifiedName,
-                        Description = $"{activeProviders.Count} active STU3 provider(s) resolved."
-                    });
-
-                    bundles = await this.patientService.GetStructuredRecordSerialisedAsync(
-                        activeProviders,
-                        correlationId,
-                        nhsNumber,
-                        dateOfBirth,
-                        demographicsOnly,
-                        includeInactivePatients,
-                        parentId: providerRequestsSpanId,
-                        cancellationToken);
-
-                    await RecordSpanAsync(MetricStatus.Succeeded, errorCode: null);
-                }
-                catch (Exception exception)
-                {
-                    await RecordSpanAsync(MetricStatus.Failed, exception.GetType().Name);
-
-                    throw;
-                }
-
-                stopwatch.Stop();
-                long elapsedTime = stopwatch.ElapsedMilliseconds;
-
-                await this.auditAndMetricBroker.LogInformationAsync(
-                    auditType,
-                    title: $"Orchestration Service Request Completed in {elapsedTime}ms",
-                    message,
-                    fileName: null,
-                    correlationId: correlationId.ToString());
-
-                // Last statement in the try on purpose - see the coordination service's request
-                // span for why.
-                await RecordOrchestrationSpanAsync(MetricStatus.Succeeded, errorCode: null);
-
-                return new StructuredRecordsResponse
-                {
-                    PrimaryProvider = primaryProvider,
-                    Bundles = bundles
-                };
+                await RecordSpanAsync(MetricStatus.Succeeded, errorCode: null);
             }
             catch (Exception exception)
             {
-                await RecordOrchestrationSpanAsync(MetricStatus.Failed, exception.GetType().Name);
+                await RecordSpanAsync(MetricStatus.Failed, exception.GetType().Name);
 
                 throw;
             }
+
+            stopwatch.Stop();
+            long elapsedTime = stopwatch.ElapsedMilliseconds;
+
+            await this.auditAndMetricBroker.LogInformationAsync(
+                auditType,
+                title: $"Orchestration Service Request Completed in {elapsedTime}ms",
+                message,
+                fileName: null,
+                correlationId: correlationId.ToString());
+
+            return new StructuredRecordsResponse
+            {
+                PrimaryProvider = primaryProvider,
+                Bundles = bundles
+            };
         });
 
         public ValueTask ValidateAccess(

@@ -1,8 +1,10 @@
-﻿import { faHome, faUser } from '@fortawesome/free-solid-svg-icons';
+﻿import { faChartLine, faClipboardList, faHome, faNetworkWired, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { ListGroup } from 'react-bootstrap';
-import { useLocation, useNavigate } from 'react-router-dom'; 
+import { useLocation, useNavigate } from 'react-router-dom';
+import { SecuredComponent } from '../securitys/securedComponents';
+import securityPoints from '../../securityMatrix';
 
 const MenuComponent: React.FC = () => {
     const location = useLocation();
@@ -20,6 +22,33 @@ const MenuComponent: React.FC = () => {
                 <FontAwesomeIcon icon={faHome} className="me-2 fa-icon" />
                 Home
             </ListGroup.Item>
+
+            <SecuredComponent allowedRoles={securityPoints.providers.view}>
+                <ListGroup.Item
+                    className={`bg-dark text-white ${location.pathname.startsWith('/admin/providers') ? 'active' : ''}`}
+                    onClick={() => handleItemClick('/admin/providers')}>
+                    <FontAwesomeIcon icon={faNetworkWired} className="me-2 fa-icon" />
+                    Providers
+                </ListGroup.Item>
+            </SecuredComponent>
+
+            <SecuredComponent allowedRoles={securityPoints.audits.view}>
+                <ListGroup.Item
+                    className={`bg-dark text-white ${location.pathname.startsWith('/admin/audits') ? 'active' : ''}`}
+                    onClick={() => handleItemClick('/admin/audits')}>
+                    <FontAwesomeIcon icon={faClipboardList} className="me-2 fa-icon" />
+                    Audits
+                </ListGroup.Item>
+            </SecuredComponent>
+
+            <SecuredComponent allowedRoles={securityPoints.metrics.view}>
+                <ListGroup.Item
+                    className={`bg-dark text-white ${location.pathname.startsWith('/admin/metrics') ? 'active' : ''}`}
+                    onClick={() => handleItemClick('/admin/metrics')}>
+                    <FontAwesomeIcon icon={faChartLine} className="me-2 fa-icon" />
+                    Metrics
+                </ListGroup.Item>
+            </SecuredComponent>
 
             <ListGroup.Item
                 className={`bg-dark text-white ${location.pathname === '/testPage' ? 'active' : ''}`}

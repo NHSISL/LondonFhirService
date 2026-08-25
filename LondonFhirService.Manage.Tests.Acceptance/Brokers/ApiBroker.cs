@@ -16,6 +16,13 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
         private readonly IRESTFulApiFactoryClient apiFactoryClient;
         internal readonly InvisibleApiKey invisibleApiKey;
 
+        /// <summary>
+        /// A second client that deliberately omits the invisible-api key header, so a test can
+        /// assert that the hidden verbs are unroutable to anyone who does not hold it. The keyed
+        /// client above exists to seed and tear down; this one is what a real caller looks like.
+        /// </summary>
+        private readonly HttpClient keylessHttpClient;
+
         public ApiBroker()
         {
             webApplicationFactory = new TestWebApplicationFactory();
@@ -23,6 +30,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
             httpClient = webApplicationFactory.CreateClient();
             httpClient.DefaultRequestHeaders.Add(invisibleApiKey.Key, invisibleApiKey.Value);
             apiFactoryClient = new RESTFulApiFactoryClient(httpClient);
+            keylessHttpClient = webApplicationFactory.CreateClient();
         }
     }
 }

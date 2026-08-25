@@ -423,3 +423,4 @@ FodyWeavers.xsd
 /Documentation/*.bkp
 /Documentation/*.dtmp
 LondonFhirService.Core/DELETEME/
+/LondonFhirService.Manage/appsettings.development.json

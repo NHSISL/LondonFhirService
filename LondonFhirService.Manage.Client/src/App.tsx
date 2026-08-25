@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import './App.css';
 import Root from './components/root';
@@ -11,6 +11,15 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import "react-toastify/dist/ReactToastify.css";
 import ToastBroker from './brokers/toastBroker';
 import { TestPage } from './pages/testPage';
+import { ProvidersPage } from './pages/providers/ProvidersPage';
+import { ProviderDetailPage } from './pages/providers/ProviderDetailPage';
+import { ProviderAddPage } from './pages/providers/ProviderAddPage';
+import { AuditsPage } from './pages/audits/AuditsPage';
+import { AuditDetailPage } from './pages/audits/AuditDetailPage';
+import { MetricsPage } from './pages/metrics/MetricsPage';
+import { MetricDetailPage } from './pages/metrics/MetricDetailPage';
+import { SecuredRoute } from './components/securitys/securedRoutes';
+import securityPoints from './securityMatrix';
 
 function App({ instance }: any) {
 
@@ -23,6 +32,62 @@ function App({ instance }: any) {
                 {
                     path: "home",
                     element: <Home />
+                },
+                {
+                    path: "admin/audits",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.audits.view}>
+                            <AuditsPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/audits/:auditId",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.audits.view}>
+                            <AuditDetailPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/metrics",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.metrics.view}>
+                            <MetricsPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/metrics/:correlationId",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.metrics.view}>
+                            <MetricDetailPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/providers",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.providers.view}>
+                            <ProvidersPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/providers/new",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.providers.add}>
+                            <ProviderAddPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/providers/:providerId",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.providers.view}>
+                            <ProviderDetailPage />
+                        </SecuredRoute>
+                    )
                 },
                 {
                     path: "testPage",

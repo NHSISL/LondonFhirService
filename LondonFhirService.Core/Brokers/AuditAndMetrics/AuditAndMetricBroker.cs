@@ -107,6 +107,29 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             await this.auditAndMetricsClient.MetricClient.LogMetricsAsync(
                 metrics.Cast<IMetric>().ToList(), cancellationToken);
 
+        public async ValueTask<Metric> AddMetricAsync(
+            Metric metric,
+            CancellationToken cancellationToken = default) =>
+            (Metric)await this.auditAndMetricsClient.MetricClient
+                .AddMetricAsync(metric, cancellationToken);
+
+        public async ValueTask<IQueryable<Metric>> RetrieveAllMetricsAsync(
+            CancellationToken cancellationToken = default) =>
+            (await this.auditAndMetricsClient.MetricClient.RetrieveAllMetricsAsync(cancellationToken))
+                .Cast<Metric>();
+
+        public async ValueTask<Metric> RetrieveMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
+            (Metric)await this.auditAndMetricsClient.MetricClient
+                .RetrieveMetricByIdAsync(metricId, cancellationToken);
+
+        public async ValueTask<Metric> RemoveMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
+            (Metric)await this.auditAndMetricsClient.MetricClient
+                .RemoveMetricByIdAsync(metricId, cancellationToken);
+
         public async ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(
             CancellationToken cancellationToken = default) =>
             await this.auditAndMetricsClient.MetricClient

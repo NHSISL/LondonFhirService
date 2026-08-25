@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 
@@ -11,9 +12,13 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
 {
     public interface IFhirRecordService
     {
-        ValueTask<FhirRecord> AddFhirRecordAsync(FhirRecord fhirRecord);
-        ValueTask<IQueryable<FhirRecord>> RetrieveAllFhirRecordsAsync();
-        ValueTask<FhirRecord> RetrieveFhirRecordByIdAsync(Guid fhirRecordId);
+        ValueTask<FhirRecord> AddFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default);
+        ValueTask<IQueryable<FhirRecord>> RetrieveAllFhirRecordsAsync(CancellationToken cancellationToken = default);
+        ValueTask<FhirRecord> RetrieveFhirRecordByIdAsync(
+            Guid fhirRecordId,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Claims a record only if it is still exactly as the caller saw it - same status, and no
@@ -24,9 +29,14 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             Guid fhirRecordId,
             StatusType expectedStatus,
             StatusType claimedStatus,
-            DateTimeOffset? notUpdatedAfter = null);
+            DateTimeOffset? notUpdatedAfter = null,
+            CancellationToken cancellationToken = default);
 
-        ValueTask<FhirRecord> ModifyFhirRecordAsync(FhirRecord fhirRecord);
-        ValueTask<FhirRecord> RemoveFhirRecordByIdAsync(Guid fhirRecordId);
+        ValueTask<FhirRecord> ModifyFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default);
+        ValueTask<FhirRecord> RemoveFhirRecordByIdAsync(
+            Guid fhirRecordId,
+            CancellationToken cancellationToken = default);
     }
 }

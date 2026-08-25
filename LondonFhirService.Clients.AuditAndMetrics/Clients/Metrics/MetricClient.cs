@@ -162,10 +162,26 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics
             }
         }
 
-        private static MetricClientValidationException CreateValidationException(Xeption exception) =>
-            new MetricClientValidationException(
+        /// <summary>
+        /// A missing span comes out as its own category rather than as a validation failure, so a
+        /// caller can answer 404 without naming NotFoundMetricException - which is internal to
+        /// this library. Mirrors AuditClient.
+        /// </summary>
+        private static Xeption CreateValidationException(Xeption exception)
+        {
+            var innerException = exception.InnerException as Xeption;
+
+            if (innerException is NotFoundMetricException)
+            {
+                return new MetricClientNotFoundException(
+                    message: "Metric not found.",
+                    innerException: innerException);
+            }
+
+            return new MetricClientValidationException(
                 message: "Metric client validation error occurred, fix errors and try again.",
-                innerException: exception.InnerException as Xeption);
+                innerException: innerException);
+        }
 
         private static MetricClientDependencyException CreateDependencyException(Xeption exception) =>
             new MetricClientDependencyException(

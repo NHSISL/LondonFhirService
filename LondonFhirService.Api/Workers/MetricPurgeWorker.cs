@@ -5,7 +5,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Services.Foundations.Metrics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -53,15 +53,19 @@ namespace LondonFhirService.Api.Workers
             {
                 try
                 {
-                    // A scope per sweep, because the broker beneath resolves a scoped client that
-                    // holds the request-shaped services this worker has none of.
+                    // A scope per sweep, because the broker beneath the service resolves a
+                    // scoped client that holds the request-shaped services this worker has
+                    // none of.
                     using IServiceScope scope = this.serviceScopeFactory.CreateScope();
 
-                    IAuditAndMetricBroker auditAndMetricBroker =
-                        scope.ServiceProvider.GetRequiredService<IAuditAndMetricBroker>();
+                    // The metric foundation service rather than the broker directly, so a
+                    // failed sweep is logged and reported in this application's exception
+                    // types rather than the library's.
+                    IMetricService metricService =
+                        scope.ServiceProvider.GetRequiredService<IMetricService>();
 
                     int purgedCount =
-                        await auditAndMetricBroker.PurgeMetricsOlderThanRetentionPeriodAsync(stoppingToken);
+                        await metricService.PurgeMetricsOlderThanRetentionPeriodAsync(stoppingToken);
 
                     this.logger.LogInformation(
                         "MetricPurgeWorker purged {PurgedCount} metric(s).", purgedCount);

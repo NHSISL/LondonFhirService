@@ -8,12 +8,12 @@ using LondonFhirService.Clients.AuditAndMetrics.Brokers.Dispatchers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Identifiers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
-using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
 using LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits;
 using LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics;
+using LondonFhirService.Core.Abstractions.Brokers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -29,24 +29,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
     /// </summary>
     public class AuditAndMetricsClient : IAuditAndMetricsClient
     {
+        /// <summary>
+        /// The section a host binds AuditAndMetricsConfigurations from. Held here rather than in
+        /// each host, so a rename cannot leave one side silently falling back to defaults.
+        /// </summary>
         public const string ConfigurationSectionName = "AuditAndMetricsConfigurations";
 
         public AuditAndMetricsClient(
-            IAuditAndMetricsStorageBroker storageBroker,
-            IAuditUserBroker auditUserBroker,
-            IConfiguration configuration,
-            ILoggerFactory loggerFactory = null,
-            IAuditAndMetricsDispatcher dispatcher = null)
-            : this(
-                storageBroker,
-                auditUserBroker,
-                BindConfigurations(configuration),
-                loggerFactory,
-                dispatcher)
-        { }
-
-        public AuditAndMetricsClient(
-            IAuditAndMetricsStorageBroker storageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
             ILoggerFactory loggerFactory = null,
@@ -71,15 +61,36 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             MetricClient = serviceProvider.GetRequiredService<IMetricClient>();
         }
 
+        /// <summary>
+        /// Binds this library's section for a host, so the section name and the shape behind it
+        /// stay owned by the library rather than hand-rolled by each host. Explicit rather than a
+        /// constructor overload: the client asks for the configuration it needs, not for the
+        /// host's whole IConfiguration.
+        ///
+        /// An absent section falls back to defaults rather than failing, so a host that has not
+        /// configured the library still starts.
+        /// </summary>
+        public static AuditAndMetricsConfigurations BindConfigurations(IConfiguration configuration)
+        {
+            AuditAndMetricsConfigurations configurations =
+                configuration
+                    .GetSection(ConfigurationSectionName)
+                    .Get<AuditAndMetricsConfigurations>();
+
+            return configurations ?? new AuditAndMetricsConfigurations();
+        }
+
         private static IServiceProvider RegisterServices(
-            IAuditAndMetricsStorageBroker storageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
             ILoggerFactory loggerFactory,
             IAuditAndMetricsDispatcher dispatcher)
         {
             // The storage broker is supplied rather than constructed: it is the seam that keeps
-            // this library free of any reference to the application that hosts it.
+            // this library free of any reference to the application that hosts it. It surfaces
+            // only audits and metrics, so a host can satisfy it with the storage broker it
+            // already has.
             IServiceCollection serviceCollection = new ServiceCollection()
                 .AddSingleton(storageBroker)
                 .AddSingleton(auditUserBroker)
@@ -113,16 +124,6 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             }
 
             return serviceCollection.BuildServiceProvider();
-        }
-
-        internal static AuditAndMetricsConfigurations BindConfigurations(IConfiguration configuration)
-        {
-            AuditAndMetricsConfigurations configurations =
-                configuration
-                    .GetSection(ConfigurationSectionName)
-                    .Get<AuditAndMetricsConfigurations>();
-
-            return configurations ?? new AuditAndMetricsConfigurations();
         }
     }
 }

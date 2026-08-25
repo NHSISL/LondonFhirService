@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -20,18 +20,20 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 {
     internal partial class MetricService : IMetricService
     {
-        private readonly IAuditAndMetricsStorageBroker storageBroker;
+        private readonly IAuditAndMetricStorageBroker storageBroker;
         private readonly IMetricBroker metricBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
+        private readonly IAuditUserBroker auditUserBroker;
         private readonly AuditAndMetricsConfigurations metricServiceConfigurations;
         private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public MetricService(
-            IAuditAndMetricsStorageBroker storageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IMetricBroker metricBroker,
             IDateTimeBroker dateTimeBroker,
             ILoggingBroker loggingBroker,
+            IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations metricServiceConfigurations,
             IAuditAndMetricsDispatcher dispatcher)
         {
@@ -39,6 +41,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             this.metricBroker = metricBroker;
             this.dateTimeBroker = dateTimeBroker;
             this.loggingBroker = loggingBroker;
+            this.auditUserBroker = auditUserBroker;
             this.metricServiceConfigurations = metricServiceConfigurations;
             this.dispatcher = dispatcher;
         }
@@ -55,6 +58,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 
             ValidateMetricIsNotNull(metric);
             metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            metric.UserId = await this.auditUserBroker.GetCurrentUserIdAsync();
+            metric.Consumer = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
             ValidateMetricOnAdd(metric);
             IMetric addedMetric = await this.storageBroker.InsertMetricAsync(metric, cancellationToken);
             await this.metricBroker.RecordAsync(addedMetric, cancellationToken);
@@ -79,12 +84,20 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
                 return;
             }
 
+            // All read once, up front. A flush can hold every span of a request, so asking per
+            // metric would repeat the same lookups for the same answers dozens of times.
             DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            string currentUserId = await this.auditUserBroker.GetCurrentUserIdAsync();
+
+            string currentUserDisplayName =
+                await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
 
             foreach (IMetric metric in metrics)
             {
                 ValidateMetricIsNotNull(metric);
                 metric.CreatedDate = currentDateTime;
+                metric.UserId = currentUserId;
+                metric.Consumer = currentUserDisplayName;
                 ValidateMetricOnAdd(metric);
             }
 
@@ -104,6 +117,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 
             ValidateMetricIsNotNull(metric);
             metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            metric.UserId = await this.auditUserBroker.GetCurrentUserIdAsync();
+            metric.Consumer = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
             ValidateMetricOnAdd(metric);
 
             Dispatch(async token =>
@@ -132,12 +147,20 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
                 return;
             }
 
+            // All read once, up front. A flush can hold every span of a request, so asking per
+            // metric would repeat the same lookups for the same answers dozens of times.
             DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            string currentUserId = await this.auditUserBroker.GetCurrentUserIdAsync();
+
+            string currentUserDisplayName =
+                await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
 
             foreach (IMetric metric in metrics)
             {
                 ValidateMetricIsNotNull(metric);
                 metric.CreatedDate = currentDateTime;
+                metric.UserId = currentUserId;
+                metric.Consumer = currentUserDisplayName;
                 ValidateMetricOnAdd(metric);
             }
 

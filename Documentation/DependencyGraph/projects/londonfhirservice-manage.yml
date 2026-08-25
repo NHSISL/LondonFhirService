@@ -5,11 +5,88 @@
 
 project: manage
 components:
+  - id: MG.Audits
+    name: AuditsController
+    layer: exposer
+    col: 3
+    description: "RESTFulController over Audit, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Create, update and delete carry [InvisibleApi]: the middleware on this host makes them unroutable without the key header, so they answer 404 to anyone who does not hold it."
+    methods:
+      - POST /api/Audits
+      - GET /api/Audits
+      - "GET /api/Audits/{auditId}"
+      - PUT /api/Audits
+      - "DELETE /api/Audits/{auditId}"
+    calls:
+      - from: POST /api/Audits
+        to: FS.Audit
+        method: AddAuditAsync(audit)
+      - from: GET /api/Audits
+        to: FS.Audit
+        method: RetrieveAllAuditsAsync
+      - from: "GET /api/Audits/{auditId}"
+        to: FS.Audit
+        method: RetrieveAuditByIdAsync
+      - from: PUT /api/Audits
+        to: FS.Audit
+        method: ModifyAuditAsync
+      - from: "DELETE /api/Audits/{auditId}"
+        to: FS.Audit
+        method: RemoveAuditByIdAsync
+  - id: MG.Metrics
+    name: MetricsController
+    layer: exposer
+    col: 3
+    description: "RESTFulController over Metric, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Create, update and delete carry [InvisibleApi]: the middleware on this host makes them unroutable without the key header, so they answer 404 to anyone who does not hold it. There is no PUT — a metric records work that already happened, so the table is append-only and no update path exists beneath the controller to expose."
+    methods:
+      - POST /api/Metrics
+      - GET /api/Metrics
+      - "GET /api/Metrics/{metricId}"
+      - "DELETE /api/Metrics/{metricId}"
+    calls:
+      - from: POST /api/Metrics
+        to: FS.Metric
+        method: AddMetricAsync
+      - from: GET /api/Metrics
+        to: FS.Metric
+        method: RetrieveAllMetricsAsync
+      - from: "GET /api/Metrics/{metricId}"
+        to: FS.Metric
+        method: RetrieveMetricByIdAsync
+      - from: "DELETE /api/Metrics/{metricId}"
+        to: FS.Metric
+        method: RemoveMetricByIdAsync
+  - id: MG.Providers
+    name: ProvidersController
+    layer: exposer
+    col: 3
+    description: "RESTFulController over Provider, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Reads are open to ManageAdmin and Users; create, update and delete narrow to ManageAdmin with a second [Authorize] on the method, because a provider row decides who the patient fan-out calls and which source is primary. Nothing here is [InvisibleApi] — providers are configuration an operator manages, not a record only the acceptance suite should seed."
+    methods:
+      - POST /api/Providers
+      - GET /api/Providers
+      - "GET /api/Providers/{providerId}"
+      - PUT /api/Providers
+      - "DELETE /api/Providers/{providerId}"
+    calls:
+      - from: POST /api/Providers
+        to: FS.Provider
+        method: AddProviderAsync
+      - from: GET /api/Providers
+        to: FS.Provider
+        method: RetrieveAllProvidersAsync
+      - from: "GET /api/Providers/{providerId}"
+        to: FS.Provider
+        method: RetrieveProviderByIdAsync
+      - from: PUT /api/Providers
+        to: FS.Provider
+        method: ModifyProviderAsync
+      - from: "DELETE /api/Providers/{providerId}"
+        to: FS.Provider
+        method: RemoveProviderByIdAsync
   - id: MG.FhirRecords
     name: FhirRecordsController
     layer: exposer
     col: 3
-    description: "RESTFulController over FhirRecord. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service. Writes are marked [InvisibleApi]. Xeption types are mapped one-for-one onto RFC problem responses."
+    description: "RESTFulController over FhirRecord, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
     methods:
       - POST /api/FhirRecords
       - GET /api/FhirRecords
@@ -36,7 +113,7 @@ components:
     name: FhirRecordDifferencesController
     layer: exposer
     col: 3
-    description: "RESTFulController over FhirRecordDifference. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service. Writes are marked [InvisibleApi]. Xeption types are mapped one-for-one onto RFC problem responses."
+    description: "RESTFulController over FhirRecordDifference, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
     methods:
       - POST /api/FhirRecordDifferences
       - GET /api/FhirRecordDifferences

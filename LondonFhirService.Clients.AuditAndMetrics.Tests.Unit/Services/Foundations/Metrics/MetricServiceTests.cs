@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -24,20 +24,22 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 {
     public partial class MetricServiceTests
     {
-        private readonly Mock<IAuditAndMetricsStorageBroker> storageBrokerMock;
+        private readonly Mock<IAuditAndMetricStorageBroker> storageBrokerMock;
         private readonly Mock<IMetricBroker> metricBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
+        private readonly Mock<IAuditUserBroker> auditUserBrokerMock;
         private readonly Mock<IAuditAndMetricsDispatcher> dispatcherMock;
         private readonly AuditAndMetricsConfigurations metricServiceConfigurations;
         private readonly IMetricService metricService;
 
         public MetricServiceTests()
         {
-            this.storageBrokerMock = new Mock<IAuditAndMetricsStorageBroker>();
+            this.storageBrokerMock = new Mock<IAuditAndMetricStorageBroker>();
             this.metricBrokerMock = new Mock<IMetricBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+            this.auditUserBrokerMock = new Mock<IAuditUserBroker>();
             this.dispatcherMock = new Mock<IAuditAndMetricsDispatcher>();
 
             // Inline, so a dispatched write is observable by the time the call returns.
@@ -65,6 +67,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 metricBroker: this.metricBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
+                auditUserBroker: this.auditUserBrokerMock.Object,
                 metricServiceConfigurations: this.metricServiceConfigurations,
                 dispatcher: this.dispatcherMock.Object);
         }
@@ -75,6 +78,27 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.metricBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        /// <summary>
+        /// Deliberately outside VerifyNoOtherCallsOnAllBrokers. Every add and log path resolves
+        /// the current user once, so folding this mock into the strict check would mean repeating
+        /// the same Verify in roughly thirty tests that are not about identity. What the service
+        /// promises here - the user and the consumer stamped on a single add, stamped on a log,
+        /// and each resolved exactly once however many spans a batch holds - is pinned in
+        /// MetricServiceTests.UserStamping.
+        /// </summary>
+        private void VerifyCurrentUserResolvedOnce()
+        {
+            this.auditUserBrokerMock.Verify(broker =>
+                broker.GetCurrentUserIdAsync(),
+                    Times.Once);
+
+            this.auditUserBrokerMock.Verify(broker =>
+                broker.GetCurrentUserDisplayNameAsync(),
+                    Times.Once);
+
+            this.auditUserBrokerMock.VerifyNoOtherCalls();
         }
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>

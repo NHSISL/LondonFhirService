@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -25,7 +25,11 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Audits
 
             List<string> expectedAttributeValues = new List<string>
             {
+                "ManageAdmin",
+                "LondonDataServices.Manage.Administrators",
                 "Administrators",
+                "ManageUsers",
+                "LondonDataServices.Manage.Users",
                 "Users"
             };
 

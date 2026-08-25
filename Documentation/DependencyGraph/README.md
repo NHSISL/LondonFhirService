@@ -65,9 +65,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 78 declared components and 341 declared edges draw as
-**75 components · 316 flows** in the single-copy view and **263 nodes ·
-809 flows** per consumer (323 · 894 with utility brokers on).
+At the last scan, 92 declared components and 431 declared edges draw as
+**89 components · 406 flows** in the single-copy view and **258 nodes ·
+1016 flows** per consumer (92 · 431 and 294 · 1069 with utility brokers on).
 
 `.github/workflows/pages.yml` publishes this folder to GitHub Pages on every
 push to `main` that touches it — `index.html` is the site root. Nothing is
@@ -75,22 +75,40 @@ compiled; `index.html`, `graph.yml` and `projects/` are copied as-is. Pages
 has to be enabled once in the repository's Settings → Pages (source: GitHub
 Actions).
 
-## Current truths captured in the data (scanned 2026-08-14)
+## Current truths captured in the data (scanned 2026-08-25)
 
 - **`LondonFhirService.Core` has no event bus.** Every flow is a direct call.
   The comparison half of the solution is driven by polling, not messaging:
   `ComparisonWorker` (a `BackgroundService` in the API host) is the *only*
   entry point into `ComparisonCoordinationService`.
-- **`AuditBroker` → `AuditClient` → `AuditService`** is the one place where a
-  broker calls back into a foundation service, so the audit write path
-  crosses the layering backwards. It is drawn faithfully: the `AuditService`
-  copy under each `AuditClient` copy sits to the *left* of its consumer.
-- **`AuditService` is the only foundation service that takes
-  `IStorageBrokerFactory`.** Every write and every read-by-id opens and
-  disposes its own `StorageBroker`, because audits are written from parallel
-  provider calls and from background work where the request-scoped context is
-  unsafe. Only `RetrieveAllAuditsAsync` uses the injected scoped broker.
-  `Stu3PatientService` uses the factory for the same reason.
+- **Auditing and metrics moved out of Core into their own library.**
+  `LondonFhirService.Clients.AuditAndMetrics` owns the validation, stamping and
+  telemetry; Core reaches it through the single `AuditAndMetricBroker`, and the
+  library reaches back down through ports declared in
+  `LondonFhirService.Core.Abstractions`. That is what makes the broker legal:
+  recording is service work, every layer needs it, and a broker may not call a
+  service — but it *may* wrap an external dependency. `AuditBroker` and Core's
+  old `AuditClient` are gone.
+- **The arrows into `AuditAndMetricStorageBroker` run right-to-left.** It
+  implements `IAuditAndMetricStorageBroker`, so the library calls back down
+  into the application that hosts it. `IStorageBroker` inherits that port,
+  which is what lets the standalone library share Core's `StorageBroker`
+  without ever being handed a concrete type.
+- **`AuditAndMetricStorageBroker` is the only component that takes
+  `IStorageBrokerFactory` for its writes.** Every write opens and disposes its
+  own `StorageBroker`, because a deferred write outlives the request scope that
+  owns the injected one; only the reads use the scoped broker, because they
+  hand back an `IQueryable` the caller enumerates. `Stu3PatientService` uses
+  the factory for the same reason.
+- **Deferred writes are handed back to the host.** `IAuditAndMetricsDispatcher`
+  is a port too: the library defers writes so recording does not lengthen the
+  work being recorded, but only a host with a lifecycle can bound the queue and
+  drain it on shutdown. Without one the library falls back to
+  `ThreadPoolDispatcher` — one work item per write, unbounded, draining nothing.
+- **One span, two sinks.** The library's `MetricService` persists each span
+  through the storage port *and* publishes it to an `ActivitySource`.
+  `MetricTelemetryPublisher` on the API host is what subscribes; before it
+  existed every published span was dropped before reaching Application Insights.
 - **The access decision is now delegated to a remote service, and lives with
   the patient orchestration.** `Stu3PatientOrchestrationService.ValidateAccess`
   resolves the caller, builds a `ValidateAccessRequest` (consumer user id +
@@ -125,11 +143,23 @@ Actions).
   modelled — and now lives — as an orchestration: it sits alongside
   `Stu3PatientOrchestrationService` under the coordination service, and its
   exceptions are the `FhirReconciliationOrchestration*` family.
-- **The two hosts are not equivalent.** `LondonFhirService.Api` registers the
-  whole stack (providers, orchestrations, processings, coordinations,
-  background worker). `LondonFhirService.Manage` registers brokers, clients
-  four foundation services and the reconciliation orchestration only — its
-  `AddProcessingServices` and `AddCoordinationServices` are empty methods.
+- **The two hosts are not equivalent, and every admin CRUD controller now
+  lives on Manage.** `LondonFhirService.Api` keeps the headline patient
+  endpoint, the two config endpoints and all the background work
+  (`ComparisonWorker`, `MetricPurgeWorker`, `AuditAndMetricsDispatchWorker`,
+  `MetricTelemetryPublisher`). `LondonFhirService.Manage` carries
+  `Audits`, `Metrics`, `Providers`, `FhirRecords` and
+  `FhirRecordDifferences` — audit rows carry whole patient payloads, and Manage
+  is reachable only from the business IP range.
+- **`Audits` and `Metrics` hide their write verbs; `Providers` does not.** All
+  three are `[Authorize(Roles = "ManageAdmin,ManageUsers")]`. Audit and metric
+  writes additionally carry `[InvisibleApi]`, so the middleware answers 404
+  without the key header and they exist for the acceptance suite to seed and
+  tear down. Provider writes instead narrow to `ManageAdmin` with a second
+  `[Authorize]` — a provider row decides who the patient fan-out calls and
+  which source is primary, so it is operator-managed configuration rather than
+  a record only tests should touch. `Metrics` has no PUT at all: a span records
+  work that already happened.
 - **`HashBroker` and the NHS-number hashing config are gone.** The SHA-256 hash
   existed only to build the patient identifier for the in-process PDS check;
   the remote consumer-access API does its own hashing, so `IHashBroker`,

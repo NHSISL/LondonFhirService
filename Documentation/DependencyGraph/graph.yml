@@ -34,6 +34,14 @@ projects:
     name: LondonFhirService.Core
     kind: internal
     file: projects/londonfhirservice-core.yml
+  - id: core-abstractions
+    name: LondonFhirService.Core.Abstractions
+    kind: internal
+    file: projects/londonfhirservice-core-abstractions.yml
+  - id: clients-am
+    name: LondonFhirService.Clients.AuditAndMetrics
+    kind: internal
+    file: projects/londonfhirservice-clients-auditandmetrics.yml
   - id: pkg-security
     name: ISL.Security.Client
     kind: library
@@ -54,6 +62,10 @@ projects:
     name: Microsoft.Extensions.Logging
     kind: external
     file: projects/microsoft-extensions-logging.yml
+  - id: ext-appinsights
+    name: System.Diagnostics / Application Insights
+    kind: external
+    file: projects/system-diagnostics-application-insights.yml
   - id: ext-azure
     name: Azure.Identity
     kind: external
@@ -71,11 +83,15 @@ roots:
   - MC.FeatureSwitch
   - API.Patient
   - API.ComparisonWorker
-  - API.Audits
-  - API.FhirRecords
-  - API.FhirRecordDifferences
+  - API.MetricPurgeWorker
+  - API.DispatchWorker
+  - API.Dispatcher
+  - API.MetricTelemetryPublisher
   - API.Features
   - API.FrontendConfigurations
+  - MG.Audits
+  - MG.Metrics
+  - MG.Providers
   - MG.FhirRecords
   - MG.FhirRecordDifferences
   - CO.Stu3Patient
@@ -91,6 +107,7 @@ roots:
   - PR.Rule.Id
   - PR.Rule.Meta
   - FS.Audit
+  - FS.Metric
   - FS.ConsumerAccess
   - FS.FhirRecord
   - FS.FhirRecordDifference
@@ -118,8 +135,9 @@ roots:
   - FS.Matcher.Procedure
   - FS.Matcher.ProcedureRequest
   - FS.Matcher.ReferralRequest
-  - AuditClient
-  - AuditBroker
+  - AuditAndMetricBroker
+  - AuditAndMetricStorageBroker
+  - AuditUserBroker
   - SecurityBroker
   - SecurityAuditBroker
   - StorageBroker
@@ -129,12 +147,20 @@ roots:
   - DateTimeBroker
   - IdentifierBroker
   - LoggingBroker
+  - ABS.Ports
+  - LIB.AMClient
+  - LIB.AM.AuditClient
+  - LIB.AM.MetricClient
+  - LIB.AM.AuditService
+  - LIB.AM.MetricService
+  - LIB.AM.MetricBroker
   - LIB.SecurityClient
   - LIB.EFCoreClient
   - LIB.FhirAbstractionProvider
   - LIB.FhirProvider
   - EXT.EFCore
   - EXT.ILogger
+  - EXT.ActivitySource
   - EXT.TokenCredential
   - EXT.HttpClient
   - EXT.DdsStu3

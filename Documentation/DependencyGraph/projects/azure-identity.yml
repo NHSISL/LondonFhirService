@@ -11,5 +11,5 @@ components:
     col: 12
     shared: true
     deriveMethods: true
-    description: Azure.Identity. Registered as a singleton in the API host and used by ConsumerAccessBroker to mint a bearer token for the remote consumer-access endpoint.
+    description: "Azure.Identity. Registered as a singleton in the API host and used by ConsumerAccessBroker to mint a bearer token for the remote consumer-access endpoint."
     methods: []
