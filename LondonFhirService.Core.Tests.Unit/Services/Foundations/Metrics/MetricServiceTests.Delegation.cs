@@ -14,13 +14,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
     public partial class MetricServiceTests
     {
         [Fact]
-        public async Task ShouldForwardTheSpanOnAddMetricAsync()
+        public async Task ShouldForwardTheSpanOnLogMetricAsync()
         {
             // given
             Metric randomMetric = CreateRandomMetric();
 
             // when
-            await this.metricService.AddMetricAsync(
+            await this.metricService.LogMetricAsync(
                 randomMetric, TestContext.Current.CancellationToken);
 
             // then
@@ -34,13 +34,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
         }
 
         [Fact]
-        public async Task ShouldForwardTheBatchOnAddMetricsAsync()
+        public async Task ShouldForwardTheBatchOnLogMetricsAsync()
         {
             // given
             List<Metric> randomMetrics = CreateRandomMetrics();
 
             // when
-            await this.metricService.AddMetricsAsync(
+            await this.metricService.LogMetricsAsync(
                 randomMetrics, TestContext.Current.CancellationToken);
 
             // then
@@ -86,7 +86,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
             // when
-            await this.metricService.AddMetricAsync(randomMetric, cancellationToken);
+            await this.metricService.LogMetricAsync(randomMetric, cancellationToken);
 
             // then
             this.auditAndMetricBrokerMock.Verify(broker =>

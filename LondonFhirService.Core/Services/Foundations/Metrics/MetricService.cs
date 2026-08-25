@@ -2,7 +2,9 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
@@ -36,15 +38,36 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask AddMetricAsync(Metric metric, CancellationToken cancellationToken = default) =>
+        public ValueTask<Metric> AddMetricAsync(Metric metric, CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+                await this.auditAndMetricBroker.AddMetricAsync(metric, cancellationToken));
+
+        public ValueTask LogMetricAsync(Metric metric, CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
                 await this.auditAndMetricBroker.LogMetricAsync(metric, cancellationToken));
 
-        public ValueTask AddMetricsAsync(
+        public ValueTask LogMetricsAsync(
             List<Metric> metrics,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
                 await this.auditAndMetricBroker.LogMetricsAsync(metrics, cancellationToken));
+
+        public ValueTask<IQueryable<Metric>> RetrieveAllMetricsAsync(
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+                await this.auditAndMetricBroker.RetrieveAllMetricsAsync(cancellationToken));
+
+        public ValueTask<Metric> RetrieveMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+                await this.auditAndMetricBroker.RetrieveMetricByIdAsync(metricId, cancellationToken));
+
+        public ValueTask<Metric> RemoveMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+                await this.auditAndMetricBroker.RemoveMetricByIdAsync(metricId, cancellationToken));
 
         public ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(
             CancellationToken cancellationToken = default) =>

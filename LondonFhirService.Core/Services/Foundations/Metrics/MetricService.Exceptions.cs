@@ -33,6 +33,10 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             {
                 throw;
             }
+            catch (ClientExceptions.MetricClientNotFoundException metricClientNotFoundException)
+            {
+                throw await CreateAndLogNotFoundExceptionAsync(metricClientNotFoundException);
+            }
             catch (ClientExceptions.MetricClientValidationException metricClientValidationException)
             {
                 throw await CreateAndLogValidationExceptionAsync(metricClientValidationException);
@@ -58,6 +62,28 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
 
                 return true;
             });
+
+        /// <summary>
+        /// Translated into this application's own category, because the controllers dispatch on
+        /// Core's types to choose a status code. Without this a missing span is carried in a type
+        /// the controller cannot name, and every not-found collapses into a 400.
+        /// </summary>
+        private async ValueTask<MetricServiceValidationException> CreateAndLogNotFoundExceptionAsync(
+            Xeption exception)
+        {
+            var notFoundMetricServiceException =
+                new NotFoundMetricServiceException(
+                    message: exception.InnerException?.Message ?? "Metric not found.");
+
+            var metricServiceValidationException =
+                new MetricServiceValidationException(
+                    message: "Metric validation errors occurred, please try again.",
+                    innerException: notFoundMetricServiceException);
+
+            await this.loggingBroker.LogErrorAsync(metricServiceValidationException);
+
+            return metricServiceValidationException;
+        }
 
         /// <summary>
         /// The metric client collapses plain validation and dependency validation into one

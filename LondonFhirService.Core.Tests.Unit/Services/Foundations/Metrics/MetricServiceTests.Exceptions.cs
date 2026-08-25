@@ -20,7 +20,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
     {
         [Theory]
         [MemberData(nameof(ClientExceptionMappings))]
-        public async Task ShouldLocaliseClientExceptionOnAddMetricAndLogItAsync(
+        public async Task ShouldLocaliseClientExceptionOnLogMetricAndLogItAsync(
             Xeption clientException,
             Xeption expectedServiceException)
         {
@@ -32,11 +32,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ThrowsAsync(clientException);
 
             // when
-            ValueTask addMetricTask =
-                this.metricService.AddMetricAsync(randomMetric, TestContext.Current.CancellationToken);
+            ValueTask logMetricTask =
+                this.metricService.LogMetricAsync(randomMetric, TestContext.Current.CancellationToken);
 
             Xeption actualException =
-                await Assert.ThrowsAsync(expectedServiceException.GetType(), addMetricTask.AsTask) as Xeption;
+                await Assert.ThrowsAsync(expectedServiceException.GetType(), logMetricTask.AsTask) as Xeption;
 
             // then
             actualException.Should().BeEquivalentTo(expectedServiceException);
@@ -46,7 +46,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
 
         [Theory]
         [MemberData(nameof(ClientExceptionMappings))]
-        public async Task ShouldLocaliseClientExceptionOnAddMetricsAndLogItAsync(
+        public async Task ShouldLocaliseClientExceptionOnLogMetricsAndLogItAsync(
             Xeption clientException,
             Xeption expectedServiceException)
         {
@@ -58,11 +58,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ThrowsAsync(clientException);
 
             // when
-            ValueTask addMetricsTask =
-                this.metricService.AddMetricsAsync(randomMetrics, TestContext.Current.CancellationToken);
+            ValueTask logMetricsTask =
+                this.metricService.LogMetricsAsync(randomMetrics, TestContext.Current.CancellationToken);
 
             Xeption actualException =
-                await Assert.ThrowsAsync(expectedServiceException.GetType(), addMetricsTask.AsTask) as Xeption;
+                await Assert.ThrowsAsync(expectedServiceException.GetType(), logMetricsTask.AsTask) as Xeption;
 
             // then
             actualException.Should().BeEquivalentTo(expectedServiceException);
@@ -123,13 +123,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ThrowsAsync(clientException);
 
             // when
-            Func<Task> addMetric = async () =>
-                await this.metricService.AddMetricAsync(
+            Func<Task> logMetric = async () =>
+                await this.metricService.LogMetricAsync(
                     randomMetric, TestContext.Current.CancellationToken);
 
             // then
             var actualException =
-                (await addMetric.Should().ThrowAsync<MetricServiceDependencyValidationException>()).Which;
+                (await logMetric.Should().ThrowAsync<MetricServiceDependencyValidationException>()).Which;
 
             actualException.InnerException.Should().BeOfType(expectedCategorisedType);
 
@@ -174,14 +174,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
                     .ThrowsAsync(operationCanceledException);
 
             // when
-            Func<Task> addMetric = async () =>
-                await this.metricService.AddMetricAsync(
+            Func<Task> logMetric = async () =>
+                await this.metricService.LogMetricAsync(
                     randomMetric, TestContext.Current.CancellationToken);
 
             // then
             // A caller that cancels gets the cancellation it asked for, not a service exception
             // it has to unwrap to find out what happened.
-            (await addMetric.Should().ThrowAsync<OperationCanceledException>())
+            (await logMetric.Should().ThrowAsync<OperationCanceledException>())
                 .Which.Should().BeSameAs(operationCanceledException);
 
             this.loggingBrokerMock.Verify(broker =>
