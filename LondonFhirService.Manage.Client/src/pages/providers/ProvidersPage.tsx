@@ -1,4 +1,5 @@
-import { Col, Container, Row } from "react-bootstrap";
+﻿import { Col, Container, Row } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import { useProvidersPage } from "../../hooks/pages/useProvidersPage";
 import { ErrorSummary } from "../../components/shared/ErrorSummary";
 import { LoadingIndicator } from "../../components/shared/LoadingIndicator";
@@ -34,13 +35,19 @@ export function ProvidersPage() {
 
     return (
         <Container fluid className="mt-4">
-            <Row className="mb-3 p-2">
+            <Row className="mb-3 p-2 align-items-center">
                 <Col>
                     <h1 className="h3 mb-1">Providers</h1>
                     <p className="text-muted mb-0">
                         The registry of upstream FHIR data sources the patient fan-out calls.
                         Select a provider to see its details.
                     </p>
+                </Col>
+
+                <Col xs="auto">
+                    <Link to="/admin/providers/new" className="btn btn-primary">
+                        Add provider
+                    </Link>
                 </Col>
             </Row>
 

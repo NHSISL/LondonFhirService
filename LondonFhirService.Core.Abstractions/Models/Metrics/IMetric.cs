@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -14,6 +14,17 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
     public interface IMetric
     {
         Guid Id { get; set; }
+
+        /// <summary>
+        /// Who the request that produced this span belonged to, or empty when it was produced
+        /// outside a user request - a background worker or the retention sweep.
+        ///
+        /// This is an opaque account identifier, not a name, an email or anything else that
+        /// identifies a patient. It is here so a slow or failing span can be attributed to the
+        /// caller who triggered it without joining back to the audit trail first.
+        /// </summary>
+        string UserId { get; set; }
+
         Guid? ParentId { get; set; }
         Guid CorrelationId { get; set; }
         string Method { get; set; }

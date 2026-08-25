@@ -1,14 +1,17 @@
-import moment from "moment";
+﻿import moment from "moment";
 import { ProviderService } from "../../foundations/providers/providerService";
 import { ProviderViewServiceException } from "../../../models/views/providers/exceptions/ProviderViewServiceException";
 import type { IProviderService } from "../../foundations/providers/iProviderService";
 import type { IProviderViewService } from "./iProviderViewService";
 import type { Provider } from "../../../models/foundations/providers/Provider";
 import type { ProviderDetailView } from "../../../models/views/providers/ProviderDetailView";
+import type { ProviderFormValues } from "../../../models/views/providers/ProviderFormValues";
 import type { ProviderListItemView } from "../../../models/views/providers/ProviderListItemView";
+import type { ProviderRegistration } from "../../../models/foundations/providers/ProviderRegistration";
 
 const notSetText = "—";
 const dateDisplayFormat = "DD MMM YYYY HH:mm";
+const dateTimeLocalFormat = "YYYY-MM-DDTHH:mm";
 
 export class ProviderViewService implements IProviderViewService {
     private readonly providerService: IProviderService;
@@ -67,6 +70,102 @@ export class ProviderViewService implements IProviderViewService {
             providerListItemView.searchableText.includes(trimmedSearchTerm));
     }
 
+    public createProviderFormValues(): ProviderFormValues {
+        return {
+            friendlyName: "",
+            fullyQualifiedName: "",
+            fhirVersion: "",
+            isActive: true,
+            activeFrom: "",
+            activeTo: "",
+            isPrimary: false,
+            isForComparisonOnly: false
+        };
+    }
+
+    public async addProviderAsync(
+        providerFormValues: ProviderFormValues)
+        : Promise<ProviderDetailView> {
+        try {
+            const provider = await this.providerService.addProviderAsync(
+                this.toProviderRegistration(providerFormValues));
+
+            return this.toProviderDetailView(provider);
+        } catch (exception) {
+            throw new ProviderViewServiceException(
+                "We could not add this provider, please correct any errors and try again.",
+                exception);
+        }
+    }
+
+    public async removeProviderAsync(providerId: string): Promise<void> {
+        try {
+            await this.providerService.removeProviderByIdAsync(providerId);
+        } catch (exception) {
+            throw new ProviderViewServiceException(
+                "We could not delete this provider, please try again or contact support.",
+                exception);
+        }
+    }
+
+    // The current record is re-read rather than reconstructed from the page, because the server
+    // compares CreatedBy and CreatedDate against storage and rejects a modify that does not carry
+    // them back unchanged.
+    public async updateProviderAsync(
+        providerId: string,
+        providerFormValues: ProviderFormValues)
+        : Promise<ProviderDetailView> {
+        try {
+            const currentProvider =
+                await this.providerService.retrieveProviderByIdAsync(providerId);
+
+            const modifiedProvider = await this.providerService.modifyProviderAsync({
+                ...currentProvider,
+                friendlyName: providerFormValues.friendlyName.trim(),
+                fullyQualifiedName: providerFormValues.fullyQualifiedName.trim(),
+                fhirVersion: providerFormValues.fhirVersion.trim(),
+                isActive: providerFormValues.isActive,
+                activeFrom: this.toIsoDate(providerFormValues.activeFrom),
+                activeTo: this.toIsoDate(providerFormValues.activeTo),
+                isForComparisonOnly: providerFormValues.isForComparisonOnly,
+                isPrimary: providerFormValues.isPrimary
+            });
+
+            return this.toProviderDetailView(modifiedProvider);
+        } catch (exception) {
+            throw new ProviderViewServiceException(
+                "We could not save this provider, please correct any errors and try again.",
+                exception);
+        }
+    }
+
+    // The id is minted here rather than server side because the API validates it as already set.
+    private toProviderRegistration(providerFormValues: ProviderFormValues): ProviderRegistration {
+        return {
+            id: crypto.randomUUID(),
+            friendlyName: providerFormValues.friendlyName.trim(),
+            fullyQualifiedName: providerFormValues.fullyQualifiedName.trim(),
+            fhirVersion: providerFormValues.fhirVersion.trim(),
+            isActive: providerFormValues.isActive,
+            activeFrom: this.toIsoDate(providerFormValues.activeFrom),
+            activeTo: this.toIsoDate(providerFormValues.activeTo),
+            isForComparisonOnly: providerFormValues.isForComparisonOnly,
+            isPrimary: providerFormValues.isPrimary
+        };
+    }
+
+    // datetime-local gives a local wall clock string. Keep the offset so the API stores the
+    // instant the operator meant rather than reading it as UTC.
+    private toIsoDate(value: string): string | null {
+        if (value.trim().length === 0) {
+            return null;
+        }
+
+        const parsedValue = moment(value);
+
+        return parsedValue.isValid() ? parsedValue.toISOString(true) : null;
+    }
+
     private toProviderListItemView(provider: Provider): ProviderListItemView {
         const statusText = this.mapStatusToDisplayText(provider);
         const roleText = this.mapRoleToDisplayText(provider);
@@ -114,8 +213,32 @@ export class ProviderViewService implements IProviderViewService {
             createdDateText: this.formatDate(provider.createdDate),
             updatedBy: provider.updatedBy || notSetText,
             updatedDateText: this.formatDate(provider.updatedDate),
-            detailUrl: this.buildDetailUrl(provider.id)
+            detailUrl: this.buildDetailUrl(provider.id),
+            editValues: this.toProviderFormValues(provider)
         };
+    }
+
+    private toProviderFormValues(provider: Provider): ProviderFormValues {
+        return {
+            friendlyName: provider.friendlyName,
+            fullyQualifiedName: provider.fullyQualifiedName,
+            fhirVersion: provider.fhirVersion,
+            isActive: provider.isActive,
+            activeFrom: this.toDateTimeLocal(provider.activeFrom),
+            activeTo: this.toDateTimeLocal(provider.activeTo),
+            isPrimary: provider.isPrimary,
+            isForComparisonOnly: provider.isForComparisonOnly
+        };
+    }
+
+    private toDateTimeLocal(value: string | null): string {
+        if (value === null || value.length === 0) {
+            return "";
+        }
+
+        const parsedValue = moment(value);
+
+        return parsedValue.isValid() ? parsedValue.format(dateTimeLocalFormat) : "";
     }
 
     private mapStatusToDisplayText(provider: Provider): string {
@@ -192,6 +315,6 @@ export class ProviderViewService implements IProviderViewService {
     }
 
     private buildDetailUrl(providerId: string): string {
-        return `/providers/${encodeURIComponent(providerId)}`;
+        return `/admin/providers/${encodeURIComponent(providerId)}`;
     }
 }

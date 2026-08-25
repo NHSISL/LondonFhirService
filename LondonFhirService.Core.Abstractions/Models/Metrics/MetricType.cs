@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -12,29 +12,31 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
     /// For GetStructuredRecord the tree is:
     ///
     ///   Request
-    ///   +- Orchestration
-    ///   |  +- AccessCheck
-    ///   |  +- ProviderRequests
-    ///   |     +- ProviderDiscovery
-    ///   |     +- Foundation
-    ///   |        +- ProviderFanOut
-    ///   |           +- Provider    (one per provider, in parallel)
-    ///   |           |  +- ProviderCall
-    ///   |           |  +- Persist  (deferred; runs after its parent completes)
-    ///   |           +- Provider
-    ///   |              +- ProviderCall
-    ///   |              +- Persist  (deferred)
+    ///   +- AccessCheck
+    ///   +- ProviderRequests
+    ///   |  +- ProviderDiscovery
+    ///   |  +- ProviderFanOut
+    ///   |     +- Provider    (one per provider, in parallel)
+    ///   |     |  +- Persist  (deferred; runs after its parent completes)
+    ///   |     +- Provider
+    ///   |        +- Persist  (deferred)
     ///   +- Consolidation
     ///
     /// Which yields, without any span kind being special cased:
     ///
     ///   sibling wait  = ProviderFanOut - Provider          per provider, time spent idle
     ///                                                      waiting for the slowest sibling
-    ///   API overhead  = Request - (Orchestration + Consolidation)
+    ///   API overhead  = Request - (AccessCheck + ProviderRequests + Consolidation)
     ///
     /// Persist is the one span whose duration is not part of its ancestors' durations: the write
     /// is dispatched to a background queue, so it starts around the time its Provider parent
     /// finishes and costs the request nothing.
+    ///
+    /// Orchestration, Foundation and ProviderCall are no longer recorded. Each wrapped a single
+    /// child and differed from it only by that layer's own overhead, so they added depth to every
+    /// tree without adding a figure that could not be derived. The members are kept because the
+    /// column is persisted as text and read back through EnumToStringConverter: dropping one
+    /// would fail to parse every historic row still inside the retention window.
     /// </summary>
     public enum MetricType
     {
@@ -51,6 +53,7 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
         /// orchestration overhead between them. Subtracting AccessCheck and ProviderRequests
         /// from it isolates that overhead.
         /// </summary>
+        /// <summary>No longer recorded. Kept so historic rows still parse - see the note above.</summary>
         Orchestration,
 
         /// <summary>The consumer access permission check.</summary>
@@ -70,6 +73,7 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
         /// Sits between ProviderRequests and ProviderFanOut, so foundation overhead is
         /// Foundation - ProviderFanOut.
         /// </summary>
+        /// <summary>No longer recorded. Kept so historic rows still parse - see the note above.</summary>
         Foundation,
 
         /// <summary>
@@ -91,6 +95,7 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
         /// from Provider so that a slow provider can be told apart from slow handling of what it
         /// returned.
         /// </summary>
+        /// <summary>No longer recorded. Kept so historic rows still parse - see the note above.</summary>
         ProviderCall,
 
         /// <summary>

@@ -1,7 +1,8 @@
-import ApiBroker from "../apiBroker";
+﻿import ApiBroker from "../apiBroker";
 import { ProviderApiBrokerException } from "../../models/foundations/providers/exceptions/ProviderApiBrokerException";
 import type { IProviderApiBroker } from "./iProviderApiBroker";
 import type { Provider } from "../../models/foundations/providers/Provider";
+import type { ProviderRegistration } from "../../models/foundations/providers/ProviderRegistration";
 
 export class ProviderApiBroker implements IProviderApiBroker {
     private readonly relativeProvidersUrl = "/api/providers";
@@ -43,6 +44,47 @@ export class ProviderApiBroker implements IProviderApiBroker {
         } catch (exception) {
             throw new ProviderApiBrokerException(
                 `Failed to retrieve provider '${providerId}' from the API.`,
+                exception);
+        }
+    }
+
+    public async postProviderAsync(
+        providerRegistration: ProviderRegistration)
+        : Promise<Provider> {
+        try {
+            const response = await this.apiBroker.PostAsync(
+                this.relativeProvidersUrl,
+                providerRegistration);
+
+            return this.toProvider(response.data);
+        } catch (exception) {
+            throw new ProviderApiBrokerException(
+                "Failed to add the provider through the API.",
+                exception);
+        }
+    }
+
+    public async putProviderAsync(provider: Provider): Promise<Provider> {
+        try {
+            const response = await this.apiBroker.PutAsync(this.relativeProvidersUrl, provider);
+
+            return this.toProvider(response.data);
+        } catch (exception) {
+            throw new ProviderApiBrokerException(
+                `Failed to update provider '${provider.id}' through the API.`,
+                exception);
+        }
+    }
+
+    public async deleteProviderByIdAsync(providerId: string): Promise<Provider> {
+        try {
+            const response = await this.apiBroker.DeleteAsync(
+                `${this.relativeProvidersUrl}/${encodeURIComponent(providerId)}`);
+
+            return this.toProvider(response.data);
+        } catch (exception) {
+            throw new ProviderApiBrokerException(
+                `Failed to delete provider '${providerId}' through the API.`,
                 exception);
         }
     }

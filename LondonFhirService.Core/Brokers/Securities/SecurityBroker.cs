@@ -87,6 +87,17 @@ namespace LondonFhirService.Core.Brokers.Securities
         }
 
         /// <summary>
+        /// Retrieves the userId of the current authenticated user.
+        /// </summary>
+        /// <returns>An <see cref="User"/> object containing user details.</returns>
+        public async ValueTask<string> GetCurrentUserIdAsync()
+        {
+            var user = await securityClient.Users.GetUserAsync(claimsPrincipal);
+
+            return user.UserId;
+        }
+
+        /// <summary>
         /// Determines whether the current user is authenticated.
         /// </summary>
         /// <returns>True if the user is authenticated; otherwise, false.</returns>
