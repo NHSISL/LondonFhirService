@@ -1,0 +1,37 @@
+# LondonFhirService.Providers.FHIR.STU3 — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: pkg-fhir
+components:
+  - id: LIB.FhirAbstractionProvider
+    name: FhirAbstractionProvider
+    layer: client
+    col: 10
+    shared: true
+    deriveMethods: true
+    description: "LondonFhirService.Providers.FHIR.STU3.Abstractions. Registered as a singleton wrapping the DDS and LDS providers; Stu3FhirBroker forwards its whole typed-resource surface. Method rows are derived from the declared edges."
+    methods: []
+    calls:
+      - from: FhirProviders
+        to: LIB.FhirProvider
+        method: null
+  - id: LIB.FhirProvider
+    name: IFhirProvider
+    layer: client
+    col: 11
+    shared: true
+    description: "The per-provider surface Stu3PatientService actually calls, resolved out of the FhirProviders collection by matching Provider.FullyQualifiedName. Two implementations are registered: DdsStu3Provider and LdsStu3Provider."
+    methods:
+      - ProviderName
+      - DisplayName
+      - SupportsResource
+      - Patients.GetStructuredRecordSerialisedAsync
+    calls:
+      - from: Patients.GetStructuredRecordSerialisedAsync
+        to: EXT.DdsStu3
+        method: Patients.GetStructuredRecordSerialisedAsync
+      - from: Patients.GetStructuredRecordSerialisedAsync
+        to: EXT.LdsStu3
+        method: Patients.GetStructuredRecordSerialisedAsync

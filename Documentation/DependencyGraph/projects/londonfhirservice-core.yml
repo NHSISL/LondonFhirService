@@ -1,0 +1,1514 @@
+# LondonFhirService.Core — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: core
+components:
+  - id: StorageBroker
+    name: StorageBroker
+    layer: broker
+    col: 8
+    description: "Partial EF Core DbContext (derives from EFxceptions' EFxceptionsContext) with one partial per entity. Every method delegates to a private generic that calls STX.EFCore.Client's EFCoreClient. Registered both as a DbContextFactory and a scoped IStorageBroker; OnConfiguring reads the LondonFhirServiceConnectionString and enables HierarchyId. Per-entity method rows are generated from the entity config."
+    methods:
+      - InsertFhirRecordAsync
+      - SelectAllFhirRecordsAsync
+      - SelectFhirRecordByIdAsync
+      - UpdateFhirRecordAsync
+      - DeleteFhirRecordAsync
+      - InsertFhirRecordDifferenceAsync
+      - SelectAllFhirRecordDifferencesAsync
+      - SelectFhirRecordDifferenceByIdAsync
+      - UpdateFhirRecordDifferenceAsync
+      - DeleteFhirRecordDifferenceAsync
+      - InsertProviderAsync
+      - SelectAllProvidersAsync
+      - SelectProviderByIdAsync
+      - UpdateProviderAsync
+      - DeleteProviderAsync
+      - BulkInsertAuditsAsync
+      - InsertAuditAsync
+      - SelectAllAuditsAsync
+      - SelectAuditByIdAsync
+      - UpdateAuditAsync
+      - DeleteAuditAsync
+    calls:
+      - from: InsertFhirRecordAsync
+        to: LIB.EFCoreClient
+        method: InsertAsync
+      - from: SelectAllFhirRecordsAsync
+        to: LIB.EFCoreClient
+        method: SelectAllAsync
+      - from: SelectFhirRecordByIdAsync
+        to: LIB.EFCoreClient
+        method: SelectAsync
+      - from: UpdateFhirRecordAsync
+        to: LIB.EFCoreClient
+        method: UpdateAsync
+      - from: DeleteFhirRecordAsync
+        to: LIB.EFCoreClient
+        method: DeleteAsync
+      - from: InsertFhirRecordDifferenceAsync
+        to: LIB.EFCoreClient
+        method: InsertAsync
+      - from: SelectAllFhirRecordDifferencesAsync
+        to: LIB.EFCoreClient
+        method: SelectAllAsync
+      - from: SelectFhirRecordDifferenceByIdAsync
+        to: LIB.EFCoreClient
+        method: SelectAsync
+      - from: UpdateFhirRecordDifferenceAsync
+        to: LIB.EFCoreClient
+        method: UpdateAsync
+      - from: DeleteFhirRecordDifferenceAsync
+        to: LIB.EFCoreClient
+        method: DeleteAsync
+      - from: InsertProviderAsync
+        to: LIB.EFCoreClient
+        method: InsertAsync
+      - from: SelectAllProvidersAsync
+        to: LIB.EFCoreClient
+        method: SelectAllAsync
+      - from: SelectProviderByIdAsync
+        to: LIB.EFCoreClient
+        method: SelectAsync
+      - from: UpdateProviderAsync
+        to: LIB.EFCoreClient
+        method: UpdateAsync
+      - from: DeleteProviderAsync
+        to: LIB.EFCoreClient
+        method: DeleteAsync
+      - from: BulkInsertAuditsAsync
+        to: LIB.EFCoreClient
+        method: BulkInsertAsync
+      - from: InsertAuditAsync
+        to: LIB.EFCoreClient
+        method: InsertAsync
+      - from: SelectAllAuditsAsync
+        to: LIB.EFCoreClient
+        method: SelectAllAsync
+      - from: SelectAuditByIdAsync
+        to: LIB.EFCoreClient
+        method: SelectAsync
+      - from: UpdateAuditAsync
+        to: LIB.EFCoreClient
+        method: UpdateAsync
+      - from: DeleteAuditAsync
+        to: LIB.EFCoreClient
+        method: DeleteAsync
+  - id: StorageBrokerFactory
+    name: StorageBrokerFactory
+    layer: broker
+    col: 8
+    description: "Wraps IDbContextFactory<StorageBroker>. AuditService and Stu3PatientService use it to get a short-lived, independently-disposed StorageBroker instead of the scoped one — they write from background/parallel work where the request-scoped context is unsafe."
+    methods:
+      - CreateStorageBrokerAsync
+    calls:
+      - from: CreateStorageBrokerAsync
+        to: EXT.EFCore
+        method: IDbContextFactory.CreateDbContextAsync
+  - id: SecurityAuditBroker
+    name: SecurityAuditBroker
+    layer: broker
+    col: 8
+    description: "Stamps CreatedBy/CreatedDate/UpdatedBy/UpdatedDate (and DeletedBy/DeletedDate) using the SecurityConfigurations built in each host's AddBrokers. Delegates to ISL.Security.Client's Audits client."
+    methods:
+      - ApplyAddAuditValuesAsync
+      - ApplyModifyAuditValuesAsync
+      - ApplyRemoveAuditValuesAsync
+      - EnsureAddAuditValuesRemainsUnchangedOnModifyAsync
+      - GetUserIdAsync
+    calls:
+      - from: ApplyAddAuditValuesAsync
+        to: LIB.SecurityClient
+        method: Audits.ApplyAddAuditValuesAsync
+      - from: ApplyModifyAuditValuesAsync
+        to: LIB.SecurityClient
+        method: Audits.ApplyModifyAuditValuesAsync
+      - from: ApplyRemoveAuditValuesAsync
+        to: LIB.SecurityClient
+        method: Audits.ApplyRemoveAuditValuesAsync
+      - from: EnsureAddAuditValuesRemainsUnchangedOnModifyAsync
+        to: LIB.SecurityClient
+        method: Audits.EnsureOtherAuditValuesRemainsUnchangedOnModifyAsync
+      - from: GetUserIdAsync
+        to: LIB.SecurityClient
+        method: Audits.GetUserIdAsync
+  - id: SecurityBroker
+    name: SecurityBroker
+    layer: broker
+    col: 8
+    description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today (by Stu3PatientOrchestrationService, to build the ValidateAccessRequest). ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called."
+    methods:
+      - GetCurrentUserAsync
+      - IsCurrentUserAuthenticatedAsync
+      - IsInRoleAsync
+      - HasClaimAsync
+      - ValidateCaptchaAsync
+      - GetIpAddressAsync
+    calls:
+      - from: GetCurrentUserAsync
+        to: LIB.SecurityClient
+        method: Users.GetUserAsync
+      - from: IsCurrentUserAuthenticatedAsync
+        to: LIB.SecurityClient
+        method: Users.IsUserAuthenticatedAsync
+      - from: IsInRoleAsync
+        to: LIB.SecurityClient
+        method: Users.IsUserInRoleAsync
+      - from: HasClaimAsync
+        to: LIB.SecurityClient
+        method: Users.UserHasClaimAsync
+  - id: AuditBroker
+    name: AuditBroker
+    layer: broker
+    col: 8
+    description: "The business-audit trail (persisted Audit rows), distinct from LoggingBroker's ILogger output. Every method funnels into AuditClient, which calls AuditService — so an audit write travels broker → client → foundation service → storage."
+    methods:
+      - BulkLogAsync
+      - LogAsync
+      - LogInformationAsync
+      - LogWarningAsync
+      - LogErrorAsync
+      - LogCriticalAsync
+    calls:
+      - from: LogAsync
+        to: AuditClient
+        method: LogAuditAsync
+      - from: LogInformationAsync
+        to: AuditClient
+        method: LogAuditAsync
+      - from: LogWarningAsync
+        to: AuditClient
+        method: LogAuditAsync
+      - from: LogErrorAsync
+        to: AuditClient
+        method: LogAuditAsync
+      - from: LogCriticalAsync
+        to: AuditClient
+        method: LogAuditAsync
+      - from: BulkLogAsync
+        to: AuditClient
+        method: BulkLogAuditsAsync
+  - id: ConsumerAccessBroker
+    name: ConsumerAccessBroker
+    layer: broker
+    col: 8
+    description: "Posts a ValidateAccessRequest to a remote consumer-access endpoint with a DefaultAzureCredential bearer token and reads back a ConsumerAccess verdict. Registered in the API host (AddHttpClient) and consumed by ConsumerAccessService — this is now the whole access decision."
+    methods:
+      - CheckConsumerAccessAsync
+    calls:
+      - from: CheckConsumerAccessAsync
+        to: EXT.TokenCredential
+        method: GetTokenAsync
+      - from: CheckConsumerAccessAsync
+        to: EXT.HttpClient
+        method: SendAsync
+  - id: DateTimeBroker
+    name: DateTimeBroker
+    layer: broker
+    col: 8
+    utility: true
+    methods:
+      - GetCurrentDateTimeOffsetAsync
+  - id: IdentifierBroker
+    name: IdentifierBroker
+    layer: broker
+    col: 8
+    utility: true
+    methods:
+      - GetIdentifierAsync
+  - id: LoggingBroker
+    name: LoggingBroker
+    layer: broker
+    col: 8
+    utility: true
+    description: "ILogger passthrough. Exception-path (TryCatch) logging is deliberately NOT drawn on this graph — only happy-path calls and denial logging."
+    methods:
+      - LogInformationAsync
+      - LogTraceAsync
+      - LogDebugAsync
+      - LogWarningAsync
+      - LogErrorAsync
+      - LogCriticalAsync
+    calls:
+      - from: LogInformationAsync
+        to: EXT.ILogger
+        method: ILogger.LogInformation
+      - from: LogTraceAsync
+        to: EXT.ILogger
+        method: ILogger.LogTrace
+      - from: LogDebugAsync
+        to: EXT.ILogger
+        method: ILogger.LogDebug
+      - from: LogWarningAsync
+        to: EXT.ILogger
+        method: ILogger.LogWarning
+      - from: LogErrorAsync
+        to: EXT.ILogger
+        method: ILogger.LogError
+      - from: LogCriticalAsync
+        to: EXT.ILogger
+        method: ILogger.LogCritical
+  - id: Stu3FhirBroker
+    name: Stu3FhirBroker
+    layer: broker
+    col: 8
+    description: "Thin passthrough over IFhirAbstractionProvider. It exposes 102 typed STU3 resource accessors, but the solution consumes exactly one member today — the FhirProviders collection, which Stu3PatientService filters by provider name. The rest of the surface is registered and forwarded but never called."
+    methods:
+      - FhirProviders
+      - Accounts
+      - ActivityDefinitions
+      - AllergyIntolerances
+      - AppointmentResponses
+      - Appointments
+      - AuditEvents
+      - Basics
+      - Binaries
+      - Bundles
+      - CapabilityStatements
+      - CarePlans
+      - CareTeams
+      - ClaimResponses
+      - Claims
+      - ClinicalImpressions
+      - CodeSystems
+      - CommunicationRequests
+      - Communications
+      - CompartmentDefinitions
+      - Compositions
+      - ConceptMaps
+      - Conditions
+      - Consents
+      - Contracts
+      - Coverages
+      - DetectedIssues
+      - DeviceMetrics
+      - DeviceRequests
+      - Devices
+      - DeviceUseStatements
+      - DiagnosticReports
+      - DocumentManifests
+      - DocumentReferences
+      - Encounters
+      - Endpoints
+      - EnrollmentRequests
+      - EnrollmentResponses
+      - EpisodeOfCare
+      - ExplanationsOfBenefits
+      - FamilyMemberHistories
+      - Flags
+      - Goals
+      - GraphDefinitions
+      - Groups
+      - GuidanceResponses
+      - HealthcareServices
+      - ImagingStudies
+      - ImmunizationRecommendations
+      - Immunizations
+      - ImplementationGuides
+      - Libraries
+      - Linkages
+      - Lists
+      - Locations
+      - MeasureReports
+      - Measures
+      - Media
+      - MedicationAdministrations
+      - MedicationDispenses
+      - MedicationRequests
+      - Medications
+      - MedicationStatements
+      - MessageDefinitions
+      - MessageHeaders
+      - NamingSystems
+      - NutritionOrders
+      - Observations
+      - OperationDefinitions
+      - OperationOutcomes
+      - Organizations
+      - Parameters
+      - Patients
+      - PaymentNotices
+      - PaymentReconciliations
+      - Persons
+      - PlanDefinitions
+      - PractitionerRoles
+      - Practitioners
+      - Procedures
+      - Provenances
+      - QuestionnaireResponses
+      - Questionnaires
+      - RelatedPersons
+      - RequestGroups
+      - ResearchStudies
+      - ResearchSubjects
+      - RiskAssessments
+      - Schedules
+      - SearchParameters
+      - Slots
+      - Specimens
+      - StructureDefinitions
+      - StructureMaps
+      - Subscriptions
+      - Substances
+      - SupplyDeliveries
+      - SupplyRequests
+      - Tasks
+      - TestReports
+      - TestScripts
+      - ValueSets
+      - VisionPrescriptions
+    calls:
+      - from: FhirProviders
+        to: LIB.FhirAbstractionProvider
+        method: FhirProviders
+      - from: Accounts
+        to: LIB.FhirAbstractionProvider
+        method: Accounts
+      - from: ActivityDefinitions
+        to: LIB.FhirAbstractionProvider
+        method: ActivityDefinitions
+      - from: AllergyIntolerances
+        to: LIB.FhirAbstractionProvider
+        method: AllergyIntolerances
+      - from: AppointmentResponses
+        to: LIB.FhirAbstractionProvider
+        method: AppointmentResponses
+      - from: Appointments
+        to: LIB.FhirAbstractionProvider
+        method: Appointments
+      - from: AuditEvents
+        to: LIB.FhirAbstractionProvider
+        method: AuditEvents
+      - from: Basics
+        to: LIB.FhirAbstractionProvider
+        method: Basics
+      - from: Binaries
+        to: LIB.FhirAbstractionProvider
+        method: Binaries
+      - from: Bundles
+        to: LIB.FhirAbstractionProvider
+        method: Bundles
+      - from: CapabilityStatements
+        to: LIB.FhirAbstractionProvider
+        method: CapabilityStatements
+      - from: CarePlans
+        to: LIB.FhirAbstractionProvider
+        method: CarePlans
+      - from: CareTeams
+        to: LIB.FhirAbstractionProvider
+        method: CareTeams
+      - from: ClaimResponses
+        to: LIB.FhirAbstractionProvider
+        method: ClaimResponses
+      - from: Claims
+        to: LIB.FhirAbstractionProvider
+        method: Claims
+      - from: ClinicalImpressions
+        to: LIB.FhirAbstractionProvider
+        method: ClinicalImpressions
+      - from: CodeSystems
+        to: LIB.FhirAbstractionProvider
+        method: CodeSystems
+      - from: CommunicationRequests
+        to: LIB.FhirAbstractionProvider
+        method: CommunicationRequests
+      - from: Communications
+        to: LIB.FhirAbstractionProvider
+        method: Communications
+      - from: CompartmentDefinitions
+        to: LIB.FhirAbstractionProvider
+        method: CompartmentDefinitions
+      - from: Compositions
+        to: LIB.FhirAbstractionProvider
+        method: Compositions
+      - from: ConceptMaps
+        to: LIB.FhirAbstractionProvider
+        method: ConceptMaps
+      - from: Conditions
+        to: LIB.FhirAbstractionProvider
+        method: Conditions
+      - from: Consents
+        to: LIB.FhirAbstractionProvider
+        method: Consents
+      - from: Contracts
+        to: LIB.FhirAbstractionProvider
+        method: Contracts
+      - from: Coverages
+        to: LIB.FhirAbstractionProvider
+        method: Coverages
+      - from: DetectedIssues
+        to: LIB.FhirAbstractionProvider
+        method: DetectedIssues
+      - from: DeviceMetrics
+        to: LIB.FhirAbstractionProvider
+        method: DeviceMetrics
+      - from: DeviceRequests
+        to: LIB.FhirAbstractionProvider
+        method: DeviceRequests
+      - from: Devices
+        to: LIB.FhirAbstractionProvider
+        method: Devices
+      - from: DeviceUseStatements
+        to: LIB.FhirAbstractionProvider
+        method: DeviceUseStatements
+      - from: DiagnosticReports
+        to: LIB.FhirAbstractionProvider
+        method: DiagnosticReports
+      - from: DocumentManifests
+        to: LIB.FhirAbstractionProvider
+        method: DocumentManifests
+      - from: DocumentReferences
+        to: LIB.FhirAbstractionProvider
+        method: DocumentReferences
+      - from: Encounters
+        to: LIB.FhirAbstractionProvider
+        method: Encounters
+      - from: Endpoints
+        to: LIB.FhirAbstractionProvider
+        method: Endpoints
+      - from: EnrollmentRequests
+        to: LIB.FhirAbstractionProvider
+        method: EnrollmentRequests
+      - from: EnrollmentResponses
+        to: LIB.FhirAbstractionProvider
+        method: EnrollmentResponses
+      - from: EpisodeOfCare
+        to: LIB.FhirAbstractionProvider
+        method: EpisodeOfCares
+      - from: ExplanationsOfBenefits
+        to: LIB.FhirAbstractionProvider
+        method: ExplanationOfBenefits
+      - from: FamilyMemberHistories
+        to: LIB.FhirAbstractionProvider
+        method: FamilyMemberHistories
+      - from: Flags
+        to: LIB.FhirAbstractionProvider
+        method: Flags
+      - from: Goals
+        to: LIB.FhirAbstractionProvider
+        method: Goals
+      - from: GraphDefinitions
+        to: LIB.FhirAbstractionProvider
+        method: GraphDefinitions
+      - from: Groups
+        to: LIB.FhirAbstractionProvider
+        method: Groups
+      - from: GuidanceResponses
+        to: LIB.FhirAbstractionProvider
+        method: GuidanceResponses
+      - from: HealthcareServices
+        to: LIB.FhirAbstractionProvider
+        method: HealthcareServices
+      - from: ImagingStudies
+        to: LIB.FhirAbstractionProvider
+        method: ImagingStudies
+      - from: ImmunizationRecommendations
+        to: LIB.FhirAbstractionProvider
+        method: ImmunizationRecommendations
+      - from: Immunizations
+        to: LIB.FhirAbstractionProvider
+        method: Immunizations
+      - from: ImplementationGuides
+        to: LIB.FhirAbstractionProvider
+        method: ImplementationGuides
+      - from: Libraries
+        to: LIB.FhirAbstractionProvider
+        method: Libraries
+      - from: Linkages
+        to: LIB.FhirAbstractionProvider
+        method: Linkages
+      - from: Lists
+        to: LIB.FhirAbstractionProvider
+        method: Lists
+      - from: Locations
+        to: LIB.FhirAbstractionProvider
+        method: Locations
+      - from: MeasureReports
+        to: LIB.FhirAbstractionProvider
+        method: MeasureReports
+      - from: Measures
+        to: LIB.FhirAbstractionProvider
+        method: Measures
+      - from: Media
+        to: LIB.FhirAbstractionProvider
+        method: Media
+      - from: MedicationAdministrations
+        to: LIB.FhirAbstractionProvider
+        method: MedicationAdministrations
+      - from: MedicationDispenses
+        to: LIB.FhirAbstractionProvider
+        method: MedicationDispenses
+      - from: MedicationRequests
+        to: LIB.FhirAbstractionProvider
+        method: MedicationRequests
+      - from: Medications
+        to: LIB.FhirAbstractionProvider
+        method: Medications
+      - from: MedicationStatements
+        to: LIB.FhirAbstractionProvider
+        method: MedicationStatements
+      - from: MessageDefinitions
+        to: LIB.FhirAbstractionProvider
+        method: MessageDefinitions
+      - from: MessageHeaders
+        to: LIB.FhirAbstractionProvider
+        method: MessageHeaders
+      - from: NamingSystems
+        to: LIB.FhirAbstractionProvider
+        method: NamingSystems
+      - from: NutritionOrders
+        to: LIB.FhirAbstractionProvider
+        method: NutritionOrders
+      - from: Observations
+        to: LIB.FhirAbstractionProvider
+        method: Observations
+      - from: OperationDefinitions
+        to: LIB.FhirAbstractionProvider
+        method: OperationDefinitions
+      - from: OperationOutcomes
+        to: LIB.FhirAbstractionProvider
+        method: OperationOutcomes
+      - from: Organizations
+        to: LIB.FhirAbstractionProvider
+        method: Organizations
+      - from: Parameters
+        to: LIB.FhirAbstractionProvider
+        method: Parameterss
+      - from: Patients
+        to: LIB.FhirAbstractionProvider
+        method: Patients
+      - from: PaymentNotices
+        to: LIB.FhirAbstractionProvider
+        method: PaymentNotices
+      - from: PaymentReconciliations
+        to: LIB.FhirAbstractionProvider
+        method: PaymentReconciliations
+      - from: Persons
+        to: LIB.FhirAbstractionProvider
+        method: Persons
+      - from: PlanDefinitions
+        to: LIB.FhirAbstractionProvider
+        method: PlanDefinitions
+      - from: PractitionerRoles
+        to: LIB.FhirAbstractionProvider
+        method: PractitionerRoles
+      - from: Practitioners
+        to: LIB.FhirAbstractionProvider
+        method: Practitioners
+      - from: Procedures
+        to: LIB.FhirAbstractionProvider
+        method: Procedures
+      - from: Provenances
+        to: LIB.FhirAbstractionProvider
+        method: Provenances
+      - from: QuestionnaireResponses
+        to: LIB.FhirAbstractionProvider
+        method: QuestionnaireResponses
+      - from: Questionnaires
+        to: LIB.FhirAbstractionProvider
+        method: Questionnaires
+      - from: RelatedPersons
+        to: LIB.FhirAbstractionProvider
+        method: RelatedPersons
+      - from: RequestGroups
+        to: LIB.FhirAbstractionProvider
+        method: RequestGroups
+      - from: ResearchStudies
+        to: LIB.FhirAbstractionProvider
+        method: ResearchStudies
+      - from: ResearchSubjects
+        to: LIB.FhirAbstractionProvider
+        method: ResearchSubjects
+      - from: RiskAssessments
+        to: LIB.FhirAbstractionProvider
+        method: RiskAssessments
+      - from: Schedules
+        to: LIB.FhirAbstractionProvider
+        method: Schedules
+      - from: SearchParameters
+        to: LIB.FhirAbstractionProvider
+        method: SearchParameters
+      - from: Slots
+        to: LIB.FhirAbstractionProvider
+        method: Slots
+      - from: Specimens
+        to: LIB.FhirAbstractionProvider
+        method: Specimens
+      - from: StructureDefinitions
+        to: LIB.FhirAbstractionProvider
+        method: StructureDefinitions
+      - from: StructureMaps
+        to: LIB.FhirAbstractionProvider
+        method: StructureMaps
+      - from: Subscriptions
+        to: LIB.FhirAbstractionProvider
+        method: Subscriptions
+      - from: Substances
+        to: LIB.FhirAbstractionProvider
+        method: Substances
+      - from: SupplyDeliveries
+        to: LIB.FhirAbstractionProvider
+        method: SupplyDeliveries
+      - from: SupplyRequests
+        to: LIB.FhirAbstractionProvider
+        method: SupplyRequests
+      - from: Tasks
+        to: LIB.FhirAbstractionProvider
+        method: Tasks
+      - from: TestReports
+        to: LIB.FhirAbstractionProvider
+        method: TestReports
+      - from: TestScripts
+        to: LIB.FhirAbstractionProvider
+        method: TestScripts
+      - from: ValueSets
+        to: LIB.FhirAbstractionProvider
+        method: ValueSets
+      - from: VisionPrescriptions
+        to: LIB.FhirAbstractionProvider
+        method: VisionPrescriptions
+  - id: AuditClient
+    name: AuditClient
+    layer: client
+    col: 9
+    description: "Sits between AuditBroker and AuditService — the one place in the solution where a broker calls back into a foundation service. The AuditService copy drawn to its left is that call."
+    methods:
+      - LogAuditAsync
+      - BulkLogAuditsAsync
+    calls:
+      - from: LogAuditAsync
+        to: FS.Audit
+        method: "AddAuditAsync(auditType, title, message, …)"
+      - from: BulkLogAuditsAsync
+        to: FS.Audit
+        method: BulkAddAuditsAsync
+  - id: FS.ConsumerAccess
+    name: ConsumerAccessService
+    layer: foundation
+    col: 7
+    description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService.ValidateAccess. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and timeout / cancellation onto TimedOut- and CancelledConsumerAccessServiceException. It takes no storage broker — consumer access is no longer held locally."
+    methods:
+      - CheckConsumerAccessAsync
+    calls:
+      - from: CheckConsumerAccessAsync
+        to: ConsumerAccessBroker
+        method: CheckConsumerAccessAsync
+  - id: FS.FhirRecord
+    name: FhirRecordService
+    layer: foundation
+    col: 7
+    description: "Foundation CRUD for FhirRecord. Add and Modify take security-audit stamps; Modify also re-reads storage and asks the security-audit broker to keep the original Created values; Remove is a straight delete after a read. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
+    methods:
+      - AddFhirRecordAsync
+      - RetrieveAllFhirRecordsAsync
+      - RetrieveFhirRecordByIdAsync
+      - ModifyFhirRecordAsync
+      - RemoveFhirRecordByIdAsync
+    calls:
+      - from: AddFhirRecordAsync
+        to: SecurityAuditBroker
+        method: ApplyAddAuditValuesAsync
+      - from: AddFhirRecordAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: AddFhirRecordAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: AddFhirRecordAsync
+        to: StorageBroker
+        method: InsertFhirRecordAsync
+      - from: RetrieveAllFhirRecordsAsync
+        to: StorageBroker
+        method: SelectAllFhirRecordsAsync
+      - from: RetrieveFhirRecordByIdAsync
+        to: StorageBroker
+        method: SelectFhirRecordByIdAsync
+      - from: ModifyFhirRecordAsync
+        to: SecurityAuditBroker
+        method: ApplyModifyAuditValuesAsync
+      - from: ModifyFhirRecordAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: ModifyFhirRecordAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: ModifyFhirRecordAsync
+        to: StorageBroker
+        method: SelectFhirRecordByIdAsync
+      - from: ModifyFhirRecordAsync
+        to: SecurityAuditBroker
+        method: EnsureAddAuditValuesRemainsUnchangedOnModifyAsync
+      - from: ModifyFhirRecordAsync
+        to: StorageBroker
+        method: UpdateFhirRecordAsync
+      - from: RemoveFhirRecordByIdAsync
+        to: StorageBroker
+        method: SelectFhirRecordByIdAsync
+      - from: RemoveFhirRecordByIdAsync
+        to: StorageBroker
+        method: DeleteFhirRecordAsync
+  - id: FS.FhirRecordDifference
+    name: FhirRecordDifferenceService
+    layer: foundation
+    col: 7
+    description: "Foundation CRUD for FhirRecordDifference. Add and Modify take security-audit stamps; Modify also re-reads storage and asks the security-audit broker to keep the original Created values; Remove is a straight delete after a read. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
+    methods:
+      - AddFhirRecordDifferenceAsync
+      - RetrieveAllFhirRecordDifferencesAsync
+      - RetrieveFhirRecordDifferenceByIdAsync
+      - ModifyFhirRecordDifferenceAsync
+      - RemoveFhirRecordDifferenceByIdAsync
+    calls:
+      - from: AddFhirRecordDifferenceAsync
+        to: SecurityAuditBroker
+        method: ApplyAddAuditValuesAsync
+      - from: AddFhirRecordDifferenceAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: AddFhirRecordDifferenceAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: AddFhirRecordDifferenceAsync
+        to: StorageBroker
+        method: InsertFhirRecordDifferenceAsync
+      - from: RetrieveAllFhirRecordDifferencesAsync
+        to: StorageBroker
+        method: SelectAllFhirRecordDifferencesAsync
+      - from: RetrieveFhirRecordDifferenceByIdAsync
+        to: StorageBroker
+        method: SelectFhirRecordDifferenceByIdAsync
+      - from: ModifyFhirRecordDifferenceAsync
+        to: SecurityAuditBroker
+        method: ApplyModifyAuditValuesAsync
+      - from: ModifyFhirRecordDifferenceAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: ModifyFhirRecordDifferenceAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: ModifyFhirRecordDifferenceAsync
+        to: StorageBroker
+        method: SelectFhirRecordDifferenceByIdAsync
+      - from: ModifyFhirRecordDifferenceAsync
+        to: SecurityAuditBroker
+        method: EnsureAddAuditValuesRemainsUnchangedOnModifyAsync
+      - from: ModifyFhirRecordDifferenceAsync
+        to: StorageBroker
+        method: UpdateFhirRecordDifferenceAsync
+      - from: RemoveFhirRecordDifferenceByIdAsync
+        to: StorageBroker
+        method: SelectFhirRecordDifferenceByIdAsync
+      - from: RemoveFhirRecordDifferenceByIdAsync
+        to: StorageBroker
+        method: DeleteFhirRecordDifferenceAsync
+  - id: FS.Provider
+    name: ProviderService
+    layer: foundation
+    col: 7
+    description: "Foundation CRUD for Provider. Add and Modify take security-audit stamps; Modify also re-reads storage and asks the security-audit broker to keep the original Created values; Remove is a straight delete after a read. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
+    methods:
+      - AddProviderAsync
+      - RetrieveAllProvidersAsync
+      - RetrieveProviderByIdAsync
+      - ModifyProviderAsync
+      - RemoveProviderByIdAsync
+    calls:
+      - from: AddProviderAsync
+        to: SecurityAuditBroker
+        method: ApplyAddAuditValuesAsync
+      - from: AddProviderAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: AddProviderAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: AddProviderAsync
+        to: StorageBroker
+        method: InsertProviderAsync
+      - from: RetrieveAllProvidersAsync
+        to: StorageBroker
+        method: SelectAllProvidersAsync
+      - from: RetrieveProviderByIdAsync
+        to: StorageBroker
+        method: SelectProviderByIdAsync
+      - from: ModifyProviderAsync
+        to: SecurityAuditBroker
+        method: ApplyModifyAuditValuesAsync
+      - from: ModifyProviderAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: ModifyProviderAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: ModifyProviderAsync
+        to: StorageBroker
+        method: SelectProviderByIdAsync
+      - from: ModifyProviderAsync
+        to: SecurityAuditBroker
+        method: EnsureAddAuditValuesRemainsUnchangedOnModifyAsync
+      - from: ModifyProviderAsync
+        to: StorageBroker
+        method: UpdateProviderAsync
+      - from: RemoveProviderByIdAsync
+        to: StorageBroker
+        method: SelectProviderByIdAsync
+      - from: RemoveProviderByIdAsync
+        to: StorageBroker
+        method: DeleteProviderAsync
+  - id: FS.Audit
+    name: AuditService
+    layer: foundation
+    col: 7
+    description: "The business-audit trail. Unlike every other foundation service it takes IStorageBrokerFactory as well as the scoped IStorageBroker: every write and every read-by-id opens (and disposes) its own StorageBroker, because audits are written from parallel provider calls and background work. Only RetrieveAllAuditsAsync uses the injected scoped broker. BulkAddAuditsAsync batches (default 10 000) through BatchBulkAddAuditsAsync, minting id + audit values per row and swallowing per-row failures into LoggingBroker."
+    methods:
+      - "AddAuditAsync(auditType, title, message, …)"
+      - AddAuditAsync(audit)
+      - BulkAddAuditsAsync
+      - RetrieveAllAuditsAsync
+      - RetrieveAuditByIdAsync
+      - ModifyAuditAsync
+      - RemoveAuditByIdAsync
+    calls:
+      - from: "AddAuditAsync(auditType, title, message, …)"
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: AddAuditAsync(audit)
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: BulkAddAuditsAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: RetrieveAuditByIdAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: ModifyAuditAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: RemoveAuditByIdAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: "AddAuditAsync(auditType, title, message, …)"
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: "AddAuditAsync(auditType, title, message, …)"
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: "AddAuditAsync(auditType, title, message, …)"
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+      - from: "AddAuditAsync(auditType, title, message, …)"
+        to: StorageBroker
+        method: InsertAuditAsync
+      - from: AddAuditAsync(audit)
+        to: SecurityAuditBroker
+        method: ApplyAddAuditValuesAsync
+      - from: AddAuditAsync(audit)
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: AddAuditAsync(audit)
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: AddAuditAsync(audit)
+        to: StorageBroker
+        method: InsertAuditAsync
+      - from: BulkAddAuditsAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: BulkAddAuditsAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: BulkAddAuditsAsync
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+      - from: BulkAddAuditsAsync
+        to: StorageBroker
+        method: BulkInsertAuditsAsync
+      - from: RetrieveAllAuditsAsync
+        to: StorageBroker
+        method: SelectAllAuditsAsync
+      - from: RetrieveAuditByIdAsync
+        to: StorageBroker
+        method: SelectAuditByIdAsync
+      - from: ModifyAuditAsync
+        to: SecurityAuditBroker
+        method: ApplyModifyAuditValuesAsync
+      - from: ModifyAuditAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: ModifyAuditAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: ModifyAuditAsync
+        to: StorageBroker
+        method: SelectAuditByIdAsync
+      - from: ModifyAuditAsync
+        to: StorageBroker
+        method: UpdateAuditAsync
+      - from: RemoveAuditByIdAsync
+        to: StorageBroker
+        method: SelectAuditByIdAsync
+      - from: RemoveAuditByIdAsync
+        to: SecurityAuditBroker
+        method: ApplyRemoveAuditValuesAsync
+      - from: RemoveAuditByIdAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
+      - from: RemoveAuditByIdAsync
+        to: StorageBroker
+        method: UpdateAuditAsync
+      - from: RemoveAuditByIdAsync
+        to: StorageBroker
+        method: DeleteAuditAsync
+  - id: FS.Stu3Patient
+    name: Stu3PatientService
+    layer: foundation
+    col: 7
+    description: "Fans out to every active provider in parallel (Task.WhenAll), each call wrapped in a linked CancellationTokenSource that cancels after PatientServiceConfig.MaxProviderWaitTimeMilliseconds. Each returned bundle is persisted as a Pending FhirRecord (via its own factory-created StorageBroker) and audited under STU3-Patient-GetStructuredRecordSerialised — including a -DATA entry carrying the raw JSON. Providers that do not support Patients/$GetStructuredRecord are dropped before the fan-out."
+    methods:
+      - GetStructuredRecordSerialisedAsync
+    calls:
+      - from: GetStructuredRecordSerialisedAsync
+        to: AuditBroker
+        method: LogInformationAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: Stu3FhirBroker
+        method: FhirProviders
+      - from: GetStructuredRecordSerialisedAsync
+        to: LIB.FhirProvider
+        method: ProviderName
+      - from: GetStructuredRecordSerialisedAsync
+        to: LIB.FhirProvider
+        method: SupportsResource
+      - from: GetStructuredRecordSerialisedAsync
+        to: LIB.FhirProvider
+        method: DisplayName
+      - from: GetStructuredRecordSerialisedAsync
+        to: LIB.FhirProvider
+        method: Patients.GetStructuredRecordSerialisedAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: SecurityAuditBroker
+        method: ApplyAddAuditValuesAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: StorageBroker
+        method: InsertFhirRecordAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: LoggingBroker
+        method: LogInformationAsync
+  - id: OR.Stu3FhirReconciliation
+    name: Stu3FhirReconciliationService
+    layer: orchestration
+    col: 5
+    description: "Placeholder reconciliation: returns the first non-empty bundle and throws NotFoundFhirReconciliationOrchestrationException when every provider came back empty. It takes only ILoggingBroker — no real merge across providers yet. Modelled as an orchestration: it sits alongside Stu3PatientOrchestrationService under the coordination service, and its exceptions are the FhirReconciliationOrchestration* family."
+    methods:
+      - ReconcileSerialisedAsync
+  - id: FS.JsonElement
+    name: JsonElementService
+    layer: foundation
+    col: 7
+    description: "Pure System.Text.Json factory (registered as a singleton). No brokers — it writes through Utf8JsonWriter into a MemoryStream and clones the parsed root element."
+    methods:
+      - CreateStringElement
+      - CreateArrayElement
+      - CreateObjectElement
+  - id: FS.Matcher.AllergyIntolerance
+    name: AllergyIntoleranceMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for AllergyIntolerance resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Appointment
+    name: AppointmentMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Appointment resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Condition
+    name: ConditionMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Condition resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.DiagnosticReport
+    name: DiagnosticReportMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for DiagnosticReport resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Encounter
+    name: EncounterMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Encounter resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.EpisodeOfCare
+    name: EpisodeOfCareMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for EpisodeOfCare resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.FamilyMemberHistory
+    name: FamilyMemberHistoryMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for FamilyMemberHistory resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Immunization
+    name: ImmunizationMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Immunization resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.List
+    name: ListMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for List resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Location
+    name: LocationMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Location resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Medication
+    name: MedicationMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Medication resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.MedicationRequest
+    name: MedicationRequestMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for MedicationRequest resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.MedicationStatement
+    name: MedicationStatementMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for MedicationStatement resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Observation
+    name: ObservationMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Observation resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Organization
+    name: OrganizationMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Organization resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Patient
+    name: PatientMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Patient resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Practitioner
+    name: PractitionerMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Practitioner resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.PractitionerRole
+    name: PractitionerRoleMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for PractitionerRole resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.Procedure
+    name: ProcedureMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for Procedure resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.ProcedureRequest
+    name: ProcedureRequestMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for ProcedureRequest resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: FS.Matcher.ReferralRequest
+    name: ReferralRequestMatcherService
+    layer: foundation
+    col: 7
+    shared: true
+    description: "Derives a stable match key for ReferralRequest resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
+    methods:
+      - ResourceType
+      - GetMatchKeyAsync
+      - MatchAsync
+  - id: PR.ResourceMatcher
+    name: ResourceMatcherProcessingService
+    layer: processing
+    col: 6
+    description: "Indexes every DI-registered IResourceMatcherService by its ResourceType (case-insensitive) and hands the right one back. All 21 matchers are injected as IEnumerable<IResourceMatcherService>, so the links below are constructor fan-in rather than per-call dispatch."
+    methods:
+      - GetMatcherAsync
+      - HasMatcherAsync
+    calls:
+      - from: GetMatcherAsync
+        to: FS.Matcher.AllergyIntolerance
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Appointment
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Condition
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.DiagnosticReport
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Encounter
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.EpisodeOfCare
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.FamilyMemberHistory
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Immunization
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.List
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Location
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Medication
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.MedicationRequest
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.MedicationStatement
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Observation
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Organization
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Patient
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Practitioner
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.PractitionerRole
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.Procedure
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.ProcedureRequest
+        method: null
+      - from: GetMatcherAsync
+        to: FS.Matcher.ReferralRequest
+        method: null
+  - id: PR.ListEntryComparison
+    name: ListEntryComparisonProcessingService
+    layer: processing
+    col: 6
+    description: "Compares the entry count of two List resources and emits an entry-count-mismatch DiffItem when they differ. ILoggingBroker only, on the exception path."
+    methods:
+      - CompareListEntryCountsAsync
+  - id: PR.Rule.ArrayOrder
+    name: ArrayOrderIgnoreProcessingRule
+    layer: processing
+    col: 6
+    description: Sorts array members before comparison so ordering differences are not reported as diffs. Derives from JsonIgnoreProcessingRuleBase.
+    methods:
+      - ShouldIgnoreAsync
+      - GetReplacementAsync
+    calls:
+      - from: GetReplacementAsync
+        to: FS.JsonElement
+        method: CreateArrayElement
+      - from: GetReplacementAsync
+        to: FS.JsonElement
+        method: CreateObjectElement
+  - id: PR.Rule.Guid
+    name: GuidIgnoreProcessingRule
+    layer: processing
+    col: 6
+    description: Replaces GUID-shaped values with a constant so provider-minted identifiers do not diff. Derives from JsonIgnoreProcessingRuleBase.
+    methods:
+      - ShouldIgnoreAsync
+      - GetReplacementAsync
+    calls:
+      - from: GetReplacementAsync
+        to: FS.JsonElement
+        method: CreateStringElement
+  - id: PR.Rule.Id
+    name: IdIgnoreProcessingRule
+    layer: processing
+    col: 6
+    description: "Replaces resource `id` values with a constant. Derives from JsonIgnoreProcessingRuleBase."
+    methods:
+      - ShouldIgnoreAsync
+      - GetReplacementAsync
+    calls:
+      - from: GetReplacementAsync
+        to: FS.JsonElement
+        method: CreateStringElement
+  - id: PR.Rule.Meta
+    name: MetaIgnoreProcessingRule
+    layer: processing
+    col: 6
+    description: "Replaces `meta` blocks (versionId / lastUpdated) with a constant. Derives from JsonIgnoreProcessingRuleBase."
+    methods:
+      - ShouldIgnoreAsync
+      - GetReplacementAsync
+    calls:
+      - from: GetReplacementAsync
+        to: FS.JsonElement
+        method: CreateStringElement
+  - id: OR.Stu3Patient
+    name: Stu3PatientOrchestrationService
+    layer: orchestration
+    col: 5
+    description: "Gates the request on access, then fans it out. GetStructuredRecordSerialisedAsync runs the access check first (through the same private helper ValidateAccess wraps, so the exception is localised once), reads the STU3 providers, keeps the active ones (IsActive plus the ActiveFrom/ActiveTo window) with the primary first, validates that exactly one primary exists, and returns a StructuredRecordsResponse (primary provider + per-provider bundles) for the coordination service to reconcile. ValidateAccess honours AccessConfigurations.CheckAccessPermissions: off, it audits the skip and returns; on, it resolves the caller, builds a ValidateAccessRequest and asks ConsumerAccessService — not allowed writes an Access Forbidden audit carrying the returned reason codes and throws ForbiddenPatientOrchestrationException, allowed writes an Access Allowed audit naming the organisations that granted it."
+    methods:
+      - GetStructuredRecordSerialisedAsync
+      - ValidateAccess
+    calls:
+      - from: GetStructuredRecordSerialisedAsync
+        to: AuditBroker
+        method: LogInformationAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: SecurityBroker
+        method: GetCurrentUserAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: FS.ConsumerAccess
+        method: CheckConsumerAccessAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: FS.Provider
+        method: RetrieveAllProvidersAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: FS.Stu3Patient
+        method: GetStructuredRecordSerialisedAsync
+      - from: ValidateAccess
+        to: AuditBroker
+        method: LogInformationAsync
+      - from: ValidateAccess
+        to: SecurityBroker
+        method: GetCurrentUserAsync
+      - from: ValidateAccess
+        to: FS.ConsumerAccess
+        method: CheckConsumerAccessAsync
+  - id: OR.CompareQueue
+    name: CompareQueueOrchestrationService
+    layer: orchestration
+    col: 5
+    description: "The comparison queue. GetUnprocessedRecordAsync claims the oldest Pending secondary FhirRecord that has been settled for at least 5 minutes, flips it to Processing, and pairs it with the primary record sharing its CorrelationId."
+    methods:
+      - GetUnprocessedRecordAsync
+      - ChangeFhirRecordStatusAsync
+      - PersistFhirRecordDifferencesAsync
+    calls:
+      - from: GetUnprocessedRecordAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: GetUnprocessedRecordAsync
+        to: FS.FhirRecord
+        method: RetrieveAllFhirRecordsAsync
+      - from: GetUnprocessedRecordAsync
+        to: FS.FhirRecord
+        method: ModifyFhirRecordAsync
+      - from: ChangeFhirRecordStatusAsync
+        to: FS.FhirRecord
+        method: RetrieveFhirRecordByIdAsync
+      - from: ChangeFhirRecordStatusAsync
+        to: FS.FhirRecord
+        method: ModifyFhirRecordAsync
+      - from: PersistFhirRecordDifferencesAsync
+        to: FS.FhirRecordDifference
+        method: AddFhirRecordDifferenceAsync
+  - id: OR.Comparison
+    name: ComparisonOrchestrationService
+    layer: orchestration
+    col: 5
+    description: "Splits both bundles by resourceType, asks the matcher registry for a strategy per type, then walks matched pairs property by property after applying the ignore rules. Unmatched resources and types with no matcher become manual-review-required diffs. NOTE: MatchAsync / GetMatchKeyAsync are invoked on whichever IResourceMatcherService GetMatcherAsync returned, so those calls are not drawn as separate edges — follow GetMatcherAsync to see the candidates."
+    methods:
+      - CompareAsync
+    calls:
+      - from: CompareAsync
+        to: PR.ResourceMatcher
+        method: GetMatcherAsync
+      - from: CompareAsync
+        to: PR.ListEntryComparison
+        method: CompareListEntryCountsAsync
+      - from: CompareAsync
+        to: PR.Rule.ArrayOrder
+        method: ShouldIgnoreAsync
+      - from: CompareAsync
+        to: PR.Rule.ArrayOrder
+        method: GetReplacementAsync
+      - from: CompareAsync
+        to: PR.Rule.Guid
+        method: ShouldIgnoreAsync
+      - from: CompareAsync
+        to: PR.Rule.Guid
+        method: GetReplacementAsync
+      - from: CompareAsync
+        to: PR.Rule.Id
+        method: ShouldIgnoreAsync
+      - from: CompareAsync
+        to: PR.Rule.Id
+        method: GetReplacementAsync
+      - from: CompareAsync
+        to: PR.Rule.Meta
+        method: ShouldIgnoreAsync
+      - from: CompareAsync
+        to: PR.Rule.Meta
+        method: GetReplacementAsync
+      - from: CompareAsync
+        to: FS.JsonElement
+        method: CreateObjectElement
+      - from: CompareAsync
+        to: FS.JsonElement
+        method: CreateArrayElement
+  - id: CO.Stu3Patient
+    name: Stu3PatientCoordinationService
+    layer: coordination
+    col: 4
+    description: "Mints the correlation id for the whole request, audits each stage, delegates to the patient orchestration for the access-gated fan-out, then hands the per-provider bundles to the reconciliation orchestration, which returns the single serialised bundle the API hands back."
+    methods:
+      - GetStructuredRecordSerialisedAsync
+    calls:
+      - from: GetStructuredRecordSerialisedAsync
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: AuditBroker
+        method: LogInformationAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: OR.Stu3Patient
+        method: GetStructuredRecordSerialisedAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: OR.Stu3FhirReconciliation
+        method: ReconcileSerialisedAsync
+  - id: CO.Comparison
+    name: ComparisonCoordinationService
+    layer: coordination
+    col: 4
+    description: "Drains the compare queue: claim a pair, compare, persist the FhirRecordDifference, then mark both records Completed. A pair with no primary record is marked Failed without comparison; a comparison that throws marks the secondary Failed and still completes the primary."
+    methods:
+      - ProcessFhirRecordsAsync
+    calls:
+      - from: ProcessFhirRecordsAsync
+        to: OR.CompareQueue
+        method: GetUnprocessedRecordAsync
+      - from: ProcessFhirRecordsAsync
+        to: OR.Comparison
+        method: CompareAsync
+      - from: ProcessFhirRecordsAsync
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+      - from: ProcessFhirRecordsAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: ProcessFhirRecordsAsync
+        to: OR.CompareQueue
+        method: PersistFhirRecordDifferencesAsync
+      - from: ProcessFhirRecordsAsync
+        to: OR.CompareQueue
+        method: ChangeFhirRecordStatusAsync
+      - from: ProcessFhirRecordsAsync
+        to: LoggingBroker
+        method: LogWarningAsync

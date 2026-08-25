@@ -1,0 +1,47 @@
+# STX.EFCore.Client — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: pkg-efcore
+components:
+  - id: LIB.EFCoreClient
+    name: EFCoreClient
+    layer: client
+    col: 10
+    shared: true
+    description: "STX.EFCore.Client 3.0.0. Every StorageBroker partial funnels through these eight generic primitives; the broker constructs it with itself as the DbContext."
+    methods:
+      - InsertAsync
+      - SelectAllAsync
+      - SelectAsync
+      - UpdateAsync
+      - DeleteAsync
+      - BulkInsertAsync
+      - BulkUpdateAsync
+      - BulkDeleteAsync
+    calls:
+      - from: InsertAsync
+        to: EXT.EFCore
+        method: DbContext (this StorageBroker)
+      - from: SelectAllAsync
+        to: EXT.EFCore
+        method: DbContext (this StorageBroker)
+      - from: SelectAsync
+        to: EXT.EFCore
+        method: DbContext (this StorageBroker)
+      - from: UpdateAsync
+        to: EXT.EFCore
+        method: DbContext (this StorageBroker)
+      - from: DeleteAsync
+        to: EXT.EFCore
+        method: DbContext (this StorageBroker)
+      - from: BulkInsertAsync
+        to: EXT.EFCore
+        method: DbContext (this StorageBroker)
+      - from: BulkUpdateAsync
+        to: EXT.EFCore
+        method: DbContext (this StorageBroker)
+      - from: BulkDeleteAsync
+        to: EXT.EFCore
+        method: DbContext (this StorageBroker)

@@ -1,9 +1,23 @@
 # Solution Dependency Graph
 
-An interactive, self-contained dependency graph of the London FHIR Service
-solution: project boundaries, per-component method blocks, and colour-coded
-data flows. No build step and no server — open [index.html](./index.html) in
-a browser.
+An interactive dependency graph of the London FHIR Service solution: project
+boundaries, per-component method blocks, and colour-coded data flows.
+
+Data and renderer are separate files, all in this folder:
+
+- [graph.yml](./graph.yml) — the manifest: solution name, project list (which
+  also names each project's data file), root order, and the event registry.
+- `projects/*.yml` — one file per project / package boundary, each declaring
+  that project's components with their methods and outbound flows.
+- [index.html](./index.html) — the renderer. It fetches the manifest and the
+  project files, assembles them, and draws. No build step, but because the
+  data is fetched the page must be **served** rather than double-clicked:
+
+```bash
+python -m http.server 8731 --bind 127.0.0.1
+```
+
+then open `http://127.0.0.1:8731/` — or use the published GitHub Pages copy.
 
 It carries two ways of drawing the same data, switched from the segmented
 control in the header:
@@ -57,8 +71,9 @@ At the last scan, 78 declared components and 341 declared edges draw as
 
 `.github/workflows/pages.yml` publishes this folder to GitHub Pages on every
 push to `main` that touches it — `index.html` is the site root. Nothing is
-compiled; `index.html` and `graph-data.js` are copied as-is. Pages has to be
-enabled once in the repository's Settings → Pages (source: GitHub Actions).
+compiled; `index.html`, `graph.yml` and `projects/` are copied as-is. Pages
+has to be enabled once in the repository's Settings → Pages (source: GitHub
+Actions).
 
 ## Current truths captured in the data (scanned 2026-08-14)
 
@@ -127,7 +142,7 @@ enabled once in the repository's Settings → Pages (source: GitHub Actions).
 
 ## Modelling decisions
 
-These are the judgement calls baked into `graph-data.js`; keep them stable so
+These are the judgement calls baked into the data files; keep them stable so
 successive scans stay comparable.
 
 - **Happy-path calls and denial logging are drawn; exception-path (`TryCatch`
@@ -147,33 +162,60 @@ successive scans stay comparable.
   in-solution components. They are a DI fan-in registry with no subtree of
   their own, and duplicating them per consumer chain added ~85 empty nodes.
 
+## The data files
+
+All data is declarative YAML — no code runs to produce the model, and
+[index.html](./index.html) is a pure renderer (it holds both views,
+`buildSingleCopyInstances` / `layoutBands` and `buildDuplicatedInstances` /
+`layoutTrees`, dispatched on `state.view`, and should rarely need changes).
+
+**`graph.yml`** is the manifest:
+
+- `projects` — id, name, kind (`internal` / `library` / `external`) and the
+  `file` holding that project's components. List order controls the
+  single-copy view's band order.
+- `roots` — component ids in layout order for the per-consumer view. A
+  component flagged `shared` **must** appear here, or its inbound edges are
+  silently dropped.
+- `events` / `eventBroker` — empty / `null` today; ready for an event bus.
+
+**`projects/<name>.yml`** declares one project's components:
+
+```yaml
+- id: API.Patient
+  name: PatientController (STU3)
+  layer: exposer          # exposer|view|coordination|orchestration|
+                          # processing|foundation|broker|client|external
+  col: 3                  # layout column — map documented in graph.yml
+  shared: true            # optional: consumers link to ONE copy
+  utility: true           # optional: hidden behind the header toggle
+  deriveMethods: true     # optional: rows derived from inbound edges
+                          # (externals — rows can never drift from arrows)
+  description: "..."
+  methods: [...]
+  calls:                  # outbound flows, one per call
+    - from: <method or null>   # null = header-level link
+      to: <component id>
+      method: <method or null>
+  publishes:              # for a future event bus
+    - method: M
+      event: E
+  subscribes:
+    - event: E
+      handler: H
+```
+
+Strings containing anything beyond letters, digits, spaces, `_.-/()` are
+double-quoted JSON strings — the renderer parses a deliberately small YAML
+subset, so stick to the shapes above (single-line scalars, no anchors, no
+multi-line blocks).
+
 ## Updating the graph
 
 The data is a scanned snapshot of the source, not a build artifact — refresh
 it whenever services, brokers, or cross-project wiring change by running the
 `/update-dependency-graph` skill in Claude Code (defined in
 `.claude/skills/update-dependency-graph/SKILL.md`). It re-scans the solution,
-diffs against the current data, updates `graph-data.js`, and re-verifies the
-rendered graph.
-
-For small changes you can also edit by hand: all data lives in
-[graph-data.js](./graph-data.js) (`window.LFS_DATA`);
-[index.html](./index.html) is the renderer — it holds both views
-(`buildSingleCopyInstances` / `layoutBands` and `buildDuplicatedInstances` /
-`layoutTrees`, dispatched on `state.view`) and should rarely need changes.
-
-- The three uniform CRUD foundation services are generated from the
-  `CRUD_ENTITIES` config (entity name + read/write variant A/B/C). A new one
-  is usually one added line, and it extends the `StorageBroker` surface
-  automatically.
-- The 21 resource matchers come from `MATCHERS`, the 4 ignore rules from
-  `IGNORE_RULES`, the REST controllers from `restControllers`, and
-  `Stu3FhirBroker`'s 102 typed accessors from `FHIR_RESOURCES`.
-- Everything else is declared explicitly with `C(...)` components and
-  `D(from, to)` direct edges (`null` method = header-level link).
-  `P(component, method, event)` / `S(event, component, handler)` exist for a
-  future event bus.
-- Component options: `col` (layout column), `utility: true` (hidden behind the
-  toggle), `shared: true` (consumers link to one copy instead of duplicating —
-  **must** also appear in `roots`, or its inbound edges are dropped).
-- Add new roots to the `roots` list in project order; it controls layout.
+diffs against the current data files, updates them, and re-verifies the
+rendered graph. Small changes (a new method, one new call) are comfortable
+hand-edits in the project file that owns the calling component.

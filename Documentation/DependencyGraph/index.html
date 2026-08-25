@@ -188,14 +188,204 @@
   </div>
 </div>
 
-<script src="./graph-data.js"></script>
+<script>
+/* =====================================================================
+   Graph data loader.
+
+   The data is deliberately separate from this renderer: graph.yml is the
+   manifest (projects, roots, events), and each project's components and
+   flows live in their own file under projects/. This script fetches and
+   parses them (a small YAML subset — see README.md), assembles the
+   renderer's DATA shape, then calls startApp().
+   ===================================================================== */
+"use strict";
+
+function parseScalar(text) {
+  const t = text.trim();
+  if (t === "" || t === "null" || t === "~") return null;
+  if (t === "[]") return [];
+  if (t === "{}") return {};
+  if (t === "true") return true;
+  if (t === "false") return false;
+  if (t.charAt(0) === '"') return JSON.parse(t);
+  if (/^-?\d+(\.\d+)?$/.test(t)) return Number(t);
+  return t;
+}
+
+function parseYaml(text) {
+  const rows = [];
+  const raw = text.split(/\r?\n/);
+  for (let i = 0; i < raw.length; i++) {
+    const line = raw[i];
+    if (/^\s*$/.test(line) || /^\s*#/.test(line)) continue;
+    const indent = line.match(/^ */)[0].length;
+    rows.push({ indent, text: line.slice(indent) });
+  }
+  let pos = 0;
+
+  function parseBlock(indent) {
+    if (pos >= rows.length || rows[pos].indent !== indent) return null;
+    return rows[pos].text.charAt(0) === "-" ? parseList(indent) : parseMap(indent);
+  }
+
+  // nested block under "key:" — its indent is whatever the next deeper row uses
+  function parseNested(parentIndent) {
+    if (pos >= rows.length || rows[pos].indent <= parentIndent) return null;
+    return parseBlock(rows[pos].indent);
+  }
+
+  function parseKeyed(text, lineIndent) {
+    // "key: value" | "key:" (nested block follows) — returns [key, value]
+    const m = text.match(/^([A-Za-z_][A-Za-z0-9_]*):(.*)$/);
+    if (!m) throw new Error("bad mapping line: " + text);
+    const rest = m[2];
+    if (rest.trim() === "") return [m[1], parseNested(lineIndent)];
+    return [m[1], parseScalar(rest)];
+  }
+
+  function parseMap(indent) {
+    const obj = {};
+    while (pos < rows.length && rows[pos].indent === indent && rows[pos].text.charAt(0) !== "-") {
+      const row = rows[pos];
+      pos++;
+      const kv = parseKeyed(row.text, indent);
+      obj[kv[0]] = kv[1];
+    }
+    return obj;
+  }
+
+  function parseList(indent) {
+    const arr = [];
+    while (pos < rows.length && rows[pos].indent === indent && rows[pos].text.charAt(0) === "-") {
+      const row = rows[pos];
+      const after = row.text.slice(1); // drop "-"
+      if (after.trim() === "") { pos++; arr.push(parseNested(indent)); continue; }
+      const content = after.replace(/^ /, "");
+      if (/^[A-Za-z_][A-Za-z0-9_]*:( |$)/.test(content)) {
+        // inline first pair of a map item; remaining keys sit at indent+2
+        pos++;
+        const obj = {};
+        const kv = parseKeyed(content, indent + 2); // key column = indent + 2
+        obj[kv[0]] = kv[1];
+        while (pos < rows.length && rows[pos].indent === indent + 2 && rows[pos].text.charAt(0) !== "-") {
+          const r2 = rows[pos];
+          pos++;
+          const kv2 = parseKeyed(r2.text, indent + 2);
+          obj[kv2[0]] = kv2[1];
+        }
+        arr.push(obj);
+      } else {
+        pos++;
+        arr.push(parseScalar(content));
+      }
+    }
+    return arr;
+  }
+
+  const out = parseBlock(rows.length ? rows[0].indent : 0);
+  if (pos < rows.length) throw new Error("unparsed content at line: " + rows[pos].text);
+  return out;
+}
+
+/* manifest + [{projectId, doc}] -> { projects, components, events, edges,
+   roots, eventBrokerId } — the exact shape the renderer has always read. */
+function assembleGraph(manifest, docs) {
+  const projects = manifest.projects.map(function (p) {
+    return { id: p.id, name: p.name, kind: p.kind };
+  });
+  const components = [];
+  const edges = [];
+
+  for (const entry of docs) {
+    const comps = (entry.doc && entry.doc.components) || [];
+    for (const c of comps) {
+      const comp = { id: c.id, name: c.name, project: entry.projectId, layer: c.layer, col: c.col, methods: (c.methods || []).slice() };
+      if (c.utility) comp.utility = true;
+      if (c.shared) comp.shared = true;
+      if (c.description) comp.description = c.description;
+      if (c.deriveMethods) comp.deriveMethods = true;
+      components.push(comp);
+      for (const call of (c.calls || [])) {
+        edges.push({ kind: "direct", from: [c.id, call.from === undefined ? null : call.from], to: [call.to, call.method === undefined ? null : call.method] });
+      }
+      for (const pub of (c.publishes || [])) {
+        edges.push({ kind: "publish", from: [c.id, pub.method], event: pub.event });
+      }
+      for (const sub of (c.subscribes || [])) {
+        edges.push({ kind: "subscribe", event: sub.event, to: [c.id, sub.handler] });
+      }
+    }
+  }
+
+  // externals list exactly the surface this solution calls: derive their
+  // rows from the inbound edges so rows and arrows can never drift apart
+  for (const comp of components) {
+    if (!comp.deriveMethods) continue;
+    const called = [];
+    for (const e of edges) {
+      if (e.kind === "direct" && e.to[0] === comp.id && e.to[1] && called.indexOf(e.to[1]) === -1) called.push(e.to[1]);
+    }
+    comp.methods = called.sort(function (a, b) { return a.localeCompare(b); });
+    delete comp.deriveMethods;
+  }
+
+  return {
+    projects: projects,
+    components: components,
+    events: manifest.events || [],
+    edges: edges,
+    roots: manifest.roots || [],
+    eventBrokerId: manifest.eventBroker === undefined ? null : manifest.eventBroker,
+  };
+}
+
+(function () {
+  function showLoadError(err) {
+    console.error(err);
+    document.getElementById("graph-wrap").innerHTML =
+      '<div style="max-width:660px;margin:80px auto;padding:24px 28px;' +
+      'border:1px solid var(--panel-border);border-radius:10px;' +
+      'background:var(--panel);font-family:Consolas,monospace;font-size:13px;' +
+      'line-height:1.7;color:var(--text-dim)">' +
+      '<div style="color:var(--edge-circular);font-weight:700;margin-bottom:10px">' +
+      'graph data did not load</div>' +
+      'This page fetches <code>graph.yml</code> and the per-project files it ' +
+      'lists from <code>projects/</code>, next to index.html. Browsers block ' +
+      'those fetches for pages opened straight from disk — serve the folder ' +
+      'instead:' +
+      '<pre style="margin:14px 0 0;color:var(--text)">python -m http.server 8731 ' +
+      '--bind 127.0.0.1</pre>' +
+      '<div style="margin-top:6px">then open <code>http://127.0.0.1:8731/</code> ' +
+      '— or use the published GitHub Pages copy.</div>' +
+      '<div style="margin-top:10px;color:var(--text-faint)">' + String(err && err.message || err)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;") + '</div></div>';
+  }
+
+  async function fetchText(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(url + ": HTTP " + res.status);
+    return res.text();
+  }
+
+  async function load() {
+    const manifest = parseYaml(await fetchText("./graph.yml"));
+    const docs = await Promise.all(manifest.projects.map(async (p) => ({
+      projectId: p.id,
+      doc: parseYaml(await fetchText("./" + p.file)),
+    })));
+    return assembleGraph(manifest, docs);
+  }
+
+  load().then((data) => { window.LFS_DATA = data; startApp(); }).catch(showLoadError);
+})();
+</script>
 <script>
 "use strict";
 
 /* =====================================================================
    London FHIR Service solution dependency graph renderer.
 
-   Reads window.LFS_DATA (see graph-data.js) and renders a left-to-right
+   Reads window.LFS_DATA (assembled from graph.yml + projects/*.yml) and renders a left-to-right
    layered graph: exposers → view/orchestration services → foundations →
    brokers → client libraries → external services, with dashed project
    boundary boxes.
@@ -213,28 +403,10 @@
    circular event flow.
    ===================================================================== */
 
+function startApp() {
+
 const DATA = window.LFS_DATA;
 
-/* graph-data.js is a sibling <script src>. If a viewer (or a sandboxed
-   preview pane) blocks it, say so on the page instead of rendering a
-   blank canvas and a console error nobody sees. */
-if (!DATA) {
-  document.getElementById("graph-wrap").innerHTML =
-    '<div style="max-width:640px;margin:80px auto;padding:24px 28px;' +
-    'border:1px solid var(--panel-border);border-radius:10px;' +
-    'background:var(--panel);font-family:Consolas,monospace;font-size:13px;' +
-    'line-height:1.7;color:var(--text-dim)">' +
-    '<div style="color:var(--edge-circular);font-weight:700;margin-bottom:10px">' +
-    'graph-data.js did not load</div>' +
-    'This page reads <code>window.LFS_DATA</code> from <code>./graph-data.js</code> ' +
-    'next to it. Open both files from the same folder — and if your viewer ' +
-    'blocks sibling scripts, serve the folder instead:' +
-    '<pre style="margin:14px 0 0;color:var(--text)">python -m http.server 8731 ' +
-    '--bind 127.0.0.1</pre>' +
-    '<div style="margin-top:6px">then open ' +
-    '<code>http://127.0.0.1:8731/</code></div></div>';
-  throw new Error("LFS_DATA is not defined — graph-data.js failed to load");
-}
 
 const EDGE_COLORS = {
   direct: cssVar("--edge-direct"),
@@ -1377,6 +1549,11 @@ rebuild();
 buildLegend();
 fit();
 window.addEventListener("resize", fit);
+
+// console / verification handle
+window.__graph = { state, setView, select, selectRow, clearSelection, rebuild, fit, tracePath };
+
+} // startApp
 </script>
 </body>
 </html>
