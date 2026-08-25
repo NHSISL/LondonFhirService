@@ -1,0 +1,23 @@
+# ISL.Security.Client — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: pkg-security
+components:
+  - id: LIB.SecurityClient
+    name: SecurityClient
+    layer: client
+    col: 10
+    shared: true
+    description: "ISL.Security.Client 6.0.0. Core's SecurityBroker and SecurityAuditBroker each `new SecurityClient()` directly (it is not DI-registered) and pass the ClaimsPrincipal taken from IHttpContextAccessor — or parsed from a JWT / supplied directly by the two non-REST constructors."
+    methods:
+      - Audits.ApplyAddAuditValuesAsync
+      - Audits.ApplyModifyAuditValuesAsync
+      - Audits.ApplyRemoveAuditValuesAsync
+      - Audits.EnsureOtherAuditValuesRemainsUnchangedOnModifyAsync
+      - Audits.GetUserIdAsync
+      - Users.GetUserAsync
+      - Users.IsUserAuthenticatedAsync
+      - Users.IsUserInRoleAsync
+      - Users.UserHasClaimAsync

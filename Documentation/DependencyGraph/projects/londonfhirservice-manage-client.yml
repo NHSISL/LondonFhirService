@@ -1,0 +1,78 @@
+# LondonFhirService.Manage.Client — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: manage-client
+components:
+  - id: MC.Bootstrap
+    name: "main.tsx → MsalConfig.build"
+    layer: exposer
+    col: 0
+    description: "The SPA bootstraps by fetching its own MSAL configuration from the Manage host, then instantiating MSAL and rendering App."
+    methods:
+      - MsalConfig.build
+      - PublicClientApplication.initialize
+    calls:
+      - from: MsalConfig.build
+        to: MC.FrontendConfigurationBroker
+        method: GetFrontendConfigruationAsync
+  - id: MC.FeatureSwitch
+    name: FeatureSwitch
+    layer: exposer
+    col: 0
+    description: "Renders its children only when the named feature is in the host's Features array."
+    methods:
+      - FeatureSwitch
+    calls:
+      - from: FeatureSwitch
+        to: MC.FeatureService
+        method: useGetAllFeatures
+  - id: MC.FeatureService
+    name: featureService
+    layer: view
+    col: 1
+    description: "TanStack Query wrapper (staleTime: Infinity) over the feature broker."
+    methods:
+      - useGetAllFeatures
+    calls:
+      - from: useGetAllFeatures
+        to: MC.FeatureBroker
+        method: GetAllFeatureAsync
+  - id: MC.FeatureBroker
+    name: apiBroker.features
+    layer: broker
+    col: 2
+    methods:
+      - GetAllFeatureAsync
+    calls:
+      - from: GetAllFeatureAsync
+        to: MC.ApiBroker
+        method: GetAsync
+  - id: MC.FrontendConfigurationBroker
+    name: apiBroker.frontendConfiguration
+    layer: broker
+    col: 2
+    description: "Calls axios directly rather than through ApiBroker — it runs before MSAL is configured, so there is no token to attach."
+    methods:
+      - GetFrontendConfigruationAsync
+    calls:
+      - from: GetFrontendConfigruationAsync
+        to: MG.FrontendConfigurations
+        method: GET /api/FrontendConfigurations
+  - id: MC.ApiBroker
+    name: apiBroker
+    layer: broker
+    col: 2
+    description: axios wrapper that acquires an MSAL token silently (falling back to a redirect on InteractionRequiredAuthError) and attaches it as a bearer header.
+    methods:
+      - GetAsync
+      - GetAsyncAbsolute
+      - PostAsync
+      - PostFormAsync
+      - PutAsync
+      - DeleteAsync
+    calls:
+      - from: GetAsync
+        to: MG.Features
+        method: GET /api/Features

@@ -1,0 +1,15 @@
+# Microsoft.Extensions.Logging — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-logging
+components:
+  - id: EXT.ILogger
+    name: "ILogger<LoggingBroker>"
+    layer: external
+    col: 12
+    shared: true
+    deriveMethods: true
+    description: "Microsoft.Extensions.Logging. The only sink LoggingBroker writes to; Application Insights is wired at host level."
+    methods: []
