@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LondonFhirService.Manage.Tests.Acceptance.Brokers;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Metrics;
 using Tynamix.ObjectFiller;
 
@@ -60,12 +61,16 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Metrics
             CreateRandomMetricFiller().Create();
 
         /// <summary>
-        /// Type and Status are pinned to real enum names. The broker stores both as text and EF
-        /// converts on the way back, so a random string would round trip out of the database as a
-        /// value Core cannot parse.
+        /// Type and Status are pinned to real enum values. The host registers no
+        /// JsonStringEnumConverter, so these travel as ordinals - the earlier string form failed
+        /// model binding with a 400 before the controller ever ran.
         ///
         /// ParentId is left null: it points at another span, and a random Guid would name one
         /// that does not exist.
+        ///
+        /// DurationMs and PayloadBytes are pinned non-negative. The library rejects negative
+        /// values on both, and an unpinned filler hands out random doubles and longs - which made
+        /// this suite fail roughly half the time rather than never.
         /// </summary>
         private static Filler<Metric> CreateRandomMetricFiller()
         {
@@ -82,8 +87,10 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Metrics
                 .OnProperty(metric => metric.Consumer).Use(GetRandomStringWithLengthOf(255))
                 .OnProperty(metric => metric.ErrorCode).Use(GetRandomStringWithLengthOf(100))
                 .OnProperty(metric => metric.Description).Use(GetRandomStringWithLengthOf(1000))
-                .OnProperty(metric => metric.Type).Use("Provider")
-                .OnProperty(metric => metric.Status).Use("Succeeded")
+                .OnProperty(metric => metric.Type).Use(MetricType.Provider)
+                .OnProperty(metric => metric.Status).Use(MetricStatus.Succeeded)
+                .OnProperty(metric => metric.DurationMs).Use((double)GetRandomNumber())
+                .OnProperty(metric => metric.PayloadBytes).Use((long?)GetRandomNumber())
                 .OnProperty(metric => metric.Started).Use(now)
                 .OnProperty(metric => metric.Completed).Use(now)
                 .OnProperty(metric => metric.CreatedDate).Use(now);
