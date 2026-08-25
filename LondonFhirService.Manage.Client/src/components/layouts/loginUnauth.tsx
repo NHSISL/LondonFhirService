@@ -21,12 +21,12 @@ export const LoginUnAuthorisedComponent = () => {
                                 <br />
                                 <span style={{ marginLeft: "10px" }}>
                                     London Data Service <br />
-                                    <strong className="hero-text"> Local Data Opt-Out</strong>
+                                    <strong className="hero-text"> London FHIR Service Proxy</strong>
                                 </span>
 
                             </Card.Title>
                             <Card.Text className="mb-4 align-items-left" >
-                                <p>Welcome to the One London Local Data Opt-Out Management Portal.</p>
+                                <p>Welcome to the One London London FHIR Service Proxy Management Portal.</p>
                                 <p>Please sign in to continue.</p>
                             </Card.Text>
                             <Button onClick={handleLoginRedirect} className="me-3">Sign in</Button>
