@@ -34,8 +34,12 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
     }
 }
 
+// Launching through Visual Studio sets one of the two environment variables, so the fallback only
+// applies to `npm run dev` on its own. It has to be this client's own host - LondonFhirService.Manage
+// on 6284, per its launchSettings - not LondonFhirService.Api on 7284, which serves a different API
+// and has no /api/providers, /api/audits or /api/metrics to proxy to.
 const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}` :
-    env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'https://localhost:7284';
+    env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'https://localhost:6284';
 
 // https://vitejs.dev/config/
 export default defineConfig({

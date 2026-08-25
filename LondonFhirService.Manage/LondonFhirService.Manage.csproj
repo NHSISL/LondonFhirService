@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -41,6 +41,18 @@
 	<ItemGroup>
 		<ProjectReference Include="..\LondonFhirService.Core\LondonFhirService.Core.csproj" />
 		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
+
+		<!--
+			The SPA this host serves. SpaRoot, SpaProxyServerUrl and SpaProxyLaunchCommand above
+			are meaningless without it: the reference is what tells Visual Studio the JavaScript
+			project belongs to this web app rather than being a launchable web server in its own
+			right. ReferenceOutputAssembly is false because a JavaScript project produces no
+			assembly to reference - this exists purely to establish the relationship and the
+			build order.
+		-->
+		<ProjectReference Include="..\LondonFhirService.Manage.Client\LondonFhirService.Manage.Client.esproj">
+			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+		</ProjectReference>
 	</ItemGroup>
 
 	<ItemGroup>
