@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -19,22 +19,21 @@ using Task = System.Threading.Tasks.Task;
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU3
 {
     /// <summary>
-    /// The orchestration slice of the span tree. The Orchestration span carries the figure the
-    /// "Orchestration Service Request Completed in Nms" audit line used to carry, and AccessCheck
-    /// and ProviderRequests hang off it rather than off the request root - without that, the
-    /// tree flattens and orchestration overhead cannot be isolated.
+    /// The orchestration slice of the span tree. No Orchestration span is recorded any more - it
+    /// wrapped this layer end to end and carried nothing that could not be derived - so
+    /// AccessCheck and ProviderRequests hang directly off the request root passed in from the
+    /// coordination service.
     /// </summary>
     public partial class Stu3PatientOrchestrationServiceTests
     {
         [Fact]
-        public async Task ShouldRecordTheOrchestrationSpanWithItsChildrenUnderItAsync()
+        public async Task ShouldHangAccessCheckAndProviderRequestsOffTheRequestRootAsync()
         {
             // given
             string inputNhsNumber = GetRandomString();
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
             Guid inputParentId = Guid.NewGuid();
-            Guid orchestrationSpanId = Guid.NewGuid();
             Guid accessCheckSpanId = Guid.NewGuid();
             Guid providerRequestsSpanId = Guid.NewGuid();
             Guid discoverySpanId = Guid.NewGuid();
@@ -48,10 +47,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             List<(string Provider, string Json)> randomBundles = CreateRandomBundles();
             var recordedMetrics = new List<Metric>();
 
-            // Sequenced so the ids can be told apart: the orchestration span is drawn first,
-            // then the access check, then provider requests, then discovery.
+            // Sequenced so the ids can be told apart: the access check is drawn first, then
+            // provider requests, then discovery.
             this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
-                .ReturnsAsync(orchestrationSpanId)
                 .ReturnsAsync(accessCheckSpanId)
                 .ReturnsAsync(providerRequestsSpanId)
                 .ReturnsAsync(discoverySpanId);
@@ -96,8 +94,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 cancellationToken: cancellationToken);
 
             // then
-            Metric orchestrationSpan = recordedMetrics.Should().ContainSingle(metric =>
-                metric.Type == MetricType.Orchestration).Subject;
+            recordedMetrics.Should().NotContain(metric => metric.Type == MetricType.Orchestration);
 
             Metric accessCheckSpan = recordedMetrics.Should().ContainSingle(metric =>
                 metric.Type == MetricType.AccessCheck).Subject;
@@ -108,16 +105,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             Metric discoverySpan = recordedMetrics.Should().ContainSingle(metric =>
                 metric.Type == MetricType.ProviderDiscovery).Subject;
 
-            orchestrationSpan.Id.Should().Be(orchestrationSpanId);
-            orchestrationSpan.ParentId.Should().Be(inputParentId);
-
-            // The children hang off the orchestration span, not the request root - that nesting
-            // is what lets orchestration overhead be read straight off the tree.
+            // Both hang off the request root now that the layer span between them is gone.
             accessCheckSpan.Id.Should().Be(accessCheckSpanId);
-            accessCheckSpan.ParentId.Should().Be(orchestrationSpanId);
+            accessCheckSpan.ParentId.Should().Be(inputParentId);
 
             providerRequestsSpan.Id.Should().Be(providerRequestsSpanId);
-            providerRequestsSpan.ParentId.Should().Be(orchestrationSpanId);
+            providerRequestsSpan.ParentId.Should().Be(inputParentId);
 
             discoverySpan.Id.Should().Be(discoverySpanId);
             discoverySpan.ParentId.Should().Be(providerRequestsSpanId);
@@ -144,14 +137,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
         }
 
         [Fact]
-        public async Task ShouldRecordTheOrchestrationSpanWhenTheRequestFailsAsync()
+        public async Task ShouldRecordProviderRequestsAsFailedWhenTheRequestFailsAsync()
         {
             // given
             string inputNhsNumber = GetRandomString();
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
             Guid inputParentId = Guid.NewGuid();
-            Guid orchestrationSpanId = Guid.NewGuid();
+            Guid accessCheckSpanId = Guid.NewGuid();
+            Guid providerRequestsSpanId = Guid.NewGuid();
             string userId = GetRandomString();
             User randomUser = CreateRandomUser(userId);
             ConsumerAccess allowedAccess = CreateRandomConsumerAccess(isAccessAllowed: true);
@@ -160,8 +154,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             var serviceException = new Exception(GetRandomString());
 
             this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
-                .ReturnsAsync(orchestrationSpanId)
-                .ReturnsAsync(Guid.NewGuid())
+                .ReturnsAsync(accessCheckSpanId)
+                .ReturnsAsync(providerRequestsSpanId)
                 .ReturnsAsync(Guid.NewGuid())
                 .ReturnsAsync(Guid.NewGuid());
 
@@ -205,15 +199,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             await getStructuredRecord.Should().ThrowAsync<Xeption>();
 
             // then
-            // The orchestration span has to be written on the way out too, or the children
-            // already recorded point at a row that never got inserted.
-            Metric orchestrationSpan = recordedMetrics.Should().ContainSingle(metric =>
-                metric.Type == MetricType.Orchestration).Subject;
+            recordedMetrics.Should().NotContain(metric => metric.Type == MetricType.Orchestration);
 
-            orchestrationSpan.Id.Should().Be(orchestrationSpanId);
-            orchestrationSpan.ParentId.Should().Be(inputParentId);
-            orchestrationSpan.Status.Should().Be(MetricStatus.Failed);
-            orchestrationSpan.ErrorCode.Should().Be(nameof(Exception));
+            // ProviderRequests still has to be written on the way out, or the discovery span
+            // already recorded points at a row that never got inserted.
+            Metric providerRequestsSpan = recordedMetrics.Should().ContainSingle(metric =>
+                metric.Type == MetricType.ProviderRequests).Subject;
+
+            providerRequestsSpan.Id.Should().Be(providerRequestsSpanId);
+            providerRequestsSpan.ParentId.Should().Be(inputParentId);
+            providerRequestsSpan.Status.Should().Be(MetricStatus.Failed);
+            providerRequestsSpan.ErrorCode.Should().Be(nameof(Exception));
         }
     }
 }

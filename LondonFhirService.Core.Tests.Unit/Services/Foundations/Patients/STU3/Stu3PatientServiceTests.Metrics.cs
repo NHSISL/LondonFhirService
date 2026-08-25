@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -19,26 +19,24 @@ using Task = System.Threading.Tasks.Task;
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 {
     /// <summary>
-    /// The foundation slice of the span tree. The Foundation span carries the figure the
-    /// "Foundation Service Request Completed in Nms" audit line used to carry; the fan out hangs
-    /// off it, each provider hangs off the fan out, and the call and the deferred persist hang
-    /// off their provider. Persist is the one span whose duration is deliberately outside its
-    /// ancestors' durations.
+    /// The foundation slice of the span tree. No Foundation or ProviderCall span is recorded any
+    /// more - each wrapped a single child and carried nothing that could not be derived - so the
+    /// fan out hangs directly off whatever the orchestration passed down, each provider hangs off
+    /// the fan out, and the deferred persist hangs off its provider. Persist is the one span
+    /// whose duration is deliberately outside its ancestors' durations.
     /// </summary>
     public partial class Stu3PatientServiceTests
     {
         [Fact]
-        public async Task ShouldRecordTheFoundationSpanWithTheFanOutUnderItAsync()
+        public async Task ShouldHangTheFanOutOffTheParentPassedDownAsync()
         {
             // given
             string inputNhsNumber = GetRandomString();
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
             Guid inputParentId = Guid.NewGuid();
-            Guid foundationSpanId = Guid.NewGuid();
             Guid fanOutSpanId = Guid.NewGuid();
             Guid providerSpanId = Guid.NewGuid();
-            Guid providerCallMetricId = Guid.NewGuid();
             Guid fhirRecordId = Guid.NewGuid();
             Guid persistMetricId = Guid.NewGuid();
             DateTimeOffset startedAt = GetRandomDateTimeOffset();
@@ -55,10 +53,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             // then within the single provider task its span, the call metric, the record id, and
             // the persist metric.
             this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
-                .ReturnsAsync(foundationSpanId)
                 .ReturnsAsync(fanOutSpanId)
                 .ReturnsAsync(providerSpanId)
-                .ReturnsAsync(providerCallMetricId)
                 .ReturnsAsync(fhirRecordId)
                 .ReturnsAsync(persistMetricId);
 
@@ -90,8 +86,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 cancellationToken: cancellationToken);
 
             // then
-            Metric foundationSpan = recordedMetrics.Should().ContainSingle(metric =>
-                metric.Type == MetricType.Foundation).Subject;
+            recordedMetrics.Should().NotContain(metric => metric.Type == MetricType.Foundation);
+            recordedMetrics.Should().NotContain(metric => metric.Type == MetricType.ProviderCall);
 
             Metric fanOutSpan = recordedMetrics.Should().ContainSingle(metric =>
                 metric.Type == MetricType.ProviderFanOut).Subject;
@@ -99,23 +95,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Metric providerSpan = recordedMetrics.Should().ContainSingle(metric =>
                 metric.Type == MetricType.Provider).Subject;
 
-            Metric providerCallSpan = recordedMetrics.Should().ContainSingle(metric =>
-                metric.Type == MetricType.ProviderCall).Subject;
-
             Metric persistSpan = recordedMetrics.Should().ContainSingle(metric =>
                 metric.Type == MetricType.Persist).Subject;
 
-            foundationSpan.Id.Should().Be(foundationSpanId);
-            foundationSpan.ParentId.Should().Be(inputParentId);
-
+            // The fan out hangs off the caller's span now that the layer span between them is
+            // gone.
             fanOutSpan.Id.Should().Be(fanOutSpanId);
-            fanOutSpan.ParentId.Should().Be(foundationSpanId);
+            fanOutSpan.ParentId.Should().Be(inputParentId);
 
             providerSpan.Id.Should().Be(providerSpanId);
             providerSpan.ParentId.Should().Be(fanOutSpanId);
-
-            providerCallSpan.Id.Should().Be(providerCallMetricId);
-            providerCallSpan.ParentId.Should().Be(providerSpanId);
 
             // The persist is deferred, but it still belongs to the provider whose payload it
             // writes - the tree keeps it under that provider even though its duration is not
@@ -132,14 +121,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         }
 
         [Fact]
-        public async Task ShouldRecordTheFoundationSpanWhenTheRequestFailsAsync()
+        public async Task ShouldLeaveNoSpanBehindWhenTheRequestFailsBeforeTheFanOutAsync()
         {
             // given
             string inputNhsNumber = GetRandomString();
             CancellationToken cancellationToken = CancellationToken.None;
             Guid correlationId = Guid.NewGuid();
             Guid inputParentId = Guid.NewGuid();
-            Guid foundationSpanId = Guid.NewGuid();
             var recordedMetrics = new List<Metric>();
             var brokerException = new Exception(GetRandomString());
 
@@ -149,11 +137,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             };
 
             this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
-                .ReturnsAsync(foundationSpanId)
+                .ReturnsAsync(Guid.NewGuid())
                 .ReturnsAsync(Guid.NewGuid());
 
-            // Thrown from inside the foundation span's try, after it exists - the span must
-            // still be written on the way out.
+            // Thrown before the fan out span is drawn. With the Foundation span gone there is no
+            // enclosing span left to record, so the failure must leave nothing behind rather than
+            // a parent row with no children or a child pointing at a row that was never written.
             this.auditAndMetricBrokerMock.Setup(broker =>
                 broker.LogInformationAsync(
                     It.IsAny<string>(),
@@ -180,13 +169,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             await getStructuredRecord.Should().ThrowAsync<Xeption>();
 
             // then
-            Metric foundationSpan = recordedMetrics.Should().ContainSingle(metric =>
-                metric.Type == MetricType.Foundation).Subject;
-
-            foundationSpan.Id.Should().Be(foundationSpanId);
-            foundationSpan.ParentId.Should().Be(inputParentId);
-            foundationSpan.Status.Should().Be(MetricStatus.Failed);
-            foundationSpan.ErrorCode.Should().Be(nameof(Exception));
+            recordedMetrics.Should().BeEmpty();
         }
     }
 }
