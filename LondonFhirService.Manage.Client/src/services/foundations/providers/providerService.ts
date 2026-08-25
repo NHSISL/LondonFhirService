@@ -50,4 +50,12 @@ export class ProviderService implements IProviderService {
             return await this.providerApiBroker.putProviderAsync(provider);
         });
     }
+
+    public async removeProviderByIdAsync(providerId: string): Promise<Provider> {
+        return await tryCatchProviderServiceAsync(async () => {
+            validateProviderId(providerId);
+
+            return await this.providerApiBroker.deleteProviderByIdAsync(providerId);
+        });
+    }
 }

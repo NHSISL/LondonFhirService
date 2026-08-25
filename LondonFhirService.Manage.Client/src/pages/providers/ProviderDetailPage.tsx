@@ -1,4 +1,4 @@
-import { Button, Col, Container, Row } from "react-bootstrap";
+﻿import { Button, Col, Container, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import BreadCrumbBase from "../../components/bases/layouts/BreadCrumb/BreadCrumbBase";
 import { useProviderDetailPage } from "../../hooks/pages/useProviderDetailPage";
@@ -7,6 +7,7 @@ import { ErrorSummary } from "../../components/shared/ErrorSummary";
 import { LoadingIndicator } from "../../components/shared/LoadingIndicator";
 import { ProviderDetail } from "../../components/providers/ProviderDetail";
 import { ProviderForm } from "../../components/providers/ProviderForm";
+import { ConfirmDialog } from "../../components/shared/ConfirmDialog";
 import { SecuredComponent } from "../../components/securitys/securedComponents";
 import securityPoints from "../../securityMatrix";
 
@@ -26,7 +27,12 @@ export function ProviderDetailPage() {
         handleEdit,
         handleFieldChange,
         handleSave,
-        handleCancelEdit
+        handleCancelEdit,
+        confirmingDelete,
+        deleting,
+        handleDeleteRequest,
+        handleDeleteConfirm,
+        handleDeleteCancel
     } = useProviderDetailPage(providerId ?? "");
 
     const breadCrumb = (
@@ -79,6 +85,12 @@ export function ProviderDetailPage() {
                             </Button>
                         </SecuredComponent>
 
+                        <SecuredComponent allowedRoles={securityPoints.providers.delete}>
+                            <Button variant="outline-danger" onClick={handleDeleteRequest}>
+                                Delete
+                            </Button>
+                        </SecuredComponent>
+
                         <Button variant="outline-secondary" onClick={handleBackToProviders}>
                             Back to providers
                         </Button>
@@ -111,6 +123,16 @@ export function ProviderDetailPage() {
                         : <ProviderDetail provider={provider} />}
                 </Col>
             </Row>
+
+            <ConfirmDialog
+                show={confirmingDelete}
+                title="Are you sure?"
+                message={`Deleting "${provider.friendlyName}" removes it from the patient fan-out. This cannot be undone.`}
+                confirmLabel="Delete"
+                confirmingLabel="Deleting..."
+                confirming={deleting}
+                onConfirm={handleDeleteConfirm}
+                onCancel={handleDeleteCancel} />
         </Container>
     );
 }

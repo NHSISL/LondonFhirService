@@ -6,4 +6,5 @@ export interface IProviderService {
     retrieveProviderByIdAsync(providerId: string, abortSignal?: AbortSignal): Promise<Provider>;
     addProviderAsync(providerRegistration: ProviderRegistration): Promise<Provider>;
     modifyProviderAsync(provider: Provider): Promise<Provider>;
+    removeProviderByIdAsync(providerId: string): Promise<Provider>;
 }

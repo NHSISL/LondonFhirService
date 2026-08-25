@@ -14,6 +14,10 @@ import { TestPage } from './pages/testPage';
 import { ProvidersPage } from './pages/providers/ProvidersPage';
 import { ProviderDetailPage } from './pages/providers/ProviderDetailPage';
 import { ProviderAddPage } from './pages/providers/ProviderAddPage';
+import { AuditsPage } from './pages/audits/AuditsPage';
+import { AuditDetailPage } from './pages/audits/AuditDetailPage';
+import { MetricsPage } from './pages/metrics/MetricsPage';
+import { MetricDetailPage } from './pages/metrics/MetricDetailPage';
 import { SecuredRoute } from './components/securitys/securedRoutes';
 import securityPoints from './securityMatrix';
 
@@ -28,6 +32,38 @@ function App({ instance }: any) {
                 {
                     path: "home",
                     element: <Home />
+                },
+                {
+                    path: "admin/audits",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.audits.view}>
+                            <AuditsPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/audits/:auditId",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.audits.view}>
+                            <AuditDetailPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/metrics",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.metrics.view}>
+                            <MetricsPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/metrics/:correlationId",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.metrics.view}>
+                            <MetricDetailPage />
+                        </SecuredRoute>
+                    )
                 },
                 {
                     path: "admin/providers",

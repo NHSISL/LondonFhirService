@@ -20,4 +20,6 @@ export interface IProviderViewService {
     updateProviderAsync(
         providerId: string,
         providerFormValues: ProviderFormValues): Promise<ProviderDetailView>;
+
+    removeProviderAsync(providerId: string): Promise<void>;
 }

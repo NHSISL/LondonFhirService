@@ -76,6 +76,19 @@ export class ProviderApiBroker implements IProviderApiBroker {
         }
     }
 
+    public async deleteProviderByIdAsync(providerId: string): Promise<Provider> {
+        try {
+            const response = await this.apiBroker.DeleteAsync(
+                `${this.relativeProvidersUrl}/${encodeURIComponent(providerId)}`);
+
+            return this.toProvider(response.data);
+        } catch (exception) {
+            throw new ProviderApiBrokerException(
+                `Failed to delete provider '${providerId}' through the API.`,
+                exception);
+        }
+    }
+
     // Format conversion only - the API is an untyped boundary, so every field is read
     // defensively rather than asserted into shape.
     private toProvider(rawProvider: unknown): Provider {

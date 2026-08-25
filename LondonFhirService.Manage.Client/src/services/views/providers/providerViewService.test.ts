@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+﻿import { expect, it } from "vitest";
 import { ProviderViewService } from "./providerViewService";
 import type { IProviderService } from "../../foundations/providers/iProviderService";
 import type { Provider } from "../../../models/foundations/providers/Provider";
@@ -32,6 +32,7 @@ const createProviderService = (overrides: Partial<IProviderService> = {}): IProv
     retrieveProviderByIdAsync: async () => createProvider({}),
     addProviderAsync: async providerRegistration => createProvider({ ...providerRegistration }),
     modifyProviderAsync: async provider => provider,
+    removeProviderByIdAsync: async () => createProvider({}),
     ...overrides
 });
 
@@ -225,4 +226,12 @@ it("should wrap an update failure in a view service exception", async () => {
         "8f4b2c26-0c0d-4a0e-9f2b-2a2f4a6c1111",
         providerViewService.createProviderFormValues()))
         .rejects.toThrowError("We could not save this provider, please correct any errors and try again.");
+});
+
+it("should wrap a delete failure in a view service exception", async () => {
+    const providerViewService = new ProviderViewService(
+        createProviderService({ removeProviderByIdAsync: rejects }));
+
+    await expect(providerViewService.removeProviderAsync("8f4b2c26-0c0d-4a0e-9f2b-2a2f4a6c1111"))
+        .rejects.toThrowError("We could not delete this provider, please try again or contact support.");
 });

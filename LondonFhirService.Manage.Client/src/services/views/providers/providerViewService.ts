@@ -98,6 +98,16 @@ export class ProviderViewService implements IProviderViewService {
         }
     }
 
+    public async removeProviderAsync(providerId: string): Promise<void> {
+        try {
+            await this.providerService.removeProviderByIdAsync(providerId);
+        } catch (exception) {
+            throw new ProviderViewServiceException(
+                "We could not delete this provider, please try again or contact support.",
+                exception);
+        }
+    }
+
     // The current record is re-read rather than reconstructed from the page, because the server
     // compares CreatedBy and CreatedDate against storage and rejects a modify that does not carry
     // them back unchanged.

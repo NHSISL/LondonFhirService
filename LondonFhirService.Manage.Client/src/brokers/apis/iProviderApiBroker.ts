@@ -6,4 +6,5 @@ export interface IProviderApiBroker {
     getProviderByIdAsync(providerId: string, abortSignal?: AbortSignal): Promise<Provider>;
     postProviderAsync(providerRegistration: ProviderRegistration): Promise<Provider>;
     putProviderAsync(provider: Provider): Promise<Provider>;
+    deleteProviderByIdAsync(providerId: string): Promise<Provider>;
 }

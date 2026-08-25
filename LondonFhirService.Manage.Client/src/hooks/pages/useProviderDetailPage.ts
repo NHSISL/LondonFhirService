@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ProviderViewService } from "../../services/views/providers/providerViewService";
@@ -30,6 +30,11 @@ export type ProviderDetailPageState = {
     handleFieldChange: (fieldName: keyof ProviderFormValues, value: string | boolean) => void;
     handleSave: () => void;
     handleCancelEdit: () => void;
+    confirmingDelete: boolean;
+    deleting: boolean;
+    handleDeleteRequest: () => void;
+    handleDeleteConfirm: () => void;
+    handleDeleteCancel: () => void;
 };
 
 export function useProviderDetailPage(providerId: string): ProviderDetailPageState {
@@ -41,6 +46,8 @@ export function useProviderDetailPage(providerId: string): ProviderDetailPageSta
     const [editing, setEditing] = useState<boolean>(false);
     const [saving, setSaving] = useState<boolean>(false);
     const [saveError, setSaveError] = useState<Error | null>(null);
+    const [confirmingDelete, setConfirmingDelete] = useState<boolean>(false);
+    const [deleting, setDeleting] = useState<boolean>(false);
 
     const [values, setValues] =
         useState<ProviderFormValues>(() => providerViewService.createProviderFormValues());
@@ -124,6 +131,34 @@ export function useProviderDetailPage(providerId: string): ProviderDetailPageSta
         queryClient
     ]);
 
+    const handleDeleteRequest = useCallback(() => {
+        setSaveError(null);
+        setConfirmingDelete(true);
+    }, []);
+
+    const handleDeleteCancel = useCallback(() => setConfirmingDelete(false), []);
+
+    const handleDeleteConfirm = useCallback(() => {
+        setDeleting(true);
+        setSaveError(null);
+
+        providerViewService.removeProviderAsync(providerId)
+            .then(async () => {
+                await queryClient.invalidateQueries({
+                    queryKey: ["ProviderListItemViewsGetAll"]
+                });
+
+                queryClient.removeQueries({ queryKey: ["ProviderDetailView", providerId] });
+                setConfirmingDelete(false);
+                navigate("/admin/providers");
+            })
+            .catch((exception: Error) => {
+                setConfirmingDelete(false);
+                setSaveError(exception);
+            })
+            .finally(() => setDeleting(false));
+    }, [providerViewService, providerId, queryClient, navigate]);
+
     return {
         provider: data ?? null,
         loading: isLoading,
@@ -137,6 +172,11 @@ export function useProviderDetailPage(providerId: string): ProviderDetailPageSta
         handleEdit: handleEdit,
         handleFieldChange: handleFieldChange,
         handleSave: handleSave,
-        handleCancelEdit: handleCancelEdit
+        handleCancelEdit: handleCancelEdit,
+        confirmingDelete: confirmingDelete,
+        deleting: deleting,
+        handleDeleteRequest: handleDeleteRequest,
+        handleDeleteConfirm: handleDeleteConfirm,
+        handleDeleteCancel: handleDeleteCancel
     };
 }
