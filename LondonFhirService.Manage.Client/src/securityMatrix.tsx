@@ -1,4 +1,4 @@
-// Role names must match the app roles on the Manage app registration, which are the same values
+// Role names must match the app roles on the Manage app registration, which areLondonDataServices.Manage.Administrators the same values
 // the Manage host authorises against in its controllers: ManageAdmin and ManageUsers.
 const securityPoints = {
     configuration: {
@@ -13,7 +13,7 @@ const securityPoints = {
         add: ['ManageAdmin'],
         edit: ['ManageAdmin'],
         delete: ['ManageAdmin'],
-        view: ['ManageAdmin'],
+        view: ['LondonDataServices.Manage.Administrators'],
     },
     testUserAction: {
         add: ['ManageAdmin', 'ManageUsers'],
