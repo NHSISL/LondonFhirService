@@ -25,8 +25,8 @@ const MenuComponent: React.FC = () => {
 
             <SecuredComponent allowedRoles={securityPoints.providers.view}>
                 <ListGroup.Item
-                    className={`bg-dark text-white ${location.pathname.startsWith('/providers') ? 'active' : ''}`}
-                    onClick={() => handleItemClick('/providers')}>
+                    className={`bg-dark text-white ${location.pathname.startsWith('/admin/providers') ? 'active' : ''}`}
+                    onClick={() => handleItemClick('/admin/providers')}>
                     <FontAwesomeIcon icon={faNetworkWired} className="me-2 fa-icon" />
                     Providers
                 </ListGroup.Item>

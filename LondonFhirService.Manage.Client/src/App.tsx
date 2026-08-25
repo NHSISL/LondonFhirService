@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import './App.css';
 import Root from './components/root';
@@ -13,6 +13,7 @@ import ToastBroker from './brokers/toastBroker';
 import { TestPage } from './pages/testPage';
 import { ProvidersPage } from './pages/providers/ProvidersPage';
 import { ProviderDetailPage } from './pages/providers/ProviderDetailPage';
+import { ProviderAddPage } from './pages/providers/ProviderAddPage';
 import { SecuredRoute } from './components/securitys/securedRoutes';
 import securityPoints from './securityMatrix';
 
@@ -29,7 +30,7 @@ function App({ instance }: any) {
                     element: <Home />
                 },
                 {
-                    path: "providers",
+                    path: "admin/providers",
                     element: (
                         <SecuredRoute allowedRoles={securityPoints.providers.view}>
                             <ProvidersPage />
@@ -37,7 +38,15 @@ function App({ instance }: any) {
                     )
                 },
                 {
-                    path: "providers/:providerId",
+                    path: "admin/providers/new",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.providers.add}>
+                            <ProviderAddPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/providers/:providerId",
                     element: (
                         <SecuredRoute allowedRoles={securityPoints.providers.view}>
                             <ProviderDetailPage />

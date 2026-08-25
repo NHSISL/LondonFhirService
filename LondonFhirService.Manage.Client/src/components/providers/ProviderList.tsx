@@ -1,4 +1,4 @@
-import { Table } from "react-bootstrap";
+﻿import { Table } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { EmptyState } from "../shared/EmptyState";
 import type { ProviderListProps } from "../../models/components/providers/ProviderListProps";
@@ -26,6 +26,7 @@ export function ProviderList({ providers, selectedProviderId }: ProviderListProp
                     <th scope="col">Role</th>
                     <th scope="col">Status</th>
                     <th scope="col">Active period</th>
+                    <th scope="col" className="text-end">Actions</th>
                 </tr>
             </thead>
 
@@ -49,6 +50,14 @@ export function ProviderList({ providers, selectedProviderId }: ProviderListProp
                             <span className={provider.statusClassName}>{provider.statusText}</span>
                         </td>
                         <td>{provider.activePeriodText}</td>
+                        <td className="text-end">
+                            <Link
+                                to={provider.detailUrl}
+                                className="btn btn-sm btn-outline-primary"
+                                aria-label={`View ${provider.friendlyName}`}>
+                                View
+                            </Link>
+                        </td>
                     </tr>
                 ))}
             </tbody>

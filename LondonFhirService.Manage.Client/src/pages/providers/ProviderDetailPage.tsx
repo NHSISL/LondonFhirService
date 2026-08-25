@@ -6,14 +6,31 @@ import { EmptyState } from "../../components/shared/EmptyState";
 import { ErrorSummary } from "../../components/shared/ErrorSummary";
 import { LoadingIndicator } from "../../components/shared/LoadingIndicator";
 import { ProviderDetail } from "../../components/providers/ProviderDetail";
+import { ProviderForm } from "../../components/providers/ProviderForm";
+import { SecuredComponent } from "../../components/securitys/securedComponents";
+import securityPoints from "../../securityMatrix";
 
 export function ProviderDetailPage() {
     const { providerId } = useParams<{ providerId: string }>();
-    const { provider, loading, error, handleBackToProviders } =
-        useProviderDetailPage(providerId ?? "");
+
+    const {
+        provider,
+        loading,
+        error,
+        editing,
+        saving,
+        saveError,
+        values,
+        errors,
+        handleBackToProviders,
+        handleEdit,
+        handleFieldChange,
+        handleSave,
+        handleCancelEdit
+    } = useProviderDetailPage(providerId ?? "");
 
     const breadCrumb = (
-        <BreadCrumbBase link="/providers" backLink="Providers" currentLink={provider?.friendlyName ?? "Provider"} />
+        <BreadCrumbBase link="/admin/providers" backLink="Providers" currentLink={provider?.friendlyName ?? "Provider"} />
     );
 
     if (loading) {
@@ -54,16 +71,44 @@ export function ProviderDetailPage() {
                     <h1 className="h3 mb-0">{provider.friendlyName}</h1>
                 </Col>
 
-                <Col xs="auto">
-                    <Button variant="outline-secondary" onClick={handleBackToProviders}>
-                        Back to providers
-                    </Button>
-                </Col>
+                {editing === false && (
+                    <Col xs="auto" className="d-flex gap-2">
+                        <SecuredComponent allowedRoles={securityPoints.providers.edit}>
+                            <Button variant="primary" onClick={handleEdit}>
+                                Edit
+                            </Button>
+                        </SecuredComponent>
+
+                        <Button variant="outline-secondary" onClick={handleBackToProviders}>
+                            Back to providers
+                        </Button>
+                    </Col>
+                )}
             </Row>
 
+            {saveError && (
+                <Row className="mb-3 p-2">
+                    <Col>
+                        <ErrorSummary title="Provider could not be saved" message={saveError.message} />
+                    </Col>
+                </Row>
+            )}
+
             <Row className="p-2">
-                <Col>
-                    <ProviderDetail provider={provider} />
+                <Col lg={editing ? 9 : 12} xl={editing ? 7 : 12}>
+                    {editing
+                        ? (
+                            <ProviderForm
+                                values={values}
+                                errors={errors}
+                                saving={saving}
+                                submitLabel="Save"
+                                savingLabel="Saving..."
+                                onFieldChange={handleFieldChange}
+                                onSubmit={handleSave}
+                                onCancel={handleCancelEdit} />
+                        )
+                        : <ProviderDetail provider={provider} />}
                 </Col>
             </Row>
         </Container>
