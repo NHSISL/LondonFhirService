@@ -26,7 +26,7 @@ namespace LondonFhirService.Manage.Controllers.Audits
     /// without the key header, so they exist to let the acceptance suite hydrate and seed a
     /// database rather than as an operator-facing way to rewrite compliance records.
     /// </summary>
-    [Authorize(Roles = "Administrators,Users")]
+    [Authorize(Roles = "ManageAdmin,ManageUsers")]
     [ApiController]
     [Route("api/[controller]")]
     public class AuditsController : RESTFulController

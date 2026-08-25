@@ -25,7 +25,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             this.fhirRecordDifferenceService = fhirRecordDifferenceService;
 
         [HttpPost]
-        [Authorize(Roles = "Administrators,FhirRecordDifferences.Create")]
+        [Authorize(Roles = "ManageAdmin,FhirRecordDifferences.Create")]
         public async ValueTask<ActionResult<FhirRecordDifference>> PostFhirRecordDifferenceAsync(
             [FromBody] FhirRecordDifference fhirRecordDifference)
         {
@@ -67,7 +67,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
 #if DEBUG
         [EnableQuery(PageSize = 5000)]
 #endif
-        [Authorize(Roles = "Administrators,FhirRecordDifferences.Read")]
+        [Authorize(Roles = "ManageAdmin,FhirRecordDifferences.Read")]
         public async ValueTask<ActionResult<IQueryable<FhirRecordDifference>>> Get()
         {
             try
@@ -88,7 +88,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
         }
 
         [HttpGet("{fhirRecordDifferenceId}")]
-        [Authorize(Roles = "Administrators,FhirRecordDifferences.Read")]
+        [Authorize(Roles = "ManageAdmin,FhirRecordDifferences.Read")]
         public async ValueTask<ActionResult<FhirRecordDifference>> GetFhirRecordDifferenceByIdAsync(
             Guid fhirRecordDifferenceId)
         {
@@ -123,7 +123,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
         }
 
         [HttpPut]
-        [Authorize(Roles = "Administrators,FhirRecordDifferences.Update")]
+        [Authorize(Roles = "ManageAdmin,FhirRecordDifferences.Update")]
         public async ValueTask<ActionResult<FhirRecordDifference>> PutFhirRecordDifferenceAsync(
             [FromBody] FhirRecordDifference fhirRecordDifference)
         {
@@ -164,7 +164,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
         }
 
         [HttpDelete("{fhirRecordDifferenceId}")]
-        [Authorize(Roles = "Administrators,FhirRecordDifferences.Delete")]
+        [Authorize(Roles = "ManageAdmin,FhirRecordDifferences.Delete")]
         public async ValueTask<ActionResult<FhirRecordDifference>> DeleteFhirRecordDifferenceByIdAsync(
             Guid fhirRecordDifferenceId)
         {

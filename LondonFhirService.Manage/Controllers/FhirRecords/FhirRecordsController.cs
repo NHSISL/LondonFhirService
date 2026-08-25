@@ -26,7 +26,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
 
         [HttpPost]
         //[InvisibleApi]
-        [Authorize(Roles = "Administrators,FhirRecords.Create")]
+        [Authorize(Roles = "ManageAdmin,FhirRecords.Create")]
         public async ValueTask<ActionResult<FhirRecord>> PostFhirRecordAsync([FromBody] FhirRecord fhirRecord)
         {
             try
@@ -68,7 +68,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
         [EnableQuery(PageSize = 5000)]
 #endif
         //[InvisibleApi]
-        [Authorize(Roles = "Administrators,FhirRecords.Read")]
+        [Authorize(Roles = "ManageAdmin,FhirRecords.Read")]
         public async ValueTask<ActionResult<IQueryable<FhirRecord>>> Get()
         {
             try
@@ -90,7 +90,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
 
         [HttpGet("{fhirRecordId}")]
         //[InvisibleApi]
-        [Authorize(Roles = "Administrators,FhirRecords.Read")]
+        [Authorize(Roles = "ManageAdmin,FhirRecords.Read")]
         public async ValueTask<ActionResult<FhirRecord>> GetFhirRecordByIdAsync(Guid fhirRecordId)
         {
             try
@@ -124,7 +124,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
 
         [HttpPut]
         //[InvisibleApi]
-        [Authorize(Roles = "Administrators,FhirRecords.Update")]
+        [Authorize(Roles = "ManageAdmin,FhirRecords.Update")]
         public async ValueTask<ActionResult<FhirRecord>> PutFhirRecordAsync([FromBody] FhirRecord fhirRecord)
         {
             try
@@ -164,7 +164,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
 
         [HttpDelete("{fhirRecordId}")]
         //[InvisibleApi]
-        [Authorize(Roles = "Administrators,FhirRecords.Delete")]
+        [Authorize(Roles = "ManageAdmin,FhirRecords.Delete")]
         public async ValueTask<ActionResult<FhirRecord>> DeleteFhirRecordByIdAsync(Guid fhirRecordId)
         {
             try

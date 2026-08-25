@@ -9,7 +9,7 @@ components:
     name: AuditsController
     layer: exposer
     col: 3
-    description: "RESTFulController over Audit, [Authorize(Roles = \"Administrators,Users\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Create, update and delete carry [InvisibleApi]: the middleware on this host makes them unroutable without the key header, so they answer 404 to anyone who does not hold it."
+    description: "RESTFulController over Audit, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Create, update and delete carry [InvisibleApi]: the middleware on this host makes them unroutable without the key header, so they answer 404 to anyone who does not hold it."
     methods:
       - POST /api/Audits
       - GET /api/Audits
@@ -36,7 +36,7 @@ components:
     name: MetricsController
     layer: exposer
     col: 3
-    description: "RESTFulController over Metric, [Authorize(Roles = \"Administrators,Users\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Create, update and delete carry [InvisibleApi]: the middleware on this host makes them unroutable without the key header, so they answer 404 to anyone who does not hold it. There is no PUT — a metric records work that already happened, so the table is append-only and no update path exists beneath the controller to expose."
+    description: "RESTFulController over Metric, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Create, update and delete carry [InvisibleApi]: the middleware on this host makes them unroutable without the key header, so they answer 404 to anyone who does not hold it. There is no PUT — a metric records work that already happened, so the table is append-only and no update path exists beneath the controller to expose."
     methods:
       - POST /api/Metrics
       - GET /api/Metrics
@@ -59,7 +59,7 @@ components:
     name: ProvidersController
     layer: exposer
     col: 3
-    description: "RESTFulController over Provider, [Authorize(Roles = \"Administrators,Users\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Reads are open to Administrators and Users; create, update and delete narrow to Administrators with a second [Authorize] on the method, because a provider row decides who the patient fan-out calls and which source is primary. Nothing here is [InvisibleApi] — providers are configuration an operator manages, not a record only the acceptance suite should seed."
+    description: "RESTFulController over Provider, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Reads are open to ManageAdmin and Users; create, update and delete narrow to ManageAdmin with a second [Authorize] on the method, because a provider row decides who the patient fan-out calls and which source is primary. Nothing here is [InvisibleApi] — providers are configuration an operator manages, not a record only the acceptance suite should seed."
     methods:
       - POST /api/Providers
       - GET /api/Providers
@@ -86,7 +86,7 @@ components:
     name: FhirRecordsController
     layer: exposer
     col: 3
-    description: "RESTFulController over FhirRecord, [Authorize(Roles = \"Administrators,Users\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
+    description: "RESTFulController over FhirRecord, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
     methods:
       - POST /api/FhirRecords
       - GET /api/FhirRecords
@@ -113,7 +113,7 @@ components:
     name: FhirRecordDifferencesController
     layer: exposer
     col: 3
-    description: "RESTFulController over FhirRecordDifference, [Authorize(Roles = \"Administrators,Users\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
+    description: "RESTFulController over FhirRecordDifference, [Authorize(Roles = \"ManageAdmin,ManageUsers\")]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
     methods:
       - POST /api/FhirRecordDifferences
       - GET /api/FhirRecordDifferences

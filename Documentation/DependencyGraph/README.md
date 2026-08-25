@@ -152,10 +152,10 @@ Actions).
   `FhirRecordDifferences` — audit rows carry whole patient payloads, and Manage
   is reachable only from the business IP range.
 - **`Audits` and `Metrics` hide their write verbs; `Providers` does not.** All
-  three are `[Authorize(Roles = "Administrators,Users")]`. Audit and metric
+  three are `[Authorize(Roles = "ManageAdmin,ManageUsers")]`. Audit and metric
   writes additionally carry `[InvisibleApi]`, so the middleware answers 404
   without the key header and they exist for the acceptance suite to seed and
-  tear down. Provider writes instead narrow to `Administrators` with a second
+  tear down. Provider writes instead narrow to `ManageAdmin` with a second
   `[Authorize]` — a provider row decides who the patient fan-out calls and
   which source is primary, so it is operator-managed configuration rather than
   a record only tests should touch. `Metrics` has no PUT at all: a span records

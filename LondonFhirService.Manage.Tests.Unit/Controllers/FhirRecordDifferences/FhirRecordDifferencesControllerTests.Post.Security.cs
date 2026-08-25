@@ -25,7 +25,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecordDifferences
 
             List<string> expectedAttributeValues = new List<string>
             {
-                "Administrators",
+                "ManageAdmin",
                 "FhirRecordDifferences.Create"
             };
 

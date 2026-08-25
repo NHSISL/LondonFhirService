@@ -29,7 +29,7 @@ namespace LondonFhirService.Manage.Controllers.Metrics
     /// There is no PUT. A metric is a span of work that already happened, so the table is
     /// append-only and no update path exists beneath this controller to expose.
     /// </summary>
-    [Authorize(Roles = "Administrators,Users")]
+    [Authorize(Roles = "ManageAdmin,ManageUsers")]
     [ApiController]
     [Route("api/[controller]")]
     public class MetricsController : RESTFulController
