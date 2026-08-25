@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -32,32 +33,39 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<FhirRecordDifference> AddFhirRecordDifferenceAsync(FhirRecordDifference fhirRecordDifference) =>
+        public ValueTask<FhirRecordDifference> AddFhirRecordDifferenceAsync(
+            FhirRecordDifference fhirRecordDifference,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 fhirRecordDifference = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecordDifference);
                 await ValidateFhirRecordDifferenceOnAdd(fhirRecordDifference);
 
-                return await this.storageBroker.InsertFhirRecordDifferenceAsync(fhirRecordDifference);
+                return await this.storageBroker.InsertFhirRecordDifferenceAsync(fhirRecordDifference, cancellationToken);
             });
 
-        public ValueTask<IQueryable<FhirRecordDifference>> RetrieveAllFhirRecordDifferencesAsync() =>
-            TryCatch(async () => await this.storageBroker.SelectAllFhirRecordDifferencesAsync());
+        public ValueTask<IQueryable<FhirRecordDifference>> RetrieveAllFhirRecordDifferencesAsync(
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () => await this.storageBroker.SelectAllFhirRecordDifferencesAsync(cancellationToken));
 
-        public ValueTask<FhirRecordDifference> RetrieveFhirRecordDifferenceByIdAsync(Guid fhirRecordDifferenceId) =>
+        public ValueTask<FhirRecordDifference> RetrieveFhirRecordDifferenceByIdAsync(
+            Guid fhirRecordDifferenceId,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateFhirRecordDifferenceId(fhirRecordDifferenceId);
 
                 FhirRecordDifference maybeFhirRecordDifference = await this.storageBroker
-                    .SelectFhirRecordDifferenceByIdAsync(fhirRecordDifferenceId);
+                    .SelectFhirRecordDifferenceByIdAsync(fhirRecordDifferenceId, cancellationToken);
 
                 ValidateStorageFhirRecordDifference(maybeFhirRecordDifference, fhirRecordDifferenceId);
 
                 return maybeFhirRecordDifference;
             });
 
-        public ValueTask<FhirRecordDifference> ModifyFhirRecordDifferenceAsync(FhirRecordDifference fhirRecordDifference) =>
+        public ValueTask<FhirRecordDifference> ModifyFhirRecordDifferenceAsync(
+            FhirRecordDifference fhirRecordDifference,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 fhirRecordDifference = await this.securityAuditBroker.ApplyModifyAuditValuesAsync(fhirRecordDifference);
@@ -65,7 +73,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
                 await ValidateFhirRecordDifferenceOnModify(fhirRecordDifference);
 
                 FhirRecordDifference maybeFhirRecordDifference =
-                    await this.storageBroker.SelectFhirRecordDifferenceByIdAsync(fhirRecordDifference.Id);
+                    await this.storageBroker.SelectFhirRecordDifferenceByIdAsync(fhirRecordDifference.Id, cancellationToken);
 
                 ValidateStorageFhirRecordDifference(maybeFhirRecordDifference, fhirRecordDifference.Id);
 
@@ -76,20 +84,22 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
                     inputFhirRecordDifference: fhirRecordDifference,
                     storageFhirRecordDifference: maybeFhirRecordDifference);
 
-                return await this.storageBroker.UpdateFhirRecordDifferenceAsync(fhirRecordDifference);
+                return await this.storageBroker.UpdateFhirRecordDifferenceAsync(fhirRecordDifference, cancellationToken);
             });
 
-        public ValueTask<FhirRecordDifference> RemoveFhirRecordDifferenceByIdAsync(Guid fhirRecordDifferenceId) =>
+        public ValueTask<FhirRecordDifference> RemoveFhirRecordDifferenceByIdAsync(
+            Guid fhirRecordDifferenceId,
+            CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateFhirRecordDifferenceId(fhirRecordDifferenceId);
 
                 FhirRecordDifference maybeFhirRecordDifference = await this.storageBroker
-                    .SelectFhirRecordDifferenceByIdAsync(fhirRecordDifferenceId);
+                    .SelectFhirRecordDifferenceByIdAsync(fhirRecordDifferenceId, cancellationToken);
 
                 ValidateStorageFhirRecordDifference(maybeFhirRecordDifference, fhirRecordDifferenceId);
 
-                return await this.storageBroker.DeleteFhirRecordDifferenceAsync(maybeFhirRecordDifference);
+                return await this.storageBroker.DeleteFhirRecordDifferenceAsync(maybeFhirRecordDifference, cancellationToken);
             });
     }
 }

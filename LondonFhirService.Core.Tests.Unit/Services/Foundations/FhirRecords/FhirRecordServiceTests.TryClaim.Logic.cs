@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -207,9 +208,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     It.IsAny<StatusType>(),
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
-                    It.IsAny<DateTimeOffset?>()))
-                        .Callback<Guid, StatusType, StatusType, DateTimeOffset, DateTimeOffset?>(
-                            (fhirRecordId, expectedStatus, claimedStatus, claimedDate, notUpdatedAfter) =>
+                    It.IsAny<DateTimeOffset?>(),
+                    It.IsAny<CancellationToken>()))
+                        .Callback<Guid, StatusType, StatusType, DateTimeOffset, DateTimeOffset?, CancellationToken>(
+                            (fhirRecordId, expectedStatus, claimedStatus, claimedDate, notUpdatedAfter, _) =>
                             {
                                 actualClaimedDate = claimedDate;
                                 actualNotUpdatedAfter = notUpdatedAfter;
