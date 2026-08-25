@@ -393,6 +393,15 @@ public partial class Program
 
     private static void AddClients(IServiceCollection services, IConfiguration configuration)
     {
+        // Bound once and registered, rather than bound here and again inside the client. The
+        // client takes the configuration it needs instead of the host's whole IConfiguration,
+        // so there is one instance behind every reader - and the binding itself still belongs to
+        // the library, which owns the section name.
+        AuditAndMetricsConfigurations auditAndMetricsConfigurations =
+            AuditAndMetricsClient.BindConfigurations(configuration);
+
+        services.AddSingleton(auditAndMetricsConfigurations);
+
         // Scoped, and it has to stay that way. SecurityAuditBroker captures the ClaimsPrincipal
         // in its constructor, so a singleton client would hold the first request's identity and
         // stamp every audit entry after that with the wrong user - silently. It would also
@@ -401,7 +410,7 @@ public partial class Program
             new AuditAndMetricsClient(
                 serviceProvider.GetRequiredService<IAuditAndMetricStorageBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
-                configuration,
+                serviceProvider.GetRequiredService<AuditAndMetricsConfigurations>(),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
                 serviceProvider.GetRequiredService<IAuditAndMetricsDispatcher>()));
     }
@@ -432,17 +441,13 @@ public partial class Program
         services.AddHostedService<AuditAndMetricsDispatchWorker>();
 
         // Nothing was subscribed to the metric library's ActivitySource, so every span it
-        // published was dropped before it reached Application Insights.
-        AuditAndMetricsConfigurations auditAndMetricsConfigurations =
-            configuration
-                .GetSection(AuditAndMetricsClient.ConfigurationSectionName)
-                .Get<AuditAndMetricsConfigurations>()
-                    ?? new AuditAndMetricsConfigurations();
-
+        // published was dropped before it reached Application Insights. The source name comes
+        // from the same bound instance the client uses, so the two cannot drift apart.
         services.AddHostedService(serviceProvider =>
             new MetricTelemetryPublisher(
                 serviceProvider.GetService<TelemetryClient>(),
                 serviceProvider.GetRequiredService<ILogger<MetricTelemetryPublisher>>(),
-                auditAndMetricsConfigurations.ActivitySourceName));
+                serviceProvider.GetRequiredService<AuditAndMetricsConfigurations>()
+                    .ActivitySourceName));
     }
 }

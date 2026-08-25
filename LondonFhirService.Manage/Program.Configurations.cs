@@ -10,6 +10,7 @@ using Attrify.InvisibleApi.Models;
 using Hl7.Fhir.Serialization;
 using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Clients.AuditAndMetrics.Clients;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Services.Foundations.Metrics;
@@ -238,6 +239,15 @@ public partial class Program
 
     private static void AddClients(IServiceCollection services, IConfiguration configuration)
     {
+        // Bound once and registered, rather than bound here and again inside the client. The
+        // client takes the configuration it needs instead of the host's whole IConfiguration,
+        // so there is one instance behind every reader - and the binding itself still belongs to
+        // the library, which owns the section name.
+        AuditAndMetricsConfigurations auditAndMetricsConfigurations =
+            AuditAndMetricsClient.BindConfigurations(configuration);
+
+        services.AddSingleton(auditAndMetricsConfigurations);
+
         // Scoped, and it has to stay that way. SecurityAuditBroker captures the ClaimsPrincipal
         // in its constructor, so a singleton client would hold the first request's identity and
         // stamp every audit entry after that with the wrong user - silently. It would also
@@ -246,7 +256,7 @@ public partial class Program
             new AuditAndMetricsClient(
                 serviceProvider.GetRequiredService<IAuditAndMetricStorageBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
-                configuration,
+                serviceProvider.GetRequiredService<AuditAndMetricsConfigurations>(),
                 serviceProvider.GetRequiredService<ILoggerFactory>()));
     }
 }
