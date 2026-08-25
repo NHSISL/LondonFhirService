@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -40,7 +40,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
                 .ReturnsAsync(GetRandomDateTimeOffset());
 
-            this.auditBrokerMock.Setup(broker =>
+            this.auditStorageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(storedAudit.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storedAudit);
 
@@ -52,7 +52,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             await Assert.ThrowsAsync<AuditValidationException>(modifyAuditTask.AsTask);
 
             // The row is left exactly as it was; nothing reaches storage.
-            this.auditBrokerMock.Verify(broker =>
+            this.auditStorageBrokerMock.Verify(broker =>
                 broker.UpdateAuditAsync(It.IsAny<IAudit>(), It.IsAny<CancellationToken>()),
                     Times.Never);
         }
@@ -74,7 +74,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
                 .ReturnsAsync(GetRandomDateTimeOffset());
 
-            this.auditBrokerMock.Setup(broker =>
+            this.auditStorageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(storedAudit.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storedAudit);
 
@@ -87,7 +87,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // of the window anybody would look in.
             await Assert.ThrowsAsync<AuditValidationException>(modifyAuditTask.AsTask);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditStorageBrokerMock.Verify(broker =>
                 broker.UpdateAuditAsync(It.IsAny<IAudit>(), It.IsAny<CancellationToken>()),
                     Times.Never);
         }
@@ -110,11 +110,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
                 .ReturnsAsync(GetRandomDateTimeOffset());
 
-            this.auditBrokerMock.Setup(broker =>
+            this.auditStorageBrokerMock.Setup(broker =>
                 broker.SelectAuditByIdAsync(storedAudit.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storedAudit);
 
-            this.auditBrokerMock.Setup(broker =>
+            this.auditStorageBrokerMock.Setup(broker =>
                 broker.UpdateAuditAsync(inputAudit, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(inputAudit);
 
@@ -126,7 +126,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // The guard has to let a legitimate edit through, or it is just an outage.
             actualAudit.Should().BeSameAs(inputAudit);
 
-            this.auditBrokerMock.Verify(broker =>
+            this.auditStorageBrokerMock.Verify(broker =>
                 broker.UpdateAuditAsync(inputAudit, It.IsAny<CancellationToken>()),
                     Times.Once);
         }

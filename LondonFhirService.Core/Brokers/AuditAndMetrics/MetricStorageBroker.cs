@@ -16,16 +16,16 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {
     /// <summary>
     /// Satisfies the metric storage port the audit and metrics library declares. See
-    /// AuditBroker for why a port adapter is a broker rather than a foundation service,
+    /// AuditStorageBroker for why a port adapter is a broker rather than a foundation service,
     /// why it classifies storage failures, why writes take a context from the factory while reads
     /// keep the scoped broker, and why the two entities are no longer served by one class.
     /// </summary>
-    public partial class MetricBroker : IMetricBroker
+    public partial class MetricStorageBroker : IMetricStorageBroker
     {
         private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly IStorageBroker storageBroker;
 
-        public MetricBroker(
+        public MetricStorageBroker(
             IStorageBrokerFactory storageBrokerFactory,
             IStorageBroker storageBroker)
         {
@@ -34,7 +34,7 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
         }
 
         /// <summary>
-        /// See AuditBroker.AsAuditEntity: the port accepts any IMetric, storage only
+        /// See AuditStorageBroker.AsAuditEntity: the port accepts any IMetric, storage only
         /// knows the Metric entity, and a cast would throw on a legitimate call.
         /// </summary>
         private static Metric AsMetricEntity(IMetric metric)

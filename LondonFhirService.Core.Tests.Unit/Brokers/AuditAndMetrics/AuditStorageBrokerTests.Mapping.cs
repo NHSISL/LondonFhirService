@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -22,7 +22,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
     /// Every audit write in the application passes through this mapping, so a dropped field here
     /// is a column that silently stops being written.
     /// </summary>
-    public partial class AuditBrokerTests
+    public partial class AuditStorageBrokerTests
     {
         [Fact]
         public async Task ShouldCopyEveryAuditFieldWhenTheContractIsNotTheEntityAsync()
@@ -51,7 +51,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
                     .ReturnsAsync(foreignAudit);
 
             // when
-            await this.auditBroker.InsertAuditAsync(
+            await this.auditStorageBroker.InsertAuditAsync(
                 foreignAudit, TestContext.Current.CancellationToken);
 
             // then
@@ -85,7 +85,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
                     .ReturnsAsync(audit);
 
             // when
-            await this.auditBroker.InsertAuditAsync(
+            await this.auditStorageBroker.InsertAuditAsync(
                 audit, TestContext.Current.CancellationToken);
 
             // then
@@ -112,7 +112,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
                     .Callback<List<IAudit>, CancellationToken>((batch, _) => capturedAudits = batch);
 
             // when
-            await this.auditBroker.BulkInsertAuditsAsync(
+            await this.auditStorageBroker.BulkInsertAuditsAsync(
                 audits, TestContext.Current.CancellationToken);
 
             // then

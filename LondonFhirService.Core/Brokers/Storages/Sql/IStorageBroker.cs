@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -14,6 +14,6 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
     /// ports, which is what lets the standalone library share this broker without Core having to
     /// hand it a concrete type.
     /// </summary>
-    public partial interface IStorageBroker : IAsyncDisposable, IAuditBroker, IMetricBroker
+    public partial interface IStorageBroker : IAsyncDisposable, IAuditStorageBroker, IMetricStorageBroker
     { }
 }

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -62,7 +62,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // cancelled the moment the response is sent. Keying this setup on the ambient test
             // token instead would never match, the write would never fail, and the test would
             // pass while proving nothing.
-            this.metricBrokerMock.Setup(broker =>
+            this.metricStorageBrokerMock.Setup(broker =>
                 broker.InsertMetricAsync(randomMetric, CancellationToken.None))
                     .ThrowsAsync(storageException);
 

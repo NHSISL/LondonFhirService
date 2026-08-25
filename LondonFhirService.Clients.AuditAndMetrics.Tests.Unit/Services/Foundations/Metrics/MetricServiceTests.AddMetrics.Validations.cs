@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -45,7 +45,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     expectedMetricValidationException))),
                         Times.Once);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -97,11 +97,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // Nothing is written when any one span in the batch is unusable, so a partial
             // flush can never leave a half recorded request behind.
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.metricTelemetryBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.RecordAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -154,11 +154,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     expectedMetricValidationException))),
                         Times.Once);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.BulkInsertMetricsAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.metricTelemetryBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.RecordAsync(It.IsAny<List<IMetric>>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 

@@ -9,10 +9,6 @@ using LondonFhirService.Clients.AuditAndMetrics.Brokers.Identifiers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
 using LondonFhirService.Core.Abstractions.Brokers;
-// See MetricService: the port and this library's telemetry sink are both an IMetricBroker,
-// in their own namespaces. The alias picks the port.
-using CoreBrokers = LondonFhirService.Core.Abstractions.Brokers;
-using TelemetryBrokers = LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
 using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
 using LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
@@ -36,15 +32,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
         public const string ConfigurationSectionName = "AuditAndMetricsConfigurations";
 
         public AuditAndMetricsClient(
-            IAuditBroker auditBroker,
-            CoreBrokers.IMetricBroker metricBroker,
+            IAuditStorageBroker auditStorageBroker,
+            IMetricStorageBroker metricStorageBroker,
             IAuditUserBroker auditUserBroker,
             IConfiguration configuration,
             ILoggerFactory loggerFactory = null,
             IAuditAndMetricsDispatcher dispatcher = null)
             : this(
-                auditBroker,
-                metricBroker,
+                auditStorageBroker,
+                metricStorageBroker,
                 auditUserBroker,
                 BindConfigurations(configuration),
                 loggerFactory,
@@ -52,16 +48,16 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
         { }
 
         public AuditAndMetricsClient(
-            IAuditBroker auditBroker,
-            CoreBrokers.IMetricBroker metricBroker,
+            IAuditStorageBroker auditStorageBroker,
+            IMetricStorageBroker metricStorageBroker,
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
             ILoggerFactory loggerFactory = null,
             IAuditAndMetricsDispatcher dispatcher = null)
         {
             IServiceProvider serviceProvider = RegisterServices(
-                auditBroker,
-                metricBroker,
+                auditStorageBroker,
+                metricStorageBroker,
                 auditUserBroker,
                 configurations,
                 loggerFactory,
@@ -80,8 +76,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
         }
 
         private static IServiceProvider RegisterServices(
-            IAuditBroker auditBroker,
-            CoreBrokers.IMetricBroker metricBroker,
+            IAuditStorageBroker auditStorageBroker,
+            IMetricStorageBroker metricStorageBroker,
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
             ILoggerFactory loggerFactory,
@@ -94,8 +90,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             // MetricService cannot reach audit storage. A single combined port gave each of
             // them the other's write surface for no reason.
             IServiceCollection serviceCollection = new ServiceCollection()
-                .AddSingleton(auditBroker)
-                .AddSingleton(metricBroker)
+                .AddSingleton(auditStorageBroker)
+                .AddSingleton(metricStorageBroker)
                 .AddSingleton(auditUserBroker)
                 .AddSingleton(configurations)
 
@@ -109,7 +105,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
                 .AddTransient<IDateTimeBroker, DateTimeBroker>()
                 .AddTransient<IIdentifierBroker, IdentifierBroker>()
                 .AddTransient<ILoggingBroker, LoggingBroker>()
-                .AddTransient<TelemetryBrokers.IMetricBroker, MetricBroker>()
+                .AddTransient<IMetricBroker, MetricBroker>()
                 .AddTransient<IAuditService, AuditService>()
                 .AddTransient<IMetricService, MetricService>()
                 .AddTransient<IAuditClient, AuditClient>()

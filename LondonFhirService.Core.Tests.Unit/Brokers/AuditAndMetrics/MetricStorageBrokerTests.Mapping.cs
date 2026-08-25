@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -21,7 +21,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
     /// Every metric write in the application passes through this mapping, so a dropped field here
     /// is a column that silently stops being written.
     /// </summary>
-    public partial class MetricBrokerTests
+    public partial class MetricStorageBrokerTests
     {
         [Fact]
         public async Task ShouldCopyEveryMetricFieldWhenTheContractIsNotTheEntityAsync()
@@ -55,7 +55,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
                     .ReturnsAsync(foreignMetric);
 
             // when
-            await this.metricBroker.InsertMetricAsync(
+            await this.metricStorageBroker.InsertMetricAsync(
                 foreignMetric, TestContext.Current.CancellationToken);
 
             // then
@@ -92,7 +92,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
                     .ReturnsAsync(metric);
 
             // when
-            await this.metricBroker.InsertMetricAsync(
+            await this.metricStorageBroker.InsertMetricAsync(
                 metric, TestContext.Current.CancellationToken);
 
             // then

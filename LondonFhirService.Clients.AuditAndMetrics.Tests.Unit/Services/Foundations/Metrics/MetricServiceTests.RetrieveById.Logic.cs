@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -21,7 +21,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             IMetric storageMetric = randomMetric;
             IMetric expectedMetric = storageMetric.DeepClone();
 
-            this.metricBrokerMock.Setup(broker =>
+            this.metricStorageBrokerMock.Setup(broker =>
                 broker.SelectMetricByIdAsync(randomMetric.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
@@ -33,7 +33,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetric.Should().BeEquivalentTo(expectedMetric);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(randomMetric.Id, It.IsAny<CancellationToken>()),
                     Times.Once);
 

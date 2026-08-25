@@ -4,23 +4,23 @@
 
 using System.Threading.Tasks;
 using EFxceptions.Models.Exceptions;
-using LondonFhirService.Core.Abstractions.Models.Audits.Exceptions;
+using LondonFhirService.Core.Abstractions.Models.Metrics.Exceptions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {
-    public partial class AuditBroker
+    public partial class MetricStorageBroker
     {
         private delegate ValueTask<T> ReturningGenericFunction<T>();
         private delegate ValueTask ReturningNothingFunction();
 
         /// <summary>
-        /// Only audit categories are raised here. A DuplicateKeyException inserting an audit is
-        /// an AlreadyExistsAuditException and nothing else - while the audit and metric
-        /// categories lived side by side in one class, picking the wrong TryCatch reported the
-        /// failure against the wrong entity and sent whoever read the log to the wrong table.
-        /// Splitting the two removes the choice.
+        /// Only metric categories are raised here; see AuditStorageBroker.TryCatchAsync for why
+        /// the two entities no longer share a class.
+        ///
+        /// Metrics carry one category audits do not: a foreign key conflict, because a metric can
+        /// name a parent span.
         /// </summary>
         private static async ValueTask<T> TryCatchAsync<T>(ReturningGenericFunction<T> returningFunction)
         {
@@ -30,29 +30,36 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             }
             catch (SqlException sqlException)
             {
-                throw new FailedStorageAuditException(
-                    message: "Failed audit storage error occurred, contact support.",
+                throw new FailedStorageMetricException(
+                    message: "Failed metric storage error occurred, contact support.",
                     innerException: sqlException,
                     data: sqlException.Data);
             }
             catch (DuplicateKeyException duplicateKeyException)
             {
-                throw new AlreadyExistsAuditException(
-                    message: "Audit with the same Id already exists.",
+                throw new AlreadyExistsMetricException(
+                    message: "Metric with the same Id already exists.",
                     innerException: duplicateKeyException,
                     data: duplicateKeyException.Data);
             }
+            catch (ForeignKeyConstraintConflictException foreignKeyConstraintConflictException)
+            {
+                throw new InvalidReferenceMetricException(
+                    message: "Invalid metric reference error occurred.",
+                    innerException: foreignKeyConstraintConflictException,
+                    data: foreignKeyConstraintConflictException.Data);
+            }
             catch (DbUpdateConcurrencyException dbUpdateConcurrencyException)
             {
-                throw new LockedAuditException(
-                    message: "Locked audit record exception, please try again later.",
+                throw new LockedMetricException(
+                    message: "Locked metric record exception, please try again later.",
                     innerException: dbUpdateConcurrencyException,
                     data: dbUpdateConcurrencyException.Data);
             }
             catch (DbUpdateException dbUpdateException)
             {
-                throw new FailedStorageAuditException(
-                    message: "Failed audit storage error occurred, contact support.",
+                throw new FailedStorageMetricException(
+                    message: "Failed metric storage error occurred, contact support.",
                     innerException: dbUpdateException,
                     data: dbUpdateException.Data);
             }

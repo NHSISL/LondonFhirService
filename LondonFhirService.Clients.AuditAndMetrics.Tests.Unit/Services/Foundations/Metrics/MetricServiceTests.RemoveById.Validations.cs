@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -49,11 +49,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     expectedMetricValidationException))),
                         Times.Once);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.DeleteMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
@@ -76,7 +76,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     message: "Metric validation errors occurred, please try again.",
                     innerException: notFoundMetricException);
 
-            this.metricBrokerMock.Setup(broker =>
+            this.metricStorageBrokerMock.Setup(broker =>
                 broker.SelectMetricByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(noMetric);
 
@@ -90,11 +90,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetricValidationException.Should().BeEquivalentTo(expectedMetricValidationException);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.SelectMetricByIdAsync(someMetricId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.DeleteMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 

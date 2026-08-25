@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -30,7 +30,7 @@ namespace LondonFhirService.Core.Abstractions.Brokers
     /// Models.Audits.Exceptions, which are the contract between the two. Cancellation and timeout
     /// must pass through untranslated; the library handles those.
     /// </summary>
-    public interface IAuditBroker
+    public interface IAuditStorageBroker
     {
         /// <summary>
         /// A new, empty audit entry for the library to populate. The library holds only the

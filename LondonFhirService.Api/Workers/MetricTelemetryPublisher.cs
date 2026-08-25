@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -131,7 +131,7 @@ namespace LondonFhirService.Api.Workers
                 // returns, so the span being reported is still the ambient one. An assignment
                 // would in any case be refused: the setter rejects a stopped activity and
                 // swallows the exception, so the previous save/restore block was two silently
-                // discarded writes rather than the safeguard its comment claimed. MetricBroker
+                // discarded writes rather than the safeguard its comment claimed. MetricStorageBroker
                 // additionally derives an explicit trace context from the correlation id, which
                 // is what actually guarantees the span lands under its request.
                 this.telemetryClient.TrackDependency(dependencyTelemetry);

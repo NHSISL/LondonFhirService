@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -10,13 +10,13 @@ using Tynamix.ObjectFiller;
 
 namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
 {
-    public partial class MetricBrokerTests
+    public partial class MetricStorageBrokerTests
     {
         private readonly Mock<IStorageBrokerFactory> storageBrokerFactoryMock;
         private readonly Mock<IStorageBroker> storageBrokerMock;
-        private readonly MetricBroker metricBroker;
+        private readonly MetricStorageBroker metricStorageBroker;
 
-        public MetricBrokerTests()
+        public MetricStorageBrokerTests()
         {
             this.storageBrokerFactoryMock = new Mock<IStorageBrokerFactory>();
             this.storageBrokerMock = new Mock<IStorageBroker>();
@@ -26,7 +26,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             this.storageBrokerFactoryMock.Setup(factory => factory.CreateStorageBrokerAsync())
                 .ReturnsAsync(this.storageBrokerMock.Object);
 
-            this.metricBroker = new MetricBroker(
+            this.metricStorageBroker = new MetricStorageBroker(
                 storageBrokerFactory: this.storageBrokerFactoryMock.Object,
                 storageBroker: this.storageBrokerMock.Object);
         }

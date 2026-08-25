@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -21,7 +21,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             IQueryable<IMetric> storageMetrics = randomMetrics;
             IQueryable<IMetric> expectedMetrics = storageMetrics;
 
-            this.metricBrokerMock.Setup(broker =>
+            this.metricStorageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
@@ -32,7 +32,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetrics.Should().BeEquivalentTo(expectedMetrics);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -48,7 +48,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             IQueryable<IMetric> expectedMetrics = storageMetrics;
             this.metricServiceConfigurations.IsEnabled = false;
 
-            this.metricBrokerMock.Setup(broker =>
+            this.metricStorageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetrics);
 
@@ -61,7 +61,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // queryable while recording is turned off.
             actualMetrics.Should().BeEquivalentTo(expectedMetrics);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 

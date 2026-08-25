@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -23,7 +23,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 {
     public partial class AuditServiceTests
     {
-        private readonly Mock<IAuditBroker> auditBrokerMock;
+        private readonly Mock<IAuditStorageBroker> auditStorageBrokerMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
@@ -33,7 +33,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
         public AuditServiceTests()
         {
-            this.auditBrokerMock = new Mock<IAuditBroker>();
+            this.auditStorageBrokerMock = new Mock<IAuditStorageBroker>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
@@ -54,11 +54,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // The library holds no implementation of IAudit, so the entity it builds comes back
             // through the port - exactly as it does from the hosting application at runtime.
-            this.auditBrokerMock.Setup(broker => broker.CreateAudit())
+            this.auditStorageBrokerMock.Setup(broker => broker.CreateAudit())
                 .Returns(() => new TestAudit());
 
             this.auditService = new AuditService(
-                auditBroker: this.auditBrokerMock.Object,
+                auditStorageBroker: this.auditStorageBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,

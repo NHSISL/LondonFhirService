@@ -26,7 +26,7 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
     /// stays a thin pass through and lets the raw exceptions escape, exactly as it does for every
     /// other entity.
     ///
-    /// One entity per adapter: metrics have their own MetricBroker against their own port.
+    /// One entity per adapter: metrics have their own MetricStorageBroker against their own port.
     /// The two used to share one class, which left it owning two entities and two sets of
     /// exception categories, and left the library's MetricService holding a dependency that could
     /// also write audits.
@@ -40,12 +40,12 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
     /// the scoped broker, because they return an IQueryable the caller enumerates and disposing
     /// the context underneath it would kill the query.
     /// </summary>
-    public partial class AuditBroker : IAuditBroker
+    public partial class AuditStorageBroker : IAuditStorageBroker
     {
         private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly IStorageBroker storageBroker;
 
-        public AuditBroker(
+        public AuditStorageBroker(
             IStorageBrokerFactory storageBrokerFactory,
             IStorageBroker storageBroker)
         {

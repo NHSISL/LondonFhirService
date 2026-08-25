@@ -319,8 +319,8 @@ public partial class Program
         services.AddSingleton<TokenCredential>(new DefaultAzureCredential());
         services.AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>();
         services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
-        services.AddScoped<IAuditBroker, AuditBroker>();
-        services.AddScoped<IMetricBroker, MetricBroker>();
+        services.AddScoped<IAuditStorageBroker, AuditStorageBroker>();
+        services.AddScoped<IMetricStorageBroker, MetricStorageBroker>();
         services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
@@ -400,8 +400,8 @@ public partial class Program
         // capture a DbContext past the scope that owns it.
         services.AddScoped<IAuditAndMetricsClient>(serviceProvider =>
             new AuditAndMetricsClient(
-                serviceProvider.GetRequiredService<IAuditBroker>(),
-                serviceProvider.GetRequiredService<IMetricBroker>(),
+                serviceProvider.GetRequiredService<IAuditStorageBroker>(),
+                serviceProvider.GetRequiredService<IMetricStorageBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
                 configuration,
                 serviceProvider.GetRequiredService<ILoggerFactory>(),

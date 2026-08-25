@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -57,11 +57,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // Nothing is read and nothing is deleted. A retention period of zero or less would
             // put the cut off at or after the present moment and take the whole table with it.
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),
@@ -116,7 +116,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // A batch size of zero or less would loop without ever deleting anything, so the
             // purge refuses rather than spinning.
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.DeleteMetricsOlderThanAsync(
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<int>(),

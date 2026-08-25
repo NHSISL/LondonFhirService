@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -27,7 +27,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
         private readonly string activitySourceName;
         private readonly List<Activity> capturedActivities;
         private readonly ActivityListener activityListener;
-        private readonly IMetricBroker metricTelemetryBroker;
+        private readonly IMetricBroker metricBroker;
 
         public MetricBrokerTests()
         {
@@ -47,7 +47,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
 
             ActivitySource.AddActivityListener(this.activityListener);
 
-            this.metricTelemetryBroker = new MetricBroker(new AuditAndMetricsConfigurations
+            this.metricBroker = new MetricBroker(new AuditAndMetricsConfigurations
             {
                 ActivitySourceName = this.activitySourceName
             });
@@ -60,7 +60,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             IMetric metric = CreateMetric();
 
             // when
-            await this.metricTelemetryBroker.RecordAsync(metric);
+            await this.metricBroker.RecordAsync(metric);
 
             // then
             // The configured source name is what the host subscribes to. If the broker ignored it
@@ -86,7 +86,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             metric.Completed = metric.Started.AddMilliseconds(metric.DurationMs);
 
             // when
-            await this.metricTelemetryBroker.RecordAsync(metric);
+            await this.metricBroker.RecordAsync(metric);
 
             // then
             // The span is replayed after the fact, so without an explicit end time it would
@@ -106,7 +106,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             second.CorrelationId = correlationId;
 
             // when
-            await this.metricTelemetryBroker.RecordAsync(new List<IMetric> { first, second });
+            await this.metricBroker.RecordAsync(new List<IMetric> { first, second });
 
             // then
             // The trace id is derived from the correlation id, which is what puts every span of
@@ -127,7 +127,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             metric.ErrorCode = "ProviderTimeout";
 
             // when
-            await this.metricTelemetryBroker.RecordAsync(metric);
+            await this.metricBroker.RecordAsync(metric);
 
             // then
             Activity activity = this.capturedActivities.Should().ContainSingle().Subject;

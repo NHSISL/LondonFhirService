@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -28,7 +28,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
-            this.metricBrokerMock.Setup(broker =>
+            this.metricStorageBrokerMock.Setup(broker =>
                 broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
@@ -43,11 +43,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
-            this.metricTelemetryBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.RecordAsync(storageMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -68,7 +68,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(currentDateTimeOffset);
 
-            this.metricBrokerMock.Setup(broker =>
+            this.metricStorageBrokerMock.Setup(broker =>
                 broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageMetric);
 
@@ -84,11 +84,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // The exact metric, so a service that persisted a different instance could not
             // pass on the timestamp predicate alone.
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
-            this.metricTelemetryBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.RecordAsync(storageMetric, It.IsAny<CancellationToken>()),
                     Times.Once);
 
@@ -111,11 +111,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             actualMetric.Should().BeEquivalentTo(expectedMetric);
 
-            this.metricBrokerMock.Verify(broker =>
+            this.metricStorageBrokerMock.Verify(broker =>
                 broker.InsertMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
-            this.metricTelemetryBrokerMock.Verify(broker =>
+            this.metricBrokerMock.Verify(broker =>
                 broker.RecordAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 

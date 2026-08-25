@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -12,7 +12,7 @@ using LondonFhirService.Core.Abstractions.Models.Metrics;
 namespace LondonFhirService.Core.Abstractions.Brokers
 {
     /// <summary>
-    /// The metric persistence the audit and metrics library needs. See IAuditBroker for
+    /// The metric persistence the audit and metrics library needs. See IAuditStorageBroker for
     /// why the port is declared here rather than consumed from the hosting application, and why
     /// audits and metrics are two ports rather than one.
     ///
@@ -23,7 +23,7 @@ namespace LondonFhirService.Core.Abstractions.Brokers
     /// storage exceptions in Models.Metrics.Exceptions. Cancellation and timeout must pass
     /// through untranslated; the library handles those.
     /// </summary>
-    public interface IMetricBroker
+    public interface IMetricStorageBroker
     {
         ValueTask<IMetric> InsertMetricAsync(IMetric metric, CancellationToken cancellationToken = default);
         ValueTask BulkInsertMetricsAsync(List<IMetric> metrics, CancellationToken cancellationToken = default);
