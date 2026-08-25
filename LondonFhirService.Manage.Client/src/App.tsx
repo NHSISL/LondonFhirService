@@ -11,6 +11,10 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import "react-toastify/dist/ReactToastify.css";
 import ToastBroker from './brokers/toastBroker';
 import { TestPage } from './pages/testPage';
+import { ProvidersPage } from './pages/providers/ProvidersPage';
+import { ProviderDetailPage } from './pages/providers/ProviderDetailPage';
+import { SecuredRoute } from './components/securitys/securedRoutes';
+import securityPoints from './securityMatrix';
 
 function App({ instance }: any) {
 
@@ -23,6 +27,22 @@ function App({ instance }: any) {
                 {
                     path: "home",
                     element: <Home />
+                },
+                {
+                    path: "providers",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.providers.view}>
+                            <ProvidersPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "providers/:providerId",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.providers.view}>
+                            <ProviderDetailPage />
+                        </SecuredRoute>
+                    )
                 },
                 {
                     path: "testPage",

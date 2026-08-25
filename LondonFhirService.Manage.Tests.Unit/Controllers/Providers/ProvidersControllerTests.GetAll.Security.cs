@@ -25,7 +25,11 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Providers
 
             List<string> expectedAttributeValues = new List<string>
             {
+                "ManageAdmin",
+                "LondonDataServices.Manage.Administrators",
                 "Administrators",
+                "ManageUsers",
+                "LondonDataServices.Manage.Users",
                 "Users"
             };
 

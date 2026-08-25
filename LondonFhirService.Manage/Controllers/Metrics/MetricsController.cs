@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -9,6 +9,7 @@ using Attrify.Attributes;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Metrics;
+using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -29,7 +30,7 @@ namespace LondonFhirService.Manage.Controllers.Metrics
     /// There is no PUT. A metric is a span of work that already happened, so the table is
     /// append-only and no update path exists beneath this controller to expose.
     /// </summary>
-    [Authorize(Roles = "Administrators,Users")]
+    [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]
     [ApiController]
     [Route("api/[controller]")]
     public class MetricsController : RESTFulController

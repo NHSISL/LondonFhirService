@@ -24,10 +24,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Providers
             string attributeProperty = "Roles";
 
             // Narrower than the class attribute on purpose. A provider row decides who the
-            // patient fan-out calls and which source is primary, so writing one is an
-            // Administrators-only act even though reading the registry is not.
+            // patient fan-out calls and which source is primary, so writing one is a
+            // ManageAdmin-only act even though reading the registry is not.
             List<string> expectedAttributeValues = new List<string>
             {
+                "ManageAdmin",
+                "LondonDataServices.Manage.Administrators",
                 "Administrators"
             };
 

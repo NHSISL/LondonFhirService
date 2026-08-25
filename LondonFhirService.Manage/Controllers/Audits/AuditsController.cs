@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -9,6 +9,7 @@ using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using Attrify.Attributes;
 using LondonFhirService.Core.Services.Foundations.Audits;
+using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -26,7 +27,7 @@ namespace LondonFhirService.Manage.Controllers.Audits
     /// without the key header, so they exist to let the acceptance suite hydrate and seed a
     /// database rather than as an operator-facing way to rewrite compliance records.
     /// </summary>
-    [Authorize(Roles = "Administrators,Users")]
+    [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]
     [ApiController]
     [Route("api/[controller]")]
     public class AuditsController : RESTFulController

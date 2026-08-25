@@ -50,9 +50,9 @@ class ApiBroker {
         return {};
     }
 
-    public async GetAsync(queryFragment: string) {
+    public async GetAsync(queryFragment: string, abortSignal?: AbortSignal) {
         const url = queryFragment;
-        return axios.get(url, await this.config());
+        return axios.get(url, { ...await this.config(), signal: abortSignal });
     }
 
     public async GetAsyncAbsolute(absoluteUri: string) {
