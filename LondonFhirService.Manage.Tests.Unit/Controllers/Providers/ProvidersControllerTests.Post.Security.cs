@@ -28,7 +28,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Providers
             // ManageAdmin-only act even though reading the registry is not.
             List<string> expectedAttributeValues = new List<string>
             {
-                "ManageAdmin"
+                "ManageAdmin",
+                "LondonDataServices.Manage.Administrators",
+                "Administrators"
             };
 
             // When

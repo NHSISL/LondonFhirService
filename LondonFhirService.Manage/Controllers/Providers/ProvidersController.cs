@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Providers;
+using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
@@ -29,7 +30,7 @@ namespace LondonFhirService.Manage.Controllers.Providers
     /// operator is expected to manage, not a compliance record or a telemetry span that only the
     /// acceptance suite should be seeding.
     /// </summary>
-    [Authorize(Roles = "ManageAdmin,ManageUsers")]
+    [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]
     [ApiController]
     [Route("api/[controller]")]
     public class ProvidersController : RESTFulController
@@ -40,7 +41,7 @@ namespace LondonFhirService.Manage.Controllers.Providers
             this.providerService = providerService;
 
         [HttpPost]
-        [Authorize(Roles = "ManageAdmin")]
+        [Authorize(Roles = ManageRoles.Administrators)]
         public async ValueTask<ActionResult<Provider>> PostProviderAsync([FromBody] Provider provider)
         {
             try
@@ -133,7 +134,7 @@ namespace LondonFhirService.Manage.Controllers.Providers
         }
 
         [HttpPut]
-        [Authorize(Roles = "ManageAdmin")]
+        [Authorize(Roles = ManageRoles.Administrators)]
         public async ValueTask<ActionResult<Provider>> PutProviderAsync([FromBody] Provider provider)
         {
             try
@@ -173,7 +174,7 @@ namespace LondonFhirService.Manage.Controllers.Providers
         }
 
         [HttpDelete("{providerId}")]
-        [Authorize(Roles = "ManageAdmin")]
+        [Authorize(Roles = ManageRoles.Administrators)]
         public async ValueTask<ActionResult<Provider>> DeleteProviderByIdAsync(Guid providerId)
         {
             try
