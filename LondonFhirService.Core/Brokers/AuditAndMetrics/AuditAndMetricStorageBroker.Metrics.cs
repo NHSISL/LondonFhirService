@@ -11,9 +11,9 @@ using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 
-namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
+namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {
-    internal partial class AuditAndMetricsStorageService
+    public partial class AuditAndMetricStorageBroker
     {
         /// <summary>
         /// See AsAuditEntity: the port accepts any IMetric, storage only knows the Metric entity,

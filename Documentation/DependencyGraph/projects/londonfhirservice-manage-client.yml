@@ -32,7 +32,7 @@ components:
     name: featureService
     layer: view
     col: 1
-    description: "TanStack Query wrapper (staleTime: Infinity) over the feature broker."
+    description: "TanStack Query wrapper (staleTime: Infinity) over the feature broker. Still the SPA's only foundation service — the admin CRUD surfaces are exposed by the host but not yet consumed by the client."
     methods:
       - useGetAllFeatures
     calls:
@@ -64,7 +64,7 @@ components:
     name: apiBroker
     layer: broker
     col: 2
-    description: axios wrapper that acquires an MSAL token silently (falling back to a redirect on InteractionRequiredAuthError) and attaches it as a bearer header.
+    description: "axios wrapper that acquires an MSAL token silently (falling back to a redirect on InteractionRequiredAuthError) and attaches it as a bearer header."
     methods:
       - GetAsync
       - GetAsyncAbsolute

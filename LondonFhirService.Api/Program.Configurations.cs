@@ -20,7 +20,7 @@ using Microsoft.ApplicationInsights;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
-using LondonFhirService.Core.Services.Foundations.AuditAndMetrics;
+using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
@@ -319,7 +319,7 @@ public partial class Program
         services.AddSingleton<TokenCredential>(new DefaultAzureCredential());
         services.AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>();
         services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
-        services.AddScoped<IAuditAndMetricsStorageBroker, AuditAndMetricsStorageService>();
+        services.AddScoped<IAuditAndMetricStorageBroker, AuditAndMetricStorageBroker>();
         services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
@@ -337,6 +337,7 @@ public partial class Program
     private static void AddFoundationServices(IServiceCollection services)
     {
         services.AddTransient<IAuditService, AuditService>();
+        services.AddTransient<IMetricService, MetricService>();
         services.AddTransient<IConsumerAccessService, ConsumerAccessService>();
         services.AddTransient<IFhirRecordDifferenceService, FhirRecordDifferenceService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();
@@ -392,15 +393,24 @@ public partial class Program
 
     private static void AddClients(IServiceCollection services, IConfiguration configuration)
     {
+        // Bound once and registered, rather than bound here and again inside the client. The
+        // client takes the configuration it needs instead of the host's whole IConfiguration,
+        // so there is one instance behind every reader - and the binding itself still belongs to
+        // the library, which owns the section name.
+        AuditAndMetricsConfigurations auditAndMetricsConfigurations =
+            AuditAndMetricsClient.BindConfigurations(configuration);
+
+        services.AddSingleton(auditAndMetricsConfigurations);
+
         // Scoped, and it has to stay that way. SecurityAuditBroker captures the ClaimsPrincipal
         // in its constructor, so a singleton client would hold the first request's identity and
         // stamp every audit entry after that with the wrong user - silently. It would also
         // capture a DbContext past the scope that owns it.
         services.AddScoped<IAuditAndMetricsClient>(serviceProvider =>
             new AuditAndMetricsClient(
-                serviceProvider.GetRequiredService<IAuditAndMetricsStorageBroker>(),
+                serviceProvider.GetRequiredService<IAuditAndMetricStorageBroker>(),
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
-                configuration,
+                serviceProvider.GetRequiredService<AuditAndMetricsConfigurations>(),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
                 serviceProvider.GetRequiredService<IAuditAndMetricsDispatcher>()));
     }
@@ -431,17 +441,13 @@ public partial class Program
         services.AddHostedService<AuditAndMetricsDispatchWorker>();
 
         // Nothing was subscribed to the metric library's ActivitySource, so every span it
-        // published was dropped before it reached Application Insights.
-        AuditAndMetricsConfigurations auditAndMetricsConfigurations =
-            configuration
-                .GetSection(AuditAndMetricsClient.ConfigurationSectionName)
-                .Get<AuditAndMetricsConfigurations>()
-                    ?? new AuditAndMetricsConfigurations();
-
+        // published was dropped before it reached Application Insights. The source name comes
+        // from the same bound instance the client uses, so the two cannot drift apart.
         services.AddHostedService(serviceProvider =>
             new MetricTelemetryPublisher(
                 serviceProvider.GetService<TelemetryClient>(),
                 serviceProvider.GetRequiredService<ILogger<MetricTelemetryPublisher>>(),
-                auditAndMetricsConfigurations.ActivitySourceName));
+                serviceProvider.GetRequiredService<AuditAndMetricsConfigurations>()
+                    .ActivitySourceName));
     }
 }

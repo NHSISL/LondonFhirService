@@ -9,7 +9,7 @@ components:
     name: StorageBroker
     layer: broker
     col: 8
-    description: "Partial EF Core DbContext (derives from EFxceptions' EFxceptionsContext) with one partial per entity. Every method delegates to a private generic that calls STX.EFCore.Client's EFCoreClient. Registered both as a DbContextFactory and a scoped IStorageBroker; OnConfiguring reads the LondonFhirServiceConnectionString and enables HierarchyId. Per-entity method rows are generated from the entity config."
+    description: "Partial EF Core DbContext (derives from EFxceptions' EFxceptionsContext) with one partial per entity. Most methods delegate to a private generic that calls STX.EFCore.Client's EFCoreClient. It also inherits IAuditAndMetricStorageBroker, so the audit and metric members are declared once in Core.Abstractions over IAudit / IMetric — which is what lets the standalone library share this broker without Core handing it a concrete type. Registered both as a DbContextFactory and a scoped IStorageBroker; OnConfiguring reads the LondonFhirServiceConnectionString and enables HierarchyId."
     methods:
       - InsertFhirRecordAsync
       - SelectAllFhirRecordsAsync
@@ -32,6 +32,14 @@ components:
       - SelectAuditByIdAsync
       - UpdateAuditAsync
       - DeleteAuditAsync
+      - BulkInsertMetricsAsync
+      - InsertMetricAsync
+      - SelectAllMetricsAsync
+      - SelectMetricByIdAsync
+      - DeleteMetricAsync
+      - ClaimFhirRecordAsync
+      - SelectAllProvidersAsListAsync
+      - DeleteMetricsOlderThanAsync
     calls:
       - from: InsertFhirRecordAsync
         to: LIB.EFCoreClient
@@ -96,11 +104,35 @@ components:
       - from: DeleteAuditAsync
         to: LIB.EFCoreClient
         method: DeleteAsync
+      - from: BulkInsertMetricsAsync
+        to: LIB.EFCoreClient
+        method: BulkInsertAsync
+      - from: InsertMetricAsync
+        to: LIB.EFCoreClient
+        method: InsertAsync
+      - from: SelectAllMetricsAsync
+        to: LIB.EFCoreClient
+        method: SelectAllAsync
+      - from: SelectMetricByIdAsync
+        to: LIB.EFCoreClient
+        method: SelectAsync
+      - from: DeleteMetricAsync
+        to: LIB.EFCoreClient
+        method: DeleteAsync
+      - from: ClaimFhirRecordAsync
+        to: EXT.EFCore
+        method: ExecuteUpdateAsync
+      - from: DeleteMetricsOlderThanAsync
+        to: EXT.EFCore
+        method: ExecuteDeleteAsync
+      - from: SelectAllProvidersAsListAsync
+        to: EXT.EFCore
+        method: ToListAsync
   - id: StorageBrokerFactory
     name: StorageBrokerFactory
     layer: broker
     col: 8
-    description: "Wraps IDbContextFactory<StorageBroker>. AuditService and Stu3PatientService use it to get a short-lived, independently-disposed StorageBroker instead of the scoped one — they write from background/parallel work where the request-scoped context is unsafe."
+    description: "Wraps IDbContextFactory<StorageBroker>. AuditAndMetricStorageBroker and Stu3PatientService use it to get a short-lived, independently-disposed StorageBroker instead of the scoped one — they write from background and parallel work where the request-scoped context is unsafe."
     methods:
       - CreateStorageBrokerAsync
     calls:
@@ -159,37 +191,168 @@ components:
       - from: HasClaimAsync
         to: LIB.SecurityClient
         method: Users.UserHasClaimAsync
-  - id: AuditBroker
-    name: AuditBroker
+  - id: AuditAndMetricBroker
+    name: AuditAndMetricBroker
     layer: broker
     col: 8
-    description: "The business-audit trail (persisted Audit rows), distinct from LoggingBroker's ILogger output. Every method funnels into AuditClient, which calls AuditService — so an audit write travels broker → client → foundation service → storage."
+    description: "The utility broker any service can call to record an audit entry or a metric span. Recording is service work, but every layer needs it and a broker may not call a service — so those services live in LondonFhirService.Clients.AuditAndMetrics and this broker wraps an external dependency, which is what a broker is for. It stamps nothing and constructs nothing: calling services build their own entries so the timestamp is the event time rather than the submit time. Not to be confused with AuditAndMetricStorageBroker beside it — this one runs up into the library, that one runs down into storage."
     methods:
-      - BulkLogAsync
-      - LogAsync
       - LogInformationAsync
-      - LogWarningAsync
-      - LogErrorAsync
-      - LogCriticalAsync
+      - RecordAuditAsync
+      - LogAuditAsync
+      - BulkLogAuditsAsync
+      - AddAuditAsync
+      - RetrieveAllAuditsAsync
+      - RetrieveAuditByIdAsync
+      - ModifyAuditAsync
+      - RemoveAuditByIdAsync
+      - LogMetricAsync
+      - LogMetricsAsync
+      - AddMetricAsync
+      - RetrieveAllMetricsAsync
+      - RetrieveMetricByIdAsync
+      - RemoveMetricByIdAsync
+      - PurgeMetricsOlderThanRetentionPeriodAsync
     calls:
-      - from: LogAsync
-        to: AuditClient
-        method: LogAuditAsync
       - from: LogInformationAsync
-        to: AuditClient
-        method: LogAuditAsync
-      - from: LogWarningAsync
-        to: AuditClient
-        method: LogAuditAsync
-      - from: LogErrorAsync
-        to: AuditClient
-        method: LogAuditAsync
-      - from: LogCriticalAsync
-        to: AuditClient
-        method: LogAuditAsync
-      - from: BulkLogAsync
-        to: AuditClient
-        method: BulkLogAuditsAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: RecordAuditAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: LogAuditAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: AddAuditAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: RetrieveAllAuditsAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: RetrieveAuditByIdAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: ModifyAuditAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: RemoveAuditByIdAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: BulkLogAuditsAsync
+        to: LIB.AMClient
+        method: AuditClient
+      - from: LogMetricAsync
+        to: LIB.AMClient
+        method: MetricClient
+      - from: LogMetricsAsync
+        to: LIB.AMClient
+        method: MetricClient
+      - from: AddMetricAsync
+        to: LIB.AMClient
+        method: MetricClient
+      - from: RetrieveAllMetricsAsync
+        to: LIB.AMClient
+        method: MetricClient
+      - from: RetrieveMetricByIdAsync
+        to: LIB.AMClient
+        method: MetricClient
+      - from: RemoveMetricByIdAsync
+        to: LIB.AMClient
+        method: MetricClient
+      - from: PurgeMetricsOlderThanRetentionPeriodAsync
+        to: LIB.AMClient
+        method: MetricClient
+  - id: AuditAndMetricStorageBroker
+    name: AuditAndMetricStorageBroker
+    layer: broker
+    col: 8
+    description: "Satisfies the storage port the audit and metrics library declares, the same way AuditUserBroker satisfies its identity port. Classifying storage failures is part of the port's contract rather than logic of its own — the library carries no ORM, so it cannot name SqlException. Writes go through the factory and get their own short-lived context, which is what makes them safe to fire and forget: a write dispatched to the background outlives the request scope. Reads keep the scoped broker, because they hand back an IQueryable the caller enumerates. The arrows into this component run right-to-left: the library calls back down into the application that hosts it."
+    methods:
+      - CreateAudit
+      - InsertAuditAsync
+      - BulkInsertAuditsAsync
+      - SelectAllAuditsAsync
+      - SelectAuditByIdAsync
+      - UpdateAuditAsync
+      - DeleteAuditAsync
+      - InsertMetricAsync
+      - BulkInsertMetricsAsync
+      - SelectAllMetricsAsync
+      - SelectMetricByIdAsync
+      - DeleteMetricAsync
+      - DeleteMetricsOlderThanAsync
+    calls:
+      - from: InsertAuditAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: BulkInsertAuditsAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: UpdateAuditAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: DeleteAuditAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: InsertMetricAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: BulkInsertMetricsAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: DeleteMetricAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: DeleteMetricsOlderThanAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
+      - from: InsertAuditAsync
+        to: StorageBroker
+        method: InsertAuditAsync
+      - from: BulkInsertAuditsAsync
+        to: StorageBroker
+        method: BulkInsertAuditsAsync
+      - from: SelectAllAuditsAsync
+        to: StorageBroker
+        method: SelectAllAuditsAsync
+      - from: SelectAuditByIdAsync
+        to: StorageBroker
+        method: SelectAuditByIdAsync
+      - from: UpdateAuditAsync
+        to: StorageBroker
+        method: UpdateAuditAsync
+      - from: DeleteAuditAsync
+        to: StorageBroker
+        method: DeleteAuditAsync
+      - from: InsertMetricAsync
+        to: StorageBroker
+        method: InsertMetricAsync
+      - from: BulkInsertMetricsAsync
+        to: StorageBroker
+        method: BulkInsertMetricsAsync
+      - from: SelectAllMetricsAsync
+        to: StorageBroker
+        method: SelectAllMetricsAsync
+      - from: SelectMetricByIdAsync
+        to: StorageBroker
+        method: SelectMetricByIdAsync
+      - from: DeleteMetricAsync
+        to: StorageBroker
+        method: DeleteMetricAsync
+      - from: DeleteMetricsOlderThanAsync
+        to: StorageBroker
+        method: DeleteMetricsOlderThanAsync
+  - id: AuditUserBroker
+    name: AuditUserBroker
+    layer: broker
+    col: 8
+    description: "Satisfies the audit library's identity port from this application's security broker. SecurityAuditBroker captures the ClaimsPrincipal in its constructor rather than reading it per call, so this must be resolved per request — registered as a singleton it would be built at startup with no HttpContext, and every audit row in the system would be stamped anonymous with nothing failing to signal it."
+    methods:
+      - GetCurrentUserIdAsync
+    calls:
+      - from: GetCurrentUserIdAsync
+        to: SecurityAuditBroker
+        method: GetUserIdAsync
   - id: ConsumerAccessBroker
     name: ConsumerAccessBroker
     layer: broker
@@ -669,32 +832,6 @@ components:
       - from: VisionPrescriptions
         to: LIB.FhirAbstractionProvider
         method: VisionPrescriptions
-  - id: AuditClient
-    name: AuditClient
-    layer: client
-    col: 9
-    description: "Sits between AuditBroker and AuditService — the one place in the solution where a broker calls back into a foundation service. The AuditService copy drawn to its left is that call."
-    methods:
-      - LogAuditAsync
-      - BulkLogAuditsAsync
-    calls:
-      - from: LogAuditAsync
-        to: FS.Audit
-        method: "AddAuditAsync(auditType, title, message, …)"
-      - from: BulkLogAuditsAsync
-        to: FS.Audit
-        method: BulkAddAuditsAsync
-  - id: FS.ConsumerAccess
-    name: ConsumerAccessService
-    layer: foundation
-    col: 7
-    description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService.ValidateAccess. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and timeout / cancellation onto TimedOut- and CancelledConsumerAccessServiceException. It takes no storage broker — consumer access is no longer held locally."
-    methods:
-      - CheckConsumerAccessAsync
-    calls:
-      - from: CheckConsumerAccessAsync
-        to: ConsumerAccessBroker
-        method: CheckConsumerAccessAsync
   - id: FS.FhirRecord
     name: FhirRecordService
     layer: foundation
@@ -706,6 +843,7 @@ components:
       - RetrieveFhirRecordByIdAsync
       - ModifyFhirRecordAsync
       - RemoveFhirRecordByIdAsync
+      - TryClaimFhirRecordAsync
     calls:
       - from: AddFhirRecordAsync
         to: SecurityAuditBroker
@@ -749,6 +887,12 @@ components:
       - from: RemoveFhirRecordByIdAsync
         to: StorageBroker
         method: DeleteFhirRecordAsync
+      - from: TryClaimFhirRecordAsync
+        to: StorageBroker
+        method: ClaimFhirRecordAsync
+      - from: TryClaimFhirRecordAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
   - id: FS.FhirRecordDifference
     name: FhirRecordDifferenceService
     layer: foundation
@@ -814,6 +958,7 @@ components:
       - RetrieveProviderByIdAsync
       - ModifyProviderAsync
       - RemoveProviderByIdAsync
+      - RetrieveAllProvidersAsListAsync
     calls:
       - from: AddProviderAsync
         to: SecurityAuditBroker
@@ -857,11 +1002,25 @@ components:
       - from: RemoveProviderByIdAsync
         to: StorageBroker
         method: DeleteProviderAsync
+      - from: RetrieveAllProvidersAsListAsync
+        to: StorageBroker
+        method: SelectAllProvidersAsListAsync
+  - id: FS.ConsumerAccess
+    name: ConsumerAccessService
+    layer: foundation
+    col: 7
+    description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService's access check. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and timeout / cancellation onto TimedOut- and CancelledConsumerAccessServiceException. It takes no storage broker — consumer access is no longer held locally."
+    methods:
+      - CheckConsumerAccessAsync
+    calls:
+      - from: CheckConsumerAccessAsync
+        to: ConsumerAccessBroker
+        method: CheckConsumerAccessAsync
   - id: FS.Audit
     name: AuditService
     layer: foundation
     col: 7
-    description: "The business-audit trail. Unlike every other foundation service it takes IStorageBrokerFactory as well as the scoped IStorageBroker: every write and every read-by-id opens (and disposes) its own StorageBroker, because audits are written from parallel provider calls and background work. Only RetrieveAllAuditsAsync uses the injected scoped broker. BulkAddAuditsAsync batches (default 10 000) through BatchBulkAddAuditsAsync, minting id + audit values per row and swallowing per-row failures into LoggingBroker."
+    description: "Delegates to the audit and metrics broker rather than reaching for storage. Validation and stamping now live in the library behind that broker, so what remains is the API surface this application exposes and the localisation of the client's exceptions into this service's own — controllers dispatch on Core's categorization types to choose a status code. There is deliberately no Validations partial: duplicating the library's rules here would let the two drift. AddAuditAsync(audit) and ModifyAuditAsync stamp through the security-audit broker, overwriting whatever the caller sent, because an entity arriving from a request body carries claims rather than facts."
     methods:
       - "AddAuditAsync(auditType, title, message, …)"
       - AddAuditAsync(audit)
@@ -872,105 +1031,79 @@ components:
       - RemoveAuditByIdAsync
     calls:
       - from: "AddAuditAsync(auditType, title, message, …)"
-        to: StorageBrokerFactory
-        method: CreateStorageBrokerAsync
-      - from: AddAuditAsync(audit)
-        to: StorageBrokerFactory
-        method: CreateStorageBrokerAsync
-      - from: BulkAddAuditsAsync
-        to: StorageBrokerFactory
-        method: CreateStorageBrokerAsync
-      - from: RetrieveAuditByIdAsync
-        to: StorageBrokerFactory
-        method: CreateStorageBrokerAsync
-      - from: ModifyAuditAsync
-        to: StorageBrokerFactory
-        method: CreateStorageBrokerAsync
-      - from: RemoveAuditByIdAsync
-        to: StorageBrokerFactory
-        method: CreateStorageBrokerAsync
-      - from: "AddAuditAsync(auditType, title, message, …)"
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: "AddAuditAsync(auditType, title, message, …)"
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: "AddAuditAsync(auditType, title, message, …)"
-        to: IdentifierBroker
-        method: GetIdentifierAsync
-      - from: "AddAuditAsync(auditType, title, message, …)"
-        to: StorageBroker
-        method: InsertAuditAsync
+        to: AuditAndMetricBroker
+        method: AddAuditAsync
       - from: AddAuditAsync(audit)
         to: SecurityAuditBroker
         method: ApplyAddAuditValuesAsync
       - from: AddAuditAsync(audit)
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: AddAuditAsync(audit)
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: AddAuditAsync(audit)
-        to: StorageBroker
-        method: InsertAuditAsync
+        to: AuditAndMetricBroker
+        method: AddAuditAsync
       - from: BulkAddAuditsAsync
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: BulkAddAuditsAsync
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: BulkAddAuditsAsync
-        to: IdentifierBroker
-        method: GetIdentifierAsync
-      - from: BulkAddAuditsAsync
-        to: StorageBroker
-        method: BulkInsertAuditsAsync
+        to: AuditAndMetricBroker
+        method: BulkLogAuditsAsync
       - from: RetrieveAllAuditsAsync
-        to: StorageBroker
-        method: SelectAllAuditsAsync
+        to: AuditAndMetricBroker
+        method: RetrieveAllAuditsAsync
       - from: RetrieveAuditByIdAsync
-        to: StorageBroker
-        method: SelectAuditByIdAsync
+        to: AuditAndMetricBroker
+        method: RetrieveAuditByIdAsync
       - from: ModifyAuditAsync
         to: SecurityAuditBroker
         method: ApplyModifyAuditValuesAsync
       - from: ModifyAuditAsync
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: ModifyAuditAsync
-        to: DateTimeBroker
-        method: GetCurrentDateTimeOffsetAsync
-      - from: ModifyAuditAsync
-        to: StorageBroker
-        method: SelectAuditByIdAsync
-      - from: ModifyAuditAsync
-        to: StorageBroker
-        method: UpdateAuditAsync
+        to: AuditAndMetricBroker
+        method: ModifyAuditAsync
       - from: RemoveAuditByIdAsync
-        to: StorageBroker
-        method: SelectAuditByIdAsync
-      - from: RemoveAuditByIdAsync
-        to: SecurityAuditBroker
-        method: ApplyRemoveAuditValuesAsync
-      - from: RemoveAuditByIdAsync
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: RemoveAuditByIdAsync
-        to: StorageBroker
-        method: UpdateAuditAsync
-      - from: RemoveAuditByIdAsync
-        to: StorageBroker
-        method: DeleteAuditAsync
+        to: AuditAndMetricBroker
+        method: RemoveAuditByIdAsync
+  - id: FS.Metric
+    name: MetricService
+    layer: foundation
+    col: 7
+    description: "The metric counterpart to AuditService, and the newer of the two. Callers used to reach AuditAndMetricBroker directly for metrics, which left metric failures arriving at controllers and workers in the library's exception types while audit failures arrived in this application's — this service closes that gap. Add is the awaited API surface; Log is fire and forget. Nothing is stamped here: a span carries its own Started and Completed, taken when the work happened. There is no Modify — a metric records what already happened, so the table is append-only."
+    methods:
+      - AddMetricAsync
+      - LogMetricAsync
+      - LogMetricsAsync
+      - RetrieveAllMetricsAsync
+      - RetrieveMetricByIdAsync
+      - RemoveMetricByIdAsync
+      - PurgeMetricsOlderThanRetentionPeriodAsync
+    calls:
+      - from: AddMetricAsync
+        to: AuditAndMetricBroker
+        method: AddMetricAsync
+      - from: LogMetricAsync
+        to: AuditAndMetricBroker
+        method: LogMetricAsync
+      - from: LogMetricsAsync
+        to: AuditAndMetricBroker
+        method: LogMetricsAsync
+      - from: RetrieveAllMetricsAsync
+        to: AuditAndMetricBroker
+        method: RetrieveAllMetricsAsync
+      - from: RetrieveMetricByIdAsync
+        to: AuditAndMetricBroker
+        method: RetrieveMetricByIdAsync
+      - from: RemoveMetricByIdAsync
+        to: AuditAndMetricBroker
+        method: RemoveMetricByIdAsync
+      - from: PurgeMetricsOlderThanRetentionPeriodAsync
+        to: AuditAndMetricBroker
+        method: PurgeMetricsOlderThanRetentionPeriodAsync
   - id: FS.Stu3Patient
     name: Stu3PatientService
     layer: foundation
     col: 7
-    description: "Fans out to every active provider in parallel (Task.WhenAll), each call wrapped in a linked CancellationTokenSource that cancels after PatientServiceConfig.MaxProviderWaitTimeMilliseconds. Each returned bundle is persisted as a Pending FhirRecord (via its own factory-created StorageBroker) and audited under STU3-Patient-GetStructuredRecordSerialised — including a -DATA entry carrying the raw JSON. Providers that do not support Patients/$GetStructuredRecord are dropped before the fan-out."
+    description: "Fans out to every active provider in parallel (Task.WhenAll), each call wrapped in a linked CancellationTokenSource that cancels after PatientServiceConfig.MaxProviderWaitTimeMilliseconds. Each returned bundle is queued for persistence as a Pending FhirRecord through the dispatcher, so the write leaves the request's critical path, and each provider call emits a metric span — including a failure span when a provider times out or throws. Providers that do not support Patients/$GetStructuredRecord are dropped before the fan-out."
     methods:
       - GetStructuredRecordSerialisedAsync
+      - QueueFhirRecordPersistenceAsync
+      - RecordFailedProviderSpanAsync
     calls:
       - from: GetStructuredRecordSerialisedAsync
-        to: AuditBroker
+        to: AuditAndMetricBroker
         method: LogInformationAsync
       - from: GetStructuredRecordSerialisedAsync
         to: Stu3FhirBroker
@@ -987,28 +1120,30 @@ components:
       - from: GetStructuredRecordSerialisedAsync
         to: LIB.FhirProvider
         method: Patients.GetStructuredRecordSerialisedAsync
-      - from: GetStructuredRecordSerialisedAsync
+      - from: QueueFhirRecordPersistenceAsync
+        to: API.Dispatcher
+        method: TryDispatch
+      - from: QueueFhirRecordPersistenceAsync
+        to: AuditAndMetricBroker
+        method: LogMetricAsync
+      - from: QueueFhirRecordPersistenceAsync
         to: IdentifierBroker
         method: GetIdentifierAsync
-      - from: GetStructuredRecordSerialisedAsync
+      - from: QueueFhirRecordPersistenceAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: QueueFhirRecordPersistenceAsync
         to: SecurityAuditBroker
         method: ApplyAddAuditValuesAsync
-      - from: GetStructuredRecordSerialisedAsync
+      - from: QueueFhirRecordPersistenceAsync
         to: StorageBrokerFactory
         method: CreateStorageBrokerAsync
-      - from: GetStructuredRecordSerialisedAsync
+      - from: QueueFhirRecordPersistenceAsync
         to: StorageBroker
         method: InsertFhirRecordAsync
-      - from: GetStructuredRecordSerialisedAsync
-        to: LoggingBroker
-        method: LogInformationAsync
-  - id: OR.Stu3FhirReconciliation
-    name: Stu3FhirReconciliationService
-    layer: orchestration
-    col: 5
-    description: "Placeholder reconciliation: returns the first non-empty bundle and throws NotFoundFhirReconciliationOrchestrationException when every provider came back empty. It takes only ILoggingBroker — no real merge across providers yet. Modelled as an orchestration: it sits alongside Stu3PatientOrchestrationService under the coordination service, and its exceptions are the FhirReconciliationOrchestration* family."
-    methods:
-      - ReconcileSerialisedAsync
+      - from: RecordFailedProviderSpanAsync
+        to: AuditAndMetricBroker
+        method: LogMetricAsync
   - id: FS.JsonElement
     name: JsonElementService
     layer: foundation
@@ -1311,7 +1446,7 @@ components:
     name: ArrayOrderIgnoreProcessingRule
     layer: processing
     col: 6
-    description: Sorts array members before comparison so ordering differences are not reported as diffs. Derives from JsonIgnoreProcessingRuleBase.
+    description: "Sorts array members before comparison so ordering differences are not reported as diffs. Derives from JsonIgnoreProcessingRuleBase."
     methods:
       - ShouldIgnoreAsync
       - GetReplacementAsync
@@ -1326,7 +1461,7 @@ components:
     name: GuidIgnoreProcessingRule
     layer: processing
     col: 6
-    description: Replaces GUID-shaped values with a constant so provider-minted identifiers do not diff. Derives from JsonIgnoreProcessingRuleBase.
+    description: "Replaces GUID-shaped values with a constant so provider-minted identifiers do not diff. Derives from JsonIgnoreProcessingRuleBase."
     methods:
       - ShouldIgnoreAsync
       - GetReplacementAsync
@@ -1358,44 +1493,66 @@ components:
       - from: GetReplacementAsync
         to: FS.JsonElement
         method: CreateStringElement
+  - id: OR.Stu3FhirReconciliation
+    name: Stu3FhirReconciliationService
+    layer: orchestration
+    col: 5
+    description: "Placeholder reconciliation: returns the first non-empty bundle and throws NotFoundFhirReconciliationOrchestrationException when every provider came back empty. It takes only ILoggingBroker — no real merge across providers yet. Modelled as an orchestration: it sits alongside Stu3PatientOrchestrationService under the coordination service, and its exceptions are the FhirReconciliationOrchestration* family."
+    methods:
+      - ReconcileSerialisedAsync
   - id: OR.Stu3Patient
     name: Stu3PatientOrchestrationService
     layer: orchestration
     col: 5
-    description: "Gates the request on access, then fans it out. GetStructuredRecordSerialisedAsync runs the access check first (through the same private helper ValidateAccess wraps, so the exception is localised once), reads the STU3 providers, keeps the active ones (IsActive plus the ActiveFrom/ActiveTo window) with the primary first, validates that exactly one primary exists, and returns a StructuredRecordsResponse (primary provider + per-provider bundles) for the coordination service to reconcile. ValidateAccess honours AccessConfigurations.CheckAccessPermissions: off, it audits the skip and returns; on, it resolves the caller, builds a ValidateAccessRequest and asks ConsumerAccessService — not allowed writes an Access Forbidden audit carrying the returned reason codes and throws ForbiddenPatientOrchestrationException, allowed writes an Access Allowed audit naming the organisations that granted it."
+    description: "Gates the request on access, then fans it out. GetStructuredRecordSerialisedAsync runs the access check first, reads the STU3 providers, keeps the active ones (IsActive plus the ActiveFrom/ActiveTo window) with the primary first, validates that exactly one primary exists, and returns a StructuredRecordsResponse for the coordination service to reconcile. CheckAccessPermissionsAsync honours AccessConfigurations.CheckAccessPermissions: off, it audits the skip and returns; on, it resolves the caller, builds a ValidateAccessRequest and asks ConsumerAccessService — not allowed writes an Access Forbidden audit carrying the returned reason codes and throws ForbiddenPatientOrchestrationException, allowed writes an Access Allowed audit naming the organisations that granted it. Both paths emit a metric span."
     methods:
       - GetStructuredRecordSerialisedAsync
-      - ValidateAccess
+      - CheckAccessPermissionsAsync
     calls:
       - from: GetStructuredRecordSerialisedAsync
-        to: AuditBroker
+        to: AuditAndMetricBroker
         method: LogInformationAsync
       - from: GetStructuredRecordSerialisedAsync
-        to: SecurityBroker
-        method: GetCurrentUserAsync
+        to: AuditAndMetricBroker
+        method: LogMetricAsync
       - from: GetStructuredRecordSerialisedAsync
-        to: FS.ConsumerAccess
-        method: CheckConsumerAccessAsync
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
       - from: GetStructuredRecordSerialisedAsync
         to: FS.Provider
         method: RetrieveAllProvidersAsync
       - from: GetStructuredRecordSerialisedAsync
         to: FS.Stu3Patient
         method: GetStructuredRecordSerialisedAsync
-      - from: ValidateAccess
-        to: AuditBroker
+      - from: CheckAccessPermissionsAsync
+        to: AuditAndMetricBroker
         method: LogInformationAsync
-      - from: ValidateAccess
+      - from: CheckAccessPermissionsAsync
+        to: AuditAndMetricBroker
+        method: RecordAuditAsync
+      - from: CheckAccessPermissionsAsync
+        to: AuditAndMetricBroker
+        method: LogMetricAsync
+      - from: CheckAccessPermissionsAsync
         to: SecurityBroker
         method: GetCurrentUserAsync
-      - from: ValidateAccess
+      - from: CheckAccessPermissionsAsync
         to: FS.ConsumerAccess
         method: CheckConsumerAccessAsync
+      - from: CheckAccessPermissionsAsync
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+      - from: CheckAccessPermissionsAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
   - id: OR.CompareQueue
     name: CompareQueueOrchestrationService
     layer: orchestration
     col: 5
-    description: "The comparison queue. GetUnprocessedRecordAsync claims the oldest Pending secondary FhirRecord that has been settled for at least 5 minutes, flips it to Processing, and pairs it with the primary record sharing its CorrelationId."
+    description: "The comparison queue. GetUnprocessedRecordAsync claims the oldest Pending secondary FhirRecord that has been settled for at least 5 minutes and pairs it with the primary record sharing its CorrelationId. The claim is a set-based statement in the database rather than a read-then-write, so two workers cannot both win the same row."
     methods:
       - GetUnprocessedRecordAsync
       - ChangeFhirRecordStatusAsync
@@ -1409,7 +1566,7 @@ components:
         method: RetrieveAllFhirRecordsAsync
       - from: GetUnprocessedRecordAsync
         to: FS.FhirRecord
-        method: ModifyFhirRecordAsync
+        method: TryClaimFhirRecordAsync
       - from: ChangeFhirRecordStatusAsync
         to: FS.FhirRecord
         method: RetrieveFhirRecordByIdAsync
@@ -1467,7 +1624,7 @@ components:
     name: Stu3PatientCoordinationService
     layer: coordination
     col: 4
-    description: "Mints the correlation id for the whole request, audits each stage, delegates to the patient orchestration for the access-gated fan-out, then hands the per-provider bundles to the reconciliation orchestration, which returns the single serialised bundle the API hands back."
+    description: "Mints the correlation id for the whole request, audits each stage and times it as a metric span, delegates to the patient orchestration for the access-gated fan-out, then hands the per-provider bundles to the reconciliation orchestration, which returns the single serialised bundle the API hands back."
     methods:
       - GetStructuredRecordSerialisedAsync
     calls:
@@ -1475,8 +1632,14 @@ components:
         to: IdentifierBroker
         method: GetIdentifierAsync
       - from: GetStructuredRecordSerialisedAsync
-        to: AuditBroker
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: AuditAndMetricBroker
         method: LogInformationAsync
+      - from: GetStructuredRecordSerialisedAsync
+        to: AuditAndMetricBroker
+        method: LogMetricAsync
       - from: GetStructuredRecordSerialisedAsync
         to: OR.Stu3Patient
         method: GetStructuredRecordSerialisedAsync

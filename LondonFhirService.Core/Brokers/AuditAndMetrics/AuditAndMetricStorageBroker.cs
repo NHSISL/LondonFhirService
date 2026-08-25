@@ -5,7 +5,7 @@
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 
-namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
+namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {
     /// <summary>
     /// Satisfies the storage port the audit and metrics library declares.
@@ -20,12 +20,12 @@ namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
     /// the scoped broker, because they return an IQueryable the caller enumerates and disposing
     /// the context underneath it would kill the query.
     /// </summary>
-    internal partial class AuditAndMetricsStorageService : IAuditAndMetricsStorageBroker
+    public partial class AuditAndMetricStorageBroker : IAuditAndMetricStorageBroker
     {
         private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly IStorageBroker storageBroker;
 
-        public AuditAndMetricsStorageService(
+        public AuditAndMetricStorageBroker(
             IStorageBrokerFactory storageBrokerFactory,
             IStorageBroker storageBroker)
         {

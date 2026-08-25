@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using Microsoft.EntityFrameworkCore;
@@ -14,18 +15,22 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
     {
         public DbSet<FhirRecord> FhirRecords { get; set; }
 
-        public async ValueTask<FhirRecord> InsertFhirRecordAsync(FhirRecord fhirRecord) =>
-            await InsertAsync(fhirRecord);
+        public async ValueTask<FhirRecord> InsertFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default) =>
+            await InsertAsync(fhirRecord, cancellationToken);
 
-        public async ValueTask<IQueryable<FhirRecord>> SelectAllFhirRecordsAsync() =>
-            await SelectAllAsync<FhirRecord>();
+        public async ValueTask<IQueryable<FhirRecord>> SelectAllFhirRecordsAsync(
+            CancellationToken cancellationToken = default) =>
+            await SelectAllAsync<FhirRecord>(cancellationToken);
 
         public async ValueTask<int> ClaimFhirRecordAsync(
             Guid fhirRecordId,
             StatusType expectedStatus,
             StatusType claimedStatus,
             DateTimeOffset claimedDate,
-            DateTimeOffset? notUpdatedAfter) =>
+            DateTimeOffset? notUpdatedAfter,
+            CancellationToken cancellationToken = default) =>
             await this.FhirRecords
                 .Where(fhirRecord =>
                     fhirRecord.Id == fhirRecordId
@@ -39,15 +44,22 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                         && (notUpdatedAfter == null || fhirRecord.UpdatedDate <= notUpdatedAfter))
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(fhirRecord => fhirRecord.Status, claimedStatus)
-                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, claimedDate));
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, claimedDate),
+                    cancellationToken);
 
-        public async ValueTask<FhirRecord> SelectFhirRecordByIdAsync(Guid fhirRecordId) =>
-            await SelectAsync<FhirRecord>(new object[] { fhirRecordId });
+        public async ValueTask<FhirRecord> SelectFhirRecordByIdAsync(
+            Guid fhirRecordId,
+            CancellationToken cancellationToken = default) =>
+            await SelectAsync<FhirRecord>(new object[] { fhirRecordId }, cancellationToken);
 
-        public async ValueTask<FhirRecord> UpdateFhirRecordAsync(FhirRecord fhirRecord) =>
-            await UpdateAsync(fhirRecord);
+        public async ValueTask<FhirRecord> UpdateFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default) =>
+            await UpdateAsync(fhirRecord, cancellationToken);
 
-        public async ValueTask<FhirRecord> DeleteFhirRecordAsync(FhirRecord fhirRecord) =>
-            await DeleteAsync(fhirRecord);
+        public async ValueTask<FhirRecord> DeleteFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default) =>
+            await DeleteAsync(fhirRecord, cancellationToken);
     }
 }

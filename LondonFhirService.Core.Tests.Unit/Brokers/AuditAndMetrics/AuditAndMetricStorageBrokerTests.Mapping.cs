@@ -15,7 +15,7 @@ using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 using IAudit = LondonFhirService.Core.Abstractions.Models.Audits.IAudit;
 
-namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
+namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
 {
     /// <summary>
     /// The storage port accepts any IAudit or IMetric, because the library that calls it holds no
@@ -26,7 +26,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
     /// Every audit and metric write in the application passes through this mapping, so a dropped
     /// field here is a column that silently stops being written.
     /// </summary>
-    public partial class AuditAndMetricsStorageServiceTests
+    public partial class AuditAndMetricStorageBrokerTests
     {
         [Fact]
         public async Task ShouldCopyEveryAuditFieldWhenTheContractIsNotTheEntityAsync()
@@ -55,7 +55,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
                     .ReturnsAsync(foreignAudit);
 
             // when
-            await this.auditAndMetricsStorageService.InsertAuditAsync(
+            await this.auditAndMetricStorageBroker.InsertAuditAsync(
                 foreignAudit, TestContext.Current.CancellationToken);
 
             // then
@@ -89,7 +89,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
                     .ReturnsAsync(audit);
 
             // when
-            await this.auditAndMetricsStorageService.InsertAuditAsync(
+            await this.auditAndMetricStorageBroker.InsertAuditAsync(
                 audit, TestContext.Current.CancellationToken);
 
             // then
@@ -116,7 +116,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
                     .Callback<List<IAudit>, CancellationToken>((batch, _) => capturedAudits = batch);
 
             // when
-            await this.auditAndMetricsStorageService.BulkInsertAuditsAsync(
+            await this.auditAndMetricStorageBroker.BulkInsertAuditsAsync(
                 audits, TestContext.Current.CancellationToken);
 
             // then
@@ -161,7 +161,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
                     .ReturnsAsync(foreignMetric);
 
             // when
-            await this.auditAndMetricsStorageService.InsertMetricAsync(
+            await this.auditAndMetricStorageBroker.InsertMetricAsync(
                 foreignMetric, TestContext.Current.CancellationToken);
 
             // then
@@ -198,7 +198,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.AuditAndMetrics
                     .ReturnsAsync(metric);
 
             // when
-            await this.auditAndMetricsStorageService.InsertMetricAsync(
+            await this.auditAndMetricStorageBroker.InsertMetricAsync(
                 metric, TestContext.Current.CancellationToken);
 
             // then

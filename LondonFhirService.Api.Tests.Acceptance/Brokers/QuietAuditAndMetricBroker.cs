@@ -82,6 +82,25 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
         public ValueTask<Audit> RemoveAuditByIdAsync(Guid auditId, CancellationToken cancellationToken = default) =>
             this.auditAndMetricBroker.RemoveAuditByIdAsync(auditId, cancellationToken);
 
+        public ValueTask<Metric> AddMetricAsync(
+            Metric metric,
+            CancellationToken cancellationToken = default) =>
+            this.auditAndMetricBroker.AddMetricAsync(metric, cancellationToken);
+
+        public ValueTask<IQueryable<Metric>> RetrieveAllMetricsAsync(
+            CancellationToken cancellationToken = default) =>
+            this.auditAndMetricBroker.RetrieveAllMetricsAsync(cancellationToken);
+
+        public ValueTask<Metric> RetrieveMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
+            this.auditAndMetricBroker.RetrieveMetricByIdAsync(metricId, cancellationToken);
+
+        public ValueTask<Metric> RemoveMetricByIdAsync(
+            Guid metricId,
+            CancellationToken cancellationToken = default) =>
+            this.auditAndMetricBroker.RemoveMetricByIdAsync(metricId, cancellationToken);
+
         public ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(
             CancellationToken cancellationToken = default) =>
             this.auditAndMetricBroker.PurgeMetricsOlderThanRetentionPeriodAsync(cancellationToken);

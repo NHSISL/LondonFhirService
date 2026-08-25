@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 
@@ -11,8 +12,12 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
 {
     public partial interface IStorageBroker
     {
-        ValueTask<FhirRecord> InsertFhirRecordAsync(FhirRecord fhirRecord);
-        ValueTask<IQueryable<FhirRecord>> SelectAllFhirRecordsAsync();
+        ValueTask<FhirRecord> InsertFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<IQueryable<FhirRecord>> SelectAllFhirRecordsAsync(
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Moves one record from an expected status to a new one in a single statement, returning
@@ -29,10 +34,19 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             StatusType expectedStatus,
             StatusType claimedStatus,
             DateTimeOffset claimedDate,
-            DateTimeOffset? notUpdatedAfter);
+            DateTimeOffset? notUpdatedAfter,
+            CancellationToken cancellationToken = default);
 
-        ValueTask<FhirRecord> SelectFhirRecordByIdAsync(Guid fhirRecordId);
-        ValueTask<FhirRecord> UpdateFhirRecordAsync(FhirRecord fhirRecord);
-        ValueTask<FhirRecord> DeleteFhirRecordAsync(FhirRecord fhirRecord);
+        ValueTask<FhirRecord> SelectFhirRecordByIdAsync(
+            Guid fhirRecordId,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<FhirRecord> UpdateFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<FhirRecord> DeleteFhirRecordAsync(
+            FhirRecord fhirRecord,
+            CancellationToken cancellationToken = default);
     }
 }

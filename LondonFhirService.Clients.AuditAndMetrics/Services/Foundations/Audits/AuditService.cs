@@ -17,7 +17,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
 {
     internal partial class AuditService : IAuditService
     {
-        private readonly IAuditAndMetricsStorageBroker storageBroker;
+        private readonly IAuditAndMetricStorageBroker storageBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
@@ -25,7 +25,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public AuditService(
-            IAuditAndMetricsStorageBroker storageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IDateTimeBroker dateTimeBroker,
             IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker,

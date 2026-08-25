@@ -11,9 +11,9 @@ using LondonFhirService.Core.Abstractions.Models.Audits;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
 
-namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
+namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {
-    internal partial class AuditAndMetricsStorageService
+    public partial class AuditAndMetricStorageBroker
     {
         public IAudit CreateAudit() =>
             new Audit();

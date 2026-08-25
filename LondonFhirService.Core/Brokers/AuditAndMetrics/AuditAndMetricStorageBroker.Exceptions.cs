@@ -10,9 +10,9 @@ using LondonFhirService.Core.Abstractions.Models.Metrics.Exceptions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace LondonFhirService.Core.Services.Foundations.AuditAndMetrics
+namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {
-    internal partial class AuditAndMetricsStorageService
+    public partial class AuditAndMetricStorageBroker
     {
         private delegate ValueTask<T> ReturningGenericFunction<T>();
         private delegate ValueTask ReturningNothingFunction();

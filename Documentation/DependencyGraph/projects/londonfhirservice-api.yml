@@ -5,96 +5,15 @@
 
 project: api
 components:
-  - id: API.Audits
-    name: AuditsController
-    layer: exposer
-    col: 3
-    description: "RESTFulController over Audit. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service. Writes are marked [InvisibleApi]. Xeption types are mapped one-for-one onto RFC problem responses."
-    methods:
-      - POST /api/Audits
-      - GET /api/Audits
-      - "GET /api/Audits/{auditId}"
-      - PUT /api/Audits
-      - "DELETE /api/Audits/{auditId}"
-    calls:
-      - from: POST /api/Audits
-        to: FS.Audit
-        method: AddAuditAsync(audit)
-      - from: GET /api/Audits
-        to: FS.Audit
-        method: RetrieveAllAuditsAsync
-      - from: "GET /api/Audits/{auditId}"
-        to: FS.Audit
-        method: RetrieveAuditByIdAsync
-      - from: PUT /api/Audits
-        to: FS.Audit
-        method: ModifyAuditAsync
-      - from: "DELETE /api/Audits/{auditId}"
-        to: FS.Audit
-        method: RemoveAuditByIdAsync
-  - id: API.FhirRecords
-    name: FhirRecordsController
-    layer: exposer
-    col: 3
-    description: "RESTFulController over FhirRecord. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service. Writes are marked [InvisibleApi]. Xeption types are mapped one-for-one onto RFC problem responses."
-    methods:
-      - POST /api/FhirRecords
-      - GET /api/FhirRecords
-      - "GET /api/FhirRecords/{fhirRecordId}"
-      - PUT /api/FhirRecords
-      - "DELETE /api/FhirRecords/{fhirRecordId}"
-    calls:
-      - from: POST /api/FhirRecords
-        to: FS.FhirRecord
-        method: AddFhirRecordAsync
-      - from: GET /api/FhirRecords
-        to: FS.FhirRecord
-        method: RetrieveAllFhirRecordsAsync
-      - from: "GET /api/FhirRecords/{fhirRecordId}"
-        to: FS.FhirRecord
-        method: RetrieveFhirRecordByIdAsync
-      - from: PUT /api/FhirRecords
-        to: FS.FhirRecord
-        method: ModifyFhirRecordAsync
-      - from: "DELETE /api/FhirRecords/{fhirRecordId}"
-        to: FS.FhirRecord
-        method: RemoveFhirRecordByIdAsync
-  - id: API.FhirRecordDifferences
-    name: FhirRecordDifferencesController
-    layer: exposer
-    col: 3
-    description: "RESTFulController over FhirRecordDifference. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service. Writes are marked [InvisibleApi]. Xeption types are mapped one-for-one onto RFC problem responses."
-    methods:
-      - POST /api/FhirRecordDifferences
-      - GET /api/FhirRecordDifferences
-      - "GET /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
-      - PUT /api/FhirRecordDifferences
-      - "DELETE /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
-    calls:
-      - from: POST /api/FhirRecordDifferences
-        to: FS.FhirRecordDifference
-        method: AddFhirRecordDifferenceAsync
-      - from: GET /api/FhirRecordDifferences
-        to: FS.FhirRecordDifference
-        method: RetrieveAllFhirRecordDifferencesAsync
-      - from: "GET /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
-        to: FS.FhirRecordDifference
-        method: RetrieveFhirRecordDifferenceByIdAsync
-      - from: PUT /api/FhirRecordDifferences
-        to: FS.FhirRecordDifference
-        method: ModifyFhirRecordDifferenceAsync
-      - from: "DELETE /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
-        to: FS.FhirRecordDifference
-        method: RemoveFhirRecordDifferenceByIdAsync
   - id: API.Patient
     name: PatientController (STU3)
     layer: exposer
     col: 3
     description: "The solution's headline endpoint. Accepts a FHIR Parameters body (custom FhirJson input/output formatters) and returns the reconciled STU3 bundle. Wrapped in a 130-second request-timeout policy."
     methods:
-      - "POST /api/STU3/Patient/$getstructuredrecord"
+      - POST /api/STU3/Patient/$getstructuredrecord
     calls:
-      - from: "POST /api/STU3/Patient/$getstructuredrecord"
+      - from: POST /api/STU3/Patient/$getstructuredrecord
         to: CO.Stu3Patient
         method: GetStructuredRecordSerialisedAsync
   - id: API.ComparisonWorker
@@ -108,17 +27,60 @@ components:
       - from: ExecuteAsync
         to: CO.Comparison
         method: ProcessFhirRecordsAsync
+  - id: API.MetricPurgeWorker
+    name: MetricPurgeWorker
+    layer: exposer
+    col: 3
+    description: "Runs the metric retention sweep. The purge existed since metrics were added but nothing ever called it, so the table only ever grew — and it takes a row per span rather than per request. Whether anything is deleted is still governed by IsPurgingAllowed and RetentionPeriodInDays; this worker only decides when to ask. A scope per sweep, because the broker beneath the service resolves a scoped client. It goes through the metric foundation service rather than the broker directly, so a failed sweep is reported in this application's exception types."
+    methods:
+      - ExecuteAsync
+    calls:
+      - from: ExecuteAsync
+        to: FS.Metric
+        method: PurgeMetricsOlderThanRetentionPeriodAsync
+  - id: API.Dispatcher
+    name: AuditAndMetricsDispatcher
+    layer: exposer
+    col: 3
+    description: "Where a deferred audit or metric write goes. The library defers these so recording does not add to the elapsed time of the work being recorded, but how that deferral happens is the host's business: a host with a lifecycle can queue the work and drain it under control, which a library with no lifecycle of its own cannot. Rejection is a return value rather than an exception, because the caller is recording telemetry and a full queue must not take down the requests it is trying to measure. Registered as a singleton and shared with the drain worker. Without a host-supplied dispatcher the library falls back to ThreadPoolDispatcher — one work item per write, unbounded, with nothing draining it on shutdown."
+    methods:
+      - TryDispatch
+      - Complete
+  - id: API.DispatchWorker
+    name: AuditAndMetricsDispatchWorker
+    layer: exposer
+    col: 3
+    description: "Drains the bounded dispatcher queue. StopAsync completes the queue and waits for in-flight writes, so a shutdown does not silently drop audits that were already accepted."
+    methods:
+      - ExecuteAsync
+      - StopAsync
+    calls:
+      - from: ExecuteAsync
+        to: API.Dispatcher
+        method: Complete
+  - id: API.MetricTelemetryPublisher
+    name: MetricTelemetryPublisher
+    layer: exposer
+    col: 3
+    description: "Subscribes to the metric library's ActivitySource by name and forwards completed spans to Application Insights. Nothing was subscribed before this existed, so every span the library published was dropped. The source name comes from the same bound AuditAndMetricsConfigurations instance the client uses, so the two cannot drift apart."
+    methods:
+      - ExecuteAsync
+      - Dispose
+    calls:
+      - from: ExecuteAsync
+        to: EXT.ActivitySource
+        method: ActivityListener
   - id: API.Features
     name: FeaturesController
     layer: exposer
     col: 3
-    description: Reads the Features array straight from IConfiguration. No Core dependency.
+    description: "Reads the Features array straight from IConfiguration. No Core dependency."
     methods:
       - GET /api/Features
   - id: API.FrontendConfigurations
     name: FrontendConfigurationsController
     layer: exposer
     col: 3
-    description: Anonymous endpoint returning the FrontendConfiguration section (clientId / authority / scopes) so a SPA can build its MSAL config before sign-in. No Core dependency.
+    description: "Anonymous endpoint returning the FrontendConfiguration section (clientId / authority / scopes) so a SPA can build its MSAL config before sign-in. No Core dependency."
     methods:
       - GET /api/FrontendConfigurations

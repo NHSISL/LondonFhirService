@@ -19,6 +19,6 @@ namespace LondonFhirService.Core.Abstractions.Brokers
     /// Models.Metrics.Exceptions and Models.Audits.Exceptions, which are the contract between the
     /// two. Cancellation and timeout must pass through untranslated; the library handles those.
     /// </summary>
-    public partial interface IAuditAndMetricsStorageBroker
+    public partial interface IAuditAndMetricStorageBroker
     { }
 }

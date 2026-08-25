@@ -11,7 +11,7 @@ using LondonFhirService.Core.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Core.Abstractions.Brokers
 {
-    public partial interface IAuditAndMetricsStorageBroker
+    public partial interface IAuditAndMetricStorageBroker
     {
         ValueTask<IMetric> InsertMetricAsync(IMetric metric, CancellationToken cancellationToken = default);
         ValueTask BulkInsertMetricsAsync(List<IMetric> metrics, CancellationToken cancellationToken = default);

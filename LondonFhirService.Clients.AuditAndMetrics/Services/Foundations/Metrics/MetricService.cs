@@ -20,7 +20,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 {
     internal partial class MetricService : IMetricService
     {
-        private readonly IAuditAndMetricsStorageBroker storageBroker;
+        private readonly IAuditAndMetricStorageBroker storageBroker;
         private readonly IMetricBroker metricBroker;
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
@@ -28,7 +28,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public MetricService(
-            IAuditAndMetricsStorageBroker storageBroker,
+            IAuditAndMetricStorageBroker storageBroker,
             IMetricBroker metricBroker,
             IDateTimeBroker dateTimeBroker,
             ILoggingBroker loggingBroker,

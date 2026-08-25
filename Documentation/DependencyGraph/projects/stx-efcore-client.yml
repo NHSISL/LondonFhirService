@@ -10,7 +10,7 @@ components:
     layer: client
     col: 10
     shared: true
-    description: "STX.EFCore.Client 3.0.0. Every StorageBroker partial funnels through these eight generic primitives; the broker constructs it with itself as the DbContext."
+    description: "STX.EFCore.Client 3.0.0. Most StorageBroker partials funnel through these eight generic primitives; the broker constructs it with itself as the DbContext."
     methods:
       - InsertAsync
       - SelectAllAsync

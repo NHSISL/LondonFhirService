@@ -22,12 +22,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
     /// </summary>
     public class AuditAndMetricsClientTests
     {
-        private readonly Mock<IAuditAndMetricsStorageBroker> storageBrokerMock;
+        private readonly Mock<IAuditAndMetricStorageBroker> storageBrokerMock;
         private readonly Mock<IAuditUserBroker> auditUserBrokerMock;
 
         public AuditAndMetricsClientTests()
         {
-            this.storageBrokerMock = new Mock<IAuditAndMetricsStorageBroker>();
+            this.storageBrokerMock = new Mock<IAuditAndMetricStorageBroker>();
             this.auditUserBrokerMock = new Mock<IAuditUserBroker>();
         }
 

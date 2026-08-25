@@ -11,7 +11,7 @@ using LondonFhirService.Core.Abstractions.Models.Audits;
 
 namespace LondonFhirService.Core.Abstractions.Brokers
 {
-    public partial interface IAuditAndMetricsStorageBroker
+    public partial interface IAuditAndMetricStorageBroker
     {
         /// <summary>
         /// A new, empty audit entry for the library to populate. The library holds only the
