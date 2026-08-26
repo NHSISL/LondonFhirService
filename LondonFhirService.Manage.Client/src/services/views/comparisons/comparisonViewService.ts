@@ -281,7 +281,7 @@ export class ComparisonViewService implements IComparisonViewService {
             acceptableDiffCountText: this.formatAcceptableDiffCount(acceptableDiffCount),
 
             acceptableDiffCountClassName:
-                this.mapAcceptableDiffCountToClassName(acceptableDiffCount),
+                this.mapAcceptableDiffCountToClassName(),
 
             outstandingDiffCountText: String(Math.max(outstandingDiffCount, 0)),
             breakdownText: this.formatBreakdown(diffs),
@@ -316,7 +316,7 @@ export class ComparisonViewService implements IComparisonViewService {
             acceptableDiffCountText: this.formatAcceptedCount(acceptableDiffCount),
 
             acceptableDiffCountClassName:
-                this.mapAcceptableDiffCountToClassName(acceptableDiffCount),
+                this.mapAcceptableDiffCountToClassName(),
 
             breakdownText: this.formatBreakdown(diffs),
             comparedAtText: this.formatDate(fhirRecordDifference.comparedAt),
@@ -510,13 +510,12 @@ export class ComparisonViewService implements IComparisonViewService {
             : `${acceptableDiffCount} acceptable differences`;
     }
 
-    // Green once anything has been accepted, because accepting is progress through the triage.
-    // Nothing accepted yet is neutral rather than a warning - it is the starting state, not a
-    // problem.
-    private mapAcceptableDiffCountToClassName(acceptableDiffCount: number): string {
-        return acceptableDiffCount > 0
-            ? "badge bg-success"
-            : "badge bg-light text-dark border";
+    // Info rather than success or danger, and the same whatever the count. Accepting differences
+    // is triage progress, not a verdict, and the pill sits between the red difference count and
+    // the amber state - both of which do carry a verdict - so it needs a colour that reads as
+    // neither.
+    private mapAcceptableDiffCountToClassName(): string {
+        return "badge bg-info text-dark";
     }
 
     private mapResolutionToDisplayText(isResolved: boolean): string {

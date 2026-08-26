@@ -474,7 +474,7 @@ it("should project the flags back onto the differences it hands the page", async
     expect(comparison.diffs.map(diff => diff.index)).toEqual([0, 1]);
     expect(comparison.acceptableDiffCount).toBe(1);
     expect(comparison.acceptableDiffCountText).toBe("1 acceptable difference");
-    expect(comparison.acceptableDiffCountClassName).toBe("badge bg-success");
+    expect(comparison.acceptableDiffCountClassName).toBe("badge bg-info text-dark");
 });
 
 it("should count the accepted differences on a list row from the stored result", async () => {
@@ -500,7 +500,7 @@ it("should count the accepted differences on a list row from the stored result",
         await comparisonViewService.retrieveComparisonPageViewAsync(0, "", false);
 
     expect(comparisons[0].acceptableDiffCountText).toBe("2 accepted");
-    expect(comparisons[0].acceptableDiffCountClassName).toBe("badge bg-success");
+    expect(comparisons[0].acceptableDiffCountClassName).toBe("badge bg-info text-dark");
 });
 
 it("should refuse to accept a difference the stored result does not have", async () => {
