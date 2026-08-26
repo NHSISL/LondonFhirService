@@ -4,6 +4,7 @@ export type ComparisonListItemView = {
     diffCountText: string;
     diffCountClassName: string;
     acceptableDiffCountText: string;
+    acceptableDiffCountClassName: string;
     breakdownText: string;
     comparedAtText: string;
     resolutionText: string;

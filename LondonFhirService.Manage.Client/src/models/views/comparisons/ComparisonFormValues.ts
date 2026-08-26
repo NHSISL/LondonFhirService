@@ -1,7 +1,6 @@
-// What an operator can change about a comparison. Everything else on the record is written by the
-// comparison coordination service and is read only here.
+// What an operator types about a comparison. The accepted count is not here: it is derived from
+// the differences they tick as acceptable, not entered by hand.
 export type ComparisonFormValues = {
     comment: string;
     isResolved: boolean;
-    acceptableDiffCount: string;
 };

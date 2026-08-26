@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Badge, Col, Form, Row } from "react-bootstrap";
+import { DiffHighlight } from "./DiffHighlight";
 import { ExpandableRow } from "./ExpandableRow";
 import { ResourceJsonToggle } from "./ResourceJsonToggle";
 import { ResourceReference } from "./resourceSections";
 import { formatFhirDate } from "./patientFormatters";
-import { getInlineHighlightStyle } from "../../../helpers/comparisons/diffHighlighting";
 import { readString } from "../../../helpers/fhir/fhirJson";
 import type { DiffItemView } from "../../../models/views/comparisons/DiffItemView";
 import type { EpisodeOfCareData } from "../../../models/foundations/fhir/EpisodeOfCareData";
@@ -54,16 +54,18 @@ function EpisodeOfCareItem({ episodeOfCare, diffs, context }: EpisodeOfCareItemP
     const [expanded, setExpanded] = useState<boolean>(false);
     const resource = context.resourceIndex.get(`EpisodeOfCare/${episodeOfCare.id}`) ?? null;
 
-    const findDiff = (path: string) =>
-        diffs.some(diff => diff.path === path && diff.identifierText === episodeOfCare.id);
+    const findDiffs = (path: string) =>
+        diffs.filter(diff => diff.path === path && diff.identifierText === episodeOfCare.id);
 
-    const hasStatusDiff = findDiff("status");
-    const hasTypeDiff = findDiff("type");
-    const hasCareManagerDiff = findDiff("careManager");
-    const hasOrganizationDiff = findDiff("managingOrganization");
+    const statusDiffs = findDiffs("status");
+    const typeDiffs = findDiffs("type");
+    const careManagerDiffs = findDiffs("careManager");
+    const organizationDiffs = findDiffs("managingOrganization");
 
-    const hasAnyDiff =
-        hasStatusDiff || hasTypeDiff || hasCareManagerDiff || hasOrganizationDiff;
+    const episodeDiffs =
+        [...statusDiffs, ...typeDiffs, ...careManagerDiffs, ...organizationDiffs];
+
+    const outstandingDiffCount = episodeDiffs.filter(diff => diff.acceptableDiff === false).length;
 
     const organizationResource = episodeOfCare.organizationRef === null
         ? null
@@ -99,9 +101,13 @@ function EpisodeOfCareItem({ episodeOfCare, diffs, context }: EpisodeOfCareItemP
                             </Badge>
                         )}
 
-                        {hasAnyDiff && (
-                            <Badge bg="warning" style={badgeFontSize}>
-                                modified
+                        {episodeDiffs.length > 0 && (
+                            <Badge
+                                bg={outstandingDiffCount > 0 ? "warning" : "success"}
+                                style={badgeFontSize}>
+                                {outstandingDiffCount > 0
+                                    ? `${outstandingDiffCount} outstanding`
+                                    : `${episodeDiffs.length} accepted`}
                             </Badge>
                         )}
                     </>
@@ -118,30 +124,39 @@ function EpisodeOfCareItem({ episodeOfCare, diffs, context }: EpisodeOfCareItemP
                         <Col xs={6}>
                             <small className="text-muted d-block">Status</small>
 
-                            <div style={getInlineHighlightStyle(hasStatusDiff)}>
+                            <DiffHighlight
+                                fieldDiffs={statusDiffs}
+                                acceptance={context.acceptance}
+                                inline>
                                 {episodeOfCare.status ?? "N/A"}
-                            </div>
+                            </DiffHighlight>
                         </Col>
 
                         <Col xs={6}>
                             <small className="text-muted d-block">Type</small>
 
-                            <div style={getInlineHighlightStyle(hasTypeDiff)}>
+                            <DiffHighlight
+                                fieldDiffs={typeDiffs}
+                                acceptance={context.acceptance}
+                                inline>
                                 {episodeOfCare.typeDisplay ?? episodeOfCare.typeCode ?? "N/A"}
-                            </div>
+                            </DiffHighlight>
                         </Col>
 
                         {episodeOfCare.careManagerRef !== null && (
                             <Col xs={12}>
                                 <small className="text-muted d-block">Care manager</small>
 
-                                <div style={getInlineHighlightStyle(hasCareManagerDiff)}>
+                                <DiffHighlight
+                                    fieldDiffs={careManagerDiffs}
+                                    acceptance={context.acceptance}
+                                    inline>
                                     <ResourceReference
                                         reference={episodeOfCare.careManagerRef}
                                         visitedRefs={
                                             new Set([`EpisodeOfCare/${episodeOfCare.id}`])}
                                         context={context} />
-                                </div>
+                                </DiffHighlight>
                             </Col>
                         )}
 
@@ -149,13 +164,16 @@ function EpisodeOfCareItem({ episodeOfCare, diffs, context }: EpisodeOfCareItemP
                             <Col xs={12}>
                                 <small className="text-muted d-block">Managing organisation</small>
 
-                                <div style={getInlineHighlightStyle(hasOrganizationDiff)}>
+                                <DiffHighlight
+                                    fieldDiffs={organizationDiffs}
+                                    acceptance={context.acceptance}
+                                    inline>
                                     <ResourceReference
                                         reference={episodeOfCare.organizationRef}
                                         visitedRefs={
                                             new Set([`EpisodeOfCare/${episodeOfCare.id}`])}
                                         context={context} />
-                                </div>
+                                </DiffHighlight>
                             </Col>
                         )}
                     </Row>

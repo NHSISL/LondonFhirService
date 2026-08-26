@@ -15,7 +15,12 @@ export interface IComparisonViewService {
 
     createComparisonFormValues(): ComparisonFormValues;
 
+    setDiffAcceptanceAsync(
+        fhirRecordDifferenceId: string,
+        diffIndexes: number[],
+        acceptable: boolean): Promise<void>;
+
     updateComparisonAsync(
         fhirRecordDifferenceId: string,
-        comparisonFormValues: ComparisonFormValues): Promise<ComparisonDetailView>;
+        comparisonFormValues: ComparisonFormValues): Promise<void>;
 }

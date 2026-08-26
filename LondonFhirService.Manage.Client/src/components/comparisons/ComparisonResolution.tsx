@@ -3,16 +3,18 @@ import { SecuredComponent } from "../securitys/securedComponents";
 import securityPoints from "../../securityMatrix";
 import type { ComparisonResolutionProps } from "../../models/components/comparisons/ComparisonResolutionProps";
 
-// The triage record for a comparison: how many of its differences have been reviewed and
-// accepted, whether it is done with, and why. The differences themselves are written by the
-// comparison service and are read only here.
+// The triage record for a comparison: how many of its differences have been accepted, whether it
+// is done with, and why.
+//
+// The accepted count is read only in both states. It is not a figure to type: it is the number of
+// differences ticked as acceptable in the viewer or the differences list, counted from the stored
+// result. Letting it be typed here would let it disagree with the ticks it is meant to summarise.
 export function ComparisonResolution({
     comparison,
     editing,
     saving,
     saveError,
     values,
-    errors,
     onEdit,
     onFieldChange,
     onSave,
@@ -39,19 +41,35 @@ export function ComparisonResolution({
                     </Alert>
                 )}
 
-                {editing === false
-                    ? (
-                        <Row className="g-3">
-                            <Col xs={6} md={3}>
-                                <div className="text-muted small">Accepted</div>
-                                <div>{comparison.acceptableDiffCountText}</div>
-                            </Col>
+                <Row className="g-3">
+                    <Col xs={6} md={3}>
+                        <div className="text-muted small">Accepted</div>
 
-                            <Col xs={6} md={3}>
-                                <div className="text-muted small">Outstanding</div>
-                                <div>{comparison.outstandingDiffCountText}</div>
-                            </Col>
+                        <div>
+                            <span className={comparison.acceptableDiffCountClassName}>
+                                {comparison.acceptableDiffCount}
+                            </span>
 
+                            <span className="text-muted small ms-2">
+                                of {comparison.diffCount}
+                            </span>
+                        </div>
+
+                        {editing && (
+                            <Form.Text muted>
+                                Tick a difference as acceptable in the records below, or in the
+                                differences list, to change this.
+                            </Form.Text>
+                        )}
+                    </Col>
+
+                    <Col xs={6} md={3}>
+                        <div className="text-muted small">Outstanding</div>
+                        <div>{comparison.outstandingDiffCountText}</div>
+                    </Col>
+
+                    {editing === false && (
+                        <>
                             <Col xs={12} md={3}>
                                 <div className="text-muted small">State</div>
 
@@ -74,35 +92,12 @@ export function ComparisonResolution({
                                 <div className="text-muted small">Comment</div>
                                 <div className="text-break">{comparison.commentText}</div>
                             </Col>
-                        </Row>
-                    )
-                    : (
-                        <Row className="g-3">
-                            <Col xs={12} md={4}>
-                                <Form.Group controlId="comparisonAcceptableDiffCount">
-                                    <Form.Label>Accepted differences</Form.Label>
+                        </>
+                    )}
 
-                                    <Form.Control
-                                        type="number"
-                                        min={0}
-                                        max={comparison.diffCount}
-                                        value={values.acceptableDiffCount}
-                                        isInvalid={errors.acceptableDiffCount.length > 0}
-                                        onChange={event => onFieldChange(
-                                            "acceptableDiffCount",
-                                            event.currentTarget.value)} />
-
-                                    <Form.Control.Feedback type="invalid">
-                                        {errors.acceptableDiffCount}
-                                    </Form.Control.Feedback>
-
-                                    <Form.Text muted>
-                                        Of the {comparison.diffCount} this comparison found.
-                                    </Form.Text>
-                                </Form.Group>
-                            </Col>
-
-                            <Col xs={12} md={8}>
+                    {editing && (
+                        <>
+                            <Col xs={12} md={6}>
                                 <Form.Group controlId="comparisonComment">
                                     <Form.Label>Comment</Form.Label>
 
@@ -139,8 +134,9 @@ export function ComparisonResolution({
                                     Cancel
                                 </Button>
                             </Col>
-                        </Row>
+                        </>
                     )}
+                </Row>
             </Card.Body>
         </Card>
     );

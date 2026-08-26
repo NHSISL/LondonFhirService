@@ -212,7 +212,8 @@ it("should parse both sides of a comparison and label their roles", async () => 
     expect(comparison.secondarySource?.roleText).toBe("Secondary");
     expect(comparison.secondarySource?.bundle.patient.nameFamily).toBe("Smyth");
     expect(comparison.sourcesError).toBeNull();
-    expect(comparison.outstandingDiffCountText).toBe("2");
+    expect(comparison.outstandingDiffCountText).toBe("3");
+    expect(comparison.acceptableDiffCountText).toBe("0 acceptable differences");
 });
 
 // A record can be removed while its comparison is still on the shelf. The differences the engine
@@ -275,15 +276,13 @@ it("should carry the untouched record back when saving the review fields", async
 
     await comparisonViewService.updateComparisonAsync("any-id", {
         comment: "  Known dosage rounding difference  ",
-        isResolved: true,
-        acceptableDiffCount: "3"
+        isResolved: true
     });
 
     const saved = modifiedFhirRecordDifference as FhirRecordDifference | null;
 
     expect(saved?.comment).toBe("Known dosage rounding difference");
     expect(saved?.isResolved).toBe(true);
-    expect(saved?.acceptableDiffCount).toBe(3);
     expect(saved?.diffJson).toBe(diffJson);
     expect(saved?.createdBy).toBe("compare-queue");
     expect(saved?.createdDate).toBe("2026-05-04T09:30:00+00:00");
@@ -307,8 +306,7 @@ it("should clear a comment that was blanked out", async () => {
 
     await comparisonViewService.updateComparisonAsync("any-id", {
         comment: "   ",
-        isResolved: false,
-        acceptableDiffCount: "0"
+        isResolved: false
     });
 
     expect((modifiedFhirRecordDifference as FhirRecordDifference | null)?.comment).toBeNull();
@@ -330,4 +328,186 @@ it("should surface a view service exception when the comparison cannot be loaded
 
     await expect(comparisonViewService.retrieveComparisonDetailViewAsync("any-id"))
         .rejects.toThrow("We could not load this comparison");
+});
+
+// Acceptance lives inside the stored result rather than in a column of its own, so recording one
+// means rewriting the whole DiffJson and recounting the flags in it.
+it("should flag the difference it was given and leave the others alone", async () => {
+    let modifiedFhirRecordDifference: FhirRecordDifference | null = null;
+
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            modifyFhirRecordDifferenceAsync: async fhirRecordDifference => {
+                modifiedFhirRecordDifference = fhirRecordDifference;
+
+                return fhirRecordDifference;
+            }
+        }),
+        createFhirRecordService());
+
+    await comparisonViewService.setDiffAcceptanceAsync("any-id", [1], true);
+
+    const saved = modifiedFhirRecordDifference as FhirRecordDifference | null;
+    const savedDiffs = JSON.parse(saved?.diffJson ?? "{}").diffs;
+
+    expect(savedDiffs.map((diff: { acceptableDiff?: boolean }) => diff.acceptableDiff))
+        .toEqual([undefined, true, undefined]);
+});
+
+// The column is recounted from the flags rather than incremented, so it cannot drift from the
+// result it summarises.
+it("should recount the accepted total from the flags on every save", async () => {
+    const twoAlreadyAccepted = JSON.stringify({
+        correlationId: "abc-123",
+        diffCount: 3,
+        diffs: [
+            { type: "modified", path: "a", acceptableDiff: true },
+            { type: "modified", path: "b", acceptableDiff: true },
+            { type: "modified", path: "c", acceptableDiff: false }
+        ]
+    });
+
+    const savedCounts: number[] = [];
+
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            retrieveFhirRecordDifferenceByIdAsync: async () => createFhirRecordDifference({
+                diffJson: twoAlreadyAccepted,
+
+                // Deliberately wrong, to prove the count is derived rather than trusted.
+                acceptableDiffCount: 99
+            }),
+
+            modifyFhirRecordDifferenceAsync: async fhirRecordDifference => {
+                savedCounts.push(fhirRecordDifference.acceptableDiffCount);
+
+                return fhirRecordDifference;
+            }
+        }),
+        createFhirRecordService());
+
+    await comparisonViewService.setDiffAcceptanceAsync("any-id", [2], true);
+    await comparisonViewService.setDiffAcceptanceAsync("any-id", [0], false);
+
+    expect(savedCounts).toEqual([3, 1]);
+});
+
+// One highlighted field can cover more than one difference, and ticking it has to accept all of
+// them in a single write rather than one save per difference.
+it("should accept every difference a field covers in one write", async () => {
+    let saveCount = 0;
+    let modifiedFhirRecordDifference: FhirRecordDifference | null = null;
+
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            modifyFhirRecordDifferenceAsync: async fhirRecordDifference => {
+                saveCount++;
+                modifiedFhirRecordDifference = fhirRecordDifference;
+
+                return fhirRecordDifference;
+            }
+        }),
+        createFhirRecordService());
+
+    await comparisonViewService.setDiffAcceptanceAsync("any-id", [0, 2], true);
+
+    const saved = modifiedFhirRecordDifference as FhirRecordDifference | null;
+
+    expect(saveCount).toBe(1);
+    expect(saved?.acceptableDiffCount).toBe(2);
+});
+
+// A later version of the engine may add properties this client does not model. The stored text is
+// mutated in place rather than re-serialised from the parsed view, so they survive the round trip.
+it("should preserve properties of the stored result it does not model", async () => {
+    let modifiedFhirRecordDifference: FhirRecordDifference | null = null;
+
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            retrieveFhirRecordDifferenceByIdAsync: async () => createFhirRecordDifference({
+                diffJson: JSON.stringify({
+                    correlationId: "abc-123",
+                    diffCount: 1,
+                    engineVersion: "3.1",
+                    diffs: [{ type: "modified", path: "a", confidence: 0.8 }]
+                })
+            }),
+
+            modifyFhirRecordDifferenceAsync: async fhirRecordDifference => {
+                modifiedFhirRecordDifference = fhirRecordDifference;
+
+                return fhirRecordDifference;
+            }
+        }),
+        createFhirRecordService());
+
+    await comparisonViewService.setDiffAcceptanceAsync("any-id", [0], true);
+
+    const saved = modifiedFhirRecordDifference as FhirRecordDifference | null;
+    const savedResult = JSON.parse(saved?.diffJson ?? "{}");
+
+    expect(savedResult.engineVersion).toBe("3.1");
+    expect(savedResult.diffs[0].confidence).toBe(0.8);
+    expect(savedResult.diffs[0].acceptableDiff).toBe(true);
+});
+
+it("should project the flags back onto the differences it hands the page", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            retrieveFhirRecordDifferenceByIdAsync: async () => createFhirRecordDifference({
+                acceptableDiffCount: 0,
+                diffJson: JSON.stringify({
+                    correlationId: "abc-123",
+                    diffCount: 2,
+                    diffs: [
+                        { type: "modified", path: "a", acceptableDiff: true },
+                        { type: "modified", path: "b" }
+                    ]
+                })
+            })
+        }),
+        createFhirRecordService());
+
+    const comparison = await comparisonViewService.retrieveComparisonDetailViewAsync("any-id");
+
+    expect(comparison.diffs.map(diff => diff.acceptableDiff)).toEqual([true, false]);
+    expect(comparison.diffs.map(diff => diff.index)).toEqual([0, 1]);
+    expect(comparison.acceptableDiffCount).toBe(1);
+    expect(comparison.acceptableDiffCountText).toBe("1 acceptable difference");
+    expect(comparison.acceptableDiffCountClassName).toBe("badge bg-success");
+});
+
+it("should count the accepted differences on a list row from the stored result", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            retrieveFhirRecordDifferencesAsync: async () => [
+                createFhirRecordDifference({
+                    acceptableDiffCount: 0,
+                    diffJson: JSON.stringify({
+                        correlationId: "abc-123",
+                        diffCount: 2,
+                        diffs: [
+                            { type: "modified", path: "a", acceptableDiff: true },
+                            { type: "added", path: "b", acceptableDiff: true }
+                        ]
+                    })
+                })
+            ]
+        }),
+        createFhirRecordService());
+
+    const { comparisons } =
+        await comparisonViewService.retrieveComparisonPageViewAsync(0, "", false);
+
+    expect(comparisons[0].acceptableDiffCountText).toBe("2");
+    expect(comparisons[0].acceptableDiffCountClassName).toBe("badge bg-success");
+});
+
+it("should refuse to accept a difference the stored result does not have", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService());
+
+    await expect(comparisonViewService.setDiffAcceptanceAsync("any-id", [99], true))
+        .rejects.toThrow("We could not save this difference");
 });

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Badge, Col, Row } from "react-bootstrap";
 import { CodeWithInfo } from "./CodeWithInfo";
+import { DiffHighlight } from "./DiffHighlight";
 import { ExpandableRow } from "./ExpandableRow";
 import { ResourceJsonToggle } from "./ResourceJsonToggle";
 import { buildMedicationStatementMatchKey } from "../../../helpers/comparisons/medicationStatementMatchKey";
 import { formatFhirDate } from "./patientFormatters";
-import { getInlineHighlightStyle } from "../../../helpers/comparisons/diffHighlighting";
 import { readString } from "../../../helpers/fhir/fhirJson";
 import { useItemExpansion } from "./useItemExpansion";
 import {
@@ -18,6 +18,7 @@ import {
     parsePractitioner,
     parsePractitionerRole
 } from "../../../helpers/fhir/fhirResourceParsers";
+import type { DiffAcceptance } from "../../../models/components/comparisons/DiffAcceptance";
 import type { DiffItemView } from "../../../models/views/comparisons/DiffItemView";
 import type { FhirResourceIndex } from "../../../models/foundations/fhir/FhirResource";
 import type { ListData } from "../../../models/foundations/fhir/ListData";
@@ -34,6 +35,7 @@ export type ResourceTreeContext = {
     resourceIndex: FhirResourceIndex;
     expandedItems: Set<string>;
     setExpandedItems: (expandedItems: Set<string>) => void;
+    acceptance: DiffAcceptance;
 };
 
 type ListsSectionProps = {
@@ -694,7 +696,8 @@ function MedicationStatementItem({
         ? []
         : medicationDiffs.filter(diff => diff.identifierText === matchKey);
 
-    const hasDosageDiff = itemDiffs.some(diff => diff.path.endsWith(".dosage[0].text"));
+    const dosageDiffs = itemDiffs.filter(diff => diff.path.endsWith(".dosage[0].text"));
+    const outstandingDiffCount = itemDiffs.filter(diff => diff.acceptableDiff === false).length;
 
     return (
         <div className="py-1 ps-2 border-bottom">
@@ -728,10 +731,12 @@ function MedicationStatementItem({
                         )}
 
                         {itemDiffs.length > 0 && (
-                            <Badge bg="warning" style={badgeFontSize}>
-                                {itemDiffs.length === 1
-                                    ? "1 difference"
-                                    : `${itemDiffs.length} differences`}
+                            <Badge
+                                bg={outstandingDiffCount > 0 ? "warning" : "success"}
+                                style={badgeFontSize}>
+                                {outstandingDiffCount > 0
+                                    ? `${outstandingDiffCount} outstanding`
+                                    : `${itemDiffs.length} accepted`}
                             </Badge>
                         )}
                     </>
@@ -762,9 +767,12 @@ function MedicationStatementItem({
                             <Col xs={12}>
                                 <small className="text-muted d-block">Dosage</small>
 
-                                <div style={getInlineHighlightStyle(hasDosageDiff)}>
+                                <DiffHighlight
+                                    fieldDiffs={dosageDiffs}
+                                    acceptance={context.acceptance}
+                                    inline>
                                     {medicationStatement.dosage}
-                                </div>
+                                </DiffHighlight>
                             </Col>
                         )}
 

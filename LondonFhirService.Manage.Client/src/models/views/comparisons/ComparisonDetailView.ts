@@ -8,7 +8,13 @@ export type ComparisonDetailView = {
     diffCount: number;
     diffCountText: string;
     diffCountClassName: string;
+
+    // The count of differences ticked as acceptable, derived from the stored result rather than
+    // read off the record, so the page cannot show a total that disagrees with the ticks under it.
+    acceptableDiffCount: number;
     acceptableDiffCountText: string;
+    acceptableDiffCountClassName: string;
+
     outstandingDiffCountText: string;
     breakdownText: string;
     comparedAtText: string;

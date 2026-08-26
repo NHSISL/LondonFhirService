@@ -34,11 +34,13 @@ export function ComparisonDetailPage() {
         saving,
         saveError,
         values,
-        errors,
         handleEdit,
         handleFieldChange,
         handleSave,
-        handleCancelEdit
+        handleCancelEdit,
+        acceptanceSaving,
+        acceptanceError,
+        handleToggleDiffAcceptance
     } = useComparisonDetailPage(fhirRecordDifferenceId ?? "");
 
     if (loading) {
@@ -82,6 +84,10 @@ export function ComparisonDetailPage() {
                             {comparison.diffCountText}
                         </span>
 
+                        <span className={comparison.acceptableDiffCountClassName}>
+                            {comparison.acceptableDiffCountText}
+                        </span>
+
                         <span className={comparison.resolutionClassName}>
                             {comparison.resolutionText}
                         </span>
@@ -122,6 +128,16 @@ export function ComparisonDetailPage() {
                 </Row>
             )}
 
+            {acceptanceError !== null && (
+                <Row className="mb-3 p-2">
+                    <Col>
+                        <Alert variant="danger" role="alert" className="mb-0">
+                            {acceptanceError.message}
+                        </Alert>
+                    </Col>
+                </Row>
+            )}
+
             <Row className="mb-3 p-2">
                 <Col>
                     <ComparisonResolution
@@ -130,7 +146,6 @@ export function ComparisonDetailPage() {
                         saving={saving}
                         saveError={saveError}
                         values={values}
-                        errors={errors}
                         onEdit={handleEdit}
                         onFieldChange={handleFieldChange}
                         onSave={handleSave}
@@ -148,7 +163,9 @@ export function ComparisonDetailPage() {
                         expandedLists={expandedLists}
                         setExpandedLists={setExpandedLists}
                         expandedItems={expandedItems}
-                        setExpandedItems={setExpandedItems} />
+                        setExpandedItems={setExpandedItems}
+                        acceptanceSaving={acceptanceSaving}
+                        onToggleDiffAcceptance={handleToggleDiffAcceptance} />
                 </Col>
             </Row>
 
@@ -156,7 +173,10 @@ export function ComparisonDetailPage() {
                 show={showDifferences}
                 onHide={handleHideDifferences}
                 diffs={comparison.diffs}
-                correlationId={comparison.correlationId} />
+                correlationId={comparison.correlationId}
+                acceptanceSaving={acceptanceSaving}
+                acceptanceError={acceptanceError}
+                onToggleDiffAcceptance={handleToggleDiffAcceptance} />
 
             <BothJsonModal
                 show={showBothJson}

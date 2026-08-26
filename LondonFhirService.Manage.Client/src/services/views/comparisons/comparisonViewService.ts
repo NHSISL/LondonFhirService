@@ -134,8 +134,82 @@ export class ComparisonViewService implements IComparisonViewService {
     public createComparisonFormValues(): ComparisonFormValues {
         return {
             comment: "",
-            isResolved: false,
-            acceptableDiffCount: "0"
+            isResolved: false
+        };
+    }
+
+    // Acceptance is stored inside the comparison result rather than as a column, so recording one
+    // means rewriting the whole DiffJson. The stored text is mutated in place rather than
+    // re-serialised from the parsed view: anything this client does not model - a property a later
+    // version of the engine adds - has to survive the round trip untouched.
+    //
+    // AcceptableDiffCount is recomputed from the flags here rather than incremented, so the column
+    // cannot drift from the result it summarises even if two operators tick at the same time.
+    public async setDiffAcceptanceAsync(
+        fhirRecordDifferenceId: string,
+        diffIndexes: number[],
+        acceptable: boolean)
+        : Promise<void> {
+        try {
+            const currentFhirRecordDifference =
+                await this.fhirRecordDifferenceService.retrieveFhirRecordDifferenceByIdAsync(
+                    fhirRecordDifferenceId);
+
+            const { diffJson, acceptableDiffCount } = this.applyDiffAcceptance(
+                currentFhirRecordDifference.diffJson,
+                diffIndexes,
+                acceptable);
+
+            await this.fhirRecordDifferenceService.modifyFhirRecordDifferenceAsync({
+                ...currentFhirRecordDifference,
+                diffJson: diffJson,
+                acceptableDiffCount: acceptableDiffCount
+            });
+        } catch (exception) {
+            throw new ComparisonViewServiceException(
+                "We could not save this difference, please try again or contact support.",
+                exception);
+        }
+    }
+
+    private applyDiffAcceptance(
+        diffJson: string,
+        diffIndexes: number[],
+        acceptable: boolean)
+        : { diffJson: string; acceptableDiffCount: number } {
+        const comparisonResult: unknown = JSON.parse(diffJson);
+
+        if (typeof comparisonResult !== "object" || comparisonResult === null) {
+            throw new Error("The stored comparison result could not be read.");
+        }
+
+        const rawDiffs = (comparisonResult as Record<string, unknown>).diffs;
+
+        if (Array.isArray(rawDiffs) === false) {
+            throw new Error("The stored comparison result holds no differences to accept.");
+        }
+
+        const diffs = rawDiffs as unknown[];
+
+        for (const diffIndex of diffIndexes) {
+            const diff = diffs[diffIndex];
+
+            if (typeof diff !== "object" || diff === null) {
+                throw new Error(
+                    `The stored comparison result has no difference at position ${diffIndex}.`);
+            }
+
+            (diff as Record<string, unknown>).acceptableDiff = acceptable;
+        }
+
+        const acceptableDiffCount = diffs.filter(diff =>
+            typeof diff === "object"
+            && diff !== null
+            && (diff as Record<string, unknown>).acceptableDiff === true).length;
+
+        return {
+            diffJson: JSON.stringify(comparisonResult),
+            acceptableDiffCount: acceptableDiffCount
         };
     }
 
@@ -143,26 +217,23 @@ export class ComparisonViewService implements IComparisonViewService {
     // compares CreatedBy and CreatedDate against storage and rejects a modify that does not carry
     // them back unchanged - and because DiffJson, which the operator never edits, has to travel
     // back with the rest of the record.
+    //
+    // Returns nothing: the caller refetches the detail view, and building one here would read both
+    // whole FHIR bundles a second time only to discard them.
     public async updateComparisonAsync(
         fhirRecordDifferenceId: string,
         comparisonFormValues: ComparisonFormValues)
-        : Promise<ComparisonDetailView> {
+        : Promise<void> {
         try {
             const currentFhirRecordDifference =
                 await this.fhirRecordDifferenceService.retrieveFhirRecordDifferenceByIdAsync(
                     fhirRecordDifferenceId);
 
-            const modifiedFhirRecordDifference =
-                await this.fhirRecordDifferenceService.modifyFhirRecordDifferenceAsync({
-                    ...currentFhirRecordDifference,
-                    comment: this.toNullableText(comparisonFormValues.comment),
-                    isResolved: comparisonFormValues.isResolved,
-
-                    acceptableDiffCount:
-                        this.toAcceptableDiffCount(comparisonFormValues.acceptableDiffCount)
-                });
-
-            return await this.toComparisonDetailViewAsync(modifiedFhirRecordDifference);
+            await this.fhirRecordDifferenceService.modifyFhirRecordDifferenceAsync({
+                ...currentFhirRecordDifference,
+                comment: this.toNullableText(comparisonFormValues.comment),
+                isResolved: comparisonFormValues.isResolved
+            });
         } catch (exception) {
             throw new ComparisonViewServiceException(
                 "We could not save this comparison, please correct any errors and try again.",
@@ -194,8 +265,11 @@ export class ComparisonViewService implements IComparisonViewService {
         }
 
         const diffs = this.readDiffs(fhirRecordDifference.diffJson);
-        const outstandingDiffCount =
-            fhirRecordDifference.diffCount - fhirRecordDifference.acceptableDiffCount;
+
+        // Counted from the flags rather than read off the column, so a stored result and the
+        // summary above it can never disagree on screen.
+        const acceptableDiffCount = this.countAcceptable(diffs);
+        const outstandingDiffCount = fhirRecordDifference.diffCount - acceptableDiffCount;
 
         return {
             id: fhirRecordDifference.id,
@@ -203,9 +277,11 @@ export class ComparisonViewService implements IComparisonViewService {
             diffCount: fhirRecordDifference.diffCount,
             diffCountText: this.formatDiffCount(fhirRecordDifference.diffCount),
             diffCountClassName: this.mapDiffCountToClassName(fhirRecordDifference.diffCount),
+            acceptableDiffCount: acceptableDiffCount,
+            acceptableDiffCountText: this.formatAcceptableDiffCount(acceptableDiffCount),
 
-            acceptableDiffCountText:
-                String(Math.max(fhirRecordDifference.acceptableDiffCount, 0)),
+            acceptableDiffCountClassName:
+                this.mapAcceptableDiffCountToClassName(acceptableDiffCount),
 
             outstandingDiffCountText: String(Math.max(outstandingDiffCount, 0)),
             breakdownText: this.formatBreakdown(diffs),
@@ -229,16 +305,20 @@ export class ComparisonViewService implements IComparisonViewService {
     private toComparisonListItemView(
         fhirRecordDifference: FhirRecordDifference)
         : ComparisonListItemView {
+        const diffs = this.readDiffs(fhirRecordDifference.diffJson);
+        const acceptableDiffCount = this.countAcceptable(diffs);
+
         return {
             id: fhirRecordDifference.id,
             correlationId: fhirRecordDifference.correlationId || notSetText,
             diffCountText: this.formatDiffCount(fhirRecordDifference.diffCount),
             diffCountClassName: this.mapDiffCountToClassName(fhirRecordDifference.diffCount),
+            acceptableDiffCountText: String(acceptableDiffCount),
 
-            acceptableDiffCountText:
-                String(Math.max(fhirRecordDifference.acceptableDiffCount, 0)),
+            acceptableDiffCountClassName:
+                this.mapAcceptableDiffCountToClassName(acceptableDiffCount),
 
-            breakdownText: this.formatBreakdown(this.readDiffs(fhirRecordDifference.diffJson)),
+            breakdownText: this.formatBreakdown(diffs),
             comparedAtText: this.formatDate(fhirRecordDifference.comparedAt),
             resolutionText: this.mapResolutionToDisplayText(fhirRecordDifference.isResolved),
 
@@ -302,17 +382,18 @@ export class ComparisonViewService implements IComparisonViewService {
         : ComparisonFormValues {
         return {
             comment: fhirRecordDifference.comment ?? "",
-            isResolved: fhirRecordDifference.isResolved,
-            acceptableDiffCount: String(Math.max(fhirRecordDifference.acceptableDiffCount, 0))
+            isResolved: fhirRecordDifference.isResolved
         };
     }
 
     private toDiffItemView(diff: DiffItem, index: number): DiffItemView {
         return {
             // The engine can write the same path more than once for one comparison - an array
-            // compared element by element, say - so the index is what keeps the key unique.
+            // compared element by element, say - so the index is what keeps the key unique, and
+            // is also how an acceptance is written back to the right entry.
             key: `${index}-${diff.path}`,
 
+            index: index,
             type: diff.type,
             typeText: diffTypeTexts[diff.type] ?? diff.type,
             typeClassName: diffTypeClassNames[diff.type] ?? "badge bg-secondary",
@@ -321,7 +402,8 @@ export class ComparisonViewService implements IComparisonViewService {
             newValueText: diff.newValue,
             resourceTypeText: diff.resourceType,
             identifierText: diff.identifier,
-            reasonText: diff.reason
+            reasonText: diff.reason,
+            acceptableDiff: diff.acceptableDiff
         };
     }
 
@@ -370,7 +452,11 @@ export class ComparisonViewService implements IComparisonViewService {
             newValue: this.readString(source.newValue),
             resourceType: this.readString(source.resourceType),
             identifier: this.readString(source.identifier),
-            reason: this.readString(source.reason)
+            reason: this.readString(source.reason),
+
+            // A result stored before acceptance existed has no flag at all, which is the same
+            // thing as a difference nobody has accepted yet.
+            acceptableDiff: source.acceptableDiff === true
         };
     }
 
@@ -407,6 +493,25 @@ export class ComparisonViewService implements IComparisonViewService {
         return diffCount > 0 ? "badge bg-danger" : "badge bg-success";
     }
 
+    private countAcceptable(diffs: DiffItem[]): number {
+        return diffs.filter(diff => diff.acceptableDiff).length;
+    }
+
+    private formatAcceptableDiffCount(acceptableDiffCount: number): string {
+        return acceptableDiffCount === 1
+            ? "1 acceptable difference"
+            : `${acceptableDiffCount} acceptable differences`;
+    }
+
+    // Green once anything has been accepted, because accepting is progress through the triage.
+    // Nothing accepted yet is neutral rather than a warning - it is the starting state, not a
+    // problem.
+    private mapAcceptableDiffCountToClassName(acceptableDiffCount: number): string {
+        return acceptableDiffCount > 0
+            ? "badge bg-success"
+            : "badge bg-light text-dark border";
+    }
+
     private mapResolutionToDisplayText(isResolved: boolean): string {
         return isResolved ? "Resolved" : "Open";
     }
@@ -433,12 +538,6 @@ export class ComparisonViewService implements IComparisonViewService {
         const trimmedValue = value.trim();
 
         return trimmedValue.length > 0 ? trimmedValue : null;
-    }
-
-    private toAcceptableDiffCount(value: string): number {
-        const parsedValue = Number.parseInt(value.trim(), 10);
-
-        return Number.isNaN(parsedValue) || parsedValue < 0 ? 0 : parsedValue;
     }
 
     private readString(rawValue: unknown): string | null {

@@ -5,6 +5,11 @@ import type { DiffItemType } from "../../foundations/comparisons/DiffItem";
 // everything the markup needs to choose a colour or a wording is decided here.
 export type DiffItemView = {
     key: string;
+
+    // Position in the stored result's diffs array. Acceptance is written back by index, because a
+    // difference has no id of its own and the engine can write the same path more than once.
+    index: number;
+
     type: DiffItemType;
     typeText: string;
     typeClassName: string;
@@ -14,4 +19,5 @@ export type DiffItemView = {
     resourceTypeText: string | null;
     identifierText: string | null;
     reasonText: string | null;
+    acceptableDiff: boolean;
 };

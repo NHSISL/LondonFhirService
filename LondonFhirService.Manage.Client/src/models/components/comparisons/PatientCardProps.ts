@@ -1,11 +1,11 @@
-import type { ComparisonSide } from "../../../helpers/comparisons/diffHighlighting";
 import type { ComparisonSourceView } from "../../views/comparisons/ComparisonSourceView";
+import type { DiffAcceptance } from "./DiffAcceptance";
 import type { DiffItemView } from "../../views/comparisons/DiffItemView";
 
 export type PatientCardProps = {
     source: ComparisonSourceView;
-    side: ComparisonSide;
     diffs: DiffItemView[];
+    acceptance: DiffAcceptance;
 
     // Expansion is owned by the page rather than by each card, so the two sides open and close
     // together and a difference stays opposite its counterpart.

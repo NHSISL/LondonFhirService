@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Button, Col, Form, Row } from "react-bootstrap";
+import { DiffHighlight } from "./DiffHighlight";
 import { ExpandableRow } from "./ExpandableRow";
 import { OrganizationSection, PractitionerSection } from "./resourceSections";
 import { formatPatientAddress } from "./patientFormatters";
-import type { CSSProperties } from "react";
+import type { DiffItemView } from "../../../models/views/comparisons/DiffItemView";
 import type { PatientData } from "../../../models/foundations/fhir/PatientData";
 import type { ResourceTreeContext } from "./resourceSections";
 
@@ -11,7 +12,7 @@ type PatientDetailsProps = {
     patient: PatientData;
     showPatientDetails: boolean;
     onShowPatientDetails: (showPatientDetails: boolean) => void;
-    getHighlightStyleForField: (field: string) => CSSProperties;
+    getFieldDiffs: (field: string) => DiffItemView[];
     context: ResourceTreeContext;
 };
 
@@ -19,11 +20,19 @@ export function PatientDetails({
     patient,
     showPatientDetails,
     onShowPatientDetails,
-    getHighlightStyleForField,
+    getFieldDiffs,
     context
 }: PatientDetailsProps) {
     const [showAddressComponents, setShowAddressComponents] = useState<boolean>(false);
     const [showPatientJson, setShowPatientJson] = useState<boolean>(false);
+
+    // Every field renders the same way: its value, outlined and tickable when the comparison found
+    // a difference in it, plain when it did not.
+    const field = (fieldName: string, value: string | null, className?: string) => (
+        <DiffHighlight fieldDiffs={getFieldDiffs(fieldName)} acceptance={context.acceptance}>
+            <div className={className}>{value ?? "N/A"}</div>
+        </DiffHighlight>
+    );
 
     return (
         <>
@@ -46,50 +55,33 @@ export function PatientDetails({
                                 label={<span>Address</span>} />
                         </Form.Label>
 
-                        <div style={getHighlightStyleForField("addressLine")}>
-                            {formatPatientAddress(patient) || "N/A"}
-                        </div>
+                        {field("addressLine", formatPatientAddress(patient) || null)}
 
                         {showAddressComponents && (
                             <Row className="g-1 mt-2">
                                 <Col xs={12}>
                                     <small className="text-muted d-block">Line</small>
-
-                                    <div style={getHighlightStyleForField("addressLine")}>
-                                        {patient.addressLine ?? "N/A"}
-                                    </div>
+                                    {field("addressLine", patient.addressLine)}
                                 </Col>
 
                                 <Col xs={6}>
                                     <small className="text-muted d-block">City</small>
-
-                                    <div style={getHighlightStyleForField("addressCity")}>
-                                        {patient.addressCity ?? "N/A"}
-                                    </div>
+                                    {field("addressCity", patient.addressCity)}
                                 </Col>
 
                                 <Col xs={6}>
                                     <small className="text-muted d-block">District</small>
-
-                                    <div style={getHighlightStyleForField("addressDistrict")}>
-                                        {patient.addressDistrict ?? "N/A"}
-                                    </div>
+                                    {field("addressDistrict", patient.addressDistrict)}
                                 </Col>
 
                                 <Col xs={6}>
                                     <small className="text-muted d-block">Postcode</small>
-
-                                    <div style={getHighlightStyleForField("addressPostalCode")}>
-                                        {patient.addressPostalCode ?? "N/A"}
-                                    </div>
+                                    {field("addressPostalCode", patient.addressPostalCode)}
                                 </Col>
 
                                 <Col xs={6}>
                                     <small className="text-muted d-block">Country</small>
-
-                                    <div style={getHighlightStyleForField("addressCountry")}>
-                                        {patient.addressCountry ?? "N/A"}
-                                    </div>
+                                    {field("addressCountry", patient.addressCountry)}
                                 </Col>
                             </Row>
                         )}
@@ -97,36 +89,22 @@ export function PatientDetails({
 
                     <Form.Group className="mb-3">
                         <Form.Label className="text-muted small mb-1">Birth date</Form.Label>
-
-                        <div style={getHighlightStyleForField("birthDate")}>
-                            {patient.birthDate ?? "N/A"}
-                        </div>
+                        {field("birthDate", patient.birthDate)}
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label className="text-muted small mb-1">Gender</Form.Label>
-
-                        <div
-                            className="text-capitalize"
-                            style={getHighlightStyleForField("gender")}>
-                            {patient.gender ?? "N/A"}
-                        </div>
+                        {field("gender", patient.gender, "text-capitalize")}
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label className="text-muted small mb-1">Telecom</Form.Label>
-
-                        <div style={getHighlightStyleForField("telecom")}>
-                            {patient.telecom ?? "N/A"}
-                        </div>
+                        {field("telecom", patient.telecom)}
                     </Form.Group>
 
                     <Form.Group className="mb-3">
                         <Form.Label className="text-muted small mb-1">Communication</Form.Label>
-
-                        <div style={getHighlightStyleForField("communication")}>
-                            {patient.communication ?? "N/A"}
-                        </div>
+                        {field("communication", patient.communication)}
                     </Form.Group>
 
                     {patient.managingOrganizationRef !== null && (
@@ -135,11 +113,13 @@ export function PatientDetails({
                                 Managing organisation
                             </Form.Label>
 
-                            <div style={getHighlightStyleForField("managingOrganizationRef")}>
+                            <DiffHighlight
+                                fieldDiffs={getFieldDiffs("managingOrganizationRef")}
+                                acceptance={context.acceptance}>
                                 <OrganizationSection
                                     reference={patient.managingOrganizationRef}
                                     context={context} />
-                            </div>
+                            </DiffHighlight>
                         </Form.Group>
                     )}
 

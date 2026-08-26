@@ -3,13 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ComparisonViewService } from "../../services/views/comparisons/comparisonViewService";
 import type { ComparisonDetailView } from "../../models/views/comparisons/ComparisonDetailView";
-import type { ComparisonFormErrors } from "../../models/views/comparisons/ComparisonFormErrors";
 import type { ComparisonFormValues } from "../../models/views/comparisons/ComparisonFormValues";
-
-const noComparisonFormErrors: ComparisonFormErrors = {
-    hasErrors: false,
-    acceptableDiffCount: ""
-};
 
 export type ComparisonDetailPageState = {
     comparison: ComparisonDetailView | null;
@@ -39,13 +33,19 @@ export type ComparisonDetailPageState = {
     saving: boolean;
     saveError: Error | null;
     values: ComparisonFormValues;
-    errors: ComparisonFormErrors;
     handleEdit: () => void;
     handleFieldChange: (
         fieldName: keyof ComparisonFormValues,
         value: string | boolean) => void;
     handleSave: () => void;
     handleCancelEdit: () => void;
+
+    // Ticking a difference rewrites the whole stored result, so only one tick can be in flight at
+    // a time - two overlapping saves would each re-read before the other wrote, and the later one
+    // would silently drop the earlier tick.
+    acceptanceSaving: boolean;
+    acceptanceError: Error | null;
+    handleToggleDiffAcceptance: (diffIndexes: number[], acceptable: boolean) => void;
 };
 
 export function useComparisonDetailPage(
@@ -66,7 +66,8 @@ export function useComparisonDetailPage(
     const [editing, setEditing] = useState<boolean>(false);
     const [saving, setSaving] = useState<boolean>(false);
     const [saveError, setSaveError] = useState<Error | null>(null);
-    const [showErrors, setShowErrors] = useState<boolean>(false);
+    const [acceptanceSaving, setAcceptanceSaving] = useState<boolean>(false);
+    const [acceptanceError, setAcceptanceError] = useState<Error | null>(null);
 
     const [values, setValues] =
         useState<ComparisonFormValues>(() => comparisonViewService.createComparisonFormValues());
@@ -88,12 +89,6 @@ export function useComparisonDetailPage(
         }
     }, [data, editing]);
 
-    const errors = useMemo<ComparisonFormErrors>(
-        () => showErrors === false
-            ? noComparisonFormErrors
-            : validateComparisonFormValues(values, data?.diffCount ?? 0),
-        [showErrors, values, data]);
-
     const handleShowDifferences = useCallback(() => setShowDifferences(true), []);
     const handleHideDifferences = useCallback(() => setShowDifferences(false), []);
     const handleShowBothJson = useCallback(() => setShowBothJson(true), []);
@@ -108,7 +103,6 @@ export function useComparisonDetailPage(
 
     const handleEdit = useCallback(() => {
         setSaveError(null);
-        setShowErrors(false);
         setEditing(true);
     }, []);
 
@@ -120,7 +114,6 @@ export function useComparisonDetailPage(
     const handleCancelEdit = useCallback(() => {
         setEditing(false);
         setSaveError(null);
-        setShowErrors(false);
 
         if (data) {
             setValues(data.editValues);
@@ -128,12 +121,6 @@ export function useComparisonDetailPage(
     }, [data]);
 
     const handleSave = useCallback(() => {
-        setShowErrors(true);
-
-        if (validateComparisonFormValues(values, data?.diffCount ?? 0).hasErrors) {
-            return;
-        }
-
         setSaving(true);
         setSaveError(null);
 
@@ -148,11 +135,35 @@ export function useComparisonDetailPage(
                 await queryClient.invalidateQueries({ queryKey: ["ComparisonPageViews"] });
 
                 setEditing(false);
-                setShowErrors(false);
             })
             .catch((exception: Error) => setSaveError(exception))
             .finally(() => setSaving(false));
-    }, [values, data, comparisonViewService, fhirRecordDifferenceId, queryClient]);
+    }, [values, comparisonViewService, fhirRecordDifferenceId, queryClient]);
+
+    const handleToggleDiffAcceptance = useCallback(
+        (diffIndexes: number[], acceptable: boolean) => {
+            if (acceptanceSaving || diffIndexes.length === 0) {
+                return;
+            }
+
+            setAcceptanceSaving(true);
+            setAcceptanceError(null);
+
+            comparisonViewService
+                .setDiffAcceptanceAsync(fhirRecordDifferenceId, diffIndexes, acceptable)
+                .then(async () => {
+                    await queryClient.invalidateQueries({
+                        queryKey: ["ComparisonDetailView", fhirRecordDifferenceId]
+                    });
+
+                    // The list shows the accepted count and the breakdown, so it is stale the
+                    // moment a difference is ticked here.
+                    await queryClient.invalidateQueries({ queryKey: ["ComparisonPageViews"] });
+                })
+                .catch((exception: Error) => setAcceptanceError(exception))
+                .finally(() => setAcceptanceSaving(false));
+        },
+        [acceptanceSaving, comparisonViewService, fhirRecordDifferenceId, queryClient]);
 
     return {
         comparison: data ?? null,
@@ -177,38 +188,13 @@ export function useComparisonDetailPage(
         saving: saving,
         saveError: saveError,
         values: values,
-        errors: errors,
         handleEdit: handleEdit,
         handleFieldChange: handleFieldChange,
         handleSave: handleSave,
-        handleCancelEdit: handleCancelEdit
+        handleCancelEdit: handleCancelEdit,
+        acceptanceSaving: acceptanceSaving,
+        acceptanceError: acceptanceError,
+        handleToggleDiffAcceptance: handleToggleDiffAcceptance
     };
 }
 
-// The acceptable count is how many of this comparison's differences have been reviewed and
-// accepted, so a count larger than the comparison found would make the outstanding figure
-// negative and meaningless.
-function validateComparisonFormValues(
-    values: ComparisonFormValues,
-    diffCount: number)
-    : ComparisonFormErrors {
-    const trimmedAcceptableDiffCount = values.acceptableDiffCount.trim();
-
-    if (/^\d+$/.test(trimmedAcceptableDiffCount) === false) {
-        return {
-            hasErrors: true,
-            acceptableDiffCount: "Accepted differences must be a whole number of 0 or more."
-        };
-    }
-
-    if (Number.parseInt(trimmedAcceptableDiffCount, 10) > diffCount) {
-        return {
-            hasErrors: true,
-
-            acceptableDiffCount:
-                `Accepted differences cannot be more than the ${diffCount} this comparison found.`
-        };
-    }
-
-    return noComparisonFormErrors;
-}

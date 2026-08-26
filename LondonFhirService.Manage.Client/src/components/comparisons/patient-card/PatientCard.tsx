@@ -5,7 +5,7 @@ import { ListsSection } from "./resourceSections";
 import { PatientDetails } from "./PatientDetails";
 import { PatientHeader } from "./PatientHeader";
 import { formatPatientName } from "./patientFormatters";
-import { getDiffTypeForField, getHighlightStyle } from "../../../helpers/comparisons/diffHighlighting";
+import { getDiffsForField, getDiffState, getHighlightStyle } from "../../../helpers/comparisons/diffHighlighting";
 import type { PatientCardProps } from "../../../models/components/comparisons/PatientCardProps";
 import type { ResourceTreeContext } from "./resourceSections";
 
@@ -14,8 +14,8 @@ import type { ResourceTreeContext } from "./resourceSections";
 // section only outlines what actually differs in it.
 export function PatientCard({
     source,
-    side,
     diffs,
+    acceptance,
     showPatientDetails,
     onShowPatientDetails,
     expandedLists,
@@ -29,9 +29,10 @@ export function PatientCard({
         () => ({
             resourceIndex: resourceIndex,
             expandedItems: expandedItems,
-            setExpandedItems: setExpandedItems
+            setExpandedItems: setExpandedItems,
+            acceptance: acceptance
         }),
-        [resourceIndex, expandedItems, setExpandedItems]);
+        [resourceIndex, expandedItems, setExpandedItems, acceptance]);
 
     const diffsByResourceType = useMemo(() => {
         const grouped = new Map<string, typeof diffs>();
@@ -52,8 +53,13 @@ export function PatientCard({
 
     const patientDiffs = diffsByResourceType.get("Patient") ?? [];
 
-    const getHighlightStyleForField = (field: string) =>
-        getHighlightStyle(getDiffTypeForField(patientDiffs, field, side));
+    const getFieldDiffs = (field: string) =>
+        getDiffsForField(patientDiffs, field, acceptance.side);
+
+    // The header is a two line block rather than a field box, so it takes the outline alone -
+    // its differences are ticked from the Patient details panel or the differences list.
+    const getHeaderStyleForField = (field: string) =>
+        getHighlightStyle(getDiffState(getFieldDiffs(field)));
 
     return (
         <Card className="h-100 border-0">
@@ -64,15 +70,15 @@ export function PatientCard({
                 roleText={source.roleText}
                 roleClassName={source.roleClassName}
                 formattedJsonPayload={source.formattedJsonPayload}
-                nameStyle={getHighlightStyleForField("nameFamily")}
-                nhsNumberStyle={getHighlightStyleForField("nhsNumber")} />
+                nameStyle={getHeaderStyleForField("nameFamily")}
+                nhsNumberStyle={getHeaderStyleForField("nhsNumber")} />
 
             <Card.Body>
                 <PatientDetails
                     patient={patient}
                     showPatientDetails={showPatientDetails}
                     onShowPatientDetails={onShowPatientDetails}
-                    getHighlightStyleForField={getHighlightStyleForField}
+                    getFieldDiffs={getFieldDiffs}
                     context={context} />
 
                 <EpisodeOfCareList

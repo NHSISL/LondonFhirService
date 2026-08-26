@@ -56,7 +56,11 @@ export function ComparisonList({ comparisons, selectedComparisonId }: Comparison
                         </td>
 
                         <td className="text-break">{comparison.breakdownText}</td>
-                        <td>{comparison.acceptableDiffCountText}</td>
+                        <td>
+                            <span className={comparison.acceptableDiffCountClassName}>
+                                {comparison.acceptableDiffCountText}
+                            </span>
+                        </td>
 
                         <td>
                             <span className={comparison.resolutionClassName}>

@@ -10,6 +10,11 @@ export type DiffItem = {
     resourceType: string | null;
     identifier: string | null;
     reason: string | null;
+
+    // Set by an administrator in the management portal after the fact, never by the comparison
+    // engine, which always writes it false. A stored result written before this property existed
+    // simply has no flag, which reads the same as an unaccepted difference.
+    acceptableDiff: boolean;
 };
 
 // The comparison engine writes Type as free text, so an unrecognised kind has to survive the trip

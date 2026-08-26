@@ -9,4 +9,6 @@ export type SideBySideViewerProps = {
     setExpandedLists: (expandedLists: Set<string>) => void;
     expandedItems: Set<string>;
     setExpandedItems: (expandedItems: Set<string>) => void;
+    acceptanceSaving: boolean;
+    onToggleDiffAcceptance: (diffIndexes: number[], acceptable: boolean) => void;
 };

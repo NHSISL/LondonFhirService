@@ -5,6 +5,9 @@ export type DiffSidebarProps = {
     onHide: () => void;
     diffs: DiffItemView[];
     correlationId: string;
+    acceptanceSaving: boolean;
+    acceptanceError: Error | null;
+    onToggleDiffAcceptance: (diffIndexes: number[], acceptable: boolean) => void;
 };
 
 export type DiffItemProps = {

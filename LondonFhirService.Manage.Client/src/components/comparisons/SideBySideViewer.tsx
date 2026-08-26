@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Col, Row } from "react-bootstrap";
 import { EmptyState } from "../shared/EmptyState";
 import { PatientCard } from "./patient-card/PatientCard";
 import type { ComparisonSourceView } from "../../models/views/comparisons/ComparisonSourceView";
+import type { DiffAcceptance } from "../../models/components/comparisons/DiffAcceptance";
 import type { SideBySideViewerProps } from "../../models/components/comparisons/SideBySideViewerProps";
 
 export function SideBySideViewer({
@@ -13,10 +14,31 @@ export function SideBySideViewer({
     expandedLists,
     setExpandedLists,
     expandedItems,
-    setExpandedItems
+    setExpandedItems,
+    acceptanceSaving,
+    onToggleDiffAcceptance
 }: SideBySideViewerProps) {
     const primaryPanel = useRef<HTMLDivElement>(null);
     const secondaryPanel = useRef<HTMLDivElement>(null);
+
+    // Only the secondary card carries the ticks - the primary provider's answer is the one taken
+    // as correct - but both cards need the side to read a removal and an addition the right way
+    // round.
+    const primaryAcceptance = useMemo<DiffAcceptance>(
+        () => ({
+            side: "primary",
+            saving: acceptanceSaving,
+            onToggleAcceptance: onToggleDiffAcceptance
+        }),
+        [acceptanceSaving, onToggleDiffAcceptance]);
+
+    const secondaryAcceptance = useMemo<DiffAcceptance>(
+        () => ({
+            side: "secondary",
+            saving: acceptanceSaving,
+            onToggleAcceptance: onToggleDiffAcceptance
+        }),
+        [acceptanceSaving, onToggleDiffAcceptance]);
 
     // The two cards render the same clinical facts in the same order, so scrolling one to a
     // difference should bring the other's counterpart alongside it. Reading scrollTop back from
@@ -54,8 +76,8 @@ export function SideBySideViewer({
                             {comparison.primarySource !== null && (
                                 <PatientCard
                                     source={comparison.primarySource}
-                                    side="primary"
                                     diffs={comparison.diffs}
+                                    acceptance={primaryAcceptance}
                                     showPatientDetails={showPatientDetails}
                                     onShowPatientDetails={onShowPatientDetails}
                                     expandedLists={expandedLists}
@@ -75,8 +97,8 @@ export function SideBySideViewer({
                             {comparison.secondarySource !== null && (
                                 <PatientCard
                                     source={comparison.secondarySource}
-                                    side="secondary"
                                     diffs={comparison.diffs}
+                                    acceptance={secondaryAcceptance}
                                     showPatientDetails={showPatientDetails}
                                     onShowPatientDetails={onShowPatientDetails}
                                     expandedLists={expandedLists}
