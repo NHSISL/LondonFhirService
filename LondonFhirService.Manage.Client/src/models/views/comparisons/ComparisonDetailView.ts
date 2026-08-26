@@ -15,7 +15,6 @@ export type ComparisonDetailView = {
     acceptableDiffCountText: string;
     acceptableDiffCountClassName: string;
 
-    outstandingDiffCountText: string;
     breakdownText: string;
     comparedAtText: string;
     resolutionText: string;

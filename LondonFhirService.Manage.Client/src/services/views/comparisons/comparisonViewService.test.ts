@@ -212,7 +212,6 @@ it("should parse both sides of a comparison and label their roles", async () => 
     expect(comparison.secondarySource?.roleText).toBe("Secondary");
     expect(comparison.secondarySource?.bundle.patient.nameFamily).toBe("Smyth");
     expect(comparison.sourcesError).toBeNull();
-    expect(comparison.outstandingDiffCountText).toBe("3");
     expect(comparison.acceptableDiffCountText).toBe("0 acceptable differences");
 });
 

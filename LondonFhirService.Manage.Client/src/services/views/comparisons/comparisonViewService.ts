@@ -269,7 +269,6 @@ export class ComparisonViewService implements IComparisonViewService {
         // Counted from the flags rather than read off the column, so a stored result and the
         // summary above it can never disagree on screen.
         const acceptableDiffCount = this.countAcceptable(diffs);
-        const outstandingDiffCount = fhirRecordDifference.diffCount - acceptableDiffCount;
 
         return {
             id: fhirRecordDifference.id,
@@ -283,7 +282,6 @@ export class ComparisonViewService implements IComparisonViewService {
             acceptableDiffCountClassName:
                 this.mapAcceptableDiffCountToClassName(),
 
-            outstandingDiffCountText: String(Math.max(outstandingDiffCount, 0)),
             breakdownText: this.formatBreakdown(diffs),
             comparedAtText: this.formatDate(fhirRecordDifference.comparedAt),
             resolutionText: this.mapResolutionToDisplayText(fhirRecordDifference.isResolved),

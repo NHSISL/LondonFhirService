@@ -42,7 +42,9 @@ export function ComparisonResolution({
                 )}
 
                 <Row className="g-3">
-                    <Col xs={6} md={3}>
+                    {/* Editing stacks: the form beneath is one column, so a summary field beside
+                        it would leave the comment box starting half way down the card. */}
+                    <Col xs={12} md={editing ? 12 : 4}>
                         <div className="text-muted small">Accepted</div>
 
                         <div>
@@ -63,14 +65,9 @@ export function ComparisonResolution({
                         )}
                     </Col>
 
-                    <Col xs={6} md={3}>
-                        <div className="text-muted small">Outstanding</div>
-                        <div>{comparison.outstandingDiffCountText}</div>
-                    </Col>
-
                     {editing === false && (
                         <>
-                            <Col xs={12} md={3}>
+                            <Col xs={12} md={4}>
                                 <div className="text-muted small">State</div>
 
                                 <div>
@@ -80,7 +77,7 @@ export function ComparisonResolution({
                                 </div>
                             </Col>
 
-                            <Col xs={12} md={3}>
+                            <Col xs={12} md={4}>
                                 <div className="text-muted small">Last updated</div>
 
                                 <div>
@@ -97,7 +94,7 @@ export function ComparisonResolution({
 
                     {editing && (
                         <>
-                            <Col xs={12} md={6}>
+                            <Col xs={12}>
                                 <Form.Group controlId="comparisonComment">
                                     <Form.Label>Comment</Form.Label>
 
