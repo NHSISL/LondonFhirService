@@ -3,21 +3,26 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ComparisonViewService } from "../../services/views/comparisons/comparisonViewService";
 import type { ComparisonDetailView } from "../../models/views/comparisons/ComparisonDetailView";
+import type { ComparisonSide } from "../../helpers/comparisons/diffHighlighting";
 import type { ComparisonFormValues } from "../../models/views/comparisons/ComparisonFormValues";
+
+// One set of open sections per card. Held apart so that with syncing off an administrator can
+// open a section on one side without the other following.
+export type SideExpandedKeys = {
+    primary: Set<string>;
+    secondary: Set<string>;
+};
 
 export type ComparisonDetailPageState = {
     comparison: ComparisonDetailView | null;
     loading: boolean;
     error: Error | null;
 
-    // Both cards expand and collapse together, so a difference stays lined up with its
+    // Which sections each card has open, keyed by where the section sits in the card. While
+    // syncing is on the two are kept identical, so a difference stays lined up with its
     // counterpart instead of drifting down the page as one side is opened.
-    showPatientDetails: boolean;
-    expandedLists: Set<string>;
-    expandedItems: Set<string>;
-    setShowPatientDetails: (showPatientDetails: boolean) => void;
-    setExpandedLists: (expandedLists: Set<string>) => void;
-    setExpandedItems: (expandedItems: Set<string>) => void;
+    expandedKeys: SideExpandedKeys;
+    handleToggleExpanded: (side: ComparisonSide, expansionKey: string) => void;
 
     showDifferences: boolean;
     showBothJson: boolean;
@@ -56,9 +61,9 @@ export function useComparisonDetailPage(
     const navigate = useNavigate();
     const hasFhirRecordDifferenceId = fhirRecordDifferenceId.trim().length > 0;
 
-    const [showPatientDetails, setShowPatientDetails] = useState<boolean>(false);
-    const [expandedLists, setExpandedLists] = useState<Set<string>>(() => new Set());
-    const [expandedItems, setExpandedItems] = useState<Set<string>>(() => new Set());
+    const [expandedKeys, setExpandedKeys] = useState<SideExpandedKeys>(
+        () => ({ primary: new Set(), secondary: new Set() }));
+
     const [showDifferences, setShowDifferences] = useState<boolean>(false);
     const [showBothJson, setShowBothJson] = useState<boolean>(false);
     const [syncScrollEnabled, setSyncScrollEnabled] = useState<boolean>(true);
@@ -94,9 +99,49 @@ export function useComparisonDetailPage(
     const handleShowBothJson = useCallback(() => setShowBothJson(true), []);
     const handleHideBothJson = useCallback(() => setShowBothJson(false), []);
 
-    const handleToggleSyncScroll = useCallback(
-        () => setSyncScrollEnabled(currentValue => currentValue === false),
-        []);
+    // Turning syncing on brings the two cards back into line rather than waiting for the next
+    // click to do it: the point of switching it on is that the panels should match. The union is
+    // taken, so nothing an administrator had opened on either side is closed underneath them.
+    const handleToggleSyncScroll = useCallback(() => {
+        setSyncScrollEnabled(currentValue => {
+            const nextValue = currentValue === false;
+
+            if (nextValue) {
+                setExpandedKeys(currentKeys => {
+                    const union = new Set([...currentKeys.primary, ...currentKeys.secondary]);
+
+                    return { primary: union, secondary: new Set(union) };
+                });
+            }
+
+            return nextValue;
+        });
+    }, []);
+
+    const handleToggleExpanded = useCallback(
+        (side: ComparisonSide, expansionKey: string) =>
+            setExpandedKeys(currentKeys => {
+                const shouldExpand = currentKeys[side].has(expansionKey) === false;
+
+                const nextKeys: SideExpandedKeys = {
+                    primary: new Set(currentKeys.primary),
+                    secondary: new Set(currentKeys.secondary)
+                };
+
+                const sidesToChange: ComparisonSide[] =
+                    syncScrollEnabled ? ["primary", "secondary"] : [side];
+
+                for (const sideToChange of sidesToChange) {
+                    if (shouldExpand) {
+                        nextKeys[sideToChange].add(expansionKey);
+                    } else {
+                        nextKeys[sideToChange].delete(expansionKey);
+                    }
+                }
+
+                return nextKeys;
+            }),
+        [syncScrollEnabled]);
 
     const handleBackToComparisons =
         useCallback(() => navigate("/admin/comparisons"), [navigate]);
@@ -169,12 +214,8 @@ export function useComparisonDetailPage(
         comparison: data ?? null,
         loading: isLoading,
         error: error,
-        showPatientDetails: showPatientDetails,
-        expandedLists: expandedLists,
-        expandedItems: expandedItems,
-        setShowPatientDetails: setShowPatientDetails,
-        setExpandedLists: setExpandedLists,
-        setExpandedItems: setExpandedItems,
+        expandedKeys: expandedKeys,
+        handleToggleExpanded: handleToggleExpanded,
         showDifferences: showDifferences,
         showBothJson: showBothJson,
         syncScrollEnabled: syncScrollEnabled,

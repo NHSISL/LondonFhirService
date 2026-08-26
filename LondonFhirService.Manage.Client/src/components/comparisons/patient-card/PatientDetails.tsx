@@ -3,6 +3,7 @@ import { Button, Col, Form, Row } from "react-bootstrap";
 import { DiffHighlight } from "./DiffHighlight";
 import { ExpandableRow } from "./ExpandableRow";
 import { OrganizationSection, PractitionerSection } from "./resourceSections";
+import { expansionKeys } from "./expansionKeys";
 import { formatPatientAddress } from "./patientFormatters";
 import type { DiffItemView } from "../../../models/views/comparisons/DiffItemView";
 import type { PatientData } from "../../../models/foundations/fhir/PatientData";
@@ -10,20 +11,22 @@ import type { ResourceTreeContext } from "./resourceSections";
 
 type PatientDetailsProps = {
     patient: PatientData;
-    showPatientDetails: boolean;
-    onShowPatientDetails: (showPatientDetails: boolean) => void;
     getFieldDiffs: (field: string) => DiffItemView[];
     context: ResourceTreeContext;
 };
 
 export function PatientDetails({
     patient,
-    showPatientDetails,
-    onShowPatientDetails,
     getFieldDiffs,
     context
 }: PatientDetailsProps) {
-    const [showAddressComponents, setShowAddressComponents] = useState<boolean>(false);
+    const showPatientDetails = context.expansion.isExpanded(expansionKeys.patientDetails);
+
+    const showAddressComponents =
+        context.expansion.isExpanded(expansionKeys.patientAddress);
+
+    // The raw JSON is per card by nature - the two payloads are different documents - so it stays
+    // local rather than joining the sections the two sides keep in step.
     const [showPatientJson, setShowPatientJson] = useState<boolean>(false);
 
     // Every field renders the same way: its value, outlined and tickable when the comparison found
@@ -39,7 +42,8 @@ export function PatientDetails({
             <div className="mb-3 p-2 border rounded">
                 <ExpandableRow
                     expanded={showPatientDetails}
-                    onToggle={() => onShowPatientDetails(showPatientDetails === false)}
+                    onToggle={() =>
+                        context.expansion.toggleExpanded(expansionKeys.patientDetails)}
                     label={<strong>Patient details</strong>} />
             </div>
 
@@ -50,8 +54,8 @@ export function PatientDetails({
                             <ExpandableRow
                                 expanded={showAddressComponents}
                                 onToggle={() =>
-                                    setShowAddressComponents(
-                                        currentValue => currentValue === false)}
+                                    context.expansion.toggleExpanded(
+                                        expansionKeys.patientAddress)}
                                 label={<span>Address</span>} />
                         </Form.Label>
 
@@ -118,6 +122,7 @@ export function PatientDetails({
                                 acceptance={context.acceptance}>
                                 <OrganizationSection
                                     reference={patient.managingOrganizationRef}
+                                    expansionKey={expansionKeys.managingOrganization}
                                     context={context} />
                             </DiffHighlight>
                         </Form.Group>
@@ -132,12 +137,15 @@ export function PatientDetails({
                             <DiffHighlight
                                 fieldDiffs={getFieldDiffs("generalPractitionerRefs")}
                                 acceptance={context.acceptance}>
-                                {patient.generalPractitionerRefs.map(generalPractitionerRef => (
-                                    <PractitionerSection
-                                        key={generalPractitionerRef}
-                                        reference={generalPractitionerRef}
-                                        context={context} />
-                                ))}
+                                {patient.generalPractitionerRefs.map(
+                                    (generalPractitionerRef, index) => (
+                                        <PractitionerSection
+                                            key={generalPractitionerRef}
+                                            reference={generalPractitionerRef}
+                                            expansionKey={
+                                                expansionKeys.generalPractitioner(index)}
+                                            context={context} />
+                                    ))}
                             </DiffHighlight>
                         </Form.Group>
                     )}

@@ -2,19 +2,17 @@ import { useMemo, useRef } from "react";
 import { Col, Row } from "react-bootstrap";
 import { EmptyState } from "../shared/EmptyState";
 import { PatientCard } from "./patient-card/PatientCard";
+import type { CardExpansion } from "../../models/components/comparisons/CardExpansion";
+import type { ComparisonSide } from "../../helpers/comparisons/diffHighlighting";
 import type { ComparisonSourceView } from "../../models/views/comparisons/ComparisonSourceView";
 import type { DiffAcceptance } from "../../models/components/comparisons/DiffAcceptance";
 import type { SideBySideViewerProps } from "../../models/components/comparisons/SideBySideViewerProps";
 
 export function SideBySideViewer({
     comparison,
-    syncScrollEnabled,
-    showPatientDetails,
-    onShowPatientDetails,
-    expandedLists,
-    setExpandedLists,
-    expandedItems,
-    setExpandedItems,
+    syncEnabled,
+    expandedKeys,
+    onToggleExpanded,
     acceptanceSaving,
     onToggleDiffAcceptance
 }: SideBySideViewerProps) {
@@ -40,12 +38,29 @@ export function SideBySideViewer({
         }),
         [acceptanceSaving, onToggleDiffAcceptance]);
 
+    // Each card reads its own side's open sections and reports its own clicks. Whether a click
+    // then opens the other card as well is the page's decision, not the card's - see
+    // handleToggleExpanded.
+    const primaryExpansion = useMemo<CardExpansion>(
+        () => ({
+            isExpanded: expansionKey => expandedKeys.primary.has(expansionKey),
+            toggleExpanded: expansionKey => onToggleExpanded("primary", expansionKey)
+        }),
+        [expandedKeys.primary, onToggleExpanded]);
+
+    const secondaryExpansion = useMemo<CardExpansion>(
+        () => ({
+            isExpanded: expansionKey => expandedKeys.secondary.has(expansionKey),
+            toggleExpanded: expansionKey => onToggleExpanded("secondary", expansionKey)
+        }),
+        [expandedKeys.secondary, onToggleExpanded]);
+
     // The two cards render the same clinical facts in the same order, so scrolling one to a
     // difference should bring the other's counterpart alongside it. Reading scrollTop back from
     // the panel being scrolled - rather than tracking it - keeps the two honest when their
     // heights differ.
-    const handleScroll = (scrolledPanel: "primary" | "secondary") => {
-        if (syncScrollEnabled === false) {
+    const handleScroll = (scrolledPanel: ComparisonSide) => {
+        if (syncEnabled === false) {
             return;
         }
 
@@ -78,12 +93,7 @@ export function SideBySideViewer({
                                     source={comparison.primarySource}
                                     diffs={comparison.diffs}
                                     acceptance={primaryAcceptance}
-                                    showPatientDetails={showPatientDetails}
-                                    onShowPatientDetails={onShowPatientDetails}
-                                    expandedLists={expandedLists}
-                                    setExpandedLists={setExpandedLists}
-                                    expandedItems={expandedItems}
-                                    setExpandedItems={setExpandedItems} />
+                                    expansion={primaryExpansion} />
                             )}
                         </SourcePanel>
                     </Col>
@@ -99,12 +109,7 @@ export function SideBySideViewer({
                                     source={comparison.secondarySource}
                                     diffs={comparison.diffs}
                                     acceptance={secondaryAcceptance}
-                                    showPatientDetails={showPatientDetails}
-                                    onShowPatientDetails={onShowPatientDetails}
-                                    expandedLists={expandedLists}
-                                    setExpandedLists={setExpandedLists}
-                                    expandedItems={expandedItems}
-                                    setExpandedItems={setExpandedItems} />
+                                    expansion={secondaryExpansion} />
                             )}
                         </SourcePanel>
                     </Col>
@@ -130,9 +135,7 @@ function SourcePanel({ source, sideLabel, panelRef, onScroll, children }: Source
 
                 {source !== null && (
                     <>
-                        <span className={source.statusText ? source.statusClassName : undefined}>
-                            {source.statusText}
-                        </span>
+                        <span className={source.statusClassName}>{source.statusText}</span>
 
                         <span className="text-muted small ms-auto">
                             Received {source.createdDateText}

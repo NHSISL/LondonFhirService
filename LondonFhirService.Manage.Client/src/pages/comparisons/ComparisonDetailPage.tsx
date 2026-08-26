@@ -15,12 +15,8 @@ export function ComparisonDetailPage() {
         comparison,
         loading,
         error,
-        showPatientDetails,
-        expandedLists,
-        expandedItems,
-        setShowPatientDetails,
-        setExpandedLists,
-        setExpandedItems,
+        expandedKeys,
+        handleToggleExpanded,
         showDifferences,
         showBothJson,
         syncScrollEnabled,
@@ -104,8 +100,10 @@ export function ComparisonDetailPage() {
                     <Button
                         variant={syncScrollEnabled ? "outline-primary" : "outline-secondary"}
                         onClick={handleToggleSyncScroll}
-                        aria-pressed={syncScrollEnabled}>
-                        {syncScrollEnabled ? "Sync scrolling on" : "Sync scrolling off"}
+                        aria-pressed={syncScrollEnabled}
+                        title={"Keeps the two records in step: scrolling one scrolls the other, "
+                            + "and opening a section opens the matching one."}>
+                        {syncScrollEnabled ? "Sync on" : "Sync off"}
                     </Button>
 
                     <Button variant="outline-secondary" onClick={handleShowBothJson}>
@@ -157,13 +155,9 @@ export function ComparisonDetailPage() {
                 <Col>
                     <SideBySideViewer
                         comparison={comparison}
-                        syncScrollEnabled={syncScrollEnabled}
-                        showPatientDetails={showPatientDetails}
-                        onShowPatientDetails={setShowPatientDetails}
-                        expandedLists={expandedLists}
-                        setExpandedLists={setExpandedLists}
-                        expandedItems={expandedItems}
-                        setExpandedItems={setExpandedItems}
+                        syncEnabled={syncScrollEnabled}
+                        expandedKeys={expandedKeys}
+                        onToggleExpanded={handleToggleExpanded}
                         acceptanceSaving={acceptanceSaving}
                         onToggleDiffAcceptance={handleToggleDiffAcceptance} />
                 </Col>

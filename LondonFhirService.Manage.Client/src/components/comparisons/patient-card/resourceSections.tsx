@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Badge, Col, Row } from "react-bootstrap";
 import { CodeWithInfo } from "./CodeWithInfo";
 import { DiffHighlight } from "./DiffHighlight";
@@ -7,7 +6,7 @@ import { ResourceJsonToggle } from "./ResourceJsonToggle";
 import { buildMedicationStatementMatchKey } from "../../../helpers/comparisons/medicationStatementMatchKey";
 import { formatFhirDate } from "./patientFormatters";
 import { readString } from "../../../helpers/fhir/fhirJson";
-import { useItemExpansion } from "./useItemExpansion";
+import { expansionKeys } from "./expansionKeys";
 import {
     parseAllergyIntolerance,
     parseCondition,
@@ -19,6 +18,7 @@ import {
     parsePractitionerRole
 } from "../../../helpers/fhir/fhirResourceParsers";
 import type { DiffAcceptance } from "../../../models/components/comparisons/DiffAcceptance";
+import type { CardExpansion } from "../../../models/components/comparisons/CardExpansion";
 import type { DiffItemView } from "../../../models/views/comparisons/DiffItemView";
 import type { FhirResourceIndex } from "../../../models/foundations/fhir/FhirResource";
 import type { ListData } from "../../../models/foundations/fhir/ListData";
@@ -33,8 +33,7 @@ const badgeFontSize = { fontSize: "0.65rem" };
 // value keeps each component's own props to what it actually decides.
 export type ResourceTreeContext = {
     resourceIndex: FhirResourceIndex;
-    expandedItems: Set<string>;
-    setExpandedItems: (expandedItems: Set<string>) => void;
+    expansion: CardExpansion;
     acceptance: DiffAcceptance;
 };
 
@@ -42,8 +41,6 @@ type ListsSectionProps = {
     lists: ListData[];
     listDiffs: DiffItemView[];
     medicationDiffs: DiffItemView[];
-    expandedLists: Set<string>;
-    setExpandedLists: (expandedLists: Set<string>) => void;
     context: ResourceTreeContext;
 };
 
@@ -51,8 +48,6 @@ export function ListsSection({
     lists,
     listDiffs,
     medicationDiffs,
-    expandedLists,
-    setExpandedLists,
     context
 }: ListsSectionProps) {
     return (
@@ -63,8 +58,6 @@ export function ListsSection({
                     list={list}
                     listDiffs={listDiffs}
                     medicationDiffs={medicationDiffs}
-                    expandedLists={expandedLists}
-                    setExpandedLists={setExpandedLists}
                     context={context} />
             ))}
         </div>
@@ -75,8 +68,6 @@ type ListSectionProps = {
     list: ListData;
     listDiffs: DiffItemView[];
     medicationDiffs: DiffItemView[];
-    expandedLists: Set<string>;
-    setExpandedLists: (expandedLists: Set<string>) => void;
     context: ResourceTreeContext;
 };
 
@@ -86,12 +77,10 @@ function ListSection({
     list,
     listDiffs,
     medicationDiffs,
-    expandedLists,
-    setExpandedLists,
     context
 }: ListSectionProps) {
-    const { isExpanded, toggleExpanded } =
-        useItemExpansion(list.title, expandedLists, setExpandedLists);
+    const expansionKey = expansionKeys.list(list.title);
+    const isExpanded = context.expansion.isExpanded(expansionKey);
 
     const visitedRefs = new Set<string>([`List/${list.id}`]);
 
@@ -112,7 +101,7 @@ function ListSection({
         <div className="mb-2">
             <ExpandableRow
                 expanded={isExpanded}
-                onToggle={toggleExpanded}
+                onToggle={() => context.expansion.toggleExpanded(expansionKey)}
                 label={<span>{list.title}</span>}
                 badges={
                     <>
@@ -142,6 +131,8 @@ function ListSection({
                                     <ResourceReference
                                         key={`${itemRef}-${index}`}
                                         reference={itemRef}
+                                        expansionKey={
+                                            expansionKeys.listItem(list.title, index)}
                                         visitedRefs={visitedRefs}
                                         medicationDiffs={medicationDiffs}
                                         context={context} />
@@ -156,6 +147,11 @@ function ListSection({
 
 type ResourceReferenceProps = {
     reference: string;
+
+    // Where this reference sits in the card, not what it points at. The two providers give the
+    // same clinical fact different ids, so only the slot is comparable across the two sides.
+    expansionKey: string;
+
     visitedRefs: Set<string>;
     context: ResourceTreeContext;
     medicationDiffs?: DiffItemView[];
@@ -166,6 +162,7 @@ type ResourceReferenceProps = {
 // the path is shown as circular instead of followed, and rendering never recurses forever.
 export function ResourceReference({
     reference,
+    expansionKey,
     visitedRefs,
     context,
     medicationDiffs
@@ -205,12 +202,18 @@ export function ResourceReference({
 
     switch (resourceType) {
         case "Condition":
-            return <ConditionItem reference={reference} context={context} />;
+            return (
+                <ConditionItem
+                    reference={reference}
+                    expansionKey={expansionKey}
+                    context={context} />
+            );
 
         case "AllergyIntolerance":
             return (
                 <AllergyItem
                     reference={reference}
+                    expansionKey={expansionKey}
                     visitedRefs={nextVisitedRefs}
                     context={context} />
             );
@@ -219,6 +222,7 @@ export function ResourceReference({
             return (
                 <MedicationStatementItem
                     reference={reference}
+                    expansionKey={expansionKey}
                     visitedRefs={nextVisitedRefs}
                     medicationDiffs={medicationDiffs ?? []}
                     context={context} />
@@ -228,6 +232,7 @@ export function ResourceReference({
             return (
                 <ObservationItem
                     reference={reference}
+                    expansionKey={expansionKey}
                     visitedRefs={nextVisitedRefs}
                     context={context} />
             );
@@ -236,31 +241,48 @@ export function ResourceReference({
             return (
                 <PractitionerRoleItem
                     reference={reference}
+                    expansionKey={expansionKey}
                     visitedRefs={nextVisitedRefs}
                     context={context} />
             );
 
         case "Practitioner":
-            return <PractitionerSection reference={reference} context={context} />;
+            return (
+                <PractitionerSection
+                    reference={reference}
+                    expansionKey={expansionKey}
+                    context={context} />
+            );
 
         case "Organization":
-            return <OrganizationSection reference={reference} context={context} />;
+            return (
+                <OrganizationSection
+                    reference={reference}
+                    expansionKey={expansionKey}
+                    context={context} />
+            );
 
         case "Medication":
             return <MedicationItem reference={reference} context={context} />;
 
         default:
-            return <GenericItem reference={reference} context={context} />;
+            return (
+                <GenericItem
+                    reference={reference}
+                    expansionKey={expansionKey}
+                    context={context} />
+            );
     }
 }
 
 type ReferenceOnlyProps = {
     reference: string;
+    expansionKey: string;
     context: ResourceTreeContext;
 };
 
-export function OrganizationSection({ reference, context }: ReferenceOnlyProps) {
-    const [expanded, setExpanded] = useState<boolean>(false);
+export function OrganizationSection({ reference, expansionKey, context }: ReferenceOnlyProps) {
+    const expanded = context.expansion.isExpanded(expansionKey);
     const resource = context.resourceIndex.get(reference) ?? null;
     const organization = resource === null ? null : parseOrganization(resource);
 
@@ -268,7 +290,7 @@ export function OrganizationSection({ reference, context }: ReferenceOnlyProps) 
         <div className="mb-2">
             <ExpandableRow
                 expanded={expanded}
-                onToggle={() => setExpanded(currentValue => currentValue === false)}
+                onToggle={() => context.expansion.toggleExpanded(expansionKey)}
                 label={<span>{organization?.name ?? reference}</span>}
                 badges={resource === null && (
                     <Badge bg="secondary" className="ms-1" style={badgeFontSize}>
@@ -326,8 +348,8 @@ export function OrganizationSection({ reference, context }: ReferenceOnlyProps) 
     );
 }
 
-export function PractitionerSection({ reference, context }: ReferenceOnlyProps) {
-    const [expanded, setExpanded] = useState<boolean>(false);
+export function PractitionerSection({ reference, expansionKey, context }: ReferenceOnlyProps) {
+    const expanded = context.expansion.isExpanded(expansionKey);
     const resource = context.resourceIndex.get(reference) ?? null;
     const practitioner = resource === null ? null : parsePractitioner(resource);
 
@@ -335,7 +357,7 @@ export function PractitionerSection({ reference, context }: ReferenceOnlyProps) 
         <div className="mb-2">
             <ExpandableRow
                 expanded={expanded}
-                onToggle={() => setExpanded(currentValue => currentValue === false)}
+                onToggle={() => context.expansion.toggleExpanded(expansionKey)}
                 label={<span>{practitioner?.displayName ?? reference}</span>}
                 badges={resource === null && (
                     <Badge bg="secondary" className="ms-1" style={badgeFontSize}>
@@ -387,13 +409,14 @@ export function PractitionerSection({ reference, context }: ReferenceOnlyProps) 
 
 type NestingProps = {
     reference: string;
+    expansionKey: string;
     visitedRefs: Set<string>;
     context: ResourceTreeContext;
 };
 
-function PractitionerRoleItem({ reference, visitedRefs, context }: NestingProps) {
-    const { isExpanded, toggleExpanded } =
-        useItemExpansion(reference, context.expandedItems, context.setExpandedItems);
+function PractitionerRoleItem({ reference, expansionKey, visitedRefs, context }: NestingProps) {
+    const isExpanded = context.expansion.isExpanded(expansionKey);
+    const toggleExpanded = () => context.expansion.toggleExpanded(expansionKey);
 
     const resource = context.resourceIndex.get(reference) ?? null;
     const practitionerRole = resource === null ? null : parsePractitionerRole(resource);
@@ -432,6 +455,7 @@ function PractitionerRoleItem({ reference, visitedRefs, context }: NestingProps)
 
                             <ResourceReference
                                 reference={practitionerRole.practitionerRef}
+                                expansionKey={expansionKeys.nested(expansionKey, "practitioner")}
                                 visitedRefs={visitedRefs}
                                 context={context} />
                         </div>
@@ -443,6 +467,7 @@ function PractitionerRoleItem({ reference, visitedRefs, context }: NestingProps)
 
                             <ResourceReference
                                 reference={practitionerRole.organizationRef}
+                                expansionKey={expansionKeys.nested(expansionKey, "organization")}
                                 visitedRefs={visitedRefs}
                                 context={context} />
                         </div>
@@ -455,9 +480,9 @@ function PractitionerRoleItem({ reference, visitedRefs, context }: NestingProps)
     );
 }
 
-function ConditionItem({ reference, context }: ReferenceOnlyProps) {
-    const { isExpanded, toggleExpanded } =
-        useItemExpansion(reference, context.expandedItems, context.setExpandedItems);
+function ConditionItem({ reference, expansionKey, context }: ReferenceOnlyProps) {
+    const isExpanded = context.expansion.isExpanded(expansionKey);
+    const toggleExpanded = () => context.expansion.toggleExpanded(expansionKey);
 
     const resource = context.resourceIndex.get(reference) ?? null;
     const condition = resource === null ? null : parseCondition(resource);
@@ -548,9 +573,9 @@ function ConditionItem({ reference, context }: ReferenceOnlyProps) {
     );
 }
 
-function AllergyItem({ reference, visitedRefs, context }: NestingProps) {
-    const { isExpanded, toggleExpanded } =
-        useItemExpansion(reference, context.expandedItems, context.setExpandedItems);
+function AllergyItem({ reference, expansionKey, visitedRefs, context }: NestingProps) {
+    const isExpanded = context.expansion.isExpanded(expansionKey);
+    const toggleExpanded = () => context.expansion.toggleExpanded(expansionKey);
 
     const resource = context.resourceIndex.get(reference) ?? null;
     const allergy = resource === null ? null : parseAllergyIntolerance(resource);
@@ -636,6 +661,7 @@ function AllergyItem({ reference, visitedRefs, context }: NestingProps) {
 
                                 <ResourceReference
                                     reference={allergy.asserterRef}
+                                    expansionKey={expansionKeys.nested(expansionKey, "asserter")}
                                     visitedRefs={visitedRefs}
                                     context={context} />
                             </Col>
@@ -651,6 +677,7 @@ function AllergyItem({ reference, visitedRefs, context }: NestingProps) {
 
 type MedicationStatementItemProps = {
     reference: string;
+    expansionKey: string;
     visitedRefs: Set<string>;
     medicationDiffs: DiffItemView[];
     context: ResourceTreeContext;
@@ -658,12 +685,13 @@ type MedicationStatementItemProps = {
 
 function MedicationStatementItem({
     reference,
+    expansionKey,
     visitedRefs,
     medicationDiffs,
     context
 }: MedicationStatementItemProps) {
-    const { isExpanded, toggleExpanded } =
-        useItemExpansion(reference, context.expandedItems, context.setExpandedItems);
+    const isExpanded = context.expansion.isExpanded(expansionKey);
+    const toggleExpanded = () => context.expansion.toggleExpanded(expansionKey);
 
     const resource = context.resourceIndex.get(reference) ?? null;
     const medicationStatement = resource === null ? null : parseMedicationStatement(resource);
@@ -796,6 +824,7 @@ function MedicationStatementItem({
 
                                 <ResourceReference
                                     reference={medicationStatement.informationSourceRef}
+                                    expansionKey={expansionKeys.nested(expansionKey, "informationSource")}
                                     visitedRefs={visitedRefs}
                                     context={context} />
                             </Col>
@@ -807,6 +836,7 @@ function MedicationStatementItem({
 
                                 <ResourceReference
                                     reference={medicationStatement.medicationRef}
+                                    expansionKey={expansionKeys.nested(expansionKey, "medication")}
                                     visitedRefs={visitedRefs}
                                     context={context} />
                             </Col>
@@ -820,9 +850,9 @@ function MedicationStatementItem({
     );
 }
 
-function ObservationItem({ reference, visitedRefs, context }: NestingProps) {
-    const { isExpanded, toggleExpanded } =
-        useItemExpansion(reference, context.expandedItems, context.setExpandedItems);
+function ObservationItem({ reference, expansionKey, visitedRefs, context }: NestingProps) {
+    const isExpanded = context.expansion.isExpanded(expansionKey);
+    const toggleExpanded = () => context.expansion.toggleExpanded(expansionKey);
 
     const resource = context.resourceIndex.get(reference) ?? null;
     const observation = resource === null ? null : parseObservation(resource);
@@ -914,10 +944,11 @@ function ObservationItem({ reference, visitedRefs, context }: NestingProps) {
                             <Col xs={12}>
                                 <small className="text-muted d-block">Performer(s)</small>
 
-                                {observation.performerRefs.map(performerRef => (
+                                {observation.performerRefs.map((performerRef, performerIndex) => (
                                     <ResourceReference
                                         key={performerRef}
                                         reference={performerRef}
+                                        expansionKey={expansionKeys.nested(expansionKey, `performer[${performerIndex}]`)}
                                         visitedRefs={visitedRefs}
                                         context={context} />
                                 ))}
@@ -933,7 +964,7 @@ function ObservationItem({ reference, visitedRefs, context }: NestingProps) {
 }
 
 // A leaf: a Medication carries a code and nothing worth expanding into.
-function MedicationItem({ reference, context }: ReferenceOnlyProps) {
+function MedicationItem({ reference, context }: Omit<ReferenceOnlyProps, "expansionKey">) {
     const resource = context.resourceIndex.get(reference) ?? null;
     const medication = resource === null ? null : parseMedication(resource);
 
@@ -968,9 +999,9 @@ function MedicationItem({ reference, context }: ReferenceOnlyProps) {
 
 // Whatever the tree has no dedicated view for. It still opens to its JSON, so an unmodelled
 // resource type is inspectable rather than invisible.
-function GenericItem({ reference, context }: ReferenceOnlyProps) {
-    const { isExpanded, toggleExpanded } =
-        useItemExpansion(reference, context.expandedItems, context.setExpandedItems);
+function GenericItem({ reference, expansionKey, context }: ReferenceOnlyProps) {
+    const isExpanded = context.expansion.isExpanded(expansionKey);
+    const toggleExpanded = () => context.expansion.toggleExpanded(expansionKey);
 
     const resource = context.resourceIndex.get(reference) ?? null;
     const resourceType = readString(resource?.resourceType) ?? "Unknown";

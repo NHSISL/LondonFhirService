@@ -23,23 +23,17 @@ export function PatientCard({
     source,
     diffs,
     acceptance,
-    showPatientDetails,
-    onShowPatientDetails,
-    expandedLists,
-    setExpandedLists,
-    expandedItems,
-    setExpandedItems
+    expansion
 }: PatientCardProps) {
     const { patient, resourceIndex, lists, episodesOfCare } = source.bundle;
 
     const context = useMemo<ResourceTreeContext>(
         () => ({
             resourceIndex: resourceIndex,
-            expandedItems: expandedItems,
-            setExpandedItems: setExpandedItems,
+            expansion: expansion,
             acceptance: acceptance
         }),
-        [resourceIndex, expandedItems, setExpandedItems, acceptance]);
+        [resourceIndex, expansion, acceptance]);
 
     const diffsByResourceType = useMemo(() => {
         const grouped = new Map<string, typeof diffs>();
@@ -86,8 +80,6 @@ export function PatientCard({
             <Card.Body>
                 <PatientDetails
                     patient={patient}
-                    showPatientDetails={showPatientDetails}
-                    onShowPatientDetails={onShowPatientDetails}
                     getFieldDiffs={getFieldDiffs}
                     context={context} />
 
@@ -105,8 +97,6 @@ export function PatientCard({
                             listDiffs={diffsByResourceType.get("List") ?? []}
                             medicationDiffs={
                                 diffsByResourceType.get("MedicationStatement") ?? []}
-                            expandedLists={expandedLists}
-                            setExpandedLists={setExpandedLists}
                             context={context} />
                     </Form.Group>
                 )}

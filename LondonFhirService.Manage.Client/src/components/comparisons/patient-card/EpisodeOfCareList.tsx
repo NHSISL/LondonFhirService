@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { Badge, Col, Form, Row } from "react-bootstrap";
 import { DiffHighlight } from "./DiffHighlight";
 import { ExpandableRow } from "./ExpandableRow";
+import { expansionKeys } from "./expansionKeys";
 import { ResourceJsonToggle } from "./ResourceJsonToggle";
 import { ResourceReference } from "./resourceSections";
 import { formatFhirDate } from "./patientFormatters";
@@ -27,10 +27,11 @@ export function EpisodeOfCareList({ episodesOfCare, diffs, context }: EpisodeOfC
         <Form.Group className="mb-3">
             <Form.Label className="text-muted small mb-1">Episode of care</Form.Label>
 
-            {episodesOfCare.map(episodeOfCare => (
+            {episodesOfCare.map((episodeOfCare, index) => (
                 <EpisodeOfCareItem
                     key={episodeOfCare.id}
                     episodeOfCare={episodeOfCare}
+                    expansionKey={expansionKeys.episodeOfCare(index)}
                     diffs={diffs}
                     context={context} />
             ))}
@@ -40,6 +41,7 @@ export function EpisodeOfCareList({ episodesOfCare, diffs, context }: EpisodeOfC
 
 type EpisodeOfCareItemProps = {
     episodeOfCare: EpisodeOfCareData;
+    expansionKey: string;
     diffs: DiffItemView[];
     context: ResourceTreeContext;
 };
@@ -50,8 +52,13 @@ const statusBadgeVariants: Record<string, string> = {
     "cancelled": "danger"
 };
 
-function EpisodeOfCareItem({ episodeOfCare, diffs, context }: EpisodeOfCareItemProps) {
-    const [expanded, setExpanded] = useState<boolean>(false);
+function EpisodeOfCareItem({
+    episodeOfCare,
+    expansionKey,
+    diffs,
+    context
+}: EpisodeOfCareItemProps) {
+    const expanded = context.expansion.isExpanded(expansionKey);
     const resource = context.resourceIndex.get(`EpisodeOfCare/${episodeOfCare.id}`) ?? null;
 
     const findDiffs = (path: string) =>
@@ -83,7 +90,7 @@ function EpisodeOfCareItem({ episodeOfCare, diffs, context }: EpisodeOfCareItemP
         <div className="mb-2">
             <ExpandableRow
                 expanded={expanded}
-                onToggle={() => setExpanded(currentValue => currentValue === false)}
+                onToggle={() => context.expansion.toggleExpanded(expansionKey)}
                 label={<span>{title}</span>}
                 badges={
                     <>
@@ -153,6 +160,8 @@ function EpisodeOfCareItem({ episodeOfCare, diffs, context }: EpisodeOfCareItemP
                                     inline>
                                     <ResourceReference
                                         reference={episodeOfCare.careManagerRef}
+                                        expansionKey={
+                                            expansionKeys.nested(expansionKey, "careManager")}
                                         visitedRefs={
                                             new Set([`EpisodeOfCare/${episodeOfCare.id}`])}
                                         context={context} />
@@ -170,6 +179,10 @@ function EpisodeOfCareItem({ episodeOfCare, diffs, context }: EpisodeOfCareItemP
                                     inline>
                                     <ResourceReference
                                         reference={episodeOfCare.organizationRef}
+                                        expansionKey={
+                                            expansionKeys.nested(
+                                                expansionKey,
+                                                "managingOrganization")}
                                         visitedRefs={
                                             new Set([`EpisodeOfCare/${episodeOfCare.id}`])}
                                         context={context} />

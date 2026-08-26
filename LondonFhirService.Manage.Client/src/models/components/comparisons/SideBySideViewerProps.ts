@@ -1,14 +1,16 @@
 import type { ComparisonDetailView } from "../../views/comparisons/ComparisonDetailView";
+import type { ComparisonSide } from "../../../helpers/comparisons/diffHighlighting";
+import type { SideExpandedKeys } from "../../../hooks/pages/useComparisonDetailPage";
 
 export type SideBySideViewerProps = {
     comparison: ComparisonDetailView;
-    syncScrollEnabled: boolean;
-    showPatientDetails: boolean;
-    onShowPatientDetails: (showPatientDetails: boolean) => void;
-    expandedLists: Set<string>;
-    setExpandedLists: (expandedLists: Set<string>) => void;
-    expandedItems: Set<string>;
-    setExpandedItems: (expandedItems: Set<string>) => void;
+
+    // Governs both scrolling and expanding: with it on, the two cards move and open together.
+    syncEnabled: boolean;
+
+    expandedKeys: SideExpandedKeys;
+    onToggleExpanded: (side: ComparisonSide, expansionKey: string) => void;
+
     acceptanceSaving: boolean;
     onToggleDiffAcceptance: (diffIndexes: number[], acceptable: boolean) => void;
 };
