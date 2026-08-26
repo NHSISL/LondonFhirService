@@ -313,7 +313,7 @@ export class ComparisonViewService implements IComparisonViewService {
             correlationId: fhirRecordDifference.correlationId || notSetText,
             diffCountText: this.formatDiffCount(fhirRecordDifference.diffCount),
             diffCountClassName: this.mapDiffCountToClassName(fhirRecordDifference.diffCount),
-            acceptableDiffCountText: String(acceptableDiffCount),
+            acceptableDiffCountText: this.formatAcceptedCount(acceptableDiffCount),
 
             acceptableDiffCountClassName:
                 this.mapAcceptableDiffCountToClassName(acceptableDiffCount),
@@ -495,6 +495,13 @@ export class ComparisonViewService implements IComparisonViewService {
 
     private countAcceptable(diffs: DiffItem[]): number {
         return diffs.filter(diff => diff.acceptableDiff).length;
+    }
+
+    // The master list has an Accepted column, so its pill only has to say what the number is a
+    // count of. The viewer's pill sits among differences and state, where "acceptable
+    // difference(s)" is what tells them apart.
+    private formatAcceptedCount(acceptableDiffCount: number): string {
+        return `${acceptableDiffCount} accepted`;
     }
 
     private formatAcceptableDiffCount(acceptableDiffCount: number): string {

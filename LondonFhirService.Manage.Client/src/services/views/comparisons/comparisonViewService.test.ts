@@ -499,7 +499,7 @@ it("should count the accepted differences on a list row from the stored result",
     const { comparisons } =
         await comparisonViewService.retrieveComparisonPageViewAsync(0, "", false);
 
-    expect(comparisons[0].acceptableDiffCountText).toBe("2");
+    expect(comparisons[0].acceptableDiffCountText).toBe("2 accepted");
     expect(comparisons[0].acceptableDiffCountClassName).toBe("badge bg-success");
 });
 
