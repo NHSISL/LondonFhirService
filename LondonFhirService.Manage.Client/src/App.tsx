@@ -14,6 +14,8 @@ import { TestPage } from './pages/testPage';
 import { ProvidersPage } from './pages/providers/ProvidersPage';
 import { ProviderDetailPage } from './pages/providers/ProviderDetailPage';
 import { ProviderAddPage } from './pages/providers/ProviderAddPage';
+import { ComparisonsPage } from './pages/comparisons/ComparisonsPage';
+import { ComparisonDetailPage } from './pages/comparisons/ComparisonDetailPage';
 import { AuditsPage } from './pages/audits/AuditsPage';
 import { AuditDetailPage } from './pages/audits/AuditDetailPage';
 import { MetricsPage } from './pages/metrics/MetricsPage';
@@ -62,6 +64,22 @@ function App({ instance }: any) {
                     element: (
                         <SecuredRoute allowedRoles={securityPoints.metrics.view}>
                             <MetricDetailPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/comparisons",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.comparisons.view}>
+                            <ComparisonsPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/comparisons/:fhirRecordDifferenceId",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.comparisons.view}>
+                            <ComparisonDetailPage />
                         </SecuredRoute>
                     )
                 },
