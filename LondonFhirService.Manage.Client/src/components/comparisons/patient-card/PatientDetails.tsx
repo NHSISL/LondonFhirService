@@ -129,12 +129,16 @@ export function PatientDetails({
                                 General practitioner
                             </Form.Label>
 
-                            {patient.generalPractitionerRefs.map(generalPractitionerRef => (
-                                <PractitionerSection
-                                    key={generalPractitionerRef}
-                                    reference={generalPractitionerRef}
-                                    context={context} />
-                            ))}
+                            <DiffHighlight
+                                fieldDiffs={getFieldDiffs("generalPractitionerRefs")}
+                                acceptance={context.acceptance}>
+                                {patient.generalPractitionerRefs.map(generalPractitionerRef => (
+                                    <PractitionerSection
+                                        key={generalPractitionerRef}
+                                        reference={generalPractitionerRef}
+                                        context={context} />
+                                ))}
+                            </DiffHighlight>
                         </Form.Group>
                     )}
 

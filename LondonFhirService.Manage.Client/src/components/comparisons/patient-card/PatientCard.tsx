@@ -2,10 +2,17 @@ import { useMemo } from "react";
 import { Card, Form } from "react-bootstrap";
 import { EpisodeOfCareList } from "./EpisodeOfCareList";
 import { ListsSection } from "./resourceSections";
+import { OtherDiffList } from "./OtherDiffList";
 import { PatientDetails } from "./PatientDetails";
 import { PatientHeader } from "./PatientHeader";
 import { formatPatientName } from "./patientFormatters";
-import { getDiffsForField, getDiffState, getHighlightStyle } from "../../../helpers/comparisons/diffHighlighting";
+import {
+    getDiffsForField,
+    getDiffsForFields,
+    getDiffState,
+    getHighlightStyle,
+    getOtherDiffs
+} from "../../../helpers/comparisons/diffHighlighting";
 import type { PatientCardProps } from "../../../models/components/comparisons/PatientCardProps";
 import type { ResourceTreeContext } from "./resourceSections";
 
@@ -58,8 +65,10 @@ export function PatientCard({
 
     // The header is a two line block rather than a field box, so it takes the outline alone -
     // its differences are ticked from the Patient details panel or the differences list.
-    const getHeaderStyleForField = (field: string) =>
-        getHighlightStyle(getDiffState(getFieldDiffs(field)));
+    const getHeaderStyleForFields = (fields: string[]) =>
+        getHighlightStyle(getDiffState(getDiffsForFields(patientDiffs, fields, acceptance.side)));
+
+    const otherDiffs = getOtherDiffs(diffs, acceptance.side);
 
     return (
         <Card className="h-100 border-0">
@@ -70,8 +79,9 @@ export function PatientCard({
                 roleText={source.roleText}
                 roleClassName={source.roleClassName}
                 formattedJsonPayload={source.formattedJsonPayload}
-                nameStyle={getHeaderStyleForField("nameFamily")}
-                nhsNumberStyle={getHeaderStyleForField("nhsNumber")} />
+                nameStyle={getHeaderStyleForFields(
+                    ["nameFamily", "nameGiven", "namePrefix", "nameSuffix"])}
+                nhsNumberStyle={getHeaderStyleForFields(["nhsNumber"])} />
 
             <Card.Body>
                 <PatientDetails
@@ -100,6 +110,8 @@ export function PatientCard({
                             context={context} />
                     </Form.Group>
                 )}
+
+                <OtherDiffList otherDiffs={otherDiffs} acceptance={acceptance} />
             </Card.Body>
         </Card>
     );

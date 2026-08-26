@@ -1,5 +1,14 @@
 import { expect, it } from "vitest";
-import { getDiffState, getDiffsForField, getHighlightStyle } from "./diffHighlighting";
+import {
+    getDiffState,
+    getDiffsForField,
+    getDiffsForFields,
+    getHighlightStyle,
+    getMappableFields,
+    getOtherDiffs,
+    getUnhighlightedPatientDiffs,
+    patientHighlightFields
+} from "./diffHighlighting";
 import type { DiffItemView } from "../../models/views/comparisons/DiffItemView";
 
 const createDiff = (overrides: Partial<DiffItemView>): DiffItemView => ({
@@ -77,4 +86,78 @@ it("should outline an outstanding field in red and an accepted one in green", ()
     expect(getHighlightStyle("none")).toEqual({});
     expect(getHighlightStyle("outstanding").border).toBe("2px solid #dc3545");
     expect(getHighlightStyle("accepted").border).toBe("2px solid #198754");
+});
+
+// The differences list counted a generalPractitioner change that the card had no box for, so it
+// showed one difference where the list showed two. The mapping is what closes that gap.
+it("should map a general practitioner reference onto its card field", () => {
+    const diffs = [createDiff({ path: "$.Patient[123].generalPractitioner[0].reference" })];
+
+    expect(getDiffsForField(diffs, "generalPractitionerRefs", "secondary")).toHaveLength(1);
+    expect(getUnhighlightedPatientDiffs(diffs, "secondary")).toEqual([]);
+});
+
+// The header renders the whole formatted name, so a change to any part of it belongs in the one
+// outline rather than falling through to Other differences.
+it("should gather every part of the name into one box", () => {
+    const diffs = [
+        createDiff({ key: "0", index: 0, path: "$.Patient[123].name[0].\"family\"" }),
+        createDiff({ key: "1", index: 1, path: "$.Patient[123].name[0].given[0]" })
+    ];
+
+    const nameDiffs = getDiffsForFields(
+        diffs,
+        ["nameFamily", "nameGiven", "namePrefix", "nameSuffix"],
+        "secondary");
+
+    expect(nameDiffs).toHaveLength(2);
+    expect(getUnhighlightedPatientDiffs(diffs, "secondary")).toEqual([]);
+});
+
+// Anything the card has no field for still has to be shown, or the card and the differences list
+// disagree about how many differences there are.
+it("should surface a difference no card field claims", () => {
+    const diffs = [createDiff({ path: "$.Patient[123].maritalStatus.coding[0].code" })];
+
+    expect(getUnhighlightedPatientDiffs(diffs, "secondary")).toHaveLength(1);
+});
+
+it("should keep an unclaimed difference on the side it belongs to", () => {
+    const diffs = [
+        createDiff({ key: "0", index: 0, type: "removed", path: "$.Patient[123].maritalStatus" }),
+        createDiff({ key: "1", index: 1, type: "added", path: "$.Patient[123].deceasedBoolean" })
+    ];
+
+    expect(getUnhighlightedPatientDiffs(diffs, "primary").map(diff => diff.key)).toEqual(["0"]);
+    expect(getUnhighlightedPatientDiffs(diffs, "secondary").map(diff => diff.key)).toEqual(["1"]);
+});
+
+// The two lists have to agree. A path that maps to a field the card never draws would drop its
+// difference out of the card without landing in Other differences either, which is exactly the
+// silent loss this pairing exists to prevent.
+it("should render a box for every field a path can map to", () => {
+    expect([...getMappableFields()].sort()).toEqual([...patientHighlightFields].sort());
+});
+
+// The card only lays out Patient, EpisodeOfCare, List and MedicationStatement. A difference in
+// anything else had nowhere to appear, so the card showed fewer differences than the list and
+// those it omitted could not be ticked from it.
+it("should surface a difference against a resource the card has no section for", () => {
+    const diffs = [
+        createDiff({ key: "0", index: 0, resourceTypeText: "Organization", path: "name" }),
+        createDiff({ key: "1", index: 1, resourceTypeText: "Practitioner", path: "name" })
+    ];
+
+    expect(getOtherDiffs(diffs, "secondary").map(diff => diff.key)).toEqual(["0", "1"]);
+});
+
+it("should leave a difference its own section already shows out of the other list", () => {
+    const diffs = [
+        createDiff({ key: "0", index: 0, resourceTypeText: "List", path: "entry" }),
+        createDiff({ key: "1", index: 1, resourceTypeText: "EpisodeOfCare", path: "status" }),
+        createDiff({ key: "2", index: 2, resourceTypeText: "MedicationStatement", path: "dosage" }),
+        createDiff({ key: "3", index: 3, resourceTypeText: "Patient", path: "gender" })
+    ];
+
+    expect(getOtherDiffs(diffs, "secondary")).toEqual([]);
 });
