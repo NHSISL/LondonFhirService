@@ -37,6 +37,15 @@ const securityPoints = {
     metrics: {
         view: administratorAndUserRoles,
     },
+    // A comparison holds two whole patient bundles, so the area is administrators only - the same
+    // audience FhirRecordDifferencesController and FhirRecordsController authorise against. Edit
+    // covers the review fields an operator can set on a comparison; the differences themselves are
+    // written by the comparison service and are not editable from here, so there is no add or
+    // delete.
+    comparisons: {
+        edit: administratorRoles,
+        view: administratorRoles,
+    },
     // The provider registry decides who the patient fan-out calls, so the whole area - the master
     // list as well as the detail view - is administrators only.
     providers: {

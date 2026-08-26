@@ -1,4 +1,4 @@
-﻿import { faChartLine, faClipboardList, faHome, faNetworkWired, faUser } from '@fortawesome/free-solid-svg-icons';
+﻿import { faChartLine, faClipboardList, faCodeCompare, faHome, faNetworkWired, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { ListGroup } from 'react-bootstrap';
@@ -29,6 +29,15 @@ const MenuComponent: React.FC = () => {
                     onClick={() => handleItemClick('/admin/providers')}>
                     <FontAwesomeIcon icon={faNetworkWired} className="me-2 fa-icon" />
                     Providers
+                </ListGroup.Item>
+            </SecuredComponent>
+
+            <SecuredComponent allowedRoles={securityPoints.comparisons.view}>
+                <ListGroup.Item
+                    className={`bg-dark text-white ${location.pathname.startsWith('/admin/comparisons') ? 'active' : ''}`}
+                    onClick={() => handleItemClick('/admin/comparisons')}>
+                    <FontAwesomeIcon icon={faCodeCompare} className="me-2 fa-icon" />
+                    Comparisons
                 </ListGroup.Item>
             </SecuredComponent>
 

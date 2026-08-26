@@ -13,7 +13,7 @@ const SearchBase: FunctionComponent<SearchBaseProps> = (props) => {
     return (
         <>
             <input
-                id="input-example"
+                id={props.id}
                 placeholder={props.placeholder}
                 value={props.value}
                 type="search"
