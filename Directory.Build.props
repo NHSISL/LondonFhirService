@@ -6,7 +6,7 @@
     Microsoft.ApplicationInsights.AspNetCore -> Azure.Monitor.OpenTelemetry.Exporter.
   -->
   <ItemGroup>
-    <PackageReference Include="OpenTelemetry.Api" Version="1.17.0" />
+    <PackageReference Include="OpenTelemetry.Api" Version="1.18.0" />
   </ItemGroup>
 
   <!--
