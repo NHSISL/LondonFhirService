@@ -22,4 +22,15 @@
     <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.9.0" />
     <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.11.0" />
   </ItemGroup>
+
+  <!--
+    Pin the transitive Microsoft.Data.SqlClient to 7.0.2. Microsoft.EntityFrameworkCore.SqlServer
+    asks for 6.1.6 and EFxceptions asks for 7.0.1, so NuGet already lands the solution on the 7.0
+    driver; pinning makes that explicit and keeps the driver on the same 7.0.2 build as the
+    Microsoft.Data.SqlClient.Extensions.Azure package referenced by LondonFhirService.Core, so the
+    driver, its Extensions.Abstractions and the Entra ID providers all come from one release.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+  </ItemGroup>
 </Project>
