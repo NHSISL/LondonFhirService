@@ -12,36 +12,35 @@ using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Clients.AuditAndMetrics.Clients;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
+using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
-using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Models.Foundations.Audits;
-using LondonFhirService.Core.Models.Foundations.Metrics;
-using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Foundations.Metrics;
+using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Services.Foundations.Audits;
-using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
+using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Services.Foundations.Providers;
+using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
-using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
 
 public partial class Program
 {
@@ -135,7 +134,7 @@ public partial class Program
 
         app.MapGet("/", () => Results.Ok(new
         {
-            Name = "London FHIR Service API",
+            Name = "London FHIR Service Management Portal",
             Version = "1.0",
             Status = "Running"
         }));
