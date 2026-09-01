@@ -39,6 +39,20 @@
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.Abstractions" Version="0.7.0" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.DiscoveryDataService" Version="0.12.0" />
 		<PackageReference Include="LondonFhirService.Providers.FHIR.STU3.LondonDataService" Version="0.2.0" />
+
+		<!--
+			Microsoft.Data.SqlClient 7.0 moved the Entra ID (Active Directory) authentication
+			providers out of the driver and into this package, which the driver then loads by
+			name at run time. Without it every connection string using an
+			"Authentication=Active Directory ..." mode - the deployed hosts authenticate to
+			Azure SQL with ActiveDirectoryManagedIdentity - fails to open with
+			"Cannot find an authentication provider for 'ActiveDirectoryManagedIdentity'".
+			No code references it: the reference exists so the assembly is published alongside
+			the driver. It flows on to the API and Manage hosts through their reference to this
+			project. Keep the version aligned with the Microsoft.Data.SqlClient pin in
+			Directory.Build.props.
+		-->
+		<PackageReference Include="Microsoft.Data.SqlClient.Extensions.Azure" Version="7.0.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
 			<PrivateAssets>all</PrivateAssets>
@@ -78,7 +92,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Update="OpenTelemetry.Api" Version="1.17.0" />
+	  <PackageReference Update="OpenTelemetry.Api" Version="1.18.0" />
 	</ItemGroup>
 
 </Project>
