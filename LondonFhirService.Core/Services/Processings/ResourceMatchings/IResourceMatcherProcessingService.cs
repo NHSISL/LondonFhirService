@@ -2,6 +2,8 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+#nullable enable annotations
+
 using System.Threading.Tasks;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers;
 
