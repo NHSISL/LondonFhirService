@@ -66,6 +66,32 @@ steps:
     displayName: 'Publish Artifact - Public LFS FHIR API'
     artifact: drop-public-lfs-fhir-api
 
+  - task: NodeTool@0
+    displayName: 'Install Node.js'
+    inputs:
+      versionSpec: '24.x'
+
+  - task: Npm@1
+    displayName: 'Install client dependencies (manage)'
+    inputs:
+      command: 'ci'
+      workingDir: 'LondonFhirService.Manage.Client'
+
+  - task: Npm@1
+    displayName: 'Build client (manage)'
+    inputs:
+      command: 'custom'
+      customCommand: 'run build'
+      workingDir: 'LondonFhirService.Manage.Client'
+
+  - task: CopyFiles@2
+    displayName: 'Copy client build into host wwwroot (manage)'
+    inputs:
+      SourceFolder: 'LondonFhirService.Manage.Client/dist'
+      Contents: '**'
+      TargetFolder: 'LondonFhirService.Manage/wwwroot'
+      CleanTargetFolder: true
+
   - task: DotNetCoreCLI@2
     displayName: "Dotnet Publish Private LFS Back Office Management Portal"
     inputs:
