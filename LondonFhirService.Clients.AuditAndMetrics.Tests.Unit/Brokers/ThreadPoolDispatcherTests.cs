@@ -52,7 +52,9 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             accepted.Should().BeTrue();
 
             Task<Exception> completed = await Task.WhenAny(
-                loggedException.Task, Task.Delay(WaitTimeout).ContinueWith<Exception>(_ => null));
+                loggedException.Task,
+                Task.Delay(WaitTimeout, TestContext.Current.CancellationToken)
+                    .ContinueWith<Exception>(_ => null));
 
             completed.Should().BeSameAs(loggedException.Task,
                 because: "an unexpected failure in a dispatched write must be logged");
@@ -78,13 +80,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
                 throw new OperationCanceledException();
             });
 
-            await ranWork.Task.WaitAsync(WaitTimeout);
+            await ranWork.Task.WaitAsync(WaitTimeout, TestContext.Current.CancellationToken);
 
             // then
             // A cancelled request or a host shutting down cancels these writes. Reporting that as
             // an error puts a line in the log every time a client disconnects, which buries the
             // failures that do matter.
-            Task first = await Task.WhenAny(loggedAnything.Task, Task.Delay(WaitTimeout));
+            Task first = await Task.WhenAny(
+                loggedAnything.Task,
+                Task.Delay(WaitTimeout, TestContext.Current.CancellationToken));
 
             first.Should().NotBeSameAs(loggedAnything.Task,
                 because: "cancellation is expected and must not be logged as a failure");

@@ -47,7 +47,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     activeProviders: providers,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
-                    cancellationToken: default);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientServiceValidationException actualPatientServiceValidationException =
                 await Assert.ThrowsAsync<PatientServiceValidationException>(
@@ -106,7 +106,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: invalidText,
-                    cancellationToken: default);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientServiceValidationException actualPatientServiceValidationException =
                 await Assert.ThrowsAsync<PatientServiceValidationException>(
@@ -163,7 +163,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     correlationId: correlationId,
                     nhsNumber: nhsNumber,
                     dateOfBirth: dateString,
-                    cancellationToken: default);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientServiceValidationException actualPatientServiceValidationException =
                 await Assert.ThrowsAsync<PatientServiceValidationException>(

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics;
@@ -60,7 +61,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             IMetric metric = CreateMetric();
 
             // when
-            await this.metricBroker.RecordAsync(metric);
+            await this.metricBroker.RecordAsync(metric, TestContext.Current.CancellationToken);
 
             // then
             // The configured source name is what the host subscribes to. If the broker ignored it
@@ -86,7 +87,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             metric.Completed = metric.Started.AddMilliseconds(metric.DurationMs);
 
             // when
-            await this.metricBroker.RecordAsync(metric);
+            await this.metricBroker.RecordAsync(metric, TestContext.Current.CancellationToken);
 
             // then
             // The span is replayed after the fact, so without an explicit end time it would
@@ -106,7 +107,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             second.CorrelationId = correlationId;
 
             // when
-            await this.metricBroker.RecordAsync(new List<IMetric> { first, second });
+            await this.metricBroker.RecordAsync(
+                new List<IMetric> { first, second }, TestContext.Current.CancellationToken);
 
             // then
             // The trace id is derived from the correlation id, which is what puts every span of
@@ -127,7 +129,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             metric.ErrorCode = "ProviderTimeout";
 
             // when
-            await this.metricBroker.RecordAsync(metric);
+            await this.metricBroker.RecordAsync(metric, TestContext.Current.CancellationToken);
 
             // then
             Activity activity = this.capturedActivities.Should().ContainSingle().Subject;

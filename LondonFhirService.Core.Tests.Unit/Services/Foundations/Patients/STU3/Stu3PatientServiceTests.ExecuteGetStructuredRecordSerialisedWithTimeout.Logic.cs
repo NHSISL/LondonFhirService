@@ -213,7 +213,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: default);
+                    globalToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Json.Should().Be(rawOutputJson);
@@ -408,7 +408,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: default);
+                    globalToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -485,7 +485,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: default);
+                    globalToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -583,7 +583,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: default);
+                    globalToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Json.Should().BeNull();

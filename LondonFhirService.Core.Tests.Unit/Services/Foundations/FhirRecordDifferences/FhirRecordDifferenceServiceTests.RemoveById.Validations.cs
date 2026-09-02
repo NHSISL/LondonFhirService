@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
@@ -34,7 +35,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             // when
             ValueTask<FhirRecordDifference> removeFhirRecordDifferenceByIdTask =
-                this.fhirRecordDifferenceService.RemoveFhirRecordDifferenceByIdAsync(invalidFhirRecordDifferenceId);
+                this.fhirRecordDifferenceService.RemoveFhirRecordDifferenceByIdAsync(
+                    invalidFhirRecordDifferenceId, TestContext.Current.CancellationToken);
 
             FhirRecordDifferenceValidationException actualFhirRecordDifferenceValidationException =
                 await Assert.ThrowsAsync<FhirRecordDifferenceValidationException>(
@@ -50,7 +52,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>()),
+                broker.DeleteFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

@@ -92,7 +92,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
-                    cancellationToken: default);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientServiceDependencyValidationException actualPatientServiceDependencyValidationException =
                 await Assert.ThrowsAsync<PatientServiceDependencyValidationException>(
@@ -221,7 +221,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
-                    cancellationToken: default);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientServiceDependencyException actualPatientServiceDependencyException =
                 await Assert.ThrowsAsync<PatientServiceDependencyException>(
@@ -350,7 +350,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
-                    cancellationToken: default);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientServiceException actualPatientServiceException =
                 await Assert.ThrowsAsync<PatientServiceException>(
@@ -482,7 +482,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
-                    cancellationToken: default);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientServiceDependencyException
                 actualPatientServiceDependencyException =
@@ -616,7 +616,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     activeProviders: inputProviders,
                     correlationId: correlationId,
                     nhsNumber: inputNhsNumber,
-                    cancellationToken: default);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientServiceException actualPatientServiceException =
                 await Assert.ThrowsAsync<PatientServiceException>(

@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -22,18 +23,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
             FhirRecord expectedFhirRecord = storageFhirRecord.DeepClone();
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordByIdAsync(inputFhirRecord.Id))
+                broker.SelectFhirRecordByIdAsync(inputFhirRecord.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageFhirRecord);
 
             // when
             FhirRecord actualFhirRecord =
-                await this.fhirRecordService.RetrieveFhirRecordByIdAsync(inputFhirRecord.Id);
+                await this.fhirRecordService.RetrieveFhirRecordByIdAsync(
+                    inputFhirRecord.Id, TestContext.Current.CancellationToken);
 
             // then
             actualFhirRecord.Should().BeEquivalentTo(expectedFhirRecord);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(inputFhirRecord.Id),
+                broker.SelectFhirRecordByIdAsync(inputFhirRecord.Id, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.VerifyNoOtherCalls();

@@ -8,6 +8,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using Task = System.Threading.Tasks.Task;
@@ -59,8 +60,9 @@ namespace LondonFhirService.Api.Tests.Performance
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
 
             var stopwatch = Stopwatch.StartNew();
-            HttpResponseMessage response = await httpClient.PostAsync(consumerAccessTokenSettings.LfsGetStructuredRecordUrl, content);
-            string responseContent = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await httpClient.PostAsync(
+                consumerAccessTokenSettings.LfsGetStructuredRecordUrl, content, TestContext.Current.CancellationToken);
+            string responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             stopwatch.Stop();
 
             if (!response.IsSuccessStatusCode)
@@ -77,7 +79,7 @@ namespace LondonFhirService.Api.Tests.Performance
             string outputDirectory = Path.Combine(AppContext.BaseDirectory, "StructuredRecords");
             Directory.CreateDirectory(outputDirectory);
             string filePath = Path.Combine(outputDirectory, $"{nhsNumber}-LFS.txt");
-            await File.WriteAllTextAsync(filePath, text);
+            await File.WriteAllTextAsync(filePath, text, TestContext.Current.CancellationToken);
             output.WriteLine($"Structured record written to: {filePath}");
         }
 
@@ -120,8 +122,9 @@ namespace LondonFhirService.Api.Tests.Performance
             httpClient.DefaultRequestHeaders.Remove("Authorization");
             httpClient.DefaultRequestHeaders.Add("Authorization", $"{accessToken}");
             var stopwatch = Stopwatch.StartNew();
-            HttpResponseMessage response = await httpClient.PostAsync(consumerAccessTokenSettings.DdsGetStructuredRecordUrl, content);
-            string responseContent = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await httpClient.PostAsync(
+                consumerAccessTokenSettings.DdsGetStructuredRecordUrl, content, TestContext.Current.CancellationToken);
+            string responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             stopwatch.Stop();
 
             if (!response.IsSuccessStatusCode)
@@ -138,7 +141,7 @@ namespace LondonFhirService.Api.Tests.Performance
             string outputDirectory = Path.Combine(AppContext.BaseDirectory, "StructuredRecords");
             Directory.CreateDirectory(outputDirectory);
             string filePath = Path.Combine(outputDirectory, $"{nhsNumber}-DDS.txt");
-            await File.WriteAllTextAsync(filePath, text);
+            await File.WriteAllTextAsync(filePath, text, TestContext.Current.CancellationToken);
             output.WriteLine($"Structured record written to: {filePath}");
         }
     }

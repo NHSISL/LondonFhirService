@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -26,26 +27,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             Provider expectedProvider = deletedProvider.DeepClone();
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectProviderByIdAsync(inputProviderId))
+                broker.SelectProviderByIdAsync(inputProviderId, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageProvider);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.DeleteProviderAsync(expectedInputProvider))
+                broker.DeleteProviderAsync(expectedInputProvider, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(deletedProvider);
 
             // when
             Provider actualProvider = await this.providerService
-                .RemoveProviderByIdAsync(inputProviderId);
+                .RemoveProviderByIdAsync(inputProviderId, TestContext.Current.CancellationToken);
 
             // then
             actualProvider.Should().BeEquivalentTo(expectedProvider);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectProviderByIdAsync(inputProviderId),
+                broker.SelectProviderByIdAsync(inputProviderId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteProviderAsync(expectedInputProvider),
+                broker.DeleteProviderAsync(expectedInputProvider, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.VerifyNoOtherCalls();

@@ -38,7 +38,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
-                    inputNotUpdatedAfter))
+                    inputNotUpdatedAfter,
+                    It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
 
             // when
@@ -46,7 +47,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputFhirRecordId,
                 inputExpectedStatus,
                 inputClaimedStatus,
-                inputNotUpdatedAfter);
+                inputNotUpdatedAfter,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -61,7 +63,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
-                    inputNotUpdatedAfter),
+                    inputNotUpdatedAfter,
+                    It.IsAny<CancellationToken>()),
                         Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
@@ -95,7 +98,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
-                    inputNotUpdatedAfter))
+                    inputNotUpdatedAfter,
+                    It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
 
             // when
@@ -103,7 +107,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputFhirRecordId,
                 inputExpectedStatus,
                 inputClaimedStatus,
-                inputNotUpdatedAfter);
+                inputNotUpdatedAfter,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -118,7 +123,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
-                    inputNotUpdatedAfter),
+                    inputNotUpdatedAfter,
+                    It.IsAny<CancellationToken>()),
                         Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
@@ -151,14 +157,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
-                    nullNotUpdatedAfter))
+                    nullNotUpdatedAfter,
+                    It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
 
             // when
             bool actualResult = await this.fhirRecordService.TryClaimFhirRecordAsync(
                 inputFhirRecordId,
                 inputExpectedStatus,
-                inputClaimedStatus);
+                inputClaimedStatus,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().Be(expectedResult);
@@ -173,7 +181,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
-                    nullNotUpdatedAfter),
+                    nullNotUpdatedAfter,
+                    It.IsAny<CancellationToken>()),
                         Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
@@ -223,7 +232,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputFhirRecordId,
                 inputExpectedStatus,
                 inputClaimedStatus,
-                inputNotUpdatedAfter);
+                inputNotUpdatedAfter,
+                cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualClaimedDate.Should().Be(expectedClaimedDate);
@@ -239,7 +249,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     expectedClaimedDate,
-                    inputNotUpdatedAfter),
+                    inputNotUpdatedAfter,
+                    It.IsAny<CancellationToken>()),
                         Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();

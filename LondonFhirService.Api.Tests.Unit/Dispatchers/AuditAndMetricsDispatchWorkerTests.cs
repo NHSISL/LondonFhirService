@@ -66,7 +66,7 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
             });
 
             // then
-            await ran.Task.WaitAsync(WaitTimeout);
+            await ran.Task.WaitAsync(WaitTimeout, TestContext.Current.CancellationToken);
             ran.Task.IsCompletedSuccessfully.Should().BeTrue();
 
             await worker.StopAsync(CancellationToken.None);
@@ -95,7 +95,7 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
                 completed.Enqueue(0);
             });
 
-            await firstPickedUp.Task.WaitAsync(WaitTimeout);
+            await firstPickedUp.Task.WaitAsync(WaitTimeout, TestContext.Current.CancellationToken);
 
             for (int index = 1; index <= 5; index++)
             {
@@ -111,7 +111,7 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
             // when
             Task stopping = worker.StopAsync(CancellationToken.None);
             gate.TrySetResult();
-            await stopping.WaitAsync(WaitTimeout);
+            await stopping.WaitAsync(WaitTimeout, TestContext.Current.CancellationToken);
 
             // then
             // All six, not just the one that was already running. Entries recorded moments before
@@ -142,7 +142,7 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
             // then
             // One failed write must not kill the reader. If it did, drain concurrency would decay
             // to zero over time and the queue would fill silently.
-            await ranAfterFailure.Task.WaitAsync(WaitTimeout);
+            await ranAfterFailure.Task.WaitAsync(WaitTimeout, TestContext.Current.CancellationToken);
             ranAfterFailure.Task.IsCompletedSuccessfully.Should().BeTrue();
 
             await worker.StopAsync(CancellationToken.None);
@@ -169,7 +169,7 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
             });
 
             // then
-            await ranAfterCancellation.Task.WaitAsync(WaitTimeout);
+            await ranAfterCancellation.Task.WaitAsync(WaitTimeout, TestContext.Current.CancellationToken);
             ranAfterCancellation.Task.IsCompletedSuccessfully.Should().BeTrue();
 
             await worker.StopAsync(CancellationToken.None);
@@ -199,7 +199,7 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
 
             // when
             Task stopping = worker.StopAsync(CancellationToken.None);
-            await Task.Delay(200);
+            await Task.Delay(200, TestContext.Current.CancellationToken);
 
             // A request still draining under Kestrel records a span after this worker was told
             // to stop. Hosted services stop before the web host finishes, so this is the normal
@@ -211,7 +211,7 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
                 return ValueTask.CompletedTask;
             });
 
-            await stopping.WaitAsync(WaitTimeout);
+            await stopping.WaitAsync(WaitTimeout, TestContext.Current.CancellationToken);
 
             // then
             accepted.Should().BeTrue(

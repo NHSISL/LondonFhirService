@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
@@ -36,7 +37,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             // when
             ValueTask<string> getStructuredRecordTask =
-                this.patientCoordinationService.GetStructuredRecordSerialisedAsync(nhsNumber: invalidId);
+                this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                    nhsNumber: invalidId, cancellationToken: TestContext.Current.CancellationToken);
 
             PatientCoordinationValidationException actualPatientCoordinationValidationException =
                 await Assert.ThrowsAsync<PatientCoordinationValidationException>(

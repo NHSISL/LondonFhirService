@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -42,11 +43,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     .ReturnsAsync(randomDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.InsertProviderAsync(auditAppliedProvider))
+                broker.InsertProviderAsync(auditAppliedProvider, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageProvider);
 
             // when
-            Provider actualProvider = await this.providerService.AddProviderAsync(inputProvider);
+            Provider actualProvider = await this.providerService.AddProviderAsync(
+                inputProvider, TestContext.Current.CancellationToken);
 
             // then
             actualProvider.Should().BeEquivalentTo(expectedProvider);
@@ -64,7 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     Times.Once());
 
             this.storageBrokerMock.Verify(broker =>
-                broker.InsertProviderAsync(auditAppliedProvider),
+                broker.InsertProviderAsync(auditAppliedProvider, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();

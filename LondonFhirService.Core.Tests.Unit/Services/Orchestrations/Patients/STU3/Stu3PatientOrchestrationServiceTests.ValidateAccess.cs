@@ -57,7 +57,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         .ReturnsAsync(returnedConsumerAccess);
 
             // when
-            await this.patientOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+            await this.patientOrchestrationService.ValidateAccess(
+                inputNhsNumber, correlationId, TestContext.Current.CancellationToken);
 
             // then
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -126,7 +127,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 CreateOrchestrationService(new AccessConfigurations { CheckAccessPermissions = false });
 
             // when
-            await orchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+            await orchestrationService.ValidateAccess(
+                inputNhsNumber, correlationId, TestContext.Current.CancellationToken);
 
             // then
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -185,7 +187,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask validateAccessTask =
-                this.patientOrchestrationService.ValidateAccess(invalidNhsNumber, correlationId);
+                this.patientOrchestrationService.ValidateAccess(
+                    invalidNhsNumber, correlationId, TestContext.Current.CancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -246,7 +249,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask validateAccessTask =
-                this.patientOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+                this.patientOrchestrationService.ValidateAccess(
+                    inputNhsNumber, correlationId, TestContext.Current.CancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
@@ -346,7 +350,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
 
             // when
             ValueTask validateAccessTask =
-                this.patientOrchestrationService.ValidateAccess(inputNhsNumber, correlationId);
+                this.patientOrchestrationService.ValidateAccess(
+                    inputNhsNumber, correlationId, TestContext.Current.CancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(

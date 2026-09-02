@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
@@ -32,12 +33,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     innerException: failedFhirRecordDifferenceStorageException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()))
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(sqlException);
 
             // when
             ValueTask<FhirRecordDifference> retrieveFhirRecordDifferenceByIdTask =
-                this.fhirRecordDifferenceService.RetrieveFhirRecordDifferenceByIdAsync(someId);
+                this.fhirRecordDifferenceService.RetrieveFhirRecordDifferenceByIdAsync(
+                    someId, TestContext.Current.CancellationToken);
 
             FhirRecordDifferenceDependencyException actualFhirRecordDifferenceDependencyException =
                 await Assert.ThrowsAsync<FhirRecordDifferenceDependencyException>(
@@ -48,7 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                 .BeEquivalentTo(expectedFhirRecordDifferenceDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -80,12 +82,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     innerException: failedFhirRecordDifferenceServiceException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()))
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(serviceException);
 
             // when
             ValueTask<FhirRecordDifference> retrieveFhirRecordDifferenceByIdTask =
-                this.fhirRecordDifferenceService.RetrieveFhirRecordDifferenceByIdAsync(someId);
+                this.fhirRecordDifferenceService.RetrieveFhirRecordDifferenceByIdAsync(
+                    someId, TestContext.Current.CancellationToken);
 
             FhirRecordDifferenceServiceException actualFhirRecordDifferenceServiceException =
                 await Assert.ThrowsAsync<FhirRecordDifferenceServiceException>(
@@ -96,7 +99,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                 .BeEquivalentTo(expectedFhirRecordDifferenceServiceException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>

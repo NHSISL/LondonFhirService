@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Providers;
@@ -22,18 +23,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
             List<Provider> expectedProviders = storageProviders;
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllProvidersAsListAsync())
+                broker.SelectAllProvidersAsListAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageProviders);
 
             // when
             List<Provider> actualProviders =
-                await this.providerService.RetrieveAllProvidersAsListAsync();
+                await this.providerService.RetrieveAllProvidersAsListAsync(TestContext.Current.CancellationToken);
 
             // then
             actualProviders.Should().BeEquivalentTo(expectedProviders);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllProvidersAsListAsync(),
+                broker.SelectAllProvidersAsListAsync(It.IsAny<CancellationToken>()),
                     Times.Once());
 
             this.storageBrokerMock.VerifyNoOtherCalls();

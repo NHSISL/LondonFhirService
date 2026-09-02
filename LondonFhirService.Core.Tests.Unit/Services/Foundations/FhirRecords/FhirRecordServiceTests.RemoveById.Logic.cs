@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -26,26 +27,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
             FhirRecord expectedFhirRecord = deletedFhirRecord.DeepClone();
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordByIdAsync(inputFhirRecordId))
+                broker.SelectFhirRecordByIdAsync(inputFhirRecordId, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageFhirRecord);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.DeleteFhirRecordAsync(expectedInputFhirRecord))
+                broker.DeleteFhirRecordAsync(expectedInputFhirRecord, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(deletedFhirRecord);
 
             // when
             FhirRecord actualFhirRecord = await this.fhirRecordService
-                .RemoveFhirRecordByIdAsync(inputFhirRecordId);
+                .RemoveFhirRecordByIdAsync(inputFhirRecordId, TestContext.Current.CancellationToken);
 
             // then
             actualFhirRecord.Should().BeEquivalentTo(expectedFhirRecord);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(inputFhirRecordId),
+                broker.SelectFhirRecordByIdAsync(inputFhirRecordId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteFhirRecordAsync(expectedInputFhirRecord),
+                broker.DeleteFhirRecordAsync(expectedInputFhirRecord, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.VerifyNoOtherCalls();
