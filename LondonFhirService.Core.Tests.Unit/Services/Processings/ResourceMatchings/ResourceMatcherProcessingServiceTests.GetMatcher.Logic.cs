@@ -57,14 +57,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ResourceMatchin
                 matchers: new List<IResourceMatcherService> { matcherMock.Object },
                 loggingBroker: this.loggingBrokerMock.Object);
 
-            IResourceMatcherService? noExpectedMatcher = null;
-
             // when
             IResourceMatcherService? actualMatcher =
                 await service.GetMatcherAsync(unknownResourceType);
 
             // then
-            actualMatcher.Should().BeSameAs(noExpectedMatcher);
+            actualMatcher.Should().BeNull();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }
