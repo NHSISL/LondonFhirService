@@ -74,7 +74,7 @@ steps:
   - task: Npm@1
     displayName: 'Install client dependencies (manage)'
     inputs:
-      command: 'install'
+      command: 'ci'
       workingDir: 'LondonFhirService.Manage.Client'
 
   - task: Npm@1
