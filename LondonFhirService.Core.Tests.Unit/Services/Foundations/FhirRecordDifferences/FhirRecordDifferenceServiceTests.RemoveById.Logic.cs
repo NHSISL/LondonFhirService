@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -26,26 +27,29 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
             FhirRecordDifference expectedFhirRecordDifference = deletedFhirRecordDifference.DeepClone();
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(inputFhirRecordDifferenceId))
+                broker.SelectFhirRecordDifferenceByIdAsync(inputFhirRecordDifferenceId, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageFhirRecordDifference);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.DeleteFhirRecordDifferenceAsync(expectedInputFhirRecordDifference))
+                broker.DeleteFhirRecordDifferenceAsync(
+                    expectedInputFhirRecordDifference, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(deletedFhirRecordDifference);
 
             // when
             FhirRecordDifference actualFhirRecordDifference = await this.fhirRecordDifferenceService
-                .RemoveFhirRecordDifferenceByIdAsync(inputFhirRecordDifferenceId);
+                .RemoveFhirRecordDifferenceByIdAsync(
+                    inputFhirRecordDifferenceId, TestContext.Current.CancellationToken);
 
             // then
             actualFhirRecordDifference.Should().BeEquivalentTo(expectedFhirRecordDifference);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(inputFhirRecordDifferenceId),
+                broker.SelectFhirRecordDifferenceByIdAsync(inputFhirRecordDifferenceId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteFhirRecordDifferenceAsync(expectedInputFhirRecordDifference),
+                broker.DeleteFhirRecordDifferenceAsync(
+                    expectedInputFhirRecordDifference, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.VerifyNoOtherCalls();

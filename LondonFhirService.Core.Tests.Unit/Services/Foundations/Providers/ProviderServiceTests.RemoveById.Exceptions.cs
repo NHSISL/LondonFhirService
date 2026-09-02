@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.Providers;
@@ -33,12 +34,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     innerException: failedStorageProviderServiceException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectProviderByIdAsync(randomProvider.Id))
+                broker.SelectProviderByIdAsync(randomProvider.Id, It.IsAny<CancellationToken>()))
                     .Throws(sqlException);
 
             // when
             ValueTask<Provider> addProviderTask =
-                this.providerService.RemoveProviderByIdAsync(randomProvider.Id);
+                this.providerService.RemoveProviderByIdAsync(randomProvider.Id, TestContext.Current.CancellationToken);
 
             ProviderServiceDependencyException actualProviderServiceDependencyException =
                 await Assert.ThrowsAsync<ProviderServiceDependencyException>(
@@ -49,7 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 .BeEquivalentTo(expectedProviderServiceDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectProviderByIdAsync(randomProvider.Id),
+                broker.SelectProviderByIdAsync(randomProvider.Id, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -58,7 +59,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteProviderAsync(It.IsAny<Provider>()),
+                broker.DeleteProviderAsync(It.IsAny<Provider>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -92,12 +93,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     innerException: lockedProviderServiceException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectProviderByIdAsync(It.IsAny<Guid>()))
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(databaseUpdateConcurrencyException);
 
             // when
             ValueTask<Provider> removeProviderByIdTask =
-                this.providerService.RemoveProviderByIdAsync(someProviderId);
+                this.providerService.RemoveProviderByIdAsync(someProviderId, TestContext.Current.CancellationToken);
 
             ProviderServiceDependencyValidationException actualProviderServiceDependencyValidationException =
                 await Assert.ThrowsAsync<ProviderServiceDependencyValidationException>(
@@ -108,7 +109,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 .BeEquivalentTo(expectedProviderServiceDependencyValidationException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectProviderByIdAsync(It.IsAny<Guid>()),
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -117,7 +118,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteProviderAsync(It.IsAny<Provider>()),
+                broker.DeleteProviderAsync(It.IsAny<Provider>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
@@ -144,12 +145,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     innerException: failedStorageProviderServiceException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectProviderByIdAsync(It.IsAny<Guid>()))
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(sqlException);
 
             // when
             ValueTask<Provider> deleteProviderTask =
-                this.providerService.RemoveProviderByIdAsync(someProviderId);
+                this.providerService.RemoveProviderByIdAsync(someProviderId, TestContext.Current.CancellationToken);
 
             ProviderServiceDependencyException actualProviderServiceDependencyException =
                 await Assert.ThrowsAsync<ProviderServiceDependencyException>(
@@ -160,7 +161,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 .BeEquivalentTo(expectedProviderServiceDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectProviderByIdAsync(It.IsAny<Guid>()),
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -194,12 +195,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     innerException: failedProviderServiceException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectProviderByIdAsync(It.IsAny<Guid>()))
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(serviceException);
 
             // when
             ValueTask<Provider> removeProviderByIdTask =
-                this.providerService.RemoveProviderByIdAsync(someProviderId);
+                this.providerService.RemoveProviderByIdAsync(someProviderId, TestContext.Current.CancellationToken);
 
             ProviderServiceException actualProviderServiceException =
                 await Assert.ThrowsAsync<ProviderServiceException>(
@@ -210,7 +211,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                 .BeEquivalentTo(expectedProviderServiceException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectProviderByIdAsync(It.IsAny<Guid>()),
+                broker.SelectProviderByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>

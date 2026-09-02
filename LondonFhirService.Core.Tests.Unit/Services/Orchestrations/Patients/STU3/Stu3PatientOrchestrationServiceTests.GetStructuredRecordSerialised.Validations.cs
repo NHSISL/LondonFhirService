@@ -51,7 +51,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             ValueTask<StructuredRecordsResponse> getStructuredRecordTask =
                 this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
                     correlationId: correlationId,
-                    nhsNumber: invalidNhsNumber);
+                    nhsNumber: invalidNhsNumber,
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
                 await Assert.ThrowsAsync<PatientOrchestrationValidationException>(

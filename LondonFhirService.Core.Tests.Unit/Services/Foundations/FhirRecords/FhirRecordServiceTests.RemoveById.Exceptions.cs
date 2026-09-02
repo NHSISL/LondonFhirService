@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -33,12 +34,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     innerException: failedFhirRecordStorageException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordByIdAsync(randomFhirRecord.Id))
+                broker.SelectFhirRecordByIdAsync(randomFhirRecord.Id, It.IsAny<CancellationToken>()))
                     .Throws(sqlException);
 
             // when
             ValueTask<FhirRecord> removeFhirRecordTask =
-                this.fhirRecordService.RemoveFhirRecordByIdAsync(randomFhirRecord.Id);
+                this.fhirRecordService.RemoveFhirRecordByIdAsync(
+                    randomFhirRecord.Id, TestContext.Current.CancellationToken);
 
             FhirRecordDependencyException actualFhirRecordDependencyException =
                 await Assert.ThrowsAsync<FhirRecordDependencyException>(
@@ -49,7 +51,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 .BeEquivalentTo(expectedFhirRecordDependencyException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(randomFhirRecord.Id),
+                broker.SelectFhirRecordByIdAsync(randomFhirRecord.Id, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -58,7 +60,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteFhirRecordAsync(It.IsAny<FhirRecord>()),
+                broker.DeleteFhirRecordAsync(It.IsAny<FhirRecord>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -91,12 +93,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     innerException: lockedFhirRecordException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()))
+                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(databaseUpdateConcurrencyException);
 
             // when
             ValueTask<FhirRecord> removeFhirRecordByIdTask =
-                this.fhirRecordService.RemoveFhirRecordByIdAsync(someFhirRecordId);
+                this.fhirRecordService.RemoveFhirRecordByIdAsync(
+                    someFhirRecordId, TestContext.Current.CancellationToken);
 
             FhirRecordDependencyValidationException actualFhirRecordDependencyValidationException =
                 await Assert.ThrowsAsync<FhirRecordDependencyValidationException>(
@@ -107,7 +110,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 .BeEquivalentTo(expectedFhirRecordDependencyValidationException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -116,7 +119,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.DeleteFhirRecordAsync(It.IsAny<FhirRecord>()),
+                broker.DeleteFhirRecordAsync(It.IsAny<FhirRecord>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
@@ -143,12 +146,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     innerException: failedFhirRecordServiceException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()))
+                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ThrowsAsync(serviceException);
 
             // when
             ValueTask<FhirRecord> removeFhirRecordByIdTask =
-                this.fhirRecordService.RemoveFhirRecordByIdAsync(someFhirRecordId);
+                this.fhirRecordService.RemoveFhirRecordByIdAsync(
+                    someFhirRecordId, TestContext.Current.CancellationToken);
 
             FhirRecordServiceException actualFhirRecordServiceException =
                 await Assert.ThrowsAsync<FhirRecordServiceException>(
@@ -159,7 +163,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 .BeEquivalentTo(expectedFhirRecordServiceException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                         Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>

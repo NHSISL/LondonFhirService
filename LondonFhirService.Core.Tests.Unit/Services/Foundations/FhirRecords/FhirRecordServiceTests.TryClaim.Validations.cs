@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -39,7 +40,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 this.fhirRecordService.TryClaimFhirRecordAsync(
                     invalidFhirRecordId,
                     inputExpectedStatus,
-                    inputClaimedStatus);
+                    inputClaimedStatus,
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             FhirRecordValidationException actualFhirRecordValidationException =
                 await Assert.ThrowsAsync<FhirRecordValidationException>(
@@ -64,7 +66,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     It.IsAny<StatusType>(),
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
-                    It.IsAny<DateTimeOffset?>()),
+                    It.IsAny<DateTimeOffset?>(),
+                    It.IsAny<CancellationToken>()),
                         Times.Never);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();

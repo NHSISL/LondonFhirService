@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -34,7 +35,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
 
             // when
             ValueTask<FhirRecord> retrieveFhirRecordByIdTask =
-                this.fhirRecordService.RetrieveFhirRecordByIdAsync(invalidFhirRecordId);
+                this.fhirRecordService.RetrieveFhirRecordByIdAsync(
+                    invalidFhirRecordId, TestContext.Current.CancellationToken);
 
             FhirRecordValidationException actualFhirRecordValidationException =
                 await Assert.ThrowsAsync<FhirRecordValidationException>(
@@ -50,7 +52,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                         Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -75,12 +77,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     innerException: notFoundFhirRecordException);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()))
+                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(noFhirRecord);
 
             //when
             ValueTask<FhirRecord> retrieveFhirRecordByIdTask =
-                this.fhirRecordService.RetrieveFhirRecordByIdAsync(someFhirRecordId);
+                this.fhirRecordService.RetrieveFhirRecordByIdAsync(
+                    someFhirRecordId, TestContext.Current.CancellationToken);
 
             FhirRecordValidationException actualFhirRecordValidationException =
                 await Assert.ThrowsAsync<FhirRecordValidationException>(
@@ -90,7 +93,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
             actualFhirRecordValidationException.Should().BeEquivalentTo(expectedFhirRecordValidationException);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Once());
 
             this.loggingBrokerMock.Verify(broker =>

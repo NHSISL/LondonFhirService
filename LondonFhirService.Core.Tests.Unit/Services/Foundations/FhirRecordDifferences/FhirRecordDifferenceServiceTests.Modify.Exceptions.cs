@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using EFxceptions.Models.Exceptions;
 using FluentAssertions;
@@ -39,7 +40,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             // when
             ValueTask<FhirRecordDifference> modifyFhirRecordDifferenceTask =
-                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(randomFhirRecordDifference);
+                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(
+                    randomFhirRecordDifference, TestContext.Current.CancellationToken);
 
             FhirRecordDifferenceDependencyException actualFhirRecordDifferenceDependencyException =
                 await Assert.ThrowsAsync<FhirRecordDifferenceDependencyException>(
@@ -67,7 +69,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
@@ -75,7 +77,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>()),
+                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
@@ -111,7 +113,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             // when
             ValueTask<FhirRecordDifference> modifyFhirRecordDifferenceTask =
-                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(someFhirRecordDifference);
+                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(
+                    someFhirRecordDifference, TestContext.Current.CancellationToken);
 
             FhirRecordDifferenceDependencyValidationException actualFhirRecordDifferenceDependencyValidationException =
                 await Assert.ThrowsAsync<FhirRecordDifferenceDependencyValidationException>(
@@ -138,7 +141,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
@@ -146,7 +149,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>()),
+                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
@@ -178,7 +181,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             // when
             ValueTask<FhirRecordDifference> modifyFhirRecordDifferenceTask =
-                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(randomFhirRecordDifference);
+                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(
+                    randomFhirRecordDifference, TestContext.Current.CancellationToken);
 
             FhirRecordDifferenceDependencyException actualFhirRecordDifferenceDependencyException =
                 await Assert.ThrowsAsync<FhirRecordDifferenceDependencyException>(
@@ -206,7 +210,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
@@ -214,7 +218,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>()),
+                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
@@ -246,7 +250,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             // when
             ValueTask<FhirRecordDifference> modifyFhirRecordDifferenceTask =
-                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(randomFhirRecordDifference);
+                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(
+                    randomFhirRecordDifference, TestContext.Current.CancellationToken);
 
             FhirRecordDifferenceDependencyValidationException actualFhirRecordDifferenceDependencyValidationException =
                 await Assert.ThrowsAsync<FhirRecordDifferenceDependencyValidationException>(
@@ -274,7 +279,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
@@ -282,7 +287,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>()),
+                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();
@@ -314,7 +319,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
             // when
             ValueTask<FhirRecordDifference> modifyFhirRecordDifferenceTask =
-                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(randomFhirRecordDifference);
+                this.fhirRecordDifferenceService.ModifyFhirRecordDifferenceAsync(
+                    randomFhirRecordDifference, TestContext.Current.CancellationToken);
 
             FhirRecordDifferenceServiceException actualFhirRecordDifferenceServiceException =
                 await Assert.ThrowsAsync<FhirRecordDifferenceServiceException>(
@@ -342,7 +348,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>()),
+                broker.SelectFhirRecordDifferenceByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.Verify(broker => broker
@@ -350,7 +356,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Never);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>()),
+                broker.UpdateFhirRecordDifferenceAsync(It.IsAny<FhirRecordDifference>(), It.IsAny<CancellationToken>()),
                     Times.Never);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();

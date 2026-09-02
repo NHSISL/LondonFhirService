@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -44,12 +45,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     .ReturnsAsync(randomDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.InsertFhirRecordDifferenceAsync(auditAppliedFhirRecordDifference))
+                broker.InsertFhirRecordDifferenceAsync(auditAppliedFhirRecordDifference, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageFhirRecordDifference);
 
             // when
             FhirRecordDifference actualFhirRecordDifference = await this.fhirRecordDifferenceService
-                .AddFhirRecordDifferenceAsync(inputFhirRecordDifference);
+                .AddFhirRecordDifferenceAsync(inputFhirRecordDifference, TestContext.Current.CancellationToken);
 
             // then
             actualFhirRecordDifference.Should().BeEquivalentTo(expectedFhirRecordDifference);
@@ -67,7 +68,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
                     Times.Once());
 
             this.storageBrokerMock.Verify(broker =>
-                broker.InsertFhirRecordDifferenceAsync(auditAppliedFhirRecordDifference),
+                broker.InsertFhirRecordDifferenceAsync(auditAppliedFhirRecordDifference, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();

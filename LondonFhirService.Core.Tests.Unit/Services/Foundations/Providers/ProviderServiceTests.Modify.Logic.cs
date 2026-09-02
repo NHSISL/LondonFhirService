@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -44,7 +45,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     .ReturnsAsync(randomDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectProviderByIdAsync(providerId))
+                broker.SelectProviderByIdAsync(providerId, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageProvider);
 
             this.securityAuditBrokerMock.Setup(broker => broker
@@ -52,12 +53,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     .ReturnsAsync(auditEnsuredProvider);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.UpdateProviderAsync(auditEnsuredProvider))
+                broker.UpdateProviderAsync(auditEnsuredProvider, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(updatedProvider);
 
             // when
             Provider actualProvider =
-                await this.providerService.ModifyProviderAsync(inputProvider);
+                await this.providerService.ModifyProviderAsync(inputProvider, TestContext.Current.CancellationToken);
 
             // then
             actualProvider.Should().BeEquivalentTo(expectedProvider);
@@ -75,7 +76,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectProviderByIdAsync(providerId),
+                broker.SelectProviderByIdAsync(providerId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.securityAuditBrokerMock.Verify(broker => broker
@@ -83,7 +84,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.UpdateProviderAsync(auditEnsuredProvider),
+                broker.UpdateProviderAsync(auditEnsuredProvider, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();

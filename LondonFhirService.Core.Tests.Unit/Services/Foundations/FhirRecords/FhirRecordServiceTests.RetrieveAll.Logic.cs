@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
@@ -21,18 +22,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
             IQueryable<FhirRecord> expectedFhirRecords = storageFhirRecords;
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectAllFhirRecordsAsync())
+                broker.SelectAllFhirRecordsAsync(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageFhirRecords);
 
             // when
             IQueryable<FhirRecord> actualFhirRecords =
-                await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
+                await this.fhirRecordService.RetrieveAllFhirRecordsAsync(TestContext.Current.CancellationToken);
 
             // then
             actualFhirRecords.Should().BeEquivalentTo(expectedFhirRecords);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectAllFhirRecordsAsync(),
+                broker.SelectAllFhirRecordsAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.storageBrokerMock.VerifyNoOtherCalls();

@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Force.DeepCloner;
@@ -46,7 +47,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     .ReturnsAsync(randomDateTimeOffset);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.SelectFhirRecordByIdAsync(fhirRecordId))
+                broker.SelectFhirRecordByIdAsync(fhirRecordId, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(storageFhirRecord);
 
             this.securityAuditBrokerMock.Setup(broker => broker
@@ -54,12 +55,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     .ReturnsAsync(auditEnsuredFhirRecord);
 
             this.storageBrokerMock.Setup(broker =>
-                broker.UpdateFhirRecordAsync(auditEnsuredFhirRecord))
+                broker.UpdateFhirRecordAsync(auditEnsuredFhirRecord, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(updatedFhirRecord);
 
             // when
             FhirRecord actualFhirRecord =
-                await this.fhirRecordService.ModifyFhirRecordAsync(inputFhirRecord);
+                await this.fhirRecordService.ModifyFhirRecordAsync(
+                    inputFhirRecord, TestContext.Current.CancellationToken);
 
             // then
             actualFhirRecord.Should().BeEquivalentTo(expectedFhirRecord);
@@ -77,7 +79,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.SelectFhirRecordByIdAsync(fhirRecordId),
+                broker.SelectFhirRecordByIdAsync(fhirRecordId, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.securityAuditBrokerMock.Verify(broker => broker
@@ -85,7 +87,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
-                broker.UpdateFhirRecordAsync(auditEnsuredFhirRecord),
+                broker.UpdateFhirRecordAsync(auditEnsuredFhirRecord, It.IsAny<CancellationToken>()),
                     Times.Once);
 
             this.securityAuditBrokerMock.VerifyNoOtherCalls();

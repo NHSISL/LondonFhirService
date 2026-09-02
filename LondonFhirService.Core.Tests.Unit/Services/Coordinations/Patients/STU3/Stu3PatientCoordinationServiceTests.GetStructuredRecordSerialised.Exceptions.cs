@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
@@ -35,7 +36,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // when
             ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
-                    .GetStructuredRecordSerialisedAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordSerialisedAsync(
+                        nhsNumber: inputNhsNumber, cancellationToken: TestContext.Current.CancellationToken);
 
             PatientCoordinationDependencyValidationException
                 actualPatientCoordinationDependencyValidationException =
@@ -84,7 +86,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // when
             ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
-                    .GetStructuredRecordSerialisedAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordSerialisedAsync(
+                        nhsNumber: inputNhsNumber, cancellationToken: TestContext.Current.CancellationToken);
 
             PatientCoordinationDependencyException actualPatientCoordinationDependencyException =
                 await Assert.ThrowsAsync<PatientCoordinationDependencyException>(
@@ -138,7 +141,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // When
             ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
-                    .GetStructuredRecordSerialisedAsync(nhsNumber: inputNhsNumber);
+                    .GetStructuredRecordSerialisedAsync(
+                        nhsNumber: inputNhsNumber, cancellationToken: TestContext.Current.CancellationToken);
 
             PatientCoordinationServiceException actualPatientCoordinationServiceException =
                 await Assert.ThrowsAsync<PatientCoordinationServiceException>(
