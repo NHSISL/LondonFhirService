@@ -134,7 +134,7 @@ public partial class Program
         // Resolve InvisibleApiKey from DI
         var invisibleApiKey = app.Services.GetRequiredService<InvisibleApiKey>();
 
-        app.MapGet("/", () => Results.Ok(new
+        app.MapGet("/status", () => Results.Ok(new
         {
             Name = "London FHIR Service Management Portal",
             Version = "1.0",
