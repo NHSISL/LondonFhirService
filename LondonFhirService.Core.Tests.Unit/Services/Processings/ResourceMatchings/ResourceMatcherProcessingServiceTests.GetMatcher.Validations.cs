@@ -36,7 +36,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ResourceMatchin
                     innerException: invalidArgumentResourceMatcherProcessingException);
 
             // when
-            ValueTask<IResourceMatcherService?> getMatcherTask =
+            ValueTask<IResourceMatcherService> getMatcherTask =
                 this.resourceMatcherProcessingService.GetMatcherAsync(invalidResourceType);
 
             // then

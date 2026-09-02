@@ -81,7 +81,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medicatio
             return resourceMatch;
         });
 
-        private static string? GetDateAsserted(JsonElement resource)
+        private static string GetDateAsserted(JsonElement resource)
         {
             if (!resource.TryGetProperty("dateAsserted", out var dateAsserted))
                 return null;
@@ -89,7 +89,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medicatio
             return dateAsserted.GetString();
         }
 
-        private static string? GetMedicationSnomedCode(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
+        private static string GetMedicationSnomedCode(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
         {
             if (resource.TryGetProperty("medicationReference", out var medicationReference)
                 && medicationReference.TryGetProperty("reference", out var referenceProp))
@@ -117,7 +117,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medicatio
             return null;
         }
 
-        private static string? ExtractSnomedCodeFromCode(JsonElement resource)
+        private static string ExtractSnomedCodeFromCode(JsonElement resource)
         {
             if (!resource.TryGetProperty("code", out var code))
                 return null;
@@ -125,7 +125,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Medicatio
             return ExtractSnomedCodeFromCodeableConcept(code);
         }
 
-        private static string? ExtractSnomedCodeFromCodeableConcept(JsonElement codeableConcept)
+        private static string ExtractSnomedCodeFromCodeableConcept(JsonElement codeableConcept)
         {
             if (!codeableConcept.TryGetProperty("coding", out var coding))
                 return null;

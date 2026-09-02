@@ -26,7 +26,7 @@ namespace LondonFhirService.Api.Tests.Performance
         {
             // given
             string inputNhsNumber = nhsNumber;
-            string? inputDateOfBirth = null;
+            string inputDateOfBirth = null;
             bool? inputDemographicsOnly = null;
             bool? inputIncludeInactivePatients = null;
             string accessToken = await GetLfsAccessToken();
@@ -92,7 +92,7 @@ namespace LondonFhirService.Api.Tests.Performance
         {
             // given
             string inputNhsNumber = nhsNumber;
-            string? inputDateOfBirth = null;
+            string inputDateOfBirth = null;
             bool? inputDemographicsOnly = null;
             bool? inputIncludeInactivePatients = null;
             string accessToken = await GetDdsAccessToken();

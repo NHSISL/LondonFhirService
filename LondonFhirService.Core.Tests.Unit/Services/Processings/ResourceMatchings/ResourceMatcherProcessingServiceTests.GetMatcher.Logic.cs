@@ -31,7 +31,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ResourceMatchin
             IResourceMatcherService expectedMatcher = matcherMock.Object;
 
             // when
-            IResourceMatcherService? actualMatcher =
+            IResourceMatcherService actualMatcher =
                 await service.GetMatcherAsync(randomResourceType);
 
             // then
@@ -55,10 +55,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ResourceMatchin
                 matchers: new List<IResourceMatcherService> { matcherMock.Object },
                 loggingBroker: this.loggingBrokerMock.Object);
 
-            IResourceMatcherService? expectedMatcher = null;
+            IResourceMatcherService expectedMatcher = null;
 
             // when
-            IResourceMatcherService? actualMatcher =
+            IResourceMatcherService actualMatcher =
                 await service.GetMatcherAsync(unknownResourceType);
 
             // then

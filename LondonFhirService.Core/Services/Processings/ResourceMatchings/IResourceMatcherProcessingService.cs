@@ -9,7 +9,7 @@ namespace LondonFhirService.Core.Services.Processings.ResourceMatchings
 {
     public interface IResourceMatcherProcessingService
     {
-        ValueTask<IResourceMatcherService?> GetMatcherAsync(string resourceType);
+        ValueTask<IResourceMatcherService> GetMatcherAsync(string resourceType);
         ValueTask<bool> HasMatcherAsync(string resourceType);
     }
 }
