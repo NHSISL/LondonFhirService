@@ -86,7 +86,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.consumerAccessServiceMock.Verify(service =>
                 service.CheckConsumerAccessAsync(
                     It.Is(SameValidateAccessRequestAs(userId, inputNhsNumber, correlationId)),
-                    default),
+                    TestContext.Current.CancellationToken),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -368,7 +368,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.consumerAccessServiceMock.Verify(service =>
                 service.CheckConsumerAccessAsync(
                     It.Is(SameValidateAccessRequestAs(userId, inputNhsNumber, correlationId)),
-                    default),
+                    TestContext.Current.CancellationToken),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
