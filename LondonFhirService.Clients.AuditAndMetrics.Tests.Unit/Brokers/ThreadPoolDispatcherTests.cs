@@ -51,15 +51,13 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             // leaves. Unhandled it would surface as an unobserved task exception instead.
             accepted.Should().BeTrue();
 
-            Task<Exception> completed = await Task.WhenAny(
-                loggedException.Task,
-                Task.Delay(WaitTimeout, TestContext.Current.CancellationToken)
-                    .ContinueWith<Exception>(_ => null));
+            // WaitAsync rather than a delay raced in Task.WhenAny: a cancelled run then ends as
+            // cancelled instead of completing the delay first and reading as a timeout.
+            Exception actualLoggedException =
+                await loggedException.Task.WaitAsync(WaitTimeout, TestContext.Current.CancellationToken);
 
-            completed.Should().BeSameAs(loggedException.Task,
+            actualLoggedException.Should().BeSameAs(storageException,
                 because: "an unexpected failure in a dispatched write must be logged");
-
-            (await loggedException.Task).Should().BeSameAs(storageException);
         }
 
         [Fact]
@@ -86,11 +84,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             // A cancelled request or a host shutting down cancels these writes. Reporting that as
             // an error puts a line in the log every time a client disconnects, which buries the
             // failures that do matter.
-            Task first = await Task.WhenAny(
-                loggedAnything.Task,
-                Task.Delay(WaitTimeout, TestContext.Current.CancellationToken));
+            // The wait itself, not a delay raced against the signal: raced, a cancelled run
+            // completes the delay early and the assertion below passes without ever waiting.
+            await Task.Delay(WaitTimeout, TestContext.Current.CancellationToken);
 
-            first.Should().NotBeSameAs(loggedAnything.Task,
+            loggedAnything.Task.IsCompleted.Should().BeFalse(
                 because: "cancellation is expected and must not be logged as a failure");
         }
 
