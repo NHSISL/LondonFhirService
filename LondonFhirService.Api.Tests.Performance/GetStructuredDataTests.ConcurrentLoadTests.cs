@@ -2,6 +2,8 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+#nullable enable annotations
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -35,7 +37,7 @@ namespace LondonFhirService.Api.Tests.Performance
             string accessToken = await GetLfsAccessToken();
             int numberOfRequests = requests;
 
-            List<Task<(bool isSuccess, TimeSpan elapsedTime, string? error)>> tasks = new();
+            var tasks = new List<Task<(bool isSuccess, TimeSpan elapsedTime, string? error)>>();
 
             // when
             for (int index = 0; index < numberOfRequests; index++)
@@ -67,7 +69,7 @@ namespace LondonFhirService.Api.Tests.Performance
             string accessToken = await GetDdsAccessToken();
             int numberOfRequests = requests;
 
-            List<Task<(bool isSuccess, TimeSpan elapsedTime, string? error)>> tasks = new();
+            var tasks = new List<Task<(bool isSuccess, TimeSpan elapsedTime, string? error)>>();
 
             // when
             for (int index = 0; index < numberOfRequests; index++)

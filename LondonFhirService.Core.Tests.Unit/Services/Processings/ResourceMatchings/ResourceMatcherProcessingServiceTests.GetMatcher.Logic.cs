@@ -2,6 +2,8 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+#nullable enable annotations
+
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -55,14 +57,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ResourceMatchin
                 matchers: new List<IResourceMatcherService> { matcherMock.Object },
                 loggingBroker: this.loggingBrokerMock.Object);
 
-            IResourceMatcherService? expectedMatcher = null;
-
             // when
             IResourceMatcherService? actualMatcher =
                 await service.GetMatcherAsync(unknownResourceType);
 
             // then
-            actualMatcher.Should().BeSameAs(expectedMatcher);
+            actualMatcher.Should().BeNull();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }

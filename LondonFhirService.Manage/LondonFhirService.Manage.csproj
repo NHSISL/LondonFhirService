@@ -7,9 +7,9 @@
 		<SpaRoot>..\LondonFhirService.Manage.Client</SpaRoot>
 		<SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
 		<SpaProxyServerUrl>https://localhost:6073</SpaProxyServerUrl>
-		<Version>0.6.0.0</Version>
-		<AssemblyVersion>0.6.0.0</AssemblyVersion>
-		<FileVersion>0.6.0.0</FileVersion>
+		<Version>0.7.0.0</Version>
+		<AssemblyVersion>0.7.0.0</AssemblyVersion>
+		<FileVersion>0.7.0.0</FileVersion>
 		<PackageReleaseNotes>
 			Initial release of the London FHIR Service Management Website.
 		</PackageReleaseNotes>
@@ -48,7 +48,7 @@
 			project belongs to this web app rather than being a launchable web server in its own
 			right. ReferenceOutputAssembly is false because a JavaScript project produces no
 			assembly to reference - this exists purely to establish the relationship and the
-			build order. Conditioned to Visual Studio only: dotnet restore (CI runs on Linux)
+			build order. Conditioned to Visual Studio only: a command line dotnet restore
 			cannot restore the JavaScript SDK esproj and fails with NU1105.
 		-->
 		<ProjectReference

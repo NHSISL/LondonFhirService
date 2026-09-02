@@ -11,9 +11,6 @@ namespace LondonFhirService.Core.Models.Foundations.Providers
         public string AuthorisationUrl { get; set; } = string.Empty;
         public string BaseUrl { get; set; } = string.Empty;
         public string GetStructuredRecordRelativeUrl { get; set; } = string.Empty;
-        public string Source { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
-        public string System { get; set; } = string.Empty;
         public int TimeoutSeconds { get; set; } = 100;
     }
 }
