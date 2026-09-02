@@ -9,7 +9,7 @@ namespace LondonFhirService.Core.Models.Foundations.ResourceMatchers
     public record UnmatchedResource(
         JsonElement Resource,
         string ResourceType,
-        string Identifier,
+        string? Identifier,
         bool IsFromSource1
     );
 }

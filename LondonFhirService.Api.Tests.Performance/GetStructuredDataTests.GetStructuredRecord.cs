@@ -26,16 +26,16 @@ namespace LondonFhirService.Api.Tests.Performance
         {
             // given
             string inputNhsNumber = nhsNumber;
-            string inputDateOfBirth = null;
-            bool? inputDemographicsOnly = null;
-            bool? inputIncludeInactivePatients = null;
+            string? noInputDateOfBirth = null;
+            bool? noInputDemographicsOnly = null;
+            bool? noInputIncludeInactivePatients = null;
             string accessToken = await GetLfsAccessToken();
 
             Parameters inputParameters = CreateGetStructuredRecordParameters(
                 nhsNumber: inputNhsNumber,
-                dateOfBirth: inputDateOfBirth,
-                demographicsOnly: inputDemographicsOnly,
-                includeInactivePatients: inputIncludeInactivePatients);
+                dateOfBirth: noInputDateOfBirth,
+                demographicsOnly: noInputDemographicsOnly,
+                includeInactivePatients: noInputIncludeInactivePatients);
 
             var options = new JsonSerializerOptions()
                 .ForFhir(ModelInfo.ModelInspector);
@@ -92,16 +92,16 @@ namespace LondonFhirService.Api.Tests.Performance
         {
             // given
             string inputNhsNumber = nhsNumber;
-            string inputDateOfBirth = null;
-            bool? inputDemographicsOnly = null;
-            bool? inputIncludeInactivePatients = null;
+            string? noInputDateOfBirth = null;
+            bool? noInputDemographicsOnly = null;
+            bool? noInputIncludeInactivePatients = null;
             string accessToken = await GetDdsAccessToken();
 
             Parameters inputParameters = CreateGetStructuredRecordParameters(
                 nhsNumber: inputNhsNumber,
-                dateOfBirth: inputDateOfBirth,
-                demographicsOnly: inputDemographicsOnly,
-                includeInactivePatients: inputIncludeInactivePatients);
+                dateOfBirth: noInputDateOfBirth,
+                demographicsOnly: noInputDemographicsOnly,
+                includeInactivePatients: noInputIncludeInactivePatients);
 
             var options = new JsonSerializerOptions()
                 .ForFhir(ModelInfo.ModelInspector);

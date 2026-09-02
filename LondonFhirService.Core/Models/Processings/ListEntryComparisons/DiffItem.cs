@@ -15,19 +15,19 @@ namespace LondonFhirService.Core.Models.Processings.ListEntryComparisons
         public string Path { get; set; } = string.Empty;
 
         [JsonPropertyName("oldValue")]
-        public string OldValue { get; set; }
+        public string? OldValue { get; set; }
 
         [JsonPropertyName("newValue")]
-        public string NewValue { get; set; }
+        public string? NewValue { get; set; }
 
         [JsonPropertyName("resourceType")]
-        public string ResourceType { get; set; }
+        public string? ResourceType { get; set; }
 
         [JsonPropertyName("identifier")]
-        public string Identifier { get; set; }
+        public string? Identifier { get; set; }
 
         [JsonPropertyName("reason")]
-        public string Reason { get; set; }
+        public string? Reason { get; set; }
 
         /// <summary>
         /// Whether an administrator has reviewed this difference and judged it acceptable - the

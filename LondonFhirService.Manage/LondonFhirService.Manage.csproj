@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
-		<Nullable>disable</Nullable>
+		<Nullable>annotations</Nullable>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<SpaRoot>..\LondonFhirService.Manage.Client</SpaRoot>
 		<SpaProxyLaunchCommand>npm run dev</SpaProxyLaunchCommand>
@@ -48,11 +48,12 @@
 			project belongs to this web app rather than being a launchable web server in its own
 			right. ReferenceOutputAssembly is false because a JavaScript project produces no
 			assembly to reference - this exists purely to establish the relationship and the
-			build order. Conditioned to Visual Studio only: dotnet restore (CI runs on Linux)
+			build order. Conditioned to Visual Studio only: a command line dotnet restore
 			cannot restore the JavaScript SDK esproj and fails with NU1105.
 		-->
 		<ProjectReference
-			Include="..\LondonFhirService.Manage.Client\LondonFhirService.Manage.Client.esproj">
+			Include="..\LondonFhirService.Manage.Client\LondonFhirService.Manage.Client.esproj"
+			Condition="'$(BuildingInsideVisualStudio)' == 'true'">
 			<ReferenceOutputAssembly>false</ReferenceOutputAssembly>
 		</ProjectReference>
 	</ItemGroup>

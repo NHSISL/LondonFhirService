@@ -28,12 +28,12 @@ internal partial class ResourceMatcherProcessingService : IResourceMatcherProces
         this.loggingBroker = loggingBroker;
     }
 
-    public ValueTask<IResourceMatcherService> GetMatcherAsync(string resourceType) =>
+    public ValueTask<IResourceMatcherService?> GetMatcherAsync(string resourceType) =>
         TryCatch(async () =>
         {
             ValidateResourceType(resourceType);
 
-            return this.matchers.TryGetValue(resourceType, out IResourceMatcherService matcher)
+            return this.matchers.TryGetValue(resourceType, out IResourceMatcherService? matcher)
                 ? matcher
                 : null;
         });

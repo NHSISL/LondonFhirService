@@ -44,7 +44,7 @@ using Microsoft.OData.ModelBuilder;
 
 public partial class Program
 {
-    internal static Action<WebApplicationBuilder> TestConfigurationOverrides { get; set; } = null;
+    internal static Action<WebApplicationBuilder>? TestConfigurationOverrides { get; set; } = null;
     internal static bool ExcludeAppInsightsForTesting { get; set; } = false;
 
     internal static void ConfigurationOverridesForTesting(WebApplicationBuilder builder)

@@ -37,7 +37,7 @@ namespace LondonFhirService.Api.Tests.Integration.Utilities
 
         public static string Normalize(string json)
         {
-            JsonNode root = JsonNode.Parse(json);
+            JsonNode? root = JsonNode.Parse(json);
             if (root is null) return string.Empty;
 
             JsonNode normalized = NormalizeNode(root);
@@ -68,7 +68,7 @@ namespace LondonFhirService.Api.Tests.Integration.Utilities
             foreach (var kvp in obj.OrderBy(k => k.Key, StringComparer.Ordinal))
             {
                 string key = kvp.Key;
-                JsonNode value = kvp.Value;
+                JsonNode? value = kvp.Value;
 
                 if (value is null)
                 {

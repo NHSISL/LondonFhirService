@@ -93,7 +93,7 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
 
             string trimmedUrl = ddsAccessTokenUrl.Trim();
 
-            if (!Uri.TryCreate(trimmedUrl, UriKind.Absolute, out Uri tokenUri) ||
+            if (!Uri.TryCreate(trimmedUrl, UriKind.Absolute, out Uri? tokenUri) ||
                 !string.Equals(tokenUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException(
@@ -130,7 +130,7 @@ namespace LondonFhirService.Api.Tests.Integration.Brokers
             // 4) Parse token
             using JsonDocument document = JsonDocument.Parse(responseContent);
 
-            string accessToken = document.RootElement.TryGetProperty("access_token", out JsonElement tokenElement)
+            string? accessToken = document.RootElement.TryGetProperty("access_token", out JsonElement tokenElement)
                 ? tokenElement.GetString()
                 : null;
 

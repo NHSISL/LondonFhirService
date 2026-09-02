@@ -35,7 +35,7 @@ namespace LondonFhirService.Api.Tests.Performance
             string accessToken = await GetLfsAccessToken();
             int numberOfRequests = requests;
 
-            List<Task<(bool isSuccess, TimeSpan elapsedTime, string error)>> tasks = new();
+            var tasks = new List<Task<(bool isSuccess, TimeSpan elapsedTime, string? error)>>();
 
             // when
             for (int index = 0; index < numberOfRequests; index++)
@@ -67,7 +67,7 @@ namespace LondonFhirService.Api.Tests.Performance
             string accessToken = await GetDdsAccessToken();
             int numberOfRequests = requests;
 
-            List<Task<(bool isSuccess, TimeSpan elapsedTime, string error)>> tasks = new();
+            var tasks = new List<Task<(bool isSuccess, TimeSpan elapsedTime, string? error)>>();
 
             // when
             for (int index = 0; index < numberOfRequests; index++)
@@ -84,7 +84,7 @@ namespace LondonFhirService.Api.Tests.Performance
                 results: results);
         }
 
-        private async Task<(bool isSuccess, TimeSpan elapsedTime, string error)> SendLondonFhirServiceRequestAsync(
+        private async Task<(bool isSuccess, TimeSpan elapsedTime, string? error)> SendLondonFhirServiceRequestAsync(
             string accessToken)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -92,7 +92,7 @@ namespace LondonFhirService.Api.Tests.Performance
             try
             {
                 string inputNhsNumber = consumerAccessTokenSettings.NhsNumber;
-                string inputDateOfBirth = consumerAccessTokenSettings.DateOfBirth;
+                string? inputDateOfBirth = consumerAccessTokenSettings.DateOfBirth;
                 bool? inputDemographicsOnly = consumerAccessTokenSettings.DemographicsOnly;
                 bool? inputIncludeInactivePatients = consumerAccessTokenSettings.IncludeInactivePatients;
 
@@ -148,7 +148,7 @@ namespace LondonFhirService.Api.Tests.Performance
             }
         }
 
-        private async Task<(bool isSuccess, TimeSpan elapsedTime, string error)> SendDdsRequestAsync(
+        private async Task<(bool isSuccess, TimeSpan elapsedTime, string? error)> SendDdsRequestAsync(
             string accessToken)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -156,7 +156,7 @@ namespace LondonFhirService.Api.Tests.Performance
             try
             {
                 string inputNhsNumber = consumerAccessTokenSettings.NhsNumber;
-                string inputDateOfBirth = consumerAccessTokenSettings.DateOfBirth;
+                string? inputDateOfBirth = consumerAccessTokenSettings.DateOfBirth;
                 bool? inputDemographicsOnly = consumerAccessTokenSettings.DemographicsOnly;
                 bool? inputIncludeInactivePatients = consumerAccessTokenSettings.IncludeInactivePatients;
 
@@ -208,7 +208,7 @@ namespace LondonFhirService.Api.Tests.Performance
         private void AssertLoadTestResults(
             string systemName,
             int numberOfRequests,
-            (bool isSuccess, TimeSpan elapsedTime, string error)[] results)
+            (bool isSuccess, TimeSpan elapsedTime, string? error)[] results)
         {
             int successCount = results.Count(result => result.isSuccess);
             int failureCount = results.Count(result => !result.isSuccess);

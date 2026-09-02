@@ -85,7 +85,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                     List<JsonElement> source2ResourcesForType =
                         source2Resources.GetValueOrDefault(resourceType, new List<JsonElement>());
 
-                    IResourceMatcherService matcher =
+                    IResourceMatcherService? matcher =
                         await resourceMatcherProcessingService.GetMatcherAsync(resourceType);
 
                     if (matcher is null)
@@ -293,7 +293,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
         }
 
         private async ValueTask<List<DiffItem>> CompareJsonElements(
-            JsonElement source1, JsonElement source2, string path, string resourceType, string resourceId)
+            JsonElement source1, JsonElement source2, string path, string resourceType, string? resourceId)
         {
             var diffs = new List<DiffItem>();
             var normalized1 = await ApplyIgnoreRules(source1, path);
@@ -352,7 +352,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
             string path,
             List<DiffItem> diffs,
             string resourceType,
-            string resourceId)
+            string? resourceId)
         {
             if (source1.ValueKind != source2.ValueKind)
             {

@@ -44,7 +44,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ResourceMatchin
                 .Throws(serviceException);
 
             // when
-            ValueTask<IResourceMatcherService> getMatcherTask =
+            ValueTask<IResourceMatcherService?> getMatcherTask =
                 resourceMatcherProcessingServiceMock.Object.GetMatcherAsync(randomResourceType);
 
             // then

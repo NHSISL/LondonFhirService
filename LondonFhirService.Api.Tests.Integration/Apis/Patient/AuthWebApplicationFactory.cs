@@ -24,7 +24,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
                 builder.Configuration
                     .AddJsonFile(Path.Combine(testProjectPath, "appsettings.json"), optional: true)
                     .AddJsonFile(Path.Combine(testProjectPath, "appsettings.Integration.json"), optional: true)
-                    .AddInMemoryCollection(new Dictionary<string, string>
+                    .AddInMemoryCollection(new Dictionary<string, string?>
                     {
                         // Put your strong overrides here
                         //["AzureAd:TenantId"] = "TEST-TENANT",
