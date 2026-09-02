@@ -2,6 +2,8 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+#nullable enable annotations
+
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
