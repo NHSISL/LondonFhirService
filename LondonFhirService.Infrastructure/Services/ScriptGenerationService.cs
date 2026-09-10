@@ -160,7 +160,12 @@ namespace LondonFhirService.Infrastructure.Services
                                 new GithubTask
                                 {
                                     Name = "Install EF Tools",
-                                    Run = "dotnet tool install --global dotnet-ef"
+                                    Shell = "bash",
+                                    Run =
+                                        """
+                                        dotnet tool install --global dotnet-ef
+                                        echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+                                        """
                                 },
 
                                 new GithubTask

@@ -84,7 +84,11 @@ jobs:
     - name: Build
       run: dotnet build LondonFhirService.CI.slnf --no-restore
     - name: Install EF Tools
-      run: dotnet tool install --global dotnet-ef
+      run: >-
+        dotnet tool install --global dotnet-ef
+
+        echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+      shell: bash
     - name: Deploy Database
       env:
         ConnectionStrings__LondonFhirServiceConnectionString: Server=localhost,1433;Database=LondonFhirService;User Id=sa;Password=${{ env.CI_SQL_SERVER_PASSWORD }};TrustServerCertificate=True;MultipleActiveResultSets=true
