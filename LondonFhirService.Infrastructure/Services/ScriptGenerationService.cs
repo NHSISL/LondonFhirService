@@ -139,18 +139,22 @@ namespace LondonFhirService.Infrastructure.Services
                                     Shell = "pwsh",
                                     Run =
                                         """
-                                        $localDbServer = [regex]::Escape('Server=(localdb)\MSSQLLocalDB;')
-                                        $trustedConnection = [regex]::Escape('Trusted_Connection=True;')
-                                        $sqlAuth = "User Id=sa;Password=$env:CI_SQL_SERVER_PASSWORD;" `
-                                          + "TrustServerCertificate=True;"
+                                        # Parsed as JSON rather than text-replaced: the LocalDB connection
+                                        # strings are backslash-escaped on disk, and a raw-text match on the
+                                        # escaped form is fragile. Parsing keeps each file's own Database=
+                                        # name and only swaps in the container's server/credentials.
                                         $files = Get-ChildItem -Path . -Filter "appsettings.json" -Recurse
                                         foreach ($file in $files) {
-                                          $content = Get-Content $file.FullName -Raw
-                                          if ($content -match "LondonFhirServiceConnectionString") {
-                                            $updated = $content `
-                                              -replace $localDbServer, 'Server=localhost,1433;' `
-                                              -replace $trustedConnection, $sqlAuth
-                                            Set-Content -Path $file.FullName -Value $updated
+                                          $json = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                                          $current = $json.ConnectionStrings.LondonFhirServiceConnectionString
+                                          if ($current -and ($current -match "Database=([^;]+)")) {
+                                            $databaseName = $matches[1]
+                                            $password = $env:CI_SQL_SERVER_PASSWORD
+                                            $json.ConnectionStrings.LondonFhirServiceConnectionString = (
+                                              "Server=localhost,1433;Database=$databaseName;User Id=sa;" +
+                                              "Password=$password;TrustServerCertificate=True;" +
+                                              "MultipleActiveResultSets=true")
+                                            $json | ConvertTo-Json -Depth 10 | Set-Content -Path $file.FullName
                                             Write-Host "Patched connection string in $($file.FullName)"
                                           }
                                         }
