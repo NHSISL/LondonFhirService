@@ -103,12 +103,20 @@ namespace LondonFhirService.Infrastructure.Services
 
                                 new RestoreTask
                                 {
-                                    Name = "Restore"
+                                    Name = "Restore",
+
+                                    // LondonFhirService.Manage.Client.esproj (Microsoft.VisualStudio.JavaScript.Sdk)
+                                    // only defines a TargetFrameworkVersion when '$(OS)'=='WINDOWS_NT' - by the SDK's
+                                    // own admission, "nuget restore will not work on Mac/Linux by default" for it. The
+                                    // CI solution filter below restores everything except that JS/TS project; local
+                                    // Visual Studio/Rider users keep opening the full LondonFhirService.slnx unchanged.
+                                    Run = "dotnet restore LondonFhirService.CI.slnf"
                                 },
 
                                 new DotNetBuildTask
                                 {
-                                    Name = "Build"
+                                    Name = "Build",
+                                    Run = "dotnet build LondonFhirService.CI.slnf --no-restore"
                                 },
 
                                 new GithubTask

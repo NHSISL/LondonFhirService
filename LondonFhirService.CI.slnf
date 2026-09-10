@@ -1,0 +1,23 @@
+{
+  "solution": {
+    "path": "LondonFhirService.slnx",
+    "projects": [
+      "LondonFhirService.Infrastructure\\LondonFhirService.Infrastructure.csproj",
+      "LondonFhirService.Clients.AuditAndMetrics\\LondonFhirService.Clients.AuditAndMetrics.csproj",
+      "LondonFhirService.Clients.AuditAndMetrics.Tests.Acceptance\\LondonFhirService.Clients.AuditAndMetrics.Tests.Acceptance.csproj",
+      "LondonFhirService.Clients.AuditAndMetrics.Tests.Unit\\LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.csproj",
+      "LondonFhirService.Core.Tests.Unit\\LondonFhirService.Core.Tests.Unit.csproj",
+      "LondonFhirService.Core.Abstractions\\LondonFhirService.Core.Abstractions.csproj",
+      "LondonFhirService.Core\\LondonFhirService.Core.csproj",
+      "LondonFhirService.Api.Tests.Acceptance\\LondonFhirService.Api.Tests.Acceptance.csproj",
+      "LondonFhirService.Api.Tests.Integration\\LondonFhirService.Api.Tests.Integration.csproj",
+      "LondonFhirService.Api.Tests.Performance\\LondonFhirService.Api.Tests.Performance.csproj",
+      "LondonFhirService.Api.Tests.Unit\\LondonFhirService.Api.Tests.Unit.csproj",
+      "LondonFhirService.Api\\LondonFhirService.Api.csproj",
+      "LondonFhirService.Manage.Tests.Acceptance\\LondonFhirService.Manage.Tests.Acceptance.csproj",
+      "LondonFhirService.Manage.Tests.Integration\\LondonFhirService.Manage.Tests.Integration.csproj",
+      "LondonFhirService.Manage.Tests.Unit\\LondonFhirService.Manage.Tests.Unit.csproj",
+      "LondonFhirService.Manage\\LondonFhirService.Manage.csproj"
+    ]
+  }
+}

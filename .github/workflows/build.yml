@@ -39,9 +39,9 @@ jobs:
         exit 1
       shell: bash
     - name: Restore
-      run: dotnet restore
+      run: dotnet restore LondonFhirService.CI.slnf
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build LondonFhirService.CI.slnf --no-restore
     - name: Install EF Tools
       run: dotnet tool install --global dotnet-ef
     - name: Point CI database connections at Dockerized SQL Server
