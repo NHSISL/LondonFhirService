@@ -82,6 +82,36 @@ namespace LondonFhirService.Infrastructure.Services
 
                                 new GithubTask
                                 {
+                                    Name = "Point CI database connections at Dockerized SQL Server",
+                                    Shell = "pwsh",
+                                    Run =
+                                        """
+                                        # Parsed as JSON rather than text-replaced: the LocalDB connection
+                                        # strings are backslash-escaped on disk, and a raw-text match on the
+                                        # escaped form is fragile. Parsing keeps each file's own Database=
+                                        # name and only swaps in the container's server/credentials. This
+                                        # runs before Restore/Build so the build's own content-copy carries
+                                        # the patched values into bin/ - no need to patch build output too.
+                                        $files = Get-ChildItem -Path . -Filter "appsettings.json" -Recurse
+                                        foreach ($file in $files) {
+                                          $json = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                                          $current = $json.ConnectionStrings.LondonFhirServiceConnectionString
+                                          if ($current -and ($current -match "Database=([^;]+)")) {
+                                            $databaseName = $matches[1]
+                                            $password = $env:CI_SQL_SERVER_PASSWORD
+                                            $json.ConnectionStrings.LondonFhirServiceConnectionString = (
+                                              "Server=localhost,1433;Database=$databaseName;User Id=sa;" +
+                                              "Password=$password;TrustServerCertificate=True;" +
+                                              "MultipleActiveResultSets=true")
+                                            $json | ConvertTo-Json -Depth 10 | Set-Content -Path $file.FullName
+                                            Write-Host "Patched connection string in $($file.FullName)"
+                                          }
+                                        }
+                                        """
+                                },
+
+                                new GithubTask
+                                {
                                     Name = "Start SQL Server (Docker)",
                                     Run = "docker run -d --name ci-sql-server -e \"ACCEPT_EULA=Y\" " +
                                         "-e \"MSSQL_SA_PASSWORD=$CI_SQL_SERVER_PASSWORD\" -p 1433:1433 " +
@@ -131,34 +161,6 @@ namespace LondonFhirService.Infrastructure.Services
                                 {
                                     Name = "Install EF Tools",
                                     Run = "dotnet tool install --global dotnet-ef"
-                                },
-
-                                new GithubTask
-                                {
-                                    Name = "Point CI database connections at Dockerized SQL Server",
-                                    Shell = "pwsh",
-                                    Run =
-                                        """
-                                        # Parsed as JSON rather than text-replaced: the LocalDB connection
-                                        # strings are backslash-escaped on disk, and a raw-text match on the
-                                        # escaped form is fragile. Parsing keeps each file's own Database=
-                                        # name and only swaps in the container's server/credentials.
-                                        $files = Get-ChildItem -Path . -Filter "appsettings.json" -Recurse
-                                        foreach ($file in $files) {
-                                          $json = Get-Content $file.FullName -Raw | ConvertFrom-Json
-                                          $current = $json.ConnectionStrings.LondonFhirServiceConnectionString
-                                          if ($current -and ($current -match "Database=([^;]+)")) {
-                                            $databaseName = $matches[1]
-                                            $password = $env:CI_SQL_SERVER_PASSWORD
-                                            $json.ConnectionStrings.LondonFhirServiceConnectionString = (
-                                              "Server=localhost,1433;Database=$databaseName;User Id=sa;" +
-                                              "Password=$password;TrustServerCertificate=True;" +
-                                              "MultipleActiveResultSets=true")
-                                            $json | ConvertTo-Json -Depth 10 | Set-Content -Path $file.FullName
-                                            Write-Host "Patched connection string in $($file.FullName)"
-                                          }
-                                        }
-                                        """
                                 },
 
                                 new GithubTask
