@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using Microsoft.EntityFrameworkCore.Design;
@@ -13,12 +14,20 @@ namespace LondonFhirService.Core
     {
         public StorageBroker CreateDbContext(string[] args)
         {
+            // CI (Linux) runs against a Dockerized SQL Server container and has no LocalDB, so
+            // ConnectionStrings__LondonFhirServiceConnectionString - the standard .NET config
+            // env var override - lets the build pipeline point this at the container without
+            // touching the LocalDB default every other environment still relies on.
+            string connectionString =
+                Environment.GetEnvironmentVariable("ConnectionStrings__LondonFhirServiceConnectionString")
+                ?? "Server=(localdb)\\MSSQLLocalDB;Database=LondonFhirService;" +
+                    "Trusted_Connection=True;MultipleActiveResultSets=true";
+
             List<KeyValuePair<string, string>> config = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>(
                     key: "ConnectionStrings:LondonFhirServiceConnectionString",
-                    value: "Server=(localdb)\\MSSQLLocalDB;Database=LondonFhirService;" +
-                        "Trusted_Connection=True;MultipleActiveResultSets=true"),
+                    value: connectionString),
             };
 
             var configurationBuilder = new ConfigurationBuilder()

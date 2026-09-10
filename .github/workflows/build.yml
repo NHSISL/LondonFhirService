@@ -12,23 +12,58 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
-    - name: Enable long paths for Git
-      run: git config --system core.longpaths true
     - name: Check out
       uses: actions/checkout@v5
     - name: Setup .Net
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.x
+    - name: Start SQL Server (Docker)
+      run: docker run -d --name ci-sql-server -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=P@ssw0rd_CI_Only!" -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
+    - name: Wait for SQL Server to be ready
+      run: >-
+        for i in {1..30}; do
+          if docker exec ci-sql-server /opt/mssql-tools18/bin/sqlcmd \
+              -C -S localhost -U sa -P "P@ssw0rd_CI_Only!" -Q "SELECT 1" > /dev/null 2>&1; then
+            echo "SQL Server is ready"
+            exit 0
+          fi
+          echo "Waiting for SQL Server... ($i)"
+          sleep 2
+        done
+
+        echo "::error::SQL Server did not become ready in time"
+
+        exit 1
+      shell: bash
     - name: Restore
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Install EF Tools
       run: dotnet tool install --global dotnet-ef
+    - name: Point CI database connections at Dockerized SQL Server
+      env:
+        CI_SQL_SERVER_PASSWORD: P@ssw0rd_CI_Only!
+      run: >-
+        $files = Get-ChildItem -Path . -Filter "appsettings.json" -Recurse
+
+        foreach ($file in $files) {
+          $content = Get-Content $file.FullName -Raw
+          if ($content -match "LondonFhirServiceConnectionString") {
+            $updated = $content `
+              -replace [regex]::Escape('Server=(localdb)\MSSQLLocalDB;'), 'Server=localhost,1433;' `
+              -replace [regex]::Escape('Trusted_Connection=True;'), "User Id=sa;Password=$env:CI_SQL_SERVER_PASSWORD;TrustServerCertificate=True;"
+            Set-Content -Path $file.FullName -Value $updated
+            Write-Host "Patched connection string in $($file.FullName)"
+          }
+        }
+      shell: pwsh
     - name: Deploy Database
+      env:
+        ConnectionStrings__LondonFhirServiceConnectionString: Server=localhost,1433;Database=LondonFhirService;User Id=sa;Password=P@ssw0rd_CI_Only!;TrustServerCertificate=True;MultipleActiveResultSets=true
       run: dotnet ef database update --project LondonFhirService.Core/LondonFhirService.Core.csproj --startup-project LondonFhirService.Core/LondonFhirService.Core.csproj
     - name: Run Unit Tests
       run: >-
