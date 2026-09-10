@@ -13,11 +13,6 @@ namespace LondonFhirService.Infrastructure.Services
 {
     internal class ScriptGenerationService
     {
-        // Throwaway credential for the ephemeral, single-run CI SQL Server container only -
-        // the container is destroyed with the runner at the end of every job and never holds
-        // real data, so this doesn't need to be a repository secret.
-        private const string CiSqlServerPassword = "P@ssw0rd_CI_Only!";
-
         private readonly ADotNetClient adotNetClient;
 
         public ScriptGenerationService() =>
@@ -75,9 +70,21 @@ namespace LondonFhirService.Infrastructure.Services
 
                                 new GithubTask
                                 {
+                                    Name = "Generate CI SQL Server password",
+                                    Shell = "bash",
+                                    Run =
+                                        """
+                                        password="$(openssl rand -base64 24)Aa1!"
+                                        echo "::add-mask::$password"
+                                        echo "CI_SQL_SERVER_PASSWORD=$password" >> "$GITHUB_ENV"
+                                        """
+                                },
+
+                                new GithubTask
+                                {
                                     Name = "Start SQL Server (Docker)",
                                     Run = "docker run -d --name ci-sql-server -e \"ACCEPT_EULA=Y\" " +
-                                        $"-e \"MSSQL_SA_PASSWORD={CiSqlServerPassword}\" -p 1433:1433 " +
+                                        "-e \"MSSQL_SA_PASSWORD=$CI_SQL_SERVER_PASSWORD\" -p 1433:1433 " +
                                         "mcr.microsoft.com/mssql/server:2022-latest"
                                 },
 
@@ -86,10 +93,11 @@ namespace LondonFhirService.Infrastructure.Services
                                     Name = "Wait for SQL Server to be ready",
                                     Shell = "bash",
                                     Run =
-                                        $$"""
+                                        """
+                                        sqlcmd_path=/opt/mssql-tools18/bin/sqlcmd
                                         for i in {1..30}; do
-                                          if docker exec ci-sql-server /opt/mssql-tools18/bin/sqlcmd \
-                                              -C -S localhost -U sa -P "{{CiSqlServerPassword}}" -Q "SELECT 1" > /dev/null 2>&1; then
+                                          if docker exec ci-sql-server "$sqlcmd_path" -C -S localhost -U sa \
+                                              -P "$CI_SQL_SERVER_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1; then
                                             echo "SQL Server is ready"
                                             exit 0
                                           fi
@@ -131,23 +139,22 @@ namespace LondonFhirService.Infrastructure.Services
                                     Shell = "pwsh",
                                     Run =
                                         """
+                                        $localDbServer = [regex]::Escape('Server=(localdb)\MSSQLLocalDB;')
+                                        $trustedConnection = [regex]::Escape('Trusted_Connection=True;')
+                                        $sqlAuth = "User Id=sa;Password=$env:CI_SQL_SERVER_PASSWORD;" `
+                                          + "TrustServerCertificate=True;"
                                         $files = Get-ChildItem -Path . -Filter "appsettings.json" -Recurse
                                         foreach ($file in $files) {
                                           $content = Get-Content $file.FullName -Raw
                                           if ($content -match "LondonFhirServiceConnectionString") {
                                             $updated = $content `
-                                              -replace [regex]::Escape('Server=(localdb)\MSSQLLocalDB;'), 'Server=localhost,1433;' `
-                                              -replace [regex]::Escape('Trusted_Connection=True;'), "User Id=sa;Password=$env:CI_SQL_SERVER_PASSWORD;TrustServerCertificate=True;"
+                                              -replace $localDbServer, 'Server=localhost,1433;' `
+                                              -replace $trustedConnection, $sqlAuth
                                             Set-Content -Path $file.FullName -Value $updated
                                             Write-Host "Patched connection string in $($file.FullName)"
                                           }
                                         }
-                                        """,
-
-                                    EnvironmentVariables = new Dictionary<string, string>
-                                    {
-                                        { "CI_SQL_SERVER_PASSWORD", CiSqlServerPassword }
-                                    }
+                                        """
                                 },
 
                                 new GithubTask
@@ -160,9 +167,9 @@ namespace LondonFhirService.Infrastructure.Services
                                     {
                                         {
                                             "ConnectionStrings__LondonFhirServiceConnectionString",
-                                            $"Server=localhost,1433;Database=LondonFhirService;User Id=sa;" +
-                                                $"Password={CiSqlServerPassword};TrustServerCertificate=True;" +
-                                                "MultipleActiveResultSets=true"
+                                            "Server=localhost,1433;Database=LondonFhirService;User Id=sa;" +
+                                                "Password=${{ env.CI_SQL_SERVER_PASSWORD }};" +
+                                                "TrustServerCertificate=True;MultipleActiveResultSets=true"
                                         }
                                     }
                                 },
