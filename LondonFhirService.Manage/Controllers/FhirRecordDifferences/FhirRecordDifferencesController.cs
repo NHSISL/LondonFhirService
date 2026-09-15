@@ -17,6 +17,7 @@ using RESTFulSense.Controllers;
 namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
 {
     [ApiController]
+    [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]
     [Route("api/[controller]")]
     public class FhirRecordDifferencesController : RESTFulController
     {
@@ -26,7 +27,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             this.fhirRecordDifferenceService = fhirRecordDifferenceService;
 
         [HttpPost]
-        [Authorize(Roles = ManageRoles.Administrators + ",FhirRecordDifferences.Create")]
+        [Authorize(Roles = ManageRoles.AdministratorsAndUsers + ",FhirRecordDifferences.Create")]
         public async ValueTask<ActionResult<FhirRecordDifference>> PostFhirRecordDifferenceAsync(
             [FromBody] FhirRecordDifference fhirRecordDifference)
         {
@@ -68,7 +69,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
 #if DEBUG
         [EnableQuery(PageSize = 5000)]
 #endif
-        [Authorize(Roles = ManageRoles.Administrators + ",FhirRecordDifferences.Read")]
+        [Authorize(Roles = ManageRoles.AdministratorsAndUsers + ",FhirRecordDifferences.Read")]
         public async ValueTask<ActionResult<IQueryable<FhirRecordDifference>>> Get()
         {
             try
@@ -89,7 +90,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
         }
 
         [HttpGet("{fhirRecordDifferenceId}")]
-        [Authorize(Roles = ManageRoles.Administrators + ",FhirRecordDifferences.Read")]
+        [Authorize(Roles = ManageRoles.AdministratorsAndUsers + ",FhirRecordDifferences.Read")]
         public async ValueTask<ActionResult<FhirRecordDifference>> GetFhirRecordDifferenceByIdAsync(
             Guid fhirRecordDifferenceId)
         {
@@ -124,7 +125,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
         }
 
         [HttpPut]
-        [Authorize(Roles = ManageRoles.Administrators + ",FhirRecordDifferences.Update")]
+        [Authorize(Roles = ManageRoles.AdministratorsAndUsers + ",FhirRecordDifferences.Update")]
         public async ValueTask<ActionResult<FhirRecordDifference>> PutFhirRecordDifferenceAsync(
             [FromBody] FhirRecordDifference fhirRecordDifference)
         {
@@ -165,7 +166,7 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
         }
 
         [HttpDelete("{fhirRecordDifferenceId}")]
-        [Authorize(Roles = ManageRoles.Administrators + ",FhirRecordDifferences.Delete")]
+        [Authorize(Roles = ManageRoles.AdministratorsAndUsers + ",FhirRecordDifferences.Delete")]
         public async ValueTask<ActionResult<FhirRecordDifference>> DeleteFhirRecordDifferenceByIdAsync(
             Guid fhirRecordDifferenceId)
         {

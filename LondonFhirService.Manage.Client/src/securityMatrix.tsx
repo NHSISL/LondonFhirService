@@ -5,17 +5,9 @@
 //
 // This is deliberately temporary. Once the registration is reduced to one name per role, drop the
 // alias entries from these arrays and from ManageRoles.cs.
-const administratorRoles = [
-    'Administrators',
-    'ManageAdmin',
-    'LondonDataServices.Manage.Administrators',
-];
+const administratorRoles = ['Administrators'];
 
-const userRoles = [
-    'Users',
-    'ManageUsers',
-    'LondonDataServices.Manage.Users',
-];
+const userRoles = ['Users'];
 
 const administratorAndUserRoles = [...administratorRoles, ...userRoles];
 

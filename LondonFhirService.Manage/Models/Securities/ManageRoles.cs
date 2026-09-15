@@ -20,15 +20,9 @@ namespace LondonFhirService.Manage.Models.Securities
     /// </summary>
     public static class ManageRoles
     {
-        public const string Administrators =
-            "ManageAdmin," +
-            "LondonDataServices.Manage.Administrators," +
-            "Administrators";
+        public const string Administrators = "Administrators";
 
-        public const string Users =
-            "ManageUsers," +
-            "LondonDataServices.Manage.Users," +
-            "Users";
+        public const string Users = "Users";
 
         public const string AdministratorsAndUsers = Administrators + "," + Users;
     }

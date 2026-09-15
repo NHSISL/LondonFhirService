@@ -5,9 +5,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Attrify.Attributes;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
-using Attrify.Attributes;
 using LondonFhirService.Core.Services.Foundations.Audits;
 using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
@@ -27,7 +27,7 @@ namespace LondonFhirService.Manage.Controllers.Audits
     /// without the key header, so they exist to let the acceptance suite hydrate and seed a
     /// database rather than as an operator-facing way to rewrite compliance records.
     /// </summary>
-    [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]
+    [Authorize(Roles = ManageRoles.Administrators)]
     [ApiController]
     [Route("api/[controller]")]
     public class AuditsController : RESTFulController
