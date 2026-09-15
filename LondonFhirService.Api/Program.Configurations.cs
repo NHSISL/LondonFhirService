@@ -234,6 +234,13 @@ public partial class Program
             ?? throw new InvalidOperationException(
                 "LdsConfigurations is missing or invalid. Please check appsettings.json.");
 
+        if (!Uri.TryCreate(ldsConfig.BaseUrl, UriKind.Absolute, out _))
+        {
+            throw new InvalidOperationException(
+                "LdsConfigurations:BaseUrl is missing or is not a valid absolute URI. "
+                    + "Please check appsettings.json or the corresponding environment variable/secret.");
+        }
+
         // Guarded like LdsConfigurations above. Get<T> returns null for a section that is absent
         // or has no children, and this section decides whether the per-patient consumer access
         // check runs at all - so an absent one should stop startup rather than reach AddSingleton
