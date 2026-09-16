@@ -9,6 +9,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Abstractions.Brokers;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
@@ -16,11 +18,9 @@ using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Brokers.Storages.Sql;
-using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
-using LondonFhirService.Core.Models.Foundations.Patients;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
+using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions.Extensions;
@@ -165,48 +165,48 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     throw;
                 }
 
-            await this.auditAndMetricBroker.LogInformationAsync(
-                auditType,
-                title: $"Parallel Provider Execution Completed in {stopwatchOutcomes.ElapsedMilliseconds}ms",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
+                await this.auditAndMetricBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Parallel Provider Execution Completed in {stopwatchOutcomes.ElapsedMilliseconds}ms",
+                    message,
+                    fileName: null,
+                    correlationId: correlationId.ToString());
 
-            var jsonBundles = new List<(string, string)>(outcomes.Length);
-            var exceptions = new List<Exception>();
+                var jsonBundles = new List<(string, string)>(outcomes.Length);
+                var exceptions = new List<Exception>();
 
-            foreach (var outcome in outcomes)
-            {
-                if (outcome.Json is not null)
+                foreach (var outcome in outcomes)
                 {
-                    jsonBundles.Add((outcome.Provider, outcome.Json));
+                    if (outcome.Json is not null)
+                    {
+                        jsonBundles.Add((outcome.Provider, outcome.Json));
+                    }
+                    else if (outcome.Exception is not null)
+                    {
+                        exceptions.Add(outcome.Exception);
+                    }
                 }
-                else if (outcome.Exception is not null)
+
+                if (exceptions.Count > 0)
                 {
-                    exceptions.Add(outcome.Exception);
+                    var aggregate = new AggregateException(
+                        "One or more provider calls failed or timed out.",
+                        exceptions);
+
+                    await loggingBroker.LogErrorAsync(aggregate);
                 }
-            }
 
-            if (exceptions.Count > 0)
-            {
-                var aggregate = new AggregateException(
-                    "One or more provider calls failed or timed out.",
-                    exceptions);
+                stopwatch.Stop();
+                long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-                await loggingBroker.LogErrorAsync(aggregate);
-            }
+                await this.auditAndMetricBroker.LogInformationAsync(
+                    auditType,
+                    title: $"Foundation Service Request Completed in {elapsedTime}ms",
+                    message,
+                    fileName: null,
+                    correlationId: correlationId.ToString());
 
-            stopwatch.Stop();
-            long elapsedTime = stopwatch.ElapsedMilliseconds;
-
-            await this.auditAndMetricBroker.LogInformationAsync(
-                auditType,
-                title: $"Foundation Service Request Completed in {elapsedTime}ms",
-                message,
-                fileName: null,
-                correlationId: correlationId.ToString());
-
-            return jsonBundles;
+                return jsonBundles;
             });
 
         private async ValueTask<List<(string providerFriendlyName, bool isPrimaryProvider, IFhirProvider provider)>>
@@ -316,18 +316,22 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 stopwatch.Stop();
                 long elapsedTime = stopwatch.ElapsedMilliseconds;
 
-                // The payload is not written to the audit trail. It is persisted as a FhirRecord
-                // immediately below, which is what the comparison pipeline reads, so an audit
-                // copy would be a second untruncated store of the same patient bundle - one row
-                // per provider per request, in a high-frequency table with no retention sweep.
-                await QueueFhirRecordPersistenceAsync(
-                    providerFriendlyName,
-                    isPrimaryProvider,
-                    provider,
-                    correlationId,
-                    providerSpanId,
-                    auditType,
-                    json);
+                // Will only persist the FhirRecord for comparison if active
+                if (patientServiceConfig.IsComparisonServiceActive)
+                {
+                    // The payload is not written to the audit trail. It is persisted as a FhirRecord
+                    // immediately below, which is what the comparison pipeline reads, so an audit
+                    // copy would be a second untruncated store of the same patient bundle - one row
+                    // per provider per request, in a high-frequency table with no retention sweep.
+                    await QueueFhirRecordPersistenceAsync(
+                        providerFriendlyName,
+                        isPrimaryProvider,
+                        provider,
+                        correlationId,
+                        providerSpanId,
+                        auditType,
+                        json);
+                }
 
                 await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
