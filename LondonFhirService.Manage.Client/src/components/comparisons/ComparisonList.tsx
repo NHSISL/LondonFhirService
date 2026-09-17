@@ -82,8 +82,17 @@ export function ComparisonList({
                             : undefined}>
                         <td className="text-nowrap">{comparison.comparedAtText}</td>
 
+                        {/*
+                            The source names the provider this row checked, so it is the cell an
+                            operator reads to decide whether they want the row - and it went
+                            nowhere, leaving the correlation id as the only way in. Same
+                            destination, so either reading of "open this one" works.
+
+                            The chip stays outside the link: it labels the source rather than
+                            offering a second place to go.
+                        */}
                         <td className="text-break">
-                            {comparison.sourceNameText}
+                            <Link to={comparison.detailUrl}>{comparison.sourceNameText}</Link>
                             {comparison.isPrimarySource && (
                                 <>
                                     {" "}
@@ -121,12 +130,27 @@ export function ComparisonList({
 
                         <td className="text-break">{comparison.commentText}</td>
 
-                        <td className="text-end">
+                        <td className="text-end text-nowrap">
                             <Link
                                 to={comparison.detailUrl}
                                 className="btn btn-sm btn-outline-primary"
                                 aria-label={`Compare ${comparison.correlationId}`}>
                                 Compare
+                            </Link>
+
+                            {" "}
+
+                            {/*
+                                Whether the providers agreed is this table; how long they took is
+                                the metrics screen. Labelled with the correlation id as well, because
+                                every row here offers the same two words and a screen reader moving
+                                between them would otherwise hear no difference.
+                            */}
+                            <Link
+                                to={comparison.metricsUrl}
+                                className="btn btn-sm btn-outline-secondary"
+                                aria-label={`Show metrics for ${comparison.correlationId}`}>
+                                Show metrics
                             </Link>
                         </td>
                     </tr>

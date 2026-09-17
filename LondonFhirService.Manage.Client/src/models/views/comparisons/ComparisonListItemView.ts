@@ -13,4 +13,8 @@ export type ComparisonListItemView = {
     resolutionClassName: string;
     commentText: string;
     detailUrl: string;
+
+    // The same correlation on the metrics screen - how long each provider took, beside
+    // whether they agreed.
+    metricsUrl: string;
 };

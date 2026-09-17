@@ -3,6 +3,7 @@ import { ComparisonViewServiceException } from "../../../models/views/comparison
 import { FhirRecordDifferenceService } from "../../foundations/fhirRecordDifferences/fhirRecordDifferenceService";
 import { FhirRecordService } from "../../foundations/fhirRecords/fhirRecordService";
 import { fhirRecordStatuses } from "../../../models/foundations/fhirRecords/FhirRecord";
+import { buildMetricsUrl } from "../../../helpers/correlationIds";
 import { parseBundle } from "../../../helpers/fhir/fhirBundleParser";
 import type { ComparisonDetailView } from "../../../models/views/comparisons/ComparisonDetailView";
 import type { ComparisonFormValues } from "../../../models/views/comparisons/ComparisonFormValues";
@@ -346,6 +347,7 @@ export class ComparisonViewService implements IComparisonViewService {
             primarySource: this.toComparisonSourceView(primaryResult, "primary"),
             secondarySource: this.toComparisonSourceView(secondaryResult, "secondary"),
             sourcesError: this.describeSourcesError(primaryResult, secondaryResult),
+            metricsUrl: buildMetricsUrl(fhirRecordDifference.correlationId),
             editValues: this.toComparisonFormValues(fhirRecordDifference)
         };
     }
@@ -380,7 +382,8 @@ export class ComparisonViewService implements IComparisonViewService {
                 this.mapResolutionToClassName(fhirRecordDifference.isResolved),
 
             commentText: fhirRecordDifference.comment ?? notSetText,
-            detailUrl: this.buildDetailUrl(fhirRecordDifference.id)
+            detailUrl: this.buildDetailUrl(fhirRecordDifference.id),
+            metricsUrl: buildMetricsUrl(fhirRecordDifference.correlationId)
         };
     }
 

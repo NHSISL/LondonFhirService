@@ -617,3 +617,41 @@ it("should report a queue it could not read as something the operator can act on
     await expect(comparisonViewService.retrievePendingComparisonViewsAsync(""))
         .rejects.toThrow("We could not load what is still waiting to be compared");
 });
+
+// The row's route to the metrics screen. A FhirRecordDifference stores the correlation as the
+// compact 32 character form, and the metrics route filters on a Guid, so the view is where the
+// two spellings are reconciled - not the component, which just renders the href it is handed.
+it("should give a row a metrics link in the form that route accepts", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            retrieveFhirRecordDifferencesAsync: async () => [
+                createFhirRecordDifference({
+                    correlationId: "d8924d9709dab2e07cf313bef9fdf820"
+                })
+            ]
+        }),
+        createFhirRecordService());
+
+    const { comparisons } =
+        await comparisonViewService.retrieveComparisonPageViewAsync(0, "", false);
+
+    expect(comparisons[0].metricsUrl)
+        .toBe("/admin/metrics/d8924d97-09da-b2e0-7cf3-13bef9fdf820");
+});
+
+it("should give the detail view the same metrics link", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            retrieveFhirRecordDifferenceByIdAsync: async () =>
+                createFhirRecordDifference({
+                    correlationId: "d8924d9709dab2e07cf313bef9fdf820"
+                })
+        }),
+        createFhirRecordService());
+
+    const comparison =
+        await comparisonViewService.retrieveComparisonDetailViewAsync("any-id");
+
+    expect(comparison.metricsUrl)
+        .toBe("/admin/metrics/d8924d97-09da-b2e0-7cf3-13bef9fdf820");
+});

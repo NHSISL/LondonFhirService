@@ -30,5 +30,6 @@ export type ComparisonDetailView = {
     secondarySource: ComparisonSourceView | null;
     sourcesError: string | null;
 
+    metricsUrl: string;
     editValues: ComparisonFormValues;
 };
