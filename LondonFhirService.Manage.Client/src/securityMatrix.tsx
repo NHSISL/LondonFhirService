@@ -56,13 +56,22 @@ const securityPoints = {
         edit: administratorAndUserRoles,
         view: administratorAndUserRoles,
     },
-    // The provider registry decides who the patient fan-out calls, so the whole area - the master
-    // list as well as the detail view - is administrators only.
+    // Split the way ProvidersController splits, because that is the boundary. A provider row
+    // decides who the patient fan-out calls and which source is primary, so writing one changes
+    // what every consumer gets back - create, update and delete are Administrators only, matching
+    // the method-level attributes.
+    //
+    // Reading one is not that. The controller's class-level attribute opens both GETs to
+    // Administrators and Users, and a provider carries no credential and no patient data - a
+    // friendly name, a fully qualified name, a FHIR version, and when it is active. This used to
+    // grant view to administrators only, which hid the screen from an audience that could call
+    // GET /api/Providers directly and get the same rows. That reads as a control and is not one;
+    // hiding a screen has never been authorisation.
     providers: {
         add: administratorRoles,
         edit: administratorRoles,
         delete: administratorRoles,
-        view: administratorRoles,
+        view: administratorAndUserRoles,
     },
     testUserAction: {
         add: administratorAndUserRoles,
