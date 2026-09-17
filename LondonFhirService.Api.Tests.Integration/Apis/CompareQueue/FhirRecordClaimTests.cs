@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -107,6 +107,116 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.CompareQueue
             claimCount.Should().Be(0);
 
             await DeleteFhirRecordAsync(liveFhirRecord.Id);
+        }
+
+        [Fact]
+        public async Task ShouldTransitionARecordThatIsNotAlreadyInTheTargetStatusAsync()
+        {
+            // given
+            FhirRecord processingFhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Processing,
+                updatedDate: DateTimeOffset.UtcNow.AddMinutes(-5));
+
+            // when
+            int transitionCount = await TransitionAsync(
+                processingFhirRecord.Id,
+                excludedStatus: StatusType.Completed,
+                newStatus: StatusType.Completed,
+                isProcessed: true);
+
+            // then
+            // The predicate and the SET list both have to survive translation. IsProcessed in
+            // particular: the read-then-write path this replaced set it for terminal statuses, and
+            // a mocked service cannot show that the statement actually writes it.
+            transitionCount.Should().Be(1);
+
+            FhirRecord completedFhirRecord = await SelectFhirRecordAsync(processingFhirRecord.Id);
+            completedFhirRecord.Status.Should().Be(StatusType.Completed);
+            completedFhirRecord.IsProcessed.Should().BeTrue();
+
+            await DeleteFhirRecordAsync(processingFhirRecord.Id);
+        }
+
+        [Fact]
+        public async Task ShouldNotTransitionARecordAlreadyInTheTargetStatusAsync()
+        {
+            // given
+            FhirRecord completedFhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Completed,
+                updatedDate: DateTimeOffset.UtcNow.AddMinutes(-5));
+
+            // when
+            int transitionCount = await TransitionAsync(
+                completedFhirRecord.Id,
+                excludedStatus: StatusType.Completed,
+                newStatus: StatusType.Completed,
+                isProcessed: true);
+
+            // then
+            // Zero rows is what makes the primary safe to complete from several workers at once:
+            // the shared primary is reached once per secondary, and the second and later callers
+            // must be no-ops rather than racing a read against a write.
+            transitionCount.Should().Be(0);
+
+            FhirRecord unchangedFhirRecord = await SelectFhirRecordAsync(completedFhirRecord.Id);
+            unchangedFhirRecord.Status.Should().Be(StatusType.Completed);
+
+            // Untouched, not rewritten with the value this call would have set.
+            unchangedFhirRecord.IsProcessed.Should().BeFalse();
+
+            await DeleteFhirRecordAsync(completedFhirRecord.Id);
+        }
+
+        [Fact]
+        public async Task ShouldRetainAClaimOnlyWhileTheLeaseTokenStillMatchesAsync()
+        {
+            // given
+            DateTimeOffset claimedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+
+            FhirRecord claimedFhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Processing,
+                updatedDate: claimedAt);
+
+            // when
+            // The first re-assertion is the worker proving it still owns the row; it also moves
+            // UpdatedDate on, which is exactly why the caller has to advance its token.
+            int firstRetainCount = await ClaimAsync(
+                claimedFhirRecord.Id,
+                StatusType.Processing,
+                StatusType.Processing,
+                notUpdatedAfter: claimedAt);
+
+            int staleRetainCount = await ClaimAsync(
+                claimedFhirRecord.Id,
+                StatusType.Processing,
+                StatusType.Processing,
+                notUpdatedAfter: claimedAt);
+
+            // then
+            firstRetainCount.Should().Be(1);
+
+            // Replaying the ORIGINAL token now matches nothing - which is the same shape as
+            // another worker having reclaimed the row, and is what the fence relies on.
+            staleRetainCount.Should().Be(0);
+
+            await DeleteFhirRecordAsync(claimedFhirRecord.Id);
+        }
+
+        private async ValueTask<int> TransitionAsync(
+            Guid fhirRecordId,
+            StatusType excludedStatus,
+            StatusType newStatus,
+            bool isProcessed)
+        {
+            using var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope();
+            var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+
+            return await storageBroker.UpdateFhirRecordStatusAsync(
+                fhirRecordId,
+                excludedStatus,
+                newStatus,
+                isProcessed,
+                updatedDate: DateTimeOffset.UtcNow);
         }
 
         private async ValueTask<int> ClaimAsync(
