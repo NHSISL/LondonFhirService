@@ -111,7 +111,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 key: nameof(StructuredRecordRequest.DateOfBirth),
 
                 value: "Text must be a valid date string in format 'yyyy-MM-dd' " +
-                    "e.g. '2002-10-01'");
+                    "e.g. '1994-05-21'");
 
             var expectedPatientServiceValidationException =
                 new PatientServiceValidationException(

@@ -25,7 +25,7 @@ it("should reject a blank NHS number", () => {
 });
 
 it("should accept a well formed date of birth", () => {
-    expect(() => validateStructuredRecordRequest(request({ dateOfBirth: "2002-10-01" })))
+    expect(() => validateStructuredRecordRequest(request({ dateOfBirth: "1994-05-21" })))
         .not.toThrow();
 });
 

@@ -129,7 +129,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                     DateTimeStyles.None,
                     out _),
 
-            Message = "Text must be a valid date string in format 'yyyy-MM-dd' e.g. '2002-10-01'"
+            Message = "Text must be a valid date string in format 'yyyy-MM-dd' e.g. '1994-05-21'"
         };
 
         private static void Validate<T>(

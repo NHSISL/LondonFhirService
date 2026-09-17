@@ -64,7 +64,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                     cancellationToken);
 
                 // Trimmed on the way into the body, not just for the validation checks. Validation
-                // parses the date from a trimmed copy, so " 2002-10-01 " was accepted and then sent
+                // parses the date from a trimmed copy, so " 1994-05-21 " was accepted and then sent
                 // with its spaces intact for the provider to reject.
                 string requestBody = CreateRequestBody(
                     nhsNumber: structuredRecordRequest.NhsNumber?.Trim(),
