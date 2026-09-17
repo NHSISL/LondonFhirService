@@ -241,15 +241,50 @@ public partial class Program
         //app.MapFallbackToFile("/index.html");
     }
 
+    /// <summary>
+    /// Absolute on its own is not enough, which is what these checks used to ask. Uri.TryCreate
+    /// reads "localhost:7284/x" as an absolute uri whose scheme is localhost, so the single
+    /// likeliest mistake - dropping the https from a setting - passed the guard and failed later
+    /// inside the provider instead. Naming the two schemes a provider can dial is what makes the
+    /// message true.
+    /// </summary>
+    private static bool IsDialableUrl(string url) =>
+        string.IsNullOrWhiteSpace(url) is false
+        && Uri.TryCreate(url.Trim(), UriKind.Absolute, out Uri parsedUrl)
+        && (parsedUrl.Scheme == Uri.UriSchemeHttp || parsedUrl.Scheme == Uri.UriSchemeHttps);
+
     private static void AddProviders(IServiceCollection services, IConfiguration configuration)
     {
         PatientServiceConfig patientServiceConfig = configuration
             .GetSection("PatientServiceConfig")
             .Get<PatientServiceConfig>();
 
+        // Guarded the same way LdsConfigurations is below, because it was not and a clean checkout
+        // paid for it. Every url in this section ships as the
+        // override_this_in_your_appsettings.Development.json_file_or_environment_variables marker,
+        // and DdsStu3Provider is constructed unconditionally - so the first thing a new developer
+        // met was a UriFormatException thrown from a collection initialiser that names neither the
+        // setting nor the file it belongs in. Failing here instead says which key to set.
         DdsConfigurations ddsConfig = configuration
             .GetSection("DdsConfigurations")
-            .Get<DdsConfigurations>();
+            .Get<DdsConfigurations>()
+            ?? throw new InvalidOperationException(
+                "DdsConfigurations is missing or invalid. Please check appsettings.json.");
+
+        if (IsDialableUrl(ddsConfig.BaseUrl) is false)
+        {
+            throw new InvalidOperationException(
+                "DdsConfigurations:BaseUrl is missing or is not an absolute http or https URI. "
+                    + "Please check appsettings.json or the corresponding environment variable/secret.");
+        }
+
+        if (IsDialableUrl(ddsConfig.AuthorisationUrl) is false)
+        {
+            throw new InvalidOperationException(
+                "DdsConfigurations:AuthorisationUrl is missing or is not an absolute http or "
+                    + "https URI. Please check appsettings.json or the corresponding environment "
+                    + "variable/secret.");
+        }
 
         LdsConfigurations ldsConfig = configuration
             .GetSection("LdsConfigurations")
@@ -257,10 +292,10 @@ public partial class Program
             ?? throw new InvalidOperationException(
                 "LdsConfigurations is missing or invalid. Please check appsettings.json.");
 
-        if (!Uri.TryCreate(ldsConfig.BaseUrl, UriKind.Absolute, out _))
+        if (IsDialableUrl(ldsConfig.BaseUrl) is false)
         {
             throw new InvalidOperationException(
-                "LdsConfigurations:BaseUrl is missing or is not a valid absolute URI. "
+                "LdsConfigurations:BaseUrl is missing or is not an absolute http or https URI. "
                     + "Please check appsettings.json or the corresponding environment variable/secret.");
         }
 
