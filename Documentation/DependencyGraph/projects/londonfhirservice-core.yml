@@ -38,6 +38,7 @@ components:
       - SelectMetricByIdAsync
       - DeleteMetricAsync
       - ClaimFhirRecordAsync
+      - UpdateFhirRecordStatusAsync
       - SelectAllProvidersAsListAsync
       - DeleteMetricsOlderThanAsync
     calls:
@@ -367,6 +368,41 @@ components:
       - from: CheckConsumerAccessAsync
         to: EXT.HttpClient
         method: SendAsync
+  - id: CORE.MetricTelemetryPublisher
+    name: MetricTelemetryPublisher
+    layer: exposer
+    col: 3
+    description: "Subscribes to the metric library's ActivitySource by name and forwards completed spans to Application Insights as dependencies. Nothing was subscribed before it existed, so every span the library published was dropped. Lives in Core rather than in either host because BOTH hosts register it, and rather than in the metrics library because that library deliberately carries no telemetry vendor - it publishes to an ActivitySource and leaves the choice of listener to whoever hosts it. The source name comes from the same bound AuditAndMetricsConfigurations instance the client uses, so the two cannot drift apart. Idles rather than failing when no TelemetryClient is registered."
+    methods:
+      - ExecuteAsync
+      - Dispose
+    calls:
+      - from: ExecuteAsync
+        to: EXT.ActivitySource
+        method: ActivityListener
+  - id: CorrelationBroker
+    name: CorrelationBroker
+    layer: broker
+    col: 8
+    description: "The one correlation id belonging to the request in flight, taken from W3C Trace Context rather than minted: ASP.NET parses the caller's traceparent into Activity.Current before any of our code runs, and the trace id becomes the correlation id — same 128 bits, same 32 hex characters, so Guid.ToString(N) of a correlation id IS the trace id. Settled on first read and kept on HttpContext.Items, so the middleware that writes the X-Correlation-Id response header, the exposer that hands the id down to the coordination service, and anything else resolved during the request all read the same value. Registered scoped in the API host only. With no HttpContext, or no W3C activity to read, it falls back to the IdentifierBroker rather than Guid.Empty."
+    methods:
+      - GetCorrelationIdAsync
+      - GetRequestSpanIdAsync
+    calls:
+      - from: GetCorrelationIdAsync
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+  - id: RequestTraceBroker
+    name: RequestTraceBroker
+    layer: broker
+    col: 8
+    description: "Satisfies the metric library's request-span port from the correlation broker, the way AuditUserBroker satisfies its identity port from the security broker. The metric service asks for it while the request is still alive and carries the answer into the deferred replay, which runs later on a background worker with no request left to ask. Registered scoped in the API host; a host that registers nothing gets the library's null object and its replayed spans group by trace alone."
+    methods:
+      - GetRequestSpanIdAsync
+    calls:
+      - from: GetRequestSpanIdAsync
+        to: CorrelationBroker
+        method: GetRequestSpanIdAsync
   - id: DateTimeBroker
     name: DateTimeBroker
     layer: broker
@@ -844,6 +880,7 @@ components:
       - ModifyFhirRecordAsync
       - RemoveFhirRecordByIdAsync
       - TryClaimFhirRecordAsync
+      - TryTransitionFhirRecordStatusAsync
     calls:
       - from: AddFhirRecordAsync
         to: SecurityAuditBroker
@@ -890,6 +927,12 @@ components:
       - from: TryClaimFhirRecordAsync
         to: StorageBroker
         method: ClaimFhirRecordAsync
+      - from: TryTransitionFhirRecordStatusAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: TryTransitionFhirRecordStatusAsync
+        to: StorageBroker
+        method: UpdateFhirRecordStatusAsync
       - from: TryClaimFhirRecordAsync
         to: DateTimeBroker
         method: GetCurrentDateTimeOffsetAsync
@@ -1552,27 +1595,50 @@ components:
     name: CompareQueueOrchestrationService
     layer: orchestration
     col: 5
-    description: "The comparison queue. GetUnprocessedRecordAsync claims the oldest Pending secondary FhirRecord that has been settled for at least 5 minutes and pairs it with the primary record sharing its CorrelationId. The claim is a set-based statement in the database rather than a read-then-write, so two workers cannot both win the same row."
+    description: "The comparison queue. GetUnprocessedRecordAsync pairs an eligible secondary FhirRecord - Pending and settled for at least 5 minutes, or Processing past its 30 minute lease - with the primary record sharing its CorrelationId. The claim is a set-based statement in the database rather than a read-then-write, so two workers cannot both win the same row. It chooses at random from a window of the oldest candidates rather than always taking the head, because every worker runs the same ordered query and taking the head made contention certain rather than incidental. TryRetainClaimAsync re-asserts a claim before its holder writes anything: a lease that expires while the work is still running is indistinguishable from one left by a worker that died, so a worker that has been overtaken has to be able to find out and abandon. TryFinalizeClaimedFhirRecordAsync settles a record onto Completed or Failed in that same one statement, carrying the lease token, because a check followed by a separate write leaves a window in which the write can land on a row another worker has taken over - and nothing reclaims a terminal status. It replaced a read-then-write that also dragged the whole row, JsonPayload and all, through memory to change two fields."
     methods:
       - GetUnprocessedRecordAsync
-      - ChangeFhirRecordStatusAsync
+      - TryRetainClaimAsync
+      - TryFinalizeClaimedFhirRecordAsync
+      - CompletePrimaryFhirRecordAsync
       - PersistFhirRecordDifferencesAsync
     calls:
       - from: GetUnprocessedRecordAsync
         to: DateTimeBroker
         method: GetCurrentDateTimeOffsetAsync
       - from: GetUnprocessedRecordAsync
+        to: IdentifierBroker
+        method: GetIdentifierAsync
+      - from: GetUnprocessedRecordAsync
         to: FS.FhirRecord
         method: RetrieveAllFhirRecordsAsync
       - from: GetUnprocessedRecordAsync
         to: FS.FhirRecord
         method: TryClaimFhirRecordAsync
-      - from: ChangeFhirRecordStatusAsync
+      - from: GetUnprocessedRecordAsync
         to: FS.FhirRecord
         method: RetrieveFhirRecordByIdAsync
-      - from: ChangeFhirRecordStatusAsync
+      - from: GetUnprocessedRecordAsync
+        to: LoggingBroker
+        method: LogWarningAsync
+      - from: TryRetainClaimAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: TryRetainClaimAsync
         to: FS.FhirRecord
-        method: ModifyFhirRecordAsync
+        method: TryClaimFhirRecordAsync
+      - from: CompletePrimaryFhirRecordAsync
+        to: FS.FhirRecord
+        method: TryTransitionFhirRecordStatusAsync
+      - from: CompletePrimaryFhirRecordAsync
+        to: LoggingBroker
+        method: LogDebugAsync
+      - from: TryFinalizeClaimedFhirRecordAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: TryFinalizeClaimedFhirRecordAsync
+        to: FS.FhirRecord
+        method: TryClaimFhirRecordAsync
       - from: PersistFhirRecordDifferencesAsync
         to: FS.FhirRecordDifference
         method: AddFhirRecordDifferenceAsync
@@ -1624,7 +1690,7 @@ components:
     name: Stu3PatientCoordinationService
     layer: coordination
     col: 4
-    description: "Mints the correlation id for the whole request, audits each stage and times it as a metric span, delegates to the patient orchestration for the access-gated fan-out, then hands the per-provider bundles to the reconciliation orchestration, which returns the single serialised bundle the API hands back."
+    description: "Takes the request correlation id from the exposer rather than minting its own — the pipeline has already promised that id to the consumer in a response header — then audits each stage, times it as a metric span, delegates to the patient orchestration for the access-gated fan-out, and hands the per-provider bundles to the reconciliation orchestration, which returns the single serialised bundle the API hands back. It still draws its own span ids from the IdentifierBroker."
     methods:
       - GetStructuredRecordSerialisedAsync
     calls:
@@ -1668,10 +1734,16 @@ components:
         method: GetCurrentDateTimeOffsetAsync
       - from: ProcessFhirRecordsAsync
         to: OR.CompareQueue
+        method: TryRetainClaimAsync
+      - from: ProcessFhirRecordsAsync
+        to: OR.CompareQueue
         method: PersistFhirRecordDifferencesAsync
       - from: ProcessFhirRecordsAsync
         to: OR.CompareQueue
-        method: ChangeFhirRecordStatusAsync
+        method: CompletePrimaryFhirRecordAsync
+      - from: ProcessFhirRecordsAsync
+        to: OR.CompareQueue
+        method: TryFinalizeClaimedFhirRecordAsync
       - from: ProcessFhirRecordsAsync
         to: LoggingBroker
         method: LogWarningAsync

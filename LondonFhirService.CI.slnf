@@ -9,6 +9,7 @@
       "LondonFhirService.Core.Tests.Unit/LondonFhirService.Core.Tests.Unit.csproj",
       "LondonFhirService.Core.Abstractions/LondonFhirService.Core.Abstractions.csproj",
       "LondonFhirService.Core/LondonFhirService.Core.csproj",
+      "Documentation/Documentation.csproj",
       "LondonFhirService.Api.Tests.Acceptance/LondonFhirService.Api.Tests.Acceptance.csproj",
       "LondonFhirService.Api.Tests.Integration/LondonFhirService.Api.Tests.Integration.csproj",
       "LondonFhirService.Api.Tests.Performance/LondonFhirService.Api.Tests.Performance.csproj",

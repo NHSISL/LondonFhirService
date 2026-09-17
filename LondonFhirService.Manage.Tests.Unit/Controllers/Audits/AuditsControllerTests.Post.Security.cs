@@ -8,7 +8,6 @@ using System.Linq;
 using Attrify.Attributes;
 using FluentAssertions;
 using LondonFhirService.Manage.Controllers.Audits;
-using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Audits
@@ -24,16 +23,10 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Audits
             Type attributeType = typeof(AuthorizeAttribute);
             string attributeProperty = "Roles";
 
-            // Derived from ManageRoles rather than spelled out, so the assertion is about which
-            // audience guards this endpoint and not about how that audience is currently spelled.
-            // The literal list this replaced pinned three app registration aliases per role, so
-            // when the registration was reduced to one name each every one of these tests failed
-            // without a single [Authorize] having changed.
-            List<string> expectedAttributeValues = ManageRoles.Administrators
-                .Split(',')
-                .Select(role => role.Trim())
-                .Where(role => string.IsNullOrEmpty(role) is false)
-                .ToList();
+            List<string> expectedAttributeValues = new List<string>
+            {
+                "Administrators"
+            };
 
             // When
             var methodAttribute = methodInfo?

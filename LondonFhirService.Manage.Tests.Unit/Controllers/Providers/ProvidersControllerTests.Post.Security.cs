@@ -8,7 +8,6 @@ using System.Linq;
 using Attrify.Attributes;
 using FluentAssertions;
 using LondonFhirService.Manage.Controllers.Providers;
-using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Providers
@@ -25,18 +24,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Providers
             string attributeProperty = "Roles";
 
             // Narrower than the class attribute on purpose. A provider row decides who the
-            // patient fan-out calls and which source is primary, so writing one is a
-            // ManageAdmin-only act even though reading the registry is not.
-            // Derived from ManageRoles rather than spelled out, so the assertion is about which
-            // audience guards this endpoint and not about how that audience is currently spelled.
-            // The literal list this replaced pinned three app registration aliases per role, so
-            // when the registration was reduced to one name each every one of these tests failed
-            // without a single [Authorize] having changed.
-            List<string> expectedAttributeValues = ManageRoles.Administrators
-                .Split(',')
-                .Select(role => role.Trim())
-                .Where(role => string.IsNullOrEmpty(role) is false)
-                .ToList();
+            // patient fan-out calls and which source is primary, so writing one is an
+            // Administrators-only act even though reading the registry is not.
+            List<string> expectedAttributeValues = new List<string>
+            {
+                "Administrators"
+            };
 
             // When
             var methodAttribute = methodInfo?

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -31,15 +32,8 @@ namespace LondonFhirService.Manage.Tests.Acceptance
             new Claim(ClaimTypes.Email, email),
             new Claim("jobTitle", jobTitle),
             new Claim(ClaimTypes.Name, "TestUser"),
-            new Claim(ClaimTypes.Role, "ManageAdmin"),
-            new Claim(ClaimTypes.Role, "ManageUsers"),
-
-            // ManageRoles now names only Administrators and Users. The two aliases above are kept
-            // so this principal still matches any [Authorize] written against the older spelling,
-            // but without these two every controller on this host answers 403 and no acceptance
-            // test can reach the code it is named for.
-            new Claim(ClaimTypes.Role, "Administrators"),
-            new Claim(ClaimTypes.Role, "Users")
+            new Claim(ClaimTypes.Role, ManageRoles.Administrators),
+            new Claim(ClaimTypes.Role, ManageRoles.Users)
         };
 
         public TestAuthHandler(

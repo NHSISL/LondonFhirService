@@ -1,10 +1,11 @@
-﻿// The app registration currently carries three aliases for each logical role - the intended
-// ManageAdmin/ManageUsers names plus two older forms that are still assigned to real users. All
-// three are accepted so every existing operator keeps working, and they mirror the ManageRoles
-// constants the Manage host authorises against.
+﻿// The app registration carries one name per logical role - Administrators and Users - and these
+// two arrays are where the client writes them down. The STRINGS mirror the ManageRoles constants
+// the Manage host authorises against; change one and change the other.
 //
-// This is deliberately temporary. Once the registration is reduced to one name per role, drop the
-// alias entries from these arrays and from ManageRoles.cs.
+// The strings matching does not mean the POLICY matches. Which roles each area below grants is
+// maintained by hand against each controller's [Authorize]. Nothing here enforces anything: this
+// matrix decides what the portal shows, the attributes decide what the API allows, and only the
+// second is a security boundary.
 const administratorRoles = ['Administrators'];
 
 const userRoles = ['Users'];
@@ -19,11 +20,12 @@ const securityPoints = {
         view: administratorAndUserRoles,
     },
     // The audit trail is read only in this portal - the API's write verbs are [InvisibleApi]
-    // and unroutable - so only view is granted, to the same audience AuditsController allows.
+    // and unroutable - so only view is granted.
     //
-    // Administrators only, because that is what AuditsController now authorises. This used to
-    // grant users as well, which put the menu item in front of an audience the API answers 403
-    // to.
+    // Administrators only, matching AuditsController's [Authorize]. This used to grant users as
+    // well, which put the menu item in front of an audience every call behind it answers 403 to.
+    // Reconciled towards the server rather than away from it - an audit row carries a whole
+    // patient payload, so the narrower side is the one to keep.
     audits: {
         view: administratorRoles,
     },
@@ -40,14 +42,16 @@ const securityPoints = {
     structuredRecord: {
         view: administratorAndUserRoles,
     },
-    // Administrators and users, matching what FhirRecordDifferencesController and
-    // FhirRecordsController authorise against. Both also require a granular role per verb -
-    // FhirRecordDifferences.Read and the rest - which this matrix does not model, so holding a
-    // role here is necessary to see the area but not sufficient to load it.
+    // Administrators and Users, matching the server. Edit covers the review fields an operator
+    // can set on a comparison; the differences themselves are written by the comparison service
+    // and are not editable from here, so there is no add or delete.
     //
-    // Edit covers the review fields an operator can set on a comparison; the differences
-    // themselves are written by the comparison service and are not editable from here, so there
-    // is no add or delete.
+    // This area used to be administrators only while FhirRecordsController and
+    // FhirRecordDifferencesController both carry
+    // [Authorize(Roles = ManageRoles.AdministratorsAndUsers)] - so the portal hid a screen whose
+    // endpoints a Users-role operator could call directly, which reads as a control but is not
+    // one. Hiding a screen is not authorisation; the attributes are the boundary. Widened
+    // deliberately rather than narrowing the controllers, so the two now agree.
     comparisons: {
         edit: administratorAndUserRoles,
         view: administratorAndUserRoles,

@@ -4,8 +4,7 @@
     faCodeCompare,
     faFileMedical,
     faHome,
-    faNetworkWired,
-    faUser
+    faNetworkWired
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
@@ -67,7 +66,6 @@ const MenuComponent: React.FC = () => {
                     Metrics
                 </ListGroup.Item>
             </SecuredComponent>
-
             <SecuredComponent allowedRoles={securityPoints.structuredRecord.view}>
                 <ListGroup.Item
                     className={`bg-dark text-white ${
@@ -77,13 +75,6 @@ const MenuComponent: React.FC = () => {
                     Get Structured Record
                 </ListGroup.Item>
             </SecuredComponent>
-
-            <ListGroup.Item
-                className={`bg-dark text-white ${location.pathname === '/testPage' ? 'active' : ''}`}
-                onClick={() => handleItemClick('/testPage')}>
-                <FontAwesomeIcon icon={faUser} className="me-2 fa-icon" />
-                Test Nav Page
-            </ListGroup.Item>
         </ListGroup>
     );
 };

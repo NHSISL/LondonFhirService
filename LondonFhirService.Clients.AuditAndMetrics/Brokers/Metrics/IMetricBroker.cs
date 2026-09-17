@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -17,6 +17,13 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
     /// </summary>
     internal interface IMetricBroker
     {
+        /// <summary>
+        /// Each metric carries its own RequestSpanId, which anchors the replayed span under the
+        /// HTTP request it belongs to. It travels on the metric rather than as a parameter because
+        /// the replay runs on a background worker long after that request has gone, and because a
+        /// batch is not guaranteed to belong to one request - a single parameter would stamp one
+        /// request's span id onto spans from another trace.
+        /// </summary>
         ValueTask RecordAsync(IMetric metric, CancellationToken cancellationToken = default);
         ValueTask RecordAsync(List<IMetric> metrics, CancellationToken cancellationToken = default);
     }

@@ -27,6 +27,22 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
 
         Guid? ParentId { get; set; }
         Guid CorrelationId { get; set; }
+
+        /// <summary>
+        /// The span id of the HTTP request this span belongs to, as 16 hex characters, or null
+        /// when there was no request behind it. It anchors the replayed telemetry span under that
+        /// request instead of leaving it floating beside it.
+        ///
+        /// Transport only - deliberately NOT persisted. The metrics table is the authoritative
+        /// store and this adds nothing to it; the value exists to survive the hop from the request
+        /// that produced the span to the background worker that replays it.
+        ///
+        /// Stamped by the metric service when the caller leaves it null. A caller that is already
+        /// running deferred - the Persist span is queued before it is recorded - must set it
+        /// itself, while the request is still alive, because by the time the service sees it there
+        /// is no request left to ask.
+        /// </summary>
+        string RequestSpanId { get; set; }
         string Method { get; set; }
         MetricType Type { get; set; }
         string Name { get; set; }

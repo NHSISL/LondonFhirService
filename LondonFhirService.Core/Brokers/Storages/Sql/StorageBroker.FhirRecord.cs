@@ -29,6 +29,8 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             StatusType expectedStatus,
             StatusType claimedStatus,
             DateTimeOffset claimedDate,
+            string claimedBy,
+            bool isProcessed,
             DateTimeOffset? notUpdatedAfter,
             CancellationToken cancellationToken = default) =>
             await this.FhirRecords
@@ -44,7 +46,56 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                         && (notUpdatedAfter == null || fhirRecord.UpdatedDate <= notUpdatedAfter))
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(fhirRecord => fhirRecord.Status, claimedStatus)
-                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, claimedDate),
+
+                    // Always written, so that settling a record can set it in the same statement
+                    // that proves the lease is still held. The claim and reclaim arms pass false,
+                    // which is a no-op against the states they can reach - a row is Pending or
+                    // stale Processing there, and neither is processed.
+                    .SetProperty(fhirRecord => fhirRecord.IsProcessed, isProcessed)
+
+                    // The value here is the caller's lease token, so the column's precision is
+                    // load-bearing: it carries only IsRequired() today, which is
+                    // datetimeoffset(7). Adding HasPrecision to it would round stored values and
+                    // a rounded-up UpdatedDate would sit past the token, turning every fenced
+                    // write into a silent no-op.
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, claimedDate)
+
+                    // FhirRecord is IAuditable, and ExecuteUpdateAsync goes round the change
+                    // tracker - so nothing stamps the actor unless the statement does. Moving
+                    // UpdatedDate while leaving UpdatedBy behind produces a row that says it was
+                    // touched, at a time, by whoever last touched it through a different path.
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedBy, claimedBy),
+                    cancellationToken);
+
+        public async ValueTask<int> UpdateFhirRecordStatusAsync(
+            Guid fhirRecordId,
+            StatusType excludedStatus,
+            StatusType newStatus,
+            bool isProcessed,
+            DateTimeOffset updatedDate,
+            string updatedBy,
+            CancellationToken cancellationToken = default) =>
+            await this.FhirRecords
+                .Where(fhirRecord =>
+                    fhirRecord.Id == fhirRecordId
+                        && fhirRecord.Status != excludedStatus)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(fhirRecord => fhirRecord.Status, newStatus)
+
+                    // Set here too, because the read-then-write path this replaced set it for
+                    // terminal statuses. Dropping it left every completed primary marked
+                    // unprocessed, which anything reading IsProcessed would read as still pending.
+                    // Passed in rather than derived from newStatus: deciding which statuses are
+                    // terminal is the caller's business, not the broker's.
+                    .SetProperty(fhirRecord => fhirRecord.IsProcessed, isProcessed)
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, updatedDate)
+
+                    // Same reason as the claim above, and here it is a restoration rather than a
+                    // precaution: the read-then-write path this replaced ran through
+                    // ApplyModifyAuditValuesAsync, so completing a primary used to stamp the
+                    // actor. Dropping it would have left the previous actor on a row whose
+                    // UpdatedDate had moved.
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedBy, updatedBy),
                     cancellationToken);
 
         public async ValueTask<FhirRecord> SelectFhirRecordByIdAsync(

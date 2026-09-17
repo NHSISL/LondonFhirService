@@ -136,8 +136,10 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             var foreignMetric = new ForeignMetric
             {
                 Id = Guid.NewGuid(),
+                UserId = GetRandomString(),
                 ParentId = Guid.NewGuid(),
                 CorrelationId = Guid.NewGuid(),
+                RequestSpanId = GetRandomString(),
                 Method = GetRandomString(),
                 Type = MetricType.Provider,
                 Name = GetRandomString(),
@@ -168,8 +170,19 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             capturedMetric.Should().NotBeNull();
             capturedMetric.Should().BeOfType<Metric>();
             capturedMetric.Id.Should().Be(foreignMetric.Id);
+
+            // Attribution is the one field nothing downstream can reconstruct - the caller is gone
+            // by the time the row is written, so a copy that drops it leaves the span orphaned.
+            capturedMetric.UserId.Should().Be(foreignMetric.UserId);
             capturedMetric.ParentId.Should().Be(foreignMetric.ParentId);
             capturedMetric.CorrelationId.Should().Be(foreignMetric.CorrelationId);
+
+            // Transport only, and the only field here that is not a column - which is exactly why
+            // it needs asserting. It carries the request's span id to the worker that replays the
+            // metric into telemetry, so a copy that drops it loses the anchor silently: the row
+            // still writes, and the replayed span just hangs off nothing.
+            capturedMetric.RequestSpanId.Should().Be(foreignMetric.RequestSpanId);
+
             capturedMetric.Method.Should().Be(foreignMetric.Method);
             capturedMetric.Type.Should().Be(foreignMetric.Type);
             capturedMetric.Name.Should().Be(foreignMetric.Name);
@@ -230,6 +243,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             public string UserId { get; set; }
             public Guid? ParentId { get; set; }
             public Guid CorrelationId { get; set; }
+            public string RequestSpanId { get; set; }
             public string Method { get; set; }
             public MetricType Type { get; set; }
             public string Name { get; set; }
