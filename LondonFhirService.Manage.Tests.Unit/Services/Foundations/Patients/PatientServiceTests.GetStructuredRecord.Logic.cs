@@ -27,6 +27,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             string randomStructuredRecord = GetRandomString();
             string expectedStructuredRecord = randomStructuredRecord;
 
+            // Matched exactly on both hops rather than with It.IsAny, so the caller's token has to
+            // reach the broker unchanged. With It.IsAny the service could drop it, or substitute
+            // default, and this test would still pass - which would leave a request that nobody is
+            // waiting for running to completion against a provider.
+            CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
+
             Dictionary<string, string> expectedFormValues = CreateExpectedFormValues(
                 clientId: inputStructuredRecordRequest.ClientId,
                 clientSecret: inputStructuredRecordRequest.ClientSecret,
@@ -38,7 +44,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     this.patientConfiguration.AuthUrl,
                     It.Is<IDictionary<string, string>>(formValues =>
                         SameFormValuesAs(formValues, expectedFormValues)),
-                    It.IsAny<CancellationToken>()))
+                    inputCancellationToken))
                         .ReturnsAsync(tokenResponse);
 
             this.httpBrokerMock.Setup(broker =>
@@ -46,13 +52,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     this.patientConfiguration.GetStructuredRecordUrl,
                     It.IsAny<string>(),
                     randomAccessToken,
-                    It.IsAny<CancellationToken>()))
+                    inputCancellationToken))
                         .ReturnsAsync(randomStructuredRecord);
 
             // when
             string actualStructuredRecord = await this.patientService.GetStructuredRecord(
                 inputStructuredRecordRequest,
-                TestContext.Current.CancellationToken);
+                inputCancellationToken);
 
             // then
             actualStructuredRecord.Should().BeEquivalentTo(expectedStructuredRecord);
@@ -62,7 +68,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     this.patientConfiguration.AuthUrl,
                     It.Is<IDictionary<string, string>>(formValues =>
                         SameFormValuesAs(formValues, expectedFormValues)),
-                    It.IsAny<CancellationToken>()),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.Verify(broker =>
@@ -70,7 +76,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     this.patientConfiguration.GetStructuredRecordUrl,
                     It.IsAny<string>(),
                     randomAccessToken,
-                    It.IsAny<CancellationToken>()),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
