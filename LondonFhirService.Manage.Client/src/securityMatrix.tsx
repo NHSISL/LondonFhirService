@@ -20,8 +20,12 @@ const securityPoints = {
     },
     // The audit trail is read only in this portal - the API's write verbs are [InvisibleApi]
     // and unroutable - so only view is granted, to the same audience AuditsController allows.
+    //
+    // Administrators only, because that is what AuditsController now authorises. This used to
+    // grant users as well, which put the menu item in front of an audience the API answers 403
+    // to.
     audits: {
-        view: administratorAndUserRoles,
+        view: administratorRoles,
     },
     // Metrics carry no patient identifiable data by design, and the API's write verbs are
     // [InvisibleApi] and unroutable, so this is view only to the same audience
@@ -30,20 +34,23 @@ const securityPoints = {
         view: administratorAndUserRoles,
     },
     // The page calls $getstructuredrecord live and shows a whole patient record, so it is granted
-    // to the same audience PatientController authorises - administrators and users - rather than
-    // being administrators only like the comparison area. A comparison holds two stored bundles;
-    // this one holds nothing, and an operator diagnosing a consumer needs it.
+    // to the same audience PatientController authorises - administrators and users. Unlike the
+    // comparison area it stores nothing: the record is fetched for the screen and gone when the
+    // operator leaves it.
     structuredRecord: {
         view: administratorAndUserRoles,
     },
-    // A comparison holds two whole patient bundles, so the area is administrators only - the same
-    // audience FhirRecordDifferencesController and FhirRecordsController authorise against. Edit
-    // covers the review fields an operator can set on a comparison; the differences themselves are
-    // written by the comparison service and are not editable from here, so there is no add or
-    // delete.
+    // Administrators and users, matching what FhirRecordDifferencesController and
+    // FhirRecordsController authorise against. Both also require a granular role per verb -
+    // FhirRecordDifferences.Read and the rest - which this matrix does not model, so holding a
+    // role here is necessary to see the area but not sufficient to load it.
+    //
+    // Edit covers the review fields an operator can set on a comparison; the differences
+    // themselves are written by the comparison service and are not editable from here, so there
+    // is no add or delete.
     comparisons: {
-        edit: administratorRoles,
-        view: administratorRoles,
+        edit: administratorAndUserRoles,
+        view: administratorAndUserRoles,
     },
     // The provider registry decides who the patient fan-out calls, so the whole area - the master
     // list as well as the detail view - is administrators only.
