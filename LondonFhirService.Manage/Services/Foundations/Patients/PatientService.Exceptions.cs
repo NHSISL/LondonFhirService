@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using Xeptions;
 
@@ -16,7 +17,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
     {
         private delegate ValueTask<string> ReturningStringFunction();
 
-        private static async ValueTask<string> TryCatch(
+        private async ValueTask<string> TryCatch(
             ReturningStringFunction returningStringFunction)
         {
             try
@@ -25,11 +26,11 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             }
             catch (NullPatientServiceException nullPatientServiceException)
             {
-                throw CreateValidationException(nullPatientServiceException);
+                throw await CreateAndLogValidationException(nullPatientServiceException);
             }
             catch (InvalidPatientServiceException invalidPatientServiceException)
             {
-                throw CreateValidationException(invalidPatientServiceException);
+                throw await CreateAndLogValidationException(invalidPatientServiceException);
             }
 
             // Ordered before the plain cancellation catch on purpose. A timeout surfaces as an
@@ -44,7 +45,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                         innerException: operationCanceledException,
                         data: operationCanceledException.Data);
 
-                throw CreateDependencyException(timedOutPatientServiceException);
+                throw await CreateAndLogDependencyException(timedOutPatientServiceException);
             }
             catch (TimeoutException timeoutException)
             {
@@ -54,7 +55,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                         innerException: timeoutException,
                         data: timeoutException.Data);
 
-                throw CreateDependencyException(timedOutPatientServiceException);
+                throw await CreateAndLogDependencyException(timedOutPatientServiceException);
             }
             // Rethrown, never wrapped. Cancellation is not a failure - it is the caller saying it
             // no longer wants the answer - so it has to reach them as itself rather than as a
@@ -66,7 +67,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             }
             catch (InvalidAccessTokenPatientServiceException invalidAccessTokenPatientServiceException)
             {
-                throw CreateDependencyException(invalidAccessTokenPatientServiceException);
+                throw await CreateAndLogDependencyException(invalidAccessTokenPatientServiceException);
             }
 
             // A malformed token payload is the authorisation server answering with something this
@@ -80,7 +81,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                         innerException: jsonException,
                         data: jsonException.Data);
 
-                throw CreateDependencyException(failedPatientDependencyException);
+                throw await CreateAndLogDependencyException(failedPatientDependencyException);
             }
             // A 4xx is the upstream judging the request rather than failing at it, and on this
             // screen that is nearly always the operator's own credentials being rejected. Reporting
@@ -96,7 +97,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                         innerException: httpRequestException,
                         data: httpRequestException.Data);
 
-                throw CreateDependencyValidationException(failedPatientDependencyValidationException);
+                throw await CreateAndLogDependencyValidationException(failedPatientDependencyValidationException);
             }
             catch (HttpRequestException httpRequestException)
             {
@@ -106,7 +107,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                         innerException: httpRequestException,
                         data: httpRequestException.Data);
 
-                throw CreateDependencyException(failedPatientDependencyException);
+                throw await CreateAndLogDependencyException(failedPatientDependencyException);
             }
             catch (Exception exception)
             {
@@ -115,7 +116,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                         message: "Failed patient service error occurred, contact support.",
                         innerException: exception);
 
-                throw CreateServiceException(failedPatientServiceException);
+                throw await CreateAndLogServiceException(failedPatientServiceException);
             }
         }
 
@@ -133,37 +134,58 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                 && (int)statusCode >= 400
                 && (int)statusCode <= 499;
 
-        private static PatientServiceValidationException CreateValidationException(
+        private async ValueTask<PatientServiceValidationException> CreateAndLogValidationException(
             Xeption exception)
         {
-            return new PatientServiceValidationException(
-                message: "Patient validation error occurred, please fix errors and try again.",
-                innerException: exception);
+            var patientServiceValidationException =
+                new PatientServiceValidationException(
+                    message: "Patient validation error occurred, please fix errors and try again.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(patientServiceValidationException);
+
+            return patientServiceValidationException;
         }
 
-        private static PatientServiceDependencyValidationException CreateDependencyValidationException(
-            Xeption exception)
+        private async ValueTask<PatientServiceDependencyValidationException>
+            CreateAndLogDependencyValidationException(Xeption exception)
         {
-            return new PatientServiceDependencyValidationException(
-                message: "Patient dependency validation error occurred, " +
-                    "please fix the errors and try again.",
-                innerException: exception);
+            var patientServiceDependencyValidationException =
+                new PatientServiceDependencyValidationException(
+                    message: "Patient dependency validation error occurred, " +
+                        "please fix the errors and try again.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(patientServiceDependencyValidationException);
+
+            return patientServiceDependencyValidationException;
         }
 
-        private static PatientServiceDependencyException CreateDependencyException(
+        private async ValueTask<PatientServiceDependencyException> CreateAndLogDependencyException(
             Xeption exception)
         {
-            return new PatientServiceDependencyException(
-                message: "Patient dependency error occurred, contact support.",
-                innerException: exception);
+            var patientServiceDependencyException =
+                new PatientServiceDependencyException(
+                    message: "Patient dependency error occurred, contact support.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(patientServiceDependencyException);
+
+            return patientServiceDependencyException;
         }
 
-        private static PatientServiceException CreateServiceException(
+        private async ValueTask<PatientServiceException> CreateAndLogServiceException(
             Xeption exception)
         {
-            return new PatientServiceException(
-                message: "Patient service error occurred, contact support.",
-                innerException: exception);
+            var patientServiceException =
+                new PatientServiceException(
+                    message: "Patient service error occurred, contact support.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(patientServiceException);
+
+            return patientServiceException;
         }
+
     }
 }

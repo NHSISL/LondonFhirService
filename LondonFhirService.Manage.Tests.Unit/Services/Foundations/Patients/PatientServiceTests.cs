@@ -4,33 +4,39 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Services.Foundations.Patients;
 using Moq;
 using Tynamix.ObjectFiller;
+using Xeptions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 {
     public partial class PatientServiceTests
     {
         private readonly Mock<IHttpBroker> httpBrokerMock;
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly PatientConfiguration patientConfiguration;
         private readonly PatientService patientService;
 
         public PatientServiceTests()
         {
             this.httpBrokerMock = new Mock<IHttpBroker>();
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.patientConfiguration = CreateRandomPatientConfiguration();
 
             this.patientService = new PatientService(
                 httpBroker: this.httpBrokerMock.Object,
-                patientConfiguration: this.patientConfiguration);
+                patientConfiguration: this.patientConfiguration,
+                loggingBroker: this.loggingBrokerMock.Object);
         }
 
         private static int GetRandomNumber() =>
@@ -95,6 +101,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 ["scope"] = scope,
                 ["grant_type"] = grantType
             };
+
+        private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => actualException.SameExceptionAs(expectedException);
 
         private static bool SameFormValuesAs(
             IDictionary<string, string> actualFormValues,

@@ -89,6 +89,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -165,6 +166,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -279,6 +281,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -366,6 +369,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -451,6 +455,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
@@ -35,13 +36,16 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
 
         private readonly IHttpBroker httpBroker;
         private readonly PatientConfiguration patientConfiguration;
+        private readonly ILoggingBroker loggingBroker;
 
         public PatientService(
             IHttpBroker httpBroker,
-            PatientConfiguration patientConfiguration)
+            PatientConfiguration patientConfiguration,
+            ILoggingBroker loggingBroker)
         {
             this.httpBroker = httpBroker;
             this.patientConfiguration = patientConfiguration;
+            this.loggingBroker = loggingBroker;
         }
 
         public ValueTask<string> GetStructuredRecordAsync(

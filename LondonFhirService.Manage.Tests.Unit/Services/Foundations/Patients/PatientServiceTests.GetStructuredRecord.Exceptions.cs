@@ -13,6 +13,7 @@ using FluentAssertions;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using Moq;
+using Xeptions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 {
@@ -68,7 +69,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceDependencyException))),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -146,7 +153,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceDependencyException))),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -199,7 +212,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceDependencyException))),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -248,6 +267,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -279,6 +299,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             // Neither call is made. A caller that has already given up should not cost a token
             // exchange, let alone a patient lookup.
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -311,6 +332,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualOperationCanceledException.CancellationToken.Should().Be(cancelledToken);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -363,7 +385,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Xeption>()),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -414,7 +441,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceException))),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
         [Theory]
         [MemberData(nameof(UnusableTokenResponses))]
@@ -466,7 +499,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Xeption>()),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
         /// <summary>
         /// The case this screen exists for. An operator testing a consumer's credentials gets them
@@ -521,7 +559,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Xeption>()),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -572,7 +615,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Xeption>()),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
     }

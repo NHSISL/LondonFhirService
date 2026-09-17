@@ -46,7 +46,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceValidationException.Should()
                 .BeEquivalentTo(expectedPatientServiceValidationException);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceValidationException))),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -88,7 +94,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceValidationException.Should()
                 .BeEquivalentTo(expectedPatientServiceValidationException);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceValidationException))),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -132,7 +144,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceValidationException.Should()
                 .BeEquivalentTo(expectedPatientServiceValidationException);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceValidationException))),
+                        Times.Once);
+
             this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -160,7 +178,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             var blankCredentialsPatientService = new PatientService(
                 httpBroker: blankCredentialsHttpBrokerMock.Object,
-                patientConfiguration: blankPatientConfiguration);
+                patientConfiguration: blankPatientConfiguration,
+                loggingBroker: this.loggingBrokerMock.Object);
 
             StructuredRecordRequest randomStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
@@ -207,7 +226,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceValidationException.Should()
                 .BeEquivalentTo(expectedPatientServiceValidationException);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceValidationException))),
+                        Times.Once);
+
             blankCredentialsHttpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -233,7 +258,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             var unconfiguredPatientService = new PatientService(
                 httpBroker: unconfiguredHttpBrokerMock.Object,
-                patientConfiguration: unconfiguredPatientConfiguration);
+                patientConfiguration: unconfiguredPatientConfiguration,
+                loggingBroker: this.loggingBrokerMock.Object);
 
             StructuredRecordRequest randomStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
@@ -271,7 +297,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceValidationException.Should()
                 .BeEquivalentTo(expectedPatientServiceValidationException);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceValidationException))),
+                        Times.Once);
+
             unconfiguredHttpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -282,7 +314,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             var unconfiguredPatientService = new PatientService(
                 httpBroker: unconfiguredHttpBrokerMock.Object,
-                patientConfiguration: null);
+                patientConfiguration: null,
+                loggingBroker: this.loggingBrokerMock.Object);
 
             StructuredRecordRequest randomStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
@@ -312,7 +345,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceValidationException.Should()
                 .BeEquivalentTo(expectedPatientServiceValidationException);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceValidationException))),
+                        Times.Once);
+
             unconfiguredHttpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
