@@ -65,9 +65,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 95 declared components and 444 declared edges draw as
-**92 components · 415 flows** in the single-copy view and **266 nodes ·
-1035 flows** per consumer (95 · 444 and 308 · 1101 with utility brokers on).
+At the last scan, 95 declared components and 447 declared edges draw as
+**92 components · 415 flows** in the single-copy view and **263 nodes ·
+1008 flows** per consumer (308 · 1086 with utility brokers on).
 
 > When re-verifying locally, serve on a **fresh port**. The page fetches the data
 > files, and a browser that has already loaded them on that port will keep

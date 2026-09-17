@@ -80,16 +80,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
         public ValueTask<CompareQueueItem> GetUnprocessedRecordAsync() =>
             TryCatch(async () =>
             {
-                DateTimeOffset currentDateTime =
-                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-
-                DateTimeOffset bufferedDateTime =
-                    currentDateTime.AddMinutes(-CompareBufferMinutes);
-
-                DateTimeOffset leaseExpiryDateTime =
-                    currentDateTime.AddMinutes(-ProcessingLeaseMinutes);
-
                 Guid? claimedFhirRecordId = null;
+                DateTimeOffset claimedAt = default;
 
                 // Losing a claim means another worker took that row, not that the queue is empty,
                 // so the next candidate is tried rather than returning null - the caller uses null
@@ -98,6 +90,23 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 // run of contention cannot spin.
                 for (int attempt = 0; attempt < MaxClaimAttempts; attempt++)
                 {
+                    // Read per attempt rather than once before the loop. Every attempt costs a
+                    // query, an identifier and a claim, so a stamp read up front is already old by
+                    // the time it is written - and it is written to UpdatedDate, where it IS the
+                    // lease. Stale, it shortens the lease by however long the loop ran; badly
+                    // stale, it writes a value already past another worker's expiry bound, which
+                    // leaves the row reclaimable while this worker is actively comparing it. The
+                    // query bounds come from the same read, so each attempt sees one consistent
+                    // moment.
+                    DateTimeOffset currentDateTime =
+                        await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+                    DateTimeOffset bufferedDateTime =
+                        currentDateTime.AddMinutes(-CompareBufferMinutes);
+
+                    DateTimeOffset leaseExpiryDateTime =
+                        currentDateTime.AddMinutes(-ProcessingLeaseMinutes);
+
                     IQueryable<FhirRecord> secondaryFhirRecordQueryable =
                         await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
 
@@ -153,6 +162,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     {
                         claimedFhirRecordId = claimCandidate.Id;
 
+                        // The exact value the statement wrote, kept as the caller's lease token.
+                        claimedAt = currentDateTime;
+
                         break;
                     }
                 }
@@ -187,7 +199,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 var compareQueueItem = new CompareQueueItem();
                 compareQueueItem.PrimaryFhirRecord = primaryFhirRecord;
                 compareQueueItem.SecondaryFhirRecord = secondaryFhirRecord;
-                compareQueueItem.ClaimedAt = currentDateTime;
+                compareQueueItem.ClaimedAt = claimedAt;
 
                 return compareQueueItem;
             });

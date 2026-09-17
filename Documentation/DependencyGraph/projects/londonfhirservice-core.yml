@@ -1595,11 +1595,11 @@ components:
     name: CompareQueueOrchestrationService
     layer: orchestration
     col: 5
-    description: "The comparison queue. GetUnprocessedRecordAsync pairs an eligible secondary FhirRecord - Pending and settled for at least 5 minutes, or Processing past its 30 minute lease - with the primary record sharing its CorrelationId. The claim is a set-based statement in the database rather than a read-then-write, so two workers cannot both win the same row. It chooses at random from a window of the oldest candidates rather than always taking the head, because every worker runs the same ordered query and taking the head made contention certain rather than incidental. TryRetainClaimAsync re-asserts a claim before its holder writes anything: a lease that expires while the work is still running is indistinguishable from one left by a worker that died, so a worker that has been overtaken has to be able to find out and abandon."
+    description: "The comparison queue. GetUnprocessedRecordAsync pairs an eligible secondary FhirRecord - Pending and settled for at least 5 minutes, or Processing past its 30 minute lease - with the primary record sharing its CorrelationId. The claim is a set-based statement in the database rather than a read-then-write, so two workers cannot both win the same row. It chooses at random from a window of the oldest candidates rather than always taking the head, because every worker runs the same ordered query and taking the head made contention certain rather than incidental. TryRetainClaimAsync re-asserts a claim before its holder writes anything: a lease that expires while the work is still running is indistinguishable from one left by a worker that died, so a worker that has been overtaken has to be able to find out and abandon. TryFinalizeClaimedFhirRecordAsync settles a record onto Completed or Failed in that same one statement, carrying the lease token, because a check followed by a separate write leaves a window in which the write can land on a row another worker has taken over - and nothing reclaims a terminal status. It replaced a read-then-write that also dragged the whole row, JsonPayload and all, through memory to change two fields."
     methods:
       - GetUnprocessedRecordAsync
       - TryRetainClaimAsync
-      - ChangeFhirRecordStatusAsync
+      - TryFinalizeClaimedFhirRecordAsync
       - CompletePrimaryFhirRecordAsync
       - PersistFhirRecordDifferencesAsync
     calls:
@@ -1615,6 +1615,12 @@ components:
       - from: GetUnprocessedRecordAsync
         to: FS.FhirRecord
         method: TryClaimFhirRecordAsync
+      - from: GetUnprocessedRecordAsync
+        to: FS.FhirRecord
+        method: RetrieveFhirRecordByIdAsync
+      - from: GetUnprocessedRecordAsync
+        to: LoggingBroker
+        method: LogWarningAsync
       - from: TryRetainClaimAsync
         to: DateTimeBroker
         method: GetCurrentDateTimeOffsetAsync
@@ -1624,12 +1630,15 @@ components:
       - from: CompletePrimaryFhirRecordAsync
         to: FS.FhirRecord
         method: TryTransitionFhirRecordStatusAsync
-      - from: ChangeFhirRecordStatusAsync
+      - from: CompletePrimaryFhirRecordAsync
+        to: LoggingBroker
+        method: LogDebugAsync
+      - from: TryFinalizeClaimedFhirRecordAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffsetAsync
+      - from: TryFinalizeClaimedFhirRecordAsync
         to: FS.FhirRecord
-        method: RetrieveFhirRecordByIdAsync
-      - from: ChangeFhirRecordStatusAsync
-        to: FS.FhirRecord
-        method: ModifyFhirRecordAsync
+        method: TryClaimFhirRecordAsync
       - from: PersistFhirRecordDifferencesAsync
         to: FS.FhirRecordDifference
         method: AddFhirRecordDifferenceAsync
@@ -1734,7 +1743,7 @@ components:
         method: CompletePrimaryFhirRecordAsync
       - from: ProcessFhirRecordsAsync
         to: OR.CompareQueue
-        method: ChangeFhirRecordStatusAsync
+        method: TryFinalizeClaimedFhirRecordAsync
       - from: ProcessFhirRecordsAsync
         to: LoggingBroker
         method: LogWarningAsync
