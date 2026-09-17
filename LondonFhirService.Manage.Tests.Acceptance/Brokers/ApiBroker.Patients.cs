@@ -11,7 +11,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
 {
     public partial class ApiBroker
     {
-        private const string patientsRelativeUrl = "api/patient";
+        private const string patientsRelativeUrl = "api/patients";
 
         /// <summary>
         /// Returns the raw HttpResponseMessage rather than a deserialised payload. The endpoint

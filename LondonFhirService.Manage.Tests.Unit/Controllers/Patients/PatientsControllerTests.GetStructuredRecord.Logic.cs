@@ -11,7 +11,7 @@ using RESTFulSense.Clients.Extensions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 {
-    public partial class PatientControllerTests
+    public partial class PatientsControllerTests
     {
         [Fact]
         public async Task ShouldReturnOkOnPostGetStructuredRecordAsync()
@@ -35,7 +35,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             // when
             ActionResult<string> actualActionResult =
-                await patientController.PostGetStructuredRecordAsync(
+                await patientsController.PostGetStructuredRecordAsync(
                     randomStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
@@ -73,7 +73,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
                         .ReturnsAsync(GetRandomString());
 
             // when
-            await patientController.PostGetStructuredRecordAsync(
+            await patientsController.PostGetStructuredRecordAsync(
                 randomStructuredRecordRequest,
                 inputCancellationToken);
 

@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 {
-    public partial class PatientControllerTests
+    public partial class PatientsControllerTests
     {
         /// <summary>
         /// The endpoint hands back a whole patient record for whatever NHS number is typed, so the
@@ -26,7 +26,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
         public void PostGetStructuredRecordShouldHaveRoleAttributeWithAdministratorsAndUsersRoles()
         {
             // given
-            var controllerType = typeof(PatientController);
+            var controllerType = typeof(PatientsController);
             var methodInfo = controllerType.GetMethod("PostGetStructuredRecordAsync");
             Type attributeType = typeof(AuthorizeAttribute);
             string attributeProperty = "Roles";
@@ -74,7 +74,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
         public void PostGetStructuredRecordShouldNotBeAnonymous()
         {
             // given
-            var controllerType = typeof(PatientController);
+            var controllerType = typeof(PatientsController);
             var methodInfo = controllerType.GetMethod("PostGetStructuredRecordAsync");
             Type attributeType = typeof(AllowAnonymousAttribute);
 
@@ -102,7 +102,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
         public void PostGetStructuredRecordShouldNotHaveInvisibleApiAttribute()
         {
             // given
-            var controllerType = typeof(PatientController);
+            var controllerType = typeof(PatientsController);
             var methodInfo = controllerType.GetMethod("PostGetStructuredRecordAsync");
             Type attributeType = typeof(InvisibleApiAttribute);
 

@@ -13,7 +13,7 @@ using Xeptions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 {
-    public partial class PatientControllerTests
+    public partial class PatientsControllerTests
     {
         [Theory]
         [MemberData(nameof(ValidationExceptions))]
@@ -38,7 +38,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             // when
             ActionResult<string> actualActionResult =
-                await this.patientController.PostGetStructuredRecordAsync(
+                await this.patientsController.PostGetStructuredRecordAsync(
                     someStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
@@ -77,7 +77,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             // when
             ActionResult<string> actualActionResult =
-                await this.patientController.PostGetStructuredRecordAsync(
+                await this.patientsController.PostGetStructuredRecordAsync(
                     someStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 

@@ -14,15 +14,15 @@ using Xeptions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 {
-    public partial class PatientControllerTests : RESTFulController
+    public partial class PatientsControllerTests : RESTFulController
     {
         private readonly Mock<IPatientService> patientServiceMock;
-        private readonly PatientController patientController;
+        private readonly PatientsController patientsController;
 
-        public PatientControllerTests()
+        public PatientsControllerTests()
         {
             patientServiceMock = new Mock<IPatientService>();
-            patientController = new PatientController(patientServiceMock.Object);
+            patientsController = new PatientsController(patientServiceMock.Object);
         }
 
         public static TheoryData<Xeption> ValidationExceptions()

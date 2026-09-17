@@ -30,11 +30,11 @@ namespace LondonFhirService.Manage.Controllers.Patients
     [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]
     [ApiController]
     [Route("api/[controller]")]
-    public class PatientController : RESTFulController
+    public class PatientsController : RESTFulController
     {
         private readonly IPatientService patientService;
 
-        public PatientController(IPatientService patientService) =>
+        public PatientsController(IPatientService patientService) =>
             this.patientService = patientService;
 
         [HttpPost("getstructuredrecord")]

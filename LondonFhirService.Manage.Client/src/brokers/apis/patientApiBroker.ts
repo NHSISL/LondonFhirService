@@ -4,7 +4,7 @@ import type { IPatientApiBroker } from "./iPatientApiBroker";
 import type { StructuredRecordRequest } from "../../models/foundations/patients/StructuredRecordRequest";
 
 export class PatientApiBroker implements IPatientApiBroker {
-    private readonly relativePatientUrl = "/api/patient";
+    private readonly relativePatientsUrl = "/api/patients";
     private readonly apiBroker: ApiBroker;
 
     constructor(apiBroker: ApiBroker = new ApiBroker()) {
@@ -17,7 +17,7 @@ export class PatientApiBroker implements IPatientApiBroker {
         : Promise<string> {
         try {
             const response = await this.apiBroker.PostAsync(
-                `${this.relativePatientUrl}/getstructuredrecord`,
+                `${this.relativePatientsUrl}/getstructuredrecord`,
                 structuredRecordRequest,
                 abortSignal);
 
