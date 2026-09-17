@@ -272,11 +272,11 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             invalidPatientServiceException.UpsertDataList(
                 key: nameof(PatientConfiguration.AuthUrl),
-                value: "Text is invalid");
+                value: "Text must be a valid absolute url");
 
             invalidPatientServiceException.UpsertDataList(
                 key: nameof(PatientConfiguration.GetStructuredRecordUrl),
-                value: "Text is invalid");
+                value: "Text must be a valid absolute url");
 
             var expectedPatientServiceValidationException =
                 new PatientServiceValidationException(
@@ -353,5 +353,76 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             unconfiguredHttpBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+        /// <summary>
+        /// The shape an unconfigured host actually ships in: not blank, so the old blank-only
+        /// check passed it straight through to HttpClient, which answered a relative uri with an
+        /// InvalidOperationException and turned a configuration problem into a 500 about nothing.
+        /// </summary>
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnGetStructuredRecordIfUrlsAreNotAbsoluteAsync()
+        {
+            // given
+            var placeholderPatientConfiguration = new PatientConfiguration
+            {
+                AuthUrl = "override_this_in_your_appsettings.Development.json_file",
+                ClientId = GetRandomString(),
+                ClientSecret = GetRandomString(),
+                Scope = GetRandomString(),
+                GrantType = GetRandomString(),
+                GetStructuredRecordUrl = "api/patient/$getstructuredrecord"
+            };
+
+            var placeholderHttpBrokerMock = new Mock<IHttpBroker>();
+
+            var placeholderPatientService = new PatientService(
+                httpBroker: placeholderHttpBrokerMock.Object,
+                patientConfiguration: placeholderPatientConfiguration,
+                loggingBroker: this.loggingBrokerMock.Object);
+
+            StructuredRecordRequest randomStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+
+            var invalidPatientServiceException =
+                new InvalidPatientServiceException(
+                    message: "Invalid patient request. Please correct the errors and try again.");
+
+            invalidPatientServiceException.UpsertDataList(
+                key: nameof(PatientConfiguration.AuthUrl),
+                value: "Text must be a valid absolute url");
+
+            invalidPatientServiceException.UpsertDataList(
+                key: nameof(PatientConfiguration.GetStructuredRecordUrl),
+                value: "Text must be a valid absolute url");
+
+            var expectedPatientServiceValidationException =
+                new PatientServiceValidationException(
+                    message: "Patient validation error occurred, please fix errors and try again.",
+                    innerException: invalidPatientServiceException);
+
+            // when
+            ValueTask<string> getStructuredRecordTask =
+                placeholderPatientService.GetStructuredRecordAsync(
+                    inputStructuredRecordRequest,
+                    TestContext.Current.CancellationToken);
+
+            PatientServiceValidationException actualPatientServiceValidationException =
+                await Assert.ThrowsAsync<PatientServiceValidationException>(
+                    testCode: getStructuredRecordTask.AsTask);
+
+            // then
+            actualPatientServiceValidationException.Should()
+                .BeEquivalentTo(expectedPatientServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceValidationException))),
+                        Times.Once);
+
+            placeholderHttpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
     }
 }

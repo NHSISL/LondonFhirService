@@ -82,10 +82,10 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                 (Rule: IsInvalid(structuredRecordCredentials.GrantType),
                 Parameter: nameof(StructuredRecordRequest.GrantType)),
 
-                (Rule: IsInvalid(patientConfiguration.AuthUrl),
+                (Rule: IsInvalidAbsoluteUrl(patientConfiguration.AuthUrl),
                 Parameter: nameof(PatientConfiguration.AuthUrl)),
 
-                (Rule: IsInvalid(patientConfiguration.GetStructuredRecordUrl),
+                (Rule: IsInvalidAbsoluteUrl(patientConfiguration.GetStructuredRecordUrl),
                 Parameter: nameof(PatientConfiguration.GetStructuredRecordUrl)));
         }
 
@@ -111,6 +111,23 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         {
             Condition = string.IsNullOrWhiteSpace(text),
             Message = "Text is invalid"
+        };
+
+        /// <summary>
+        /// Blank is not the only way one of these can be unusable. The convention in this solution
+        /// is to ship a setting as override_this_in_your_appsettings.Development.json_file_or_...,
+        /// which is not blank and is not a url either - and HttpClient answers a relative or
+        /// malformed uri with an InvalidOperationException, which would land here as a 500 about
+        /// nothing in particular. Checking it is absolute keeps an unconfigured host on the 400
+        /// that names the setting.
+        /// </summary>
+        private static dynamic IsInvalidAbsoluteUrl(string text) => new
+        {
+            Condition =
+                string.IsNullOrWhiteSpace(text)
+                || Uri.TryCreate(text.Trim(), UriKind.Absolute, out _) is false,
+
+            Message = "Text must be a valid absolute url"
         };
 
         /// <summary>

@@ -76,7 +76,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                     demographicsOnly: structuredRecordRequest.DemographicsOnly);
 
                 return await this.httpBroker.PostJsonContentAsync(
-                    this.patientConfiguration.GetStructuredRecordUrl,
+                    this.patientConfiguration.GetStructuredRecordUrl.Trim(),
                     requestBody,
                     FhirJsonMediaType,
                     accessToken,
@@ -98,7 +98,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             };
 
             string tokenResponse = await this.httpBroker.PostFormUrlEncodedContentAsync(
-                this.patientConfiguration.AuthUrl,
+                this.patientConfiguration.AuthUrl.Trim(),
                 formValues,
                 cancellationToken);
 
