@@ -40,10 +40,7 @@ namespace LondonFhirService.Manage.Brokers.Https
                 .PostAsync(url, formUrlEncodedContent, cancellationToken)
                 .ConfigureAwait(false);
 
-            httpResponseMessage.EnsureSuccessStatusCode();
-
-            return await httpResponseMessage.Content
-                .ReadAsStringAsync(cancellationToken)
+            return await ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -77,11 +74,43 @@ namespace LondonFhirService.Manage.Brokers.Https
                 .SendAsync(httpRequestMessage, cancellationToken)
                 .ConfigureAwait(false);
 
-            httpResponseMessage.EnsureSuccessStatusCode();
+            return await ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
+                .ConfigureAwait(false);
+        }
 
-            return await httpResponseMessage.Content
+        /// <summary>
+        /// Reads the body first and only then looks at the status, which is the opposite order to
+        /// EnsureSuccessStatusCode. That call throws before the content is read, so an
+        /// authorisation server explaining itself in a 400, or a provider returning an
+        /// OperationOutcome with a 404, arrived at the operator as a bare status line with the one
+        /// useful part discarded - on a screen whose entire purpose is showing what the upstream
+        /// actually said.
+        ///
+        /// The body travels on a plain HttpRequestException rather than a broker-specific type, so
+        /// the exception crossing this boundary stays the native one the service already maps, and
+        /// the status code stays machine readable on the exception rather than only in the text.
+        /// </summary>
+        private static async ValueTask<string> ReadContentOrThrowAsync(
+            HttpResponseMessage httpResponseMessage,
+            CancellationToken cancellationToken)
+        {
+            string responseBody = await httpResponseMessage.Content
                 .ReadAsStringAsync(cancellationToken)
                 .ConfigureAwait(false);
+
+            if (httpResponseMessage.IsSuccessStatusCode)
+            {
+                return responseBody;
+            }
+
+            throw new HttpRequestException(
+                message:
+                    $"Response status code does not indicate success: " +
+                        $"{(int)httpResponseMessage.StatusCode} " +
+                        $"({httpResponseMessage.ReasonPhrase}). Response body: {responseBody}",
+
+                inner: null,
+                statusCode: httpResponseMessage.StatusCode);
         }
     }
 }

@@ -43,8 +43,11 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             };
         }
 
+        // Both sides are trimmed, not just the caller's. A configured secret pasted with a
+        // trailing newline would otherwise go out untrimmed and the token exchange would fail
+        // with nothing on screen to explain why.
         private static string FallBackWhenBlank(string value, string fallbackValue) =>
-            string.IsNullOrWhiteSpace(value) ? fallbackValue : value.Trim();
+            string.IsNullOrWhiteSpace(value) ? fallbackValue?.Trim() : value.Trim();
 
         private static void ValidateOnGetStructuredRecord(
             StructuredRecordRequest structuredRecordRequest,

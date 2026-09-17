@@ -16,6 +16,10 @@ namespace LondonFhirService.Manage.Brokers.Https
     /// Both methods return the raw response body as a string. Neither parses it: the token
     /// response and the FHIR bundle are the service's to read, and a broker that deserialised
     /// them would be deciding what they mean.
+    ///
+    /// A non-2xx response throws HttpRequestException carrying the status code and the response
+    /// body, rather than the body being discarded. What an upstream says when it refuses is the
+    /// most useful thing it ever says.
     /// </summary>
     public interface IHttpBroker
     {
