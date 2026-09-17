@@ -91,7 +91,7 @@ export function StructuredRecordForm({
                                 id="nhsNumber"
                                 name="nhsNumber"
                                 label="NHS number"
-                                placeholder="9000000009"
+                                placeholder="9435797881"
                                 description="Required."
                                 required
                                 maxLength={50}
@@ -110,7 +110,7 @@ export function StructuredRecordForm({
                                 id="dateOfBirth"
                                 name="dateOfBirth"
                                 label="Patient date of birth"
-                                placeholder="2002-10-01"
+                                placeholder="1994-05-21"
                                 description="Optional. Format YYYY-MM-DD."
                                 maxLength={10}
                                 value={values.dateOfBirth}
