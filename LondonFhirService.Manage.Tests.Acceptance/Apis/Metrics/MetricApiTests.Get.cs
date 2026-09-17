@@ -2,8 +2,11 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Metrics;
@@ -12,6 +15,46 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Metrics
 {
     public partial class MetricApiTests
     {
+        [Fact]
+        public async Task ShouldNotAcceptOrReturnTheTransportOnlySpanIdOverJsonAsync()
+        {
+            // given
+            Metric randomMetric = CreateRandomMetric();
+            string injectedSpanId = Guid.NewGuid().ToString("N")[..16];
+
+            string metricJson = JsonSerializer.Serialize(randomMetric);
+
+            // Hand-written rather than typed, because the acceptance model has no such property -
+            // the point is what the HOST does with a field a caller invents.
+            string metricJsonWithSpanId =
+                metricJson.Insert(1, $"\"requestSpanId\":\"{injectedSpanId}\",");
+
+            // when
+            HttpResponseMessage response =
+                await this.apiBroker.PostRawMetricAsync(metricJsonWithSpanId);
+
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            // then
+            // The field is transport only: it rides in-process from the request that produced a
+            // span to the worker that replays it, and EF gives it no column. Left on the public
+            // entity, the convention binder would accept whatever a caller sent and echo it back
+            // on the created resource, while a later GET returned null - a value the API appears
+            // to take and then silently drops.
+            response.IsSuccessStatusCode.Should().BeTrue();
+            responseBody.Should().NotContain("requestSpanId");
+            responseBody.Should().NotContain(injectedSpanId);
+
+            Metric createdMetric = JsonSerializer.Deserialize<Metric>(
+                responseBody,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            Metric persistedMetric = await this.apiBroker.GetMetricByIdAsync(createdMetric.Id);
+            persistedMetric.Should().NotBeNull();
+
+            await this.apiBroker.DeleteMetricByIdAsync(createdMetric.Id);
+        }
+
         [Fact]
         public async Task ShouldNotAdvertiseTheTransportOnlySpanIdInTheEdmAsync()
         {

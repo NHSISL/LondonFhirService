@@ -152,12 +152,21 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                         {
                             await this.loggingBroker.LogWarningAsync(
                                 LeaseLostMessage(compareQueueItem, StatusType.Completed));
+
+                            continue;
                         }
 
-                        // Unconditional: the "is it already completed" test lives in the database
-                        // statement now. The primary is shared by every secondary of this
-                        // correlation, so with more than one provider several workers reach here
-                        // for the same row and a read here with a write there is a race.
+                        // Reached only once the secondary has actually been settled under this
+                        // worker's lease, which is the same gate the failure path applies. A
+                        // worker that has lost the row should not go on writing on its behalf,
+                        // and nothing is lost by stopping - the worker that took the row over
+                        // completes the primary when it finishes.
+                        //
+                        // Unconditional beyond that gate: the "is it already completed" test
+                        // lives in the database statement. The primary is shared by every
+                        // secondary of this correlation, so with more than one provider several
+                        // workers reach here for the same row, and a read here with a write
+                        // there is a race.
                         await this.compareQueueOrchestrationService
                             .CompletePrimaryFhirRecordAsync(compareQueueItem.PrimaryFhirRecord.Id);
                     }

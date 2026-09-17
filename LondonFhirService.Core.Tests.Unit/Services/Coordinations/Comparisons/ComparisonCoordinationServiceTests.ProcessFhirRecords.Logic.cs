@@ -153,6 +153,65 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
         }
 
         [Fact]
+        public async Task ShouldNotCompleteThePrimaryWhenTheSettleLostTheLeaseAsync()
+        {
+            // given
+            CompareQueueItem randomCompareQueueItem = CreateRandomCompareQueueItem();
+            CompareQueueItem inputCompareQueueItem = randomCompareQueueItem;
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+
+            this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
+                service.GetUnprocessedRecordAsync())
+                    .ReturnsAsync(inputCompareQueueItem)
+                    .ReturnsAsync((CompareQueueItem)null);
+
+            this.comparisonOrchestrationServiceMock.Setup(service =>
+                service.CompareAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()))
+                        .ReturnsAsync(new ComparisonResult
+                        {
+                            CorrelationId = inputCompareQueueItem.PrimaryFhirRecord.CorrelationId
+                        });
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(Guid.NewGuid());
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
+
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                    .ReturnsAsync(true);
+
+            // The lease held long enough to persist the difference, then went.
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryFinalizeClaimedFhirRecordAsync(
+                    It.IsAny<CompareQueueItem>(),
+                    It.IsAny<StatusType>()))
+                        .ReturnsAsync(false);
+
+            // when
+            await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
+
+            // then
+            // Same gate the failure path applies. A worker that no longer holds the record should
+            // not keep writing on its behalf, and nothing is lost by stopping - the worker that
+            // took it over completes the primary when it finishes.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.CompletePrimaryFhirRecordAsync(It.IsAny<Guid>()),
+                    Times.Never);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogWarningAsync(It.Is<string>(message =>
+                    message.Contains("matched no rows"))),
+                        Times.Once);
+        }
+
+        [Fact]
         public async Task ShouldProcessFhirRecordsAsync()
         {
             // given
