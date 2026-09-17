@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -72,6 +72,8 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
         ValueTask<Audit> RetrieveAuditByIdAsync(Guid auditId, CancellationToken cancellationToken = default);
         ValueTask<Audit> ModifyAuditAsync(Audit audit, CancellationToken cancellationToken = default);
         ValueTask<Audit> RemoveAuditByIdAsync(Guid auditId, CancellationToken cancellationToken = default);
+
+        ValueTask<int> PurgeAuditsOlderThanRetentionPeriodAsync(CancellationToken cancellationToken = default);
 
         /// <summary>Dispatched to the background; see LogAuditAsync for the trade offs.</summary>
         ValueTask LogMetricAsync(Metric metric, CancellationToken cancellationToken = default);

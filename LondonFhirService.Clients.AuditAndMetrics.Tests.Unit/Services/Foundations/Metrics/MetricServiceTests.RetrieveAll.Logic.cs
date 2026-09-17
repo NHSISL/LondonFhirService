@@ -46,7 +46,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             IQueryable<IMetric> randomMetrics = CreateRandomMetricsQueryable();
             IQueryable<IMetric> storageMetrics = randomMetrics;
             IQueryable<IMetric> expectedMetrics = storageMetrics;
-            this.metricServiceConfigurations.IsEnabled = false;
+            this.metricServiceConfigurations.IsMetricsEnabled = false;
 
             this.storageBrokerMock.Setup(broker =>
                 broker.SelectAllMetricsAsync(It.IsAny<CancellationToken>()))

@@ -20,7 +20,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             int retentionPeriodInDays = GetRandomNumber();
             int batchSize = GetRandomNumber();
             int deletedCount = batchSize - 1;
-            this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
+            this.metricServiceConfigurations.MetricsRetentionPeriodInDays = retentionPeriodInDays;
             this.metricServiceConfigurations.PurgeBatchSize = batchSize;
             DateTimeOffset expectedCutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
 
@@ -77,7 +77,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             int batchSize = GetRandomNumber();
             int lastBatchCount = batchSize - 1;
             int expectedTotal = batchSize + batchSize + lastBatchCount;
-            this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
+            this.metricServiceConfigurations.MetricsRetentionPeriodInDays = retentionPeriodInDays;
             this.metricServiceConfigurations.PurgeBatchSize = batchSize;
             DateTimeOffset expectedCutOffDate = currentDateTimeOffset.AddDays(-retentionPeriodInDays);
 
@@ -129,7 +129,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         public async Task ShouldNotPurgeIfPurgingIsNotAllowedAsync()
         {
             // given
-            this.metricServiceConfigurations.IsPurgingAllowed = false;
+            this.metricServiceConfigurations.IsMetricsPurgingAllowed = false;
 
             // when
             int actualPurgedCount =
@@ -157,8 +157,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         public async Task ShouldNotPurgeIfPurgingIsNotAllowedEvenWhenRetentionPeriodIsInvalidAsync()
         {
             // given
-            this.metricServiceConfigurations.IsPurgingAllowed = false;
-            this.metricServiceConfigurations.RetentionPeriodInDays = GetRandomNegativeNumber();
+            this.metricServiceConfigurations.IsMetricsPurgingAllowed = false;
+            this.metricServiceConfigurations.MetricsRetentionPeriodInDays = GetRandomNegativeNumber();
 
             // when
             int actualPurgedCount =

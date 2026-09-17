@@ -8,7 +8,7 @@ components:
   - id: StorageBroker
     name: StorageBroker
     layer: broker
-    col: 8
+    col: 9
     description: "Partial EF Core DbContext (derives from EFxceptions' EFxceptionsContext) with one partial per entity. Most methods delegate to a private generic that calls STX.EFCore.Client's EFCoreClient. It also inherits IAuditAndMetricStorageBroker, so the audit and metric members are declared once in Core.Abstractions over IAudit / IMetric — which is what lets the standalone library share this broker without Core handing it a concrete type. Registered both as a DbContextFactory and a scoped IStorageBroker; OnConfiguring reads the LondonFhirServiceConnectionString and enables HierarchyId."
     methods:
       - InsertFhirRecordAsync
@@ -32,6 +32,7 @@ components:
       - SelectAuditByIdAsync
       - UpdateAuditAsync
       - DeleteAuditAsync
+      - DeleteAuditsOlderThanAsync
       - BulkInsertMetricsAsync
       - InsertMetricAsync
       - SelectAllMetricsAsync
@@ -126,13 +127,16 @@ components:
       - from: DeleteMetricsOlderThanAsync
         to: EXT.EFCore
         method: ExecuteDeleteAsync
+      - from: DeleteAuditsOlderThanAsync
+        to: EXT.EFCore
+        method: ExecuteDeleteAsync
       - from: SelectAllProvidersAsListAsync
         to: EXT.EFCore
         method: ToListAsync
   - id: StorageBrokerFactory
     name: StorageBrokerFactory
     layer: broker
-    col: 8
+    col: 9
     description: "Wraps IDbContextFactory<StorageBroker>. AuditAndMetricStorageBroker and Stu3PatientService use it to get a short-lived, independently-disposed StorageBroker instead of the scoped one — they write from background and parallel work where the request-scoped context is unsafe."
     methods:
       - CreateStorageBrokerAsync
@@ -143,7 +147,7 @@ components:
   - id: SecurityAuditBroker
     name: SecurityAuditBroker
     layer: broker
-    col: 8
+    col: 9
     description: "Stamps CreatedBy/CreatedDate/UpdatedBy/UpdatedDate (and DeletedBy/DeletedDate) using the SecurityConfigurations built in each host's AddBrokers. Delegates to ISL.Security.Client's Audits client."
     methods:
       - ApplyAddAuditValuesAsync
@@ -170,7 +174,7 @@ components:
   - id: SecurityBroker
     name: SecurityBroker
     layer: broker
-    col: 8
+    col: 9
     description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today (by Stu3PatientOrchestrationService, to build the ValidateAccessRequest). ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called."
     methods:
       - GetCurrentUserAsync
@@ -195,7 +199,7 @@ components:
   - id: AuditAndMetricBroker
     name: AuditAndMetricBroker
     layer: broker
-    col: 8
+    col: 9
     description: "The utility broker any service can call to record an audit entry or a metric span. Recording is service work, but every layer needs it and a broker may not call a service — so those services live in LondonFhirService.Clients.AuditAndMetrics and this broker wraps an external dependency, which is what a broker is for. It stamps nothing and constructs nothing: calling services build their own entries so the timestamp is the event time rather than the submit time. Not to be confused with AuditAndMetricStorageBroker beside it — this one runs up into the library, that one runs down into storage."
     methods:
       - LogInformationAsync
@@ -213,6 +217,7 @@ components:
       - RetrieveAllMetricsAsync
       - RetrieveMetricByIdAsync
       - RemoveMetricByIdAsync
+      - PurgeAuditsOlderThanRetentionPeriodAsync
       - PurgeMetricsOlderThanRetentionPeriodAsync
     calls:
       - from: LogInformationAsync
@@ -263,10 +268,13 @@ components:
       - from: PurgeMetricsOlderThanRetentionPeriodAsync
         to: LIB.AMClient
         method: MetricClient
+      - from: PurgeAuditsOlderThanRetentionPeriodAsync
+        to: LIB.AMClient
+        method: AuditClient
   - id: AuditAndMetricStorageBroker
     name: AuditAndMetricStorageBroker
     layer: broker
-    col: 8
+    col: 9
     description: "Satisfies the storage port the audit and metrics library declares, the same way AuditUserBroker satisfies its identity port. Classifying storage failures is part of the port's contract rather than logic of its own — the library carries no ORM, so it cannot name SqlException. Writes go through the factory and get their own short-lived context, which is what makes them safe to fire and forget: a write dispatched to the background outlives the request scope. Reads keep the scoped broker, because they hand back an IQueryable the caller enumerates. The arrows into this component run right-to-left: the library calls back down into the application that hosts it."
     methods:
       - CreateAudit
@@ -276,6 +284,7 @@ components:
       - SelectAuditByIdAsync
       - UpdateAuditAsync
       - DeleteAuditAsync
+      - DeleteAuditsOlderThanAsync
       - InsertMetricAsync
       - BulkInsertMetricsAsync
       - SelectAllMetricsAsync
@@ -307,6 +316,9 @@ components:
       - from: DeleteMetricsOlderThanAsync
         to: StorageBrokerFactory
         method: CreateStorageBrokerAsync
+      - from: DeleteAuditsOlderThanAsync
+        to: StorageBrokerFactory
+        method: CreateStorageBrokerAsync
       - from: InsertAuditAsync
         to: StorageBroker
         method: InsertAuditAsync
@@ -325,6 +337,9 @@ components:
       - from: DeleteAuditAsync
         to: StorageBroker
         method: DeleteAuditAsync
+      - from: DeleteAuditsOlderThanAsync
+        to: StorageBroker
+        method: DeleteAuditsOlderThanAsync
       - from: InsertMetricAsync
         to: StorageBroker
         method: InsertMetricAsync
@@ -346,7 +361,7 @@ components:
   - id: AuditUserBroker
     name: AuditUserBroker
     layer: broker
-    col: 8
+    col: 9
     description: "Satisfies the audit library's identity port from this application's security broker. SecurityAuditBroker captures the ClaimsPrincipal in its constructor rather than reading it per call, so this must be resolved per request — registered as a singleton it would be built at startup with no HttpContext, and every audit row in the system would be stamped anonymous with nothing failing to signal it."
     methods:
       - GetCurrentUserIdAsync
@@ -357,7 +372,7 @@ components:
   - id: ConsumerAccessBroker
     name: ConsumerAccessBroker
     layer: broker
-    col: 8
+    col: 9
     description: "Posts a ValidateAccessRequest to a remote consumer-access endpoint with a DefaultAzureCredential bearer token and reads back a ConsumerAccess verdict. Registered in the API host (AddHttpClient) and consumed by ConsumerAccessService — this is now the whole access decision."
     methods:
       - CheckConsumerAccessAsync
@@ -371,7 +386,7 @@ components:
   - id: CORE.MetricTelemetryPublisher
     name: MetricTelemetryPublisher
     layer: exposer
-    col: 3
+    col: 4
     description: "Subscribes to the metric library's ActivitySource by name and forwards completed spans to Application Insights as dependencies. Nothing was subscribed before it existed, so every span the library published was dropped. Lives in Core rather than in either host because BOTH hosts register it, and rather than in the metrics library because that library deliberately carries no telemetry vendor - it publishes to an ActivitySource and leaves the choice of listener to whoever hosts it. The source name comes from the same bound AuditAndMetricsConfigurations instance the client uses, so the two cannot drift apart. Idles rather than failing when no TelemetryClient is registered."
     methods:
       - ExecuteAsync
@@ -383,7 +398,7 @@ components:
   - id: CorrelationBroker
     name: CorrelationBroker
     layer: broker
-    col: 8
+    col: 9
     description: "The one correlation id belonging to the request in flight, taken from W3C Trace Context rather than minted: ASP.NET parses the caller's traceparent into Activity.Current before any of our code runs, and the trace id becomes the correlation id — same 128 bits, same 32 hex characters, so Guid.ToString(N) of a correlation id IS the trace id. Settled on first read and kept on HttpContext.Items, so the middleware that writes the X-Correlation-Id response header, the exposer that hands the id down to the coordination service, and anything else resolved during the request all read the same value. Registered scoped in the API host only. With no HttpContext, or no W3C activity to read, it falls back to the IdentifierBroker rather than Guid.Empty."
     methods:
       - GetCorrelationIdAsync
@@ -395,7 +410,7 @@ components:
   - id: RequestTraceBroker
     name: RequestTraceBroker
     layer: broker
-    col: 8
+    col: 9
     description: "Satisfies the metric library's request-span port from the correlation broker, the way AuditUserBroker satisfies its identity port from the security broker. The metric service asks for it while the request is still alive and carries the answer into the deferred replay, which runs later on a background worker with no request left to ask. Registered scoped in the API host; a host that registers nothing gets the library's null object and its replayed spans group by trace alone."
     methods:
       - GetRequestSpanIdAsync
@@ -406,21 +421,21 @@ components:
   - id: DateTimeBroker
     name: DateTimeBroker
     layer: broker
-    col: 8
+    col: 9
     utility: true
     methods:
       - GetCurrentDateTimeOffsetAsync
   - id: IdentifierBroker
     name: IdentifierBroker
     layer: broker
-    col: 8
+    col: 9
     utility: true
     methods:
       - GetIdentifierAsync
   - id: LoggingBroker
     name: LoggingBroker
     layer: broker
-    col: 8
+    col: 9
     utility: true
     description: "ILogger passthrough. Exception-path (TryCatch) logging is deliberately NOT drawn on this graph — only happy-path calls and denial logging."
     methods:
@@ -452,7 +467,7 @@ components:
   - id: Stu3FhirBroker
     name: Stu3FhirBroker
     layer: broker
-    col: 8
+    col: 9
     description: "Thin passthrough over IFhirAbstractionProvider. It exposes 102 typed STU3 resource accessors, but the solution consumes exactly one member today — the FhirProviders collection, which Stu3PatientService filters by provider name. The rest of the surface is registered and forwarded but never called."
     methods:
       - FhirProviders
@@ -871,7 +886,7 @@ components:
   - id: FS.FhirRecord
     name: FhirRecordService
     layer: foundation
-    col: 7
+    col: 8
     description: "Foundation CRUD for FhirRecord. Add and Modify take security-audit stamps; Modify also re-reads storage and asks the security-audit broker to keep the original Created values; Remove is a straight delete after a read. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
     methods:
       - AddFhirRecordAsync
@@ -939,7 +954,7 @@ components:
   - id: FS.FhirRecordDifference
     name: FhirRecordDifferenceService
     layer: foundation
-    col: 7
+    col: 8
     description: "Foundation CRUD for FhirRecordDifference. Add and Modify take security-audit stamps; Modify also re-reads storage and asks the security-audit broker to keep the original Created values; Remove is a straight delete after a read. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
     methods:
       - AddFhirRecordDifferenceAsync
@@ -993,7 +1008,7 @@ components:
   - id: FS.Provider
     name: ProviderService
     layer: foundation
-    col: 7
+    col: 8
     description: "Foundation CRUD for Provider. Add and Modify take security-audit stamps; Modify also re-reads storage and asks the security-audit broker to keep the original Created values; Remove is a straight delete after a read. Validations run inside the same TryCatch as the happy path, so their broker calls are drawn here too."
     methods:
       - AddProviderAsync
@@ -1051,7 +1066,7 @@ components:
   - id: FS.ConsumerAccess
     name: ConsumerAccessService
     layer: foundation
-    col: 7
+    col: 8
     description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService's access check. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and timeout / cancellation onto TimedOut- and CancelledConsumerAccessServiceException. It takes no storage broker — consumer access is no longer held locally."
     methods:
       - CheckConsumerAccessAsync
@@ -1062,7 +1077,7 @@ components:
   - id: FS.Audit
     name: AuditService
     layer: foundation
-    col: 7
+    col: 8
     description: "Delegates to the audit and metrics broker rather than reaching for storage. Validation and stamping now live in the library behind that broker, so what remains is the API surface this application exposes and the localisation of the client's exceptions into this service's own — controllers dispatch on Core's categorization types to choose a status code. There is deliberately no Validations partial: duplicating the library's rules here would let the two drift. AddAuditAsync(audit) and ModifyAuditAsync stamp through the security-audit broker, overwriting whatever the caller sent, because an entity arriving from a request body carries claims rather than facts."
     methods:
       - "AddAuditAsync(auditType, title, message, …)"
@@ -1072,6 +1087,7 @@ components:
       - RetrieveAuditByIdAsync
       - ModifyAuditAsync
       - RemoveAuditByIdAsync
+      - PurgeAuditsOlderThanRetentionPeriodAsync
     calls:
       - from: "AddAuditAsync(auditType, title, message, …)"
         to: AuditAndMetricBroker
@@ -1100,10 +1116,13 @@ components:
       - from: RemoveAuditByIdAsync
         to: AuditAndMetricBroker
         method: RemoveAuditByIdAsync
+      - from: PurgeAuditsOlderThanRetentionPeriodAsync
+        to: AuditAndMetricBroker
+        method: PurgeAuditsOlderThanRetentionPeriodAsync
   - id: FS.Metric
     name: MetricService
     layer: foundation
-    col: 7
+    col: 8
     description: "The metric counterpart to AuditService, and the newer of the two. Callers used to reach AuditAndMetricBroker directly for metrics, which left metric failures arriving at controllers and workers in the library's exception types while audit failures arrived in this application's — this service closes that gap. Add is the awaited API surface; Log is fire and forget. Nothing is stamped here: a span carries its own Started and Completed, taken when the work happened. There is no Modify — a metric records what already happened, so the table is append-only."
     methods:
       - AddMetricAsync
@@ -1138,7 +1157,7 @@ components:
   - id: FS.Stu3Patient
     name: Stu3PatientService
     layer: foundation
-    col: 7
+    col: 8
     description: "Fans out to every active provider in parallel (Task.WhenAll), each call wrapped in a linked CancellationTokenSource that cancels after PatientServiceConfig.MaxProviderWaitTimeMilliseconds. Each returned bundle is queued for persistence as a Pending FhirRecord through the dispatcher, so the write leaves the request's critical path, and each provider call emits a metric span — including a failure span when a provider times out or throws. Providers that do not support Patients/$GetStructuredRecord are dropped before the fan-out."
     methods:
       - GetStructuredRecordSerialisedAsync
@@ -1190,7 +1209,7 @@ components:
   - id: FS.JsonElement
     name: JsonElementService
     layer: foundation
-    col: 7
+    col: 8
     description: "Pure System.Text.Json factory (registered as a singleton). No brokers — it writes through Utf8JsonWriter into a MemoryStream and clones the parsed root element."
     methods:
       - CreateStringElement
@@ -1199,7 +1218,7 @@ components:
   - id: FS.Matcher.AllergyIntolerance
     name: AllergyIntoleranceMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for AllergyIntolerance resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1209,7 +1228,7 @@ components:
   - id: FS.Matcher.Appointment
     name: AppointmentMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Appointment resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1219,7 +1238,7 @@ components:
   - id: FS.Matcher.Condition
     name: ConditionMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Condition resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1229,7 +1248,7 @@ components:
   - id: FS.Matcher.DiagnosticReport
     name: DiagnosticReportMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for DiagnosticReport resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1239,7 +1258,7 @@ components:
   - id: FS.Matcher.Encounter
     name: EncounterMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Encounter resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1249,7 +1268,7 @@ components:
   - id: FS.Matcher.EpisodeOfCare
     name: EpisodeOfCareMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for EpisodeOfCare resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1259,7 +1278,7 @@ components:
   - id: FS.Matcher.FamilyMemberHistory
     name: FamilyMemberHistoryMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for FamilyMemberHistory resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1269,7 +1288,7 @@ components:
   - id: FS.Matcher.Immunization
     name: ImmunizationMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Immunization resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1279,7 +1298,7 @@ components:
   - id: FS.Matcher.List
     name: ListMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for List resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1289,7 +1308,7 @@ components:
   - id: FS.Matcher.Location
     name: LocationMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Location resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1299,7 +1318,7 @@ components:
   - id: FS.Matcher.Medication
     name: MedicationMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Medication resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1309,7 +1328,7 @@ components:
   - id: FS.Matcher.MedicationRequest
     name: MedicationRequestMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for MedicationRequest resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1319,7 +1338,7 @@ components:
   - id: FS.Matcher.MedicationStatement
     name: MedicationStatementMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for MedicationStatement resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1329,7 +1348,7 @@ components:
   - id: FS.Matcher.Observation
     name: ObservationMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Observation resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1339,7 +1358,7 @@ components:
   - id: FS.Matcher.Organization
     name: OrganizationMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Organization resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1349,7 +1368,7 @@ components:
   - id: FS.Matcher.Patient
     name: PatientMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Patient resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1359,7 +1378,7 @@ components:
   - id: FS.Matcher.Practitioner
     name: PractitionerMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Practitioner resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1369,7 +1388,7 @@ components:
   - id: FS.Matcher.PractitionerRole
     name: PractitionerRoleMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for PractitionerRole resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1379,7 +1398,7 @@ components:
   - id: FS.Matcher.Procedure
     name: ProcedureMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for Procedure resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1389,7 +1408,7 @@ components:
   - id: FS.Matcher.ProcedureRequest
     name: ProcedureRequestMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for ProcedureRequest resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1399,7 +1418,7 @@ components:
   - id: FS.Matcher.ReferralRequest
     name: ReferralRequestMatcherService
     layer: foundation
-    col: 7
+    col: 8
     shared: true
     description: "Derives a stable match key for ReferralRequest resources and pairs Source1 against Source2 into Matched / Unmatched sets. Derives from ResourceMatcherServiceBase; ILoggingBroker is its only dependency and it is used on the exception path only, so no edges are drawn. Marked \"shared\" — the registry is a DI fan-in, so every consumer links to one copy instead of getting 21 duplicates per chain."
     methods:
@@ -1409,7 +1428,7 @@ components:
   - id: PR.ResourceMatcher
     name: ResourceMatcherProcessingService
     layer: processing
-    col: 6
+    col: 7
     description: "Indexes every DI-registered IResourceMatcherService by its ResourceType (case-insensitive) and hands the right one back. All 21 matchers are injected as IEnumerable<IResourceMatcherService>, so the links below are constructor fan-in rather than per-call dispatch."
     methods:
       - GetMatcherAsync
@@ -1481,14 +1500,14 @@ components:
   - id: PR.ListEntryComparison
     name: ListEntryComparisonProcessingService
     layer: processing
-    col: 6
+    col: 7
     description: "Compares the entry count of two List resources and emits an entry-count-mismatch DiffItem when they differ. ILoggingBroker only, on the exception path."
     methods:
       - CompareListEntryCountsAsync
   - id: PR.Rule.ArrayOrder
     name: ArrayOrderIgnoreProcessingRule
     layer: processing
-    col: 6
+    col: 7
     description: "Sorts array members before comparison so ordering differences are not reported as diffs. Derives from JsonIgnoreProcessingRuleBase."
     methods:
       - ShouldIgnoreAsync
@@ -1503,7 +1522,7 @@ components:
   - id: PR.Rule.Guid
     name: GuidIgnoreProcessingRule
     layer: processing
-    col: 6
+    col: 7
     description: "Replaces GUID-shaped values with a constant so provider-minted identifiers do not diff. Derives from JsonIgnoreProcessingRuleBase."
     methods:
       - ShouldIgnoreAsync
@@ -1515,7 +1534,7 @@ components:
   - id: PR.Rule.Id
     name: IdIgnoreProcessingRule
     layer: processing
-    col: 6
+    col: 7
     description: "Replaces resource `id` values with a constant. Derives from JsonIgnoreProcessingRuleBase."
     methods:
       - ShouldIgnoreAsync
@@ -1527,7 +1546,7 @@ components:
   - id: PR.Rule.Meta
     name: MetaIgnoreProcessingRule
     layer: processing
-    col: 6
+    col: 7
     description: "Replaces `meta` blocks (versionId / lastUpdated) with a constant. Derives from JsonIgnoreProcessingRuleBase."
     methods:
       - ShouldIgnoreAsync
@@ -1539,14 +1558,14 @@ components:
   - id: OR.Stu3FhirReconciliation
     name: Stu3FhirReconciliationService
     layer: orchestration
-    col: 5
+    col: 6
     description: "Placeholder reconciliation: returns the first non-empty bundle and throws NotFoundFhirReconciliationOrchestrationException when every provider came back empty. It takes only ILoggingBroker — no real merge across providers yet. Modelled as an orchestration: it sits alongside Stu3PatientOrchestrationService under the coordination service, and its exceptions are the FhirReconciliationOrchestration* family."
     methods:
       - ReconcileSerialisedAsync
   - id: OR.Stu3Patient
     name: Stu3PatientOrchestrationService
     layer: orchestration
-    col: 5
+    col: 6
     description: "Gates the request on access, then fans it out. GetStructuredRecordSerialisedAsync runs the access check first, reads the STU3 providers, keeps the active ones (IsActive plus the ActiveFrom/ActiveTo window) with the primary first, validates that exactly one primary exists, and returns a StructuredRecordsResponse for the coordination service to reconcile. CheckAccessPermissionsAsync honours AccessConfigurations.CheckAccessPermissions: off, it audits the skip and returns; on, it resolves the caller, builds a ValidateAccessRequest and asks ConsumerAccessService — not allowed writes an Access Forbidden audit carrying the returned reason codes and throws ForbiddenPatientOrchestrationException, allowed writes an Access Allowed audit naming the organisations that granted it. Both paths emit a metric span."
     methods:
       - GetStructuredRecordSerialisedAsync
@@ -1594,7 +1613,7 @@ components:
   - id: OR.CompareQueue
     name: CompareQueueOrchestrationService
     layer: orchestration
-    col: 5
+    col: 6
     description: "The comparison queue. GetUnprocessedRecordAsync pairs an eligible secondary FhirRecord - Pending and settled for at least 5 minutes, or Processing past its 30 minute lease - with the primary record sharing its CorrelationId. The claim is a set-based statement in the database rather than a read-then-write, so two workers cannot both win the same row. It chooses at random from a window of the oldest candidates rather than always taking the head, because every worker runs the same ordered query and taking the head made contention certain rather than incidental. TryRetainClaimAsync re-asserts a claim before its holder writes anything: a lease that expires while the work is still running is indistinguishable from one left by a worker that died, so a worker that has been overtaken has to be able to find out and abandon. TryFinalizeClaimedFhirRecordAsync settles a record onto Completed or Failed in that same one statement, carrying the lease token, because a check followed by a separate write leaves a window in which the write can land on a row another worker has taken over - and nothing reclaims a terminal status. It replaced a read-then-write that also dragged the whole row, JsonPayload and all, through memory to change two fields."
     methods:
       - GetUnprocessedRecordAsync
@@ -1645,7 +1664,7 @@ components:
   - id: OR.Comparison
     name: ComparisonOrchestrationService
     layer: orchestration
-    col: 5
+    col: 6
     description: "Splits both bundles by resourceType, asks the matcher registry for a strategy per type, then walks matched pairs property by property after applying the ignore rules. Unmatched resources and types with no matcher become manual-review-required diffs. NOTE: MatchAsync / GetMatchKeyAsync are invoked on whichever IResourceMatcherService GetMatcherAsync returned, so those calls are not drawn as separate edges — follow GetMatcherAsync to see the candidates."
     methods:
       - CompareAsync
@@ -1689,7 +1708,7 @@ components:
   - id: CO.Stu3Patient
     name: Stu3PatientCoordinationService
     layer: coordination
-    col: 4
+    col: 5
     description: "Takes the request correlation id from the exposer rather than minting its own — the pipeline has already promised that id to the consumer in a response header — then audits each stage, times it as a metric span, delegates to the patient orchestration for the access-gated fan-out, and hands the per-provider bundles to the reconciliation orchestration, which returns the single serialised bundle the API hands back. It still draws its own span ids from the IdentifierBroker."
     methods:
       - GetStructuredRecordSerialisedAsync
@@ -1715,7 +1734,7 @@ components:
   - id: CO.Comparison
     name: ComparisonCoordinationService
     layer: coordination
-    col: 4
+    col: 5
     description: "Drains the compare queue: claim a pair, compare, persist the FhirRecordDifference, then mark both records Completed. A pair with no primary record is marked Failed without comparison; a comparison that throws marks the secondary Failed and still completes the primary."
     methods:
       - ProcessFhirRecordsAsync

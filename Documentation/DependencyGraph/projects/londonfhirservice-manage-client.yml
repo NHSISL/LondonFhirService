@@ -2,6 +2,11 @@
 # Part of the solution dependency graph — see README.md in this folder.
 # Data only: index.html fetches graph.yml, then each project file, and
 # assembles them. Strings with special characters are double-quoted JSON.
+#
+# The SPA follows the same layering as the server: page -> view service ->
+# foundation service -> API broker -> apiBroker (axios + MSAL) -> host
+# endpoint. Page hooks (hooks/pages/use*Page.ts) are private helpers of the
+# page that owns them, so their calls are attributed to the page.
 
 project: manage-client
 components:
@@ -28,21 +33,440 @@ components:
       - from: FeatureSwitch
         to: MC.FeatureService
         method: useGetAllFeatures
-  - id: MC.FeatureService
-    name: featureService
+  - id: MC.AuditsPage
+    name: AuditsPage
+    layer: exposer
+    col: 0
+    description: "Route admin/audits. The paged, searchable audit list. Its useAuditsPage hook holds the page number, the debounced search term and the abort signal, and asks the view service for one assembled page view rather than composing rows itself."
+    methods:
+      - admin/audits
+    calls:
+      - from: admin/audits
+        to: MC.AuditViewService
+        method: retrieveAuditPageViewAsync
+  - id: MC.AuditDetailPage
+    name: AuditDetailPage
+    layer: exposer
+    col: 0
+    description: "Route admin/audits/:auditId. One audit entry in full, including the payload the entry carries."
+    methods:
+      - "admin/audits/:auditId"
+    calls:
+      - from: "admin/audits/:auditId"
+        to: MC.AuditViewService
+        method: retrieveAuditDetailViewAsync
+  - id: MC.MetricsPage
+    name: MetricsPage
+    layer: exposer
+    col: 0
+    description: "Route admin/metrics. The span list plus the averages panel above it, both driven by one MetricFilter the view service creates. A search term that looks like a correlation id navigates to the detail page instead of filtering, which is why isSearchableCorrelationId is asked here."
+    methods:
+      - admin/metrics
+    calls:
+      - from: admin/metrics
+        to: MC.MetricViewService
+        method: createMetricFilter
+      - from: admin/metrics
+        to: MC.MetricViewService
+        method: retrieveMetricPageViewAsync
+      - from: admin/metrics
+        to: MC.MetricViewService
+        method: retrieveMetricAveragesViewAsync
+      - from: admin/metrics
+        to: MC.MetricViewService
+        method: isSearchableCorrelationId
+  - id: MC.MetricDetailPage
+    name: MetricDetailPage
+    layer: exposer
+    col: 0
+    description: "Route admin/metrics/:correlationId. Every span recorded under one correlation id, assembled into the request's span tree."
+    methods:
+      - "admin/metrics/:correlationId"
+    calls:
+      - from: "admin/metrics/:correlationId"
+        to: MC.MetricViewService
+        method: retrieveMetricCorrelationViewAsync
+  - id: MC.ComparisonsPage
+    name: ComparisonsPage
+    layer: exposer
+    col: 0
+    description: "Route admin/comparisons. The paged list of FHIR record differences, with an unresolved-only filter."
+    methods:
+      - admin/comparisons
+    calls:
+      - from: admin/comparisons
+        to: MC.ComparisonViewService
+        method: retrieveComparisonPageViewAsync
+  - id: MC.ComparisonDetailPage
+    name: ComparisonDetailPage
+    layer: exposer
+    col: 0
+    description: "Route admin/comparisons/:fhirRecordDifferenceId. One comparison side by side with its per-item diff list. Individual diffs can be marked acceptable, which is a read-modify-write of the difference row rather than an endpoint of its own."
+    methods:
+      - "admin/comparisons/:fhirRecordDifferenceId"
+    calls:
+      - from: "admin/comparisons/:fhirRecordDifferenceId"
+        to: MC.ComparisonViewService
+        method: retrieveComparisonDetailViewAsync
+      - from: "admin/comparisons/:fhirRecordDifferenceId"
+        to: MC.ComparisonViewService
+        method: createComparisonFormValues
+      - from: "admin/comparisons/:fhirRecordDifferenceId"
+        to: MC.ComparisonViewService
+        method: setDiffAcceptanceAsync
+      - from: "admin/comparisons/:fhirRecordDifferenceId"
+        to: MC.ComparisonViewService
+        method: updateComparisonAsync
+  - id: MC.ProvidersPage
+    name: ProvidersPage
+    layer: exposer
+    col: 0
+    description: "Route admin/providers. The provider list. Filtering is done in the browser over the already-fetched list rather than as another request, because the table is small and operator-managed."
+    methods:
+      - admin/providers
+    calls:
+      - from: admin/providers
+        to: MC.ProviderViewService
+        method: retrieveProviderListItemViewsAsync
+      - from: admin/providers
+        to: MC.ProviderViewService
+        method: filterProviderListItemViews
+  - id: MC.ProviderAddPage
+    name: ProviderAddPage
+    layer: exposer
+    col: 0
+    description: "Route admin/providers/new. The create form; the view service owns both the empty form values and the mapping back to a registration."
+    methods:
+      - admin/providers/new
+    calls:
+      - from: admin/providers/new
+        to: MC.ProviderViewService
+        method: createProviderFormValues
+      - from: admin/providers/new
+        to: MC.ProviderViewService
+        method: addProviderAsync
+  - id: MC.ProviderDetailPage
+    name: ProviderDetailPage
+    layer: exposer
+    col: 0
+    description: "Route admin/providers/:providerId. View, edit and delete one provider. The write verbs beneath this page narrow to ManageAdmin on the host, so a ManageUsers caller can open it and still be refused the save."
+    methods:
+      - "admin/providers/:providerId"
+    calls:
+      - from: "admin/providers/:providerId"
+        to: MC.ProviderViewService
+        method: retrieveProviderDetailViewAsync
+      - from: "admin/providers/:providerId"
+        to: MC.ProviderViewService
+        method: createProviderFormValues
+      - from: "admin/providers/:providerId"
+        to: MC.ProviderViewService
+        method: updateProviderAsync
+      - from: "admin/providers/:providerId"
+        to: MC.ProviderViewService
+        method: removeProviderAsync
+  - id: MC.AuditViewService
+    name: auditViewService
     layer: view
     col: 1
-    description: "TanStack Query wrapper (staleTime: Infinity) over the feature broker. Still the SPA's only foundation service — the admin CRUD surfaces are exposed by the host but not yet consumed by the client."
+    description: "Turns audit rows into the page and detail views the audit screens render — paging metadata, list items and the expanded entry."
+    methods:
+      - retrieveAuditPageViewAsync
+      - retrieveAuditDetailViewAsync
+    calls:
+      - from: retrieveAuditPageViewAsync
+        to: MC.AuditService
+        method: retrieveAuditsAsync
+      - from: retrieveAuditDetailViewAsync
+        to: MC.AuditService
+        method: retrieveAuditByIdAsync
+  - id: MC.MetricViewService
+    name: metricViewService
+    layer: view
+    col: 1
+    description: "The busiest view service. Builds the MetricFilter the metrics screens share, derives the averages panel from two different span queries, decides whether a search term is a correlation id worth navigating to, and assembles the correlation view's span tree."
+    methods:
+      - createMetricFilter
+      - isSearchableCorrelationId
+      - retrieveMetricPageViewAsync
+      - retrieveMetricAveragesViewAsync
+      - retrieveMetricCorrelationViewAsync
+    calls:
+      - from: retrieveMetricPageViewAsync
+        to: MC.MetricService
+        method: retrieveRequestMetricsAsync
+      - from: retrieveMetricAveragesViewAsync
+        to: MC.MetricService
+        method: retrieveRequestMetricsAsync
+      - from: retrieveMetricAveragesViewAsync
+        to: MC.MetricService
+        method: retrieveProviderRequestsMetricsAsync
+      - from: retrieveMetricCorrelationViewAsync
+        to: MC.MetricService
+        method: retrieveMetricsByCorrelationIdAsync
+  - id: MC.ComparisonViewService
+    name: comparisonViewService
+    layer: view
+    col: 1
+    description: "Assembles a comparison from a difference row and, for the detail view, the FHIR record behind it. Marking diffs acceptable and saving the form are both read-modify-write: the row is re-read first so a save cannot clobber a field the page never showed."
+    methods:
+      - retrieveComparisonPageViewAsync
+      - retrieveComparisonDetailViewAsync
+      - createComparisonFormValues
+      - setDiffAcceptanceAsync
+      - updateComparisonAsync
+    calls:
+      - from: retrieveComparisonPageViewAsync
+        to: MC.FhirRecordDifferenceService
+        method: retrieveFhirRecordDifferencesAsync
+      - from: retrieveComparisonDetailViewAsync
+        to: MC.FhirRecordDifferenceService
+        method: retrieveFhirRecordDifferenceByIdAsync
+      - from: setDiffAcceptanceAsync
+        to: MC.FhirRecordDifferenceService
+        method: retrieveFhirRecordDifferenceByIdAsync
+      - from: setDiffAcceptanceAsync
+        to: MC.FhirRecordDifferenceService
+        method: modifyFhirRecordDifferenceAsync
+      - from: updateComparisonAsync
+        to: MC.FhirRecordDifferenceService
+        method: retrieveFhirRecordDifferenceByIdAsync
+      - from: updateComparisonAsync
+        to: MC.FhirRecordDifferenceService
+        method: modifyFhirRecordDifferenceAsync
+      - from: updateComparisonAsync
+        to: MC.FhirRecordService
+        method: retrieveFhirRecordByIdAsync
+  - id: MC.ProviderViewService
+    name: providerViewService
+    layer: view
+    col: 1
+    description: "Maps between provider rows and the list, detail and form views. Update re-reads the row before writing, so the save carries the fields the form never showed."
+    methods:
+      - retrieveProviderListItemViewsAsync
+      - retrieveProviderDetailViewAsync
+      - filterProviderListItemViews
+      - createProviderFormValues
+      - addProviderAsync
+      - updateProviderAsync
+      - removeProviderAsync
+    calls:
+      - from: retrieveProviderListItemViewsAsync
+        to: MC.ProviderService
+        method: retrieveAllProvidersAsync
+      - from: retrieveProviderDetailViewAsync
+        to: MC.ProviderService
+        method: retrieveProviderByIdAsync
+      - from: addProviderAsync
+        to: MC.ProviderService
+        method: addProviderAsync
+      - from: updateProviderAsync
+        to: MC.ProviderService
+        method: retrieveProviderByIdAsync
+      - from: updateProviderAsync
+        to: MC.ProviderService
+        method: modifyProviderAsync
+      - from: removeProviderAsync
+        to: MC.ProviderService
+        method: removeProviderByIdAsync
+  - id: MC.FeatureService
+    name: featureService
+    layer: foundation
+    col: 2
+    description: "TanStack Query wrapper (staleTime: Infinity) over the feature broker. The only foundation service exposed as a hook rather than a class — the feature list is read once and cached for the session."
     methods:
       - useGetAllFeatures
     calls:
       - from: useGetAllFeatures
         to: MC.FeatureBroker
         method: GetAllFeatureAsync
+  - id: MC.AuditService
+    name: auditService
+    layer: foundation
+    col: 2
+    description: "Validates the query and localises the broker's exceptions before handing audit rows up. No write surface: the host's audit write verbs are [InvisibleApi], so the SPA reads only."
+    methods:
+      - retrieveAuditsAsync
+      - retrieveAuditByIdAsync
+    calls:
+      - from: retrieveAuditsAsync
+        to: MC.AuditApiBroker
+        method: getAuditsAsync
+      - from: retrieveAuditByIdAsync
+        to: MC.AuditApiBroker
+        method: getAuditByIdAsync
+  - id: MC.MetricService
+    name: metricService
+    layer: foundation
+    col: 2
+    description: "Read-only, like the audit service and for the same reason. The three verbs are three different span queries rather than three entities: the request spans, the provider-request spans, and every span under one correlation id."
+    methods:
+      - retrieveRequestMetricsAsync
+      - retrieveProviderRequestsMetricsAsync
+      - retrieveMetricsByCorrelationIdAsync
+    calls:
+      - from: retrieveRequestMetricsAsync
+        to: MC.MetricApiBroker
+        method: getRequestMetricsAsync
+      - from: retrieveProviderRequestsMetricsAsync
+        to: MC.MetricApiBroker
+        method: getProviderRequestsMetricsAsync
+      - from: retrieveMetricsByCorrelationIdAsync
+        to: MC.MetricApiBroker
+        method: getMetricsByCorrelationIdAsync
+  - id: MC.ProviderService
+    name: providerService
+    layer: foundation
+    col: 2
+    description: "The SPA's only full CRUD foundation service — providers are operator-managed configuration, so unlike audits and metrics their write verbs are routable."
+    methods:
+      - retrieveAllProvidersAsync
+      - retrieveProviderByIdAsync
+      - addProviderAsync
+      - modifyProviderAsync
+      - removeProviderByIdAsync
+    calls:
+      - from: retrieveAllProvidersAsync
+        to: MC.ProviderApiBroker
+        method: getAllProvidersAsync
+      - from: retrieveProviderByIdAsync
+        to: MC.ProviderApiBroker
+        method: getProviderByIdAsync
+      - from: addProviderAsync
+        to: MC.ProviderApiBroker
+        method: postProviderAsync
+      - from: modifyProviderAsync
+        to: MC.ProviderApiBroker
+        method: putProviderAsync
+      - from: removeProviderByIdAsync
+        to: MC.ProviderApiBroker
+        method: deleteProviderByIdAsync
+
+  - id: MC.FhirRecordDifferenceService
+    name: fhirRecordDifferenceService
+    layer: foundation
+    col: 2
+    description: "Read and update only. There is no create or delete path in the SPA: difference rows are written by the comparison worker, and the screens only annotate them."
+    methods:
+      - retrieveFhirRecordDifferencesAsync
+      - retrieveFhirRecordDifferenceByIdAsync
+      - modifyFhirRecordDifferenceAsync
+    calls:
+      - from: retrieveFhirRecordDifferencesAsync
+        to: MC.FhirRecordDifferenceApiBroker
+        method: getFhirRecordDifferencesAsync
+      - from: retrieveFhirRecordDifferenceByIdAsync
+        to: MC.FhirRecordDifferenceApiBroker
+        method: getFhirRecordDifferenceByIdAsync
+      - from: modifyFhirRecordDifferenceAsync
+        to: MC.FhirRecordDifferenceApiBroker
+        method: putFhirRecordDifferenceAsync
+  - id: MC.FhirRecordService
+    name: fhirRecordService
+    layer: foundation
+    col: 2
+    description: "One verb. The comparison detail view needs the record behind a difference row; nothing else in the SPA reads FHIR records."
+    methods:
+      - retrieveFhirRecordByIdAsync
+    calls:
+      - from: retrieveFhirRecordByIdAsync
+        to: MC.FhirRecordApiBroker
+        method: getFhirRecordByIdAsync
+  - id: MC.AuditApiBroker
+    name: auditApiBroker
+    layer: broker
+    col: 3
+    description: "/api/audits. The list call builds an OData query string from an AuditQuery; the by-id call appends the encoded id."
+    methods:
+      - getAuditsAsync
+      - getAuditByIdAsync
+    calls:
+      - from: getAuditsAsync
+        to: MC.ApiBroker
+        method: GetAsync
+      - from: getAuditByIdAsync
+        to: MC.ApiBroker
+        method: GetAsync
+  - id: MC.MetricApiBroker
+    name: metricApiBroker
+    layer: broker
+    col: 3
+    description: "/api/metrics. All three verbs are GETs against the list endpoint with different OData filters — there is no by-id call, because a metric is only ever interesting alongside the other spans of its request."
+    methods:
+      - getRequestMetricsAsync
+      - getProviderRequestsMetricsAsync
+      - getMetricsByCorrelationIdAsync
+    calls:
+      - from: getRequestMetricsAsync
+        to: MC.ApiBroker
+        method: GetAsync
+      - from: getProviderRequestsMetricsAsync
+        to: MC.ApiBroker
+        method: GetAsync
+      - from: getMetricsByCorrelationIdAsync
+        to: MC.ApiBroker
+        method: GetAsync
+  - id: MC.ProviderApiBroker
+    name: providerApiBroker
+    layer: broker
+    col: 3
+    description: "/api/providers, the only SPA broker with write verbs."
+    methods:
+      - getAllProvidersAsync
+      - getProviderByIdAsync
+      - postProviderAsync
+      - putProviderAsync
+      - deleteProviderByIdAsync
+    calls:
+      - from: getAllProvidersAsync
+        to: MC.ApiBroker
+        method: GetAsync
+      - from: getProviderByIdAsync
+        to: MC.ApiBroker
+        method: GetAsync
+      - from: postProviderAsync
+        to: MC.ApiBroker
+        method: PostAsync
+      - from: putProviderAsync
+        to: MC.ApiBroker
+        method: PutAsync
+      - from: deleteProviderByIdAsync
+        to: MC.ApiBroker
+        method: DeleteAsync
+  - id: MC.FhirRecordDifferenceApiBroker
+    name: fhirRecordDifferenceApiBroker
+    layer: broker
+    col: 3
+    description: "/api/fhirrecorddifferences."
+    methods:
+      - getFhirRecordDifferencesAsync
+      - getFhirRecordDifferenceByIdAsync
+      - putFhirRecordDifferenceAsync
+    calls:
+      - from: getFhirRecordDifferencesAsync
+        to: MC.ApiBroker
+        method: GetAsync
+      - from: getFhirRecordDifferenceByIdAsync
+        to: MC.ApiBroker
+        method: GetAsync
+      - from: putFhirRecordDifferenceAsync
+        to: MC.ApiBroker
+        method: PutAsync
+  - id: MC.FhirRecordApiBroker
+    name: fhirRecordApiBroker
+    layer: broker
+    col: 3
+    description: "/api/fhirrecords, read by id only."
+    methods:
+      - getFhirRecordByIdAsync
+    calls:
+      - from: getFhirRecordByIdAsync
+        to: MC.ApiBroker
+        method: GetAsync
   - id: MC.FeatureBroker
     name: apiBroker.features
     layer: broker
-    col: 2
+    col: 3
     methods:
       - GetAllFeatureAsync
     calls:
@@ -52,7 +476,7 @@ components:
   - id: MC.FrontendConfigurationBroker
     name: apiBroker.frontendConfiguration
     layer: broker
-    col: 2
+    col: 3
     description: "Calls axios directly rather than through ApiBroker — it runs before MSAL is configured, so there is no token to attach."
     methods:
       - GetFrontendConfigruationAsync
@@ -63,8 +487,8 @@ components:
   - id: MC.ApiBroker
     name: apiBroker
     layer: broker
-    col: 2
-    description: "axios wrapper that acquires an MSAL token silently (falling back to a redirect on InteractionRequiredAuthError) and attaches it as a bearer header."
+    col: 3
+    description: "axios wrapper that acquires an MSAL token silently (falling back to a redirect on InteractionRequiredAuthError) and attaches it as a bearer header. Every other API broker goes through it, so it is the one place a token or a base URL is decided."
     methods:
       - GetAsync
       - GetAsyncAbsolute
@@ -76,3 +500,39 @@ components:
       - from: GetAsync
         to: MG.Features
         method: GET /api/Features
+      - from: GetAsync
+        to: MG.Audits
+        method: GET /api/Audits
+      - from: GetAsync
+        to: MG.Audits
+        method: "GET /api/Audits/{auditId}"
+      - from: GetAsync
+        to: MG.Metrics
+        method: GET /api/Metrics
+      - from: GetAsync
+        to: MG.Providers
+        method: GET /api/Providers
+      - from: GetAsync
+        to: MG.Providers
+        method: "GET /api/Providers/{providerId}"
+      - from: PostAsync
+        to: MG.Providers
+        method: POST /api/Providers
+      - from: PutAsync
+        to: MG.Providers
+        method: PUT /api/Providers
+      - from: DeleteAsync
+        to: MG.Providers
+        method: "DELETE /api/Providers/{providerId}"
+      - from: GetAsync
+        to: MG.FhirRecordDifferences
+        method: GET /api/FhirRecordDifferences
+      - from: GetAsync
+        to: MG.FhirRecordDifferences
+        method: "GET /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
+      - from: PutAsync
+        to: MG.FhirRecordDifferences
+        method: PUT /api/FhirRecordDifferences
+      - from: GetAsync
+        to: MG.FhirRecords
+        method: "GET /api/FhirRecords/{fhirRecordId}"

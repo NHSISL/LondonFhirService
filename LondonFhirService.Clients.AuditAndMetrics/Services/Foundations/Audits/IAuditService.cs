@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -74,5 +74,13 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         ValueTask<IAudit> RetrieveAuditByIdAsync(Guid auditId, CancellationToken cancellationToken = default);
         ValueTask<IAudit> ModifyAuditAsync(IAudit audit, CancellationToken cancellationToken = default);
         ValueTask<IAudit> RemoveAuditByIdAsync(Guid auditId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Deletes audits past the configured retention period and returns how many rows went.
+        /// Governed by IsAuditPurgingAllowed and AuditRetentionPeriodInDays, which are separate
+        /// from the metric pair so the two tables can be kept for different lengths of time -
+        /// audits are usually the one an organisation is obliged to hold on to.
+        /// </summary>
+        ValueTask<int> PurgeAuditsOlderThanRetentionPeriodAsync(CancellationToken cancellationToken = default);
     }
 }
