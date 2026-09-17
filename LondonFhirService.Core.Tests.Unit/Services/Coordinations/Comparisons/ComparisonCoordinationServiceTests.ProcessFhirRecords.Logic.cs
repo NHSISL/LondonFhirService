@@ -212,6 +212,93 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
         }
 
         [Fact]
+        public async Task ShouldNotReportAFailedComparisonWhenOnlyThePrimaryCompletionFailedAsync()
+        {
+            // given
+            CompareQueueItem randomCompareQueueItem = CreateRandomCompareQueueItem();
+            CompareQueueItem inputCompareQueueItem = randomCompareQueueItem;
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+
+            this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
+                service.GetUnprocessedRecordAsync())
+                    .ReturnsAsync(inputCompareQueueItem)
+                    .ReturnsAsync((CompareQueueItem)null);
+
+            this.comparisonOrchestrationServiceMock.Setup(service =>
+                service.CompareAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()))
+                        .ReturnsAsync(new ComparisonResult
+                        {
+                            CorrelationId = inputCompareQueueItem.PrimaryFhirRecord.CorrelationId
+                        });
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(Guid.NewGuid());
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
+
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                    .ReturnsAsync(true);
+
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryFinalizeClaimedFhirRecordAsync(
+                    It.IsAny<CompareQueueItem>(),
+                    It.IsAny<StatusType>()))
+                        .ReturnsAsync(true);
+
+            // Everything that matters is written by now; only the shared primary's completion
+            // blows up.
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.CompletePrimaryFhirRecordAsync(It.IsAny<Guid>()))
+                    .ThrowsAsync(new Exception(GetRandomString()));
+
+            // when
+            await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
+
+            // then
+            // The comparison succeeded: the difference row and the secondary's terminal status
+            // are both durable. Letting the primary's failure reach the catch would report the
+            // whole comparison as failed - and report it wrongly, because that catch fences on
+            // the secondary still being Processing, which by now it is not. The fence would match
+            // nothing and a real error would be filed as a lost lease.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryFinalizeClaimedFhirRecordAsync(
+                    inputCompareQueueItem,
+                    StatusType.Completed),
+                        Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryFinalizeClaimedFhirRecordAsync(
+                    It.IsAny<CompareQueueItem>(),
+                    StatusType.Failed),
+                        Times.Never);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogWarningAsync(It.Is<string>(message =>
+                    message.Contains("matched no rows"))),
+                        Times.Never);
+
+            // Surfaced as what it is. Nothing revisits primaries - the queue only offers
+            // secondaries - so a correlation with one secondary leaves this row unfinished, and
+            // that has to be visible rather than swallowed.
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is<Exception>(exception =>
+                    exception.Message.Contains("Could not complete PrimaryFhirRecordId"))),
+                        Times.Once);
+
+            // The drain loop keeps going rather than abandoning the rest of the queue.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.GetUnprocessedRecordAsync(),
+                    Times.Exactly(2));
+        }
+
+        [Fact]
         public async Task ShouldProcessFhirRecordsAsync()
         {
             // given

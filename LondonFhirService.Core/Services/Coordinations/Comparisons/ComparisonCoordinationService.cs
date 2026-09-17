@@ -53,6 +53,45 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             "worker's lease, so nothing was written. Whichever worker holds it now reports its " +
             "own outcome.";
 
+        /// <summary>
+        /// Completing the shared primary is the last thing either path does, and its failure is
+        /// held here rather than allowed to escape.
+        ///
+        /// On the success path everything that matters is already durable by this point - the
+        /// difference row and the secondary's terminal status - so the comparison HAS succeeded,
+        /// and letting this throw would report it as a failure. It would also be reported as the
+        /// wrong failure: the catch fences on the secondary still being Processing, and it is
+        /// Completed by now, so the fence would match nothing and a real error would be logged as
+        /// a lost lease. On the failure path the catch has already run, so an exception here
+        /// would escape the loop entirely and abandon the rest of the queue.
+        ///
+        /// The statement behind it is conditional on the row not already being Completed, so
+        /// repeating it is safe and the next secondary of the same correlation finishes the job.
+        /// A correlation with only one secondary has no second chance, which is why this is an
+        /// error rather than a swallowed warning: nothing revisits primaries, because the queue
+        /// only ever offers secondaries.
+        /// </summary>
+        private async ValueTask CompletePrimaryBestEffortAsync(CompareQueueItem compareQueueItem)
+        {
+            try
+            {
+                await this.compareQueueOrchestrationService
+                    .CompletePrimaryFhirRecordAsync(compareQueueItem.PrimaryFhirRecord.Id);
+            }
+            catch (Exception primaryCompletionException)
+            {
+                await this.loggingBroker.LogErrorAsync(
+                    new Exception(
+                        $"Could not complete PrimaryFhirRecordId: " +
+                        $"{compareQueueItem.PrimaryFhirRecord.Id} for CorrelationId: " +
+                        $"{compareQueueItem.SecondaryFhirRecord?.CorrelationId}. The secondary " +
+                        "has been settled and any difference row is written, so the comparison " +
+                        "itself stands; the primary is left unfinished and only another " +
+                        "secondary of the same correlation would pick it up.",
+                        primaryCompletionException));
+            }
+        }
+
         public ValueTask ProcessFhirRecordsAsync() =>
             TryCatch(async () =>
             {
@@ -167,8 +206,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                         // secondary of this correlation, so with more than one provider several
                         // workers reach here for the same row, and a read here with a write
                         // there is a race.
-                        await this.compareQueueOrchestrationService
-                            .CompletePrimaryFhirRecordAsync(compareQueueItem.PrimaryFhirRecord.Id);
+                        await CompletePrimaryBestEffortAsync(compareQueueItem);
                     }
                     catch (Exception ex)
                     {
@@ -200,9 +238,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 
                         if (compareQueueItem.PrimaryFhirRecord is not null)
                         {
-                            await this.compareQueueOrchestrationService
-                                .CompletePrimaryFhirRecordAsync(
-                                    compareQueueItem.PrimaryFhirRecord.Id);
+                            await CompletePrimaryBestEffortAsync(compareQueueItem);
                         }
                     }
                 }
