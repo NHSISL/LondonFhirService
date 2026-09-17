@@ -354,6 +354,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()),
                         Times.Never);
 

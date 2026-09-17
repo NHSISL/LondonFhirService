@@ -51,6 +51,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
                     It.IsAny<string>(),
+                    "application/fhir+json",
                     randomAccessToken,
                     inputCancellationToken))
                         .ReturnsAsync(randomStructuredRecord);
@@ -75,6 +76,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
                     It.IsAny<string>(),
+
+                    // Pinned, not It.IsAny. A FHIR server is entitled to answer plain
+                    // application/json with a 415, and every other caller of this operation in
+                    // the solution sends application/fhir+json.
+                    "application/fhir+json",
+
                     randomAccessToken,
                     inputCancellationToken),
                         Times.Once);
@@ -122,6 +129,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     randomAccessToken,
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(randomStructuredRecord);
@@ -145,6 +153,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     randomAccessToken,
                     It.IsAny<CancellationToken>()),
@@ -178,8 +187,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
-                        .Callback((string _, string jsonContent, string __, CancellationToken ___) =>
+                        .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
                             capturedRequestBody = jsonContent)
                         .ReturnsAsync(GetRandomString());
 
@@ -243,7 +253,79 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     randomAccessToken,
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.httpBrokerMock.VerifyNoOtherCalls();
+        }
+
+        /// <summary>
+        /// Validation parses the date from a trimmed copy, so a padded value passed the checks and
+        /// was then sent with its whitespace intact for the provider to reject. The values on the
+        /// wire are now trimmed too.
+        /// </summary>
+        [Fact]
+        public async Task ShouldTrimPatientValuesOnGetStructuredRecordBeforeSendingAsync()
+        {
+            // given
+            StructuredRecordRequest randomStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+            string expectedNhsNumber = inputStructuredRecordRequest.NhsNumber;
+            string expectedDateOfBirth = inputStructuredRecordRequest.DateOfBirth;
+            inputStructuredRecordRequest.NhsNumber = $"  {expectedNhsNumber} ";
+            inputStructuredRecordRequest.DateOfBirth = $" {expectedDateOfBirth}   ";
+            string capturedRequestBody = null;
+
+            this.httpBrokerMock.Setup(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(CreateTokenResponse(GetRandomString()));
+
+            this.httpBrokerMock.Setup(broker =>
+                broker.PostJsonContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                        .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
+                            capturedRequestBody = jsonContent)
+                        .ReturnsAsync(GetRandomString());
+
+            // when
+            await this.patientService.GetStructuredRecordAsync(
+                inputStructuredRecordRequest,
+                TestContext.Current.CancellationToken);
+
+            // then
+            using JsonDocument actualRequestBody = JsonDocument.Parse(capturedRequestBody);
+            JsonElement parameters = actualRequestBody.RootElement.GetProperty("parameter");
+
+            parameters[0].GetProperty("valueIdentifier").GetProperty("value").GetString()
+                .Should().Be(expectedNhsNumber);
+
+            parameters[3].GetProperty("valueIdentifier").GetProperty("value").GetString()
+                .Should().Be(expectedDateOfBirth);
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.PostJsonContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
@@ -280,8 +362,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
-                        .Callback((string _, string jsonContent, string __, CancellationToken ___) =>
+                        .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
                             capturedRequestBody = jsonContent)
                         .ReturnsAsync(GetRandomString());
 
@@ -310,6 +393,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     randomAccessToken,
                     It.IsAny<CancellationToken>()),

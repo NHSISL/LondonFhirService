@@ -110,6 +110,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
                         .ThrowsAsync(dependencyException);
 
@@ -130,6 +131,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     randomAccessToken,
                     It.IsAny<CancellationToken>()),
@@ -344,6 +346,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),

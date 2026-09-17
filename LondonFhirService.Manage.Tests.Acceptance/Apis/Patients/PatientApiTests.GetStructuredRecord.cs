@@ -42,6 +42,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(expectedStructuredRecord);
 
@@ -67,6 +68,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
             this.apiBroker.HttpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     "https://acceptance.example.nhs.uk/patient/$getstructuredrecord",
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     randomAccessToken,
                     It.IsAny<CancellationToken>()),
@@ -249,6 +251,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
                         .ThrowsAsync(new HttpRequestException(GetRandomString()));
 
@@ -286,6 +289,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<CancellationToken>()),
                         Times.Never);
         }
@@ -301,6 +305,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
 
             this.apiBroker.HttpBrokerMock.Setup(broker =>
                 broker.PostJsonContentAsync(
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),

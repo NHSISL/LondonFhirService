@@ -28,9 +28,14 @@ namespace LondonFhirService.Manage.Brokers.Https
             IDictionary<string, string> formValues,
             CancellationToken cancellationToken = default);
 
+        /// <param name="mediaType">
+        /// The Content-Type to send the body as. The caller supplies it because the broker has no
+        /// business knowing that one endpoint speaks FHIR and another speaks plain JSON.
+        /// </param>
         ValueTask<string> PostJsonContentAsync(
             string url,
             string jsonContent,
+            string mediaType,
             string bearerToken,
             CancellationToken cancellationToken = default);
     }

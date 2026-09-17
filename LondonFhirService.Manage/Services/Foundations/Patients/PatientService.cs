@@ -25,6 +25,14 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
     /// </summary>
     internal partial class PatientService : IPatientService
     {
+        /// <summary>
+        /// What the CareConnect operation body is sent as. Every other caller of
+        /// $getstructuredrecord and $everything in this solution sends this - the integration and
+        /// performance suites both do - and a FHIR server is entitled to answer plain
+        /// application/json with a 415.
+        /// </summary>
+        private const string FhirJsonMediaType = "application/fhir+json";
+
         private readonly IHttpBroker httpBroker;
         private readonly PatientConfiguration patientConfiguration;
 
@@ -55,14 +63,18 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                 structuredRecordCredentials,
                 cancellationToken);
 
+            // Trimmed on the way into the body, not just for the validation checks. Validation
+            // parses the date from a trimmed copy, so " 2002-10-01 " was accepted and then sent
+            // with its spaces intact for the provider to reject.
             string requestBody = CreateRequestBody(
-                nhsNumber: structuredRecordRequest.NhsNumber,
-                dateOfBirth: structuredRecordRequest.DateOfBirth,
+                nhsNumber: structuredRecordRequest.NhsNumber?.Trim(),
+                dateOfBirth: structuredRecordRequest.DateOfBirth?.Trim(),
                 demographicsOnly: structuredRecordRequest.DemographicsOnly);
 
             return await this.httpBroker.PostJsonContentAsync(
                 this.patientConfiguration.GetStructuredRecordUrl,
                 requestBody,
+                FhirJsonMediaType,
                 accessToken,
                 cancellationToken);
         });
@@ -176,7 +188,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
 
             if (!string.IsNullOrWhiteSpace(dateOfBirth))
             {
-                var dobParameter = new
+                var dateOfBirthParameter = new
                 {
                     name = "patientDOB",
                     valueIdentifier = new
@@ -186,7 +198,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                     }
                 };
 
-                parameters = parameters.Append(dobParameter).ToArray();
+                parameters = parameters.Append(dateOfBirthParameter).ToArray();
             }
 
             var requestBody = new

@@ -47,6 +47,7 @@ namespace LondonFhirService.Manage.Brokers.Https
         public async ValueTask<string> PostJsonContentAsync(
             string url,
             string jsonContent,
+            string mediaType,
             string bearerToken,
             CancellationToken cancellationToken = default)
         {
@@ -57,7 +58,7 @@ namespace LondonFhirService.Manage.Brokers.Https
                 Content = new StringContent(
                     content: jsonContent,
                     encoding: System.Text.Encoding.UTF8,
-                    mediaType: "application/json")
+                    mediaType: mediaType)
             };
 
             // Set per request rather than on DefaultRequestHeaders. The typed client's message
