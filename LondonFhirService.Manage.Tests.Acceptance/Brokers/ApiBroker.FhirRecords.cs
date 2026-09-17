@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -33,5 +33,16 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
 
         public async ValueTask<FhirRecord> PutFhirRecordAsync(FhirRecord fhirRecord) =>
             await this.apiFactoryClient.PutContentAsync(fhirRecordsRelativeUrl, fhirRecord);
+
+        /// <summary>
+        /// The body as it comes off the wire rather than a deserialised model. What the caller is
+        /// checking is the shape and the casing the host chose for a projection, and reading it
+        /// into a typed model would paper over both.
+        /// </summary>
+        public async ValueTask<string> GetFhirRecordsProjectionRawAsync(
+            string select,
+            string filter) =>
+            await this.httpClient.GetStringAsync(
+                $"{fhirRecordsRelativeUrl}?$select={select}&$filter={filter}");
     }
 }

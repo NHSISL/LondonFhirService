@@ -4,11 +4,11 @@ import type { FhirRecordDifferenceQuery } from "../../models/foundations/fhirRec
 // PascalCase here even though the payload comes back camelCased. Kept apart from the broker so
 // the query string can be exercised without standing up the authenticated transport.
 //
-// $select is deliberately not used to drop DiffJson from the list. This is an attribute routed
-// controller rather than an OData route, so a projection comes back as a SelectExpandWrapper that
-// the host's System.Text.Json pipeline cannot serialise into a readable object. The rows carry
-// their DiffJson instead, which is what lets the list break each row down by difference kind
-// without a second round trip - see comparisonPageSize for the bound that keeps that affordable.
+// $select is deliberately not used to drop DiffJson from the list, but not because it could not
+// be: a projection serialises perfectly readably, which is what the expand below relies on. The
+// rows carry their DiffJson because the list breaks each row down by difference kind, and dropping
+// the column would buy a second round trip per row - see comparisonPageSize for the bound that
+// keeps carrying it affordable.
 export function buildFhirRecordDifferenceQueryUrl(
     relativeFhirRecordDifferencesUrl: string,
     fhirRecordDifferenceQuery: FhirRecordDifferenceQuery)
@@ -18,9 +18,10 @@ export function buildFhirRecordDifferenceQueryUrl(
         // whole bundle in JsonPayload, so expanding it whole would pull a patient record per row to
         // render a short label; the nested $select leaves the payload behind and brings two fields.
         //
-        // Asking for an expand makes the host answer through OData's projection wrapper, and that
-        // wrapper serialises in PascalCase whatever the naming policy says - so the reader on the
-        // other side accepts either casing rather than this being a silent field of empty strings.
+        // Asking for an expand makes the host answer through OData's projection wrapper rather
+        // than its own serialiser. Measured, that wrapper keeps the same camelCase - the expanded
+        // object arrives as "secondary": { "sourceName": ... } - so the reader on the other side
+        // needs no translation, only the nested object it was not previously asking for.
         "$expand=Secondary($select=SourceName,IsPrimarySource)",
         "$orderby=ComparedAt desc",
         `$skip=${fhirRecordDifferenceQuery.skip}`,

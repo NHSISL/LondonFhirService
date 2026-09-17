@@ -109,10 +109,11 @@ export class FhirRecordDifferenceApiBroker implements IFhirRecordDifferenceApiBr
     }
 
     /**
-     * Field names lowercased, so the same reader handles both shapes this endpoint answers with.
-     * Without a query option it serialises through the host's camelCase policy; ask for $expand or
-     * $select and OData's projection wrapper takes over and writes PascalCase instead. Reading one
-     * casing meant the other arrived as a row of empty strings rather than as an error.
+     * Field names lowercased before they are read. Both shapes this endpoint answers with are
+     * camelCase - the unprojected one by the host's naming policy, the expanded one by OData's
+     * wrapper, which was measured rather than assumed - so this normalises nothing in practice.
+     * It stays because this class treats the response as untyped and reads every field
+     * defensively, and because the one thing that must not happen here is a silent row of blanks.
      */
     private readFields(rawValue: unknown): Record<string, unknown> {
         if (typeof rawValue !== "object" || rawValue === null) {

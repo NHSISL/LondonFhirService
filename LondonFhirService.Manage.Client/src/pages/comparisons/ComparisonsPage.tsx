@@ -2,6 +2,7 @@ import { Col, Container, Row } from "react-bootstrap";
 import InfiniteScroll from "../../components/bases/pagers/InfiniteScroll";
 import { ComparisonList } from "../../components/comparisons/ComparisonList";
 import { ComparisonSearch } from "../../components/comparisons/ComparisonSearch";
+import { PendingComparisonList } from "../../components/comparisons/PendingComparisonList";
 import { ErrorSummary } from "../../components/shared/ErrorSummary";
 import { LoadingIndicator } from "../../components/shared/LoadingIndicator";
 import { useComparisonsPage } from "../../hooks/pages/useComparisonsPage";
@@ -9,13 +10,16 @@ import { useComparisonsPage } from "../../hooks/pages/useComparisonsPage";
 export function ComparisonsPage() {
     const {
         comparisons,
+        pendingComparisons,
         searchTerm,
         unresolvedOnly,
         loading,
         loadingMore,
         searching,
+        watching,
         hasNextPage,
         error,
+        pendingError,
         handleSearchTermChange,
         handleSearchClear,
         handleUnresolvedOnlyChange,
@@ -47,7 +51,8 @@ export function ComparisonsPage() {
                     <p className="text-muted mb-0">
                         What the comparison service found when it checked a secondary provider's
                         answer against the primary's, newest first. Select a correlation id to see
-                        the two records side by side.
+                        the two records side by side. Anything that has arrived but has not been
+                        compared yet is listed above the results while it waits.
                     </p>
                 </Col>
             </Row>
@@ -67,11 +72,19 @@ export function ComparisonsPage() {
 
             <Row className="p-2">
                 <Col>
+                    <PendingComparisonList
+                        pendingComparisons={pendingComparisons}
+                        watching={watching}
+                        error={pendingError} />
+
                     <InfiniteScroll
                         loading={loadingMore}
                         hasNextPage={hasNextPage}
                         loadMore={handleLoadMore}>
-                        <ComparisonList comparisons={comparisons} />
+                        <ComparisonList
+                            comparisons={comparisons}
+                            searchTerm={searchTerm}
+                            pendingCount={pendingComparisons.length} />
                     </InfiniteScroll>
 
                     {loadingMore && <LoadingIndicator message="Loading more comparisons..." />}

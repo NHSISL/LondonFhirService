@@ -10,6 +10,7 @@ import type { ComparisonListItemView } from "../../../models/views/comparisons/C
 import type { ComparisonPageView } from "../../../models/views/comparisons/ComparisonPageView";
 import type { ComparisonResult } from "../../../models/foundations/comparisons/ComparisonResult";
 import type { ComparisonSourceView } from "../../../models/views/comparisons/ComparisonSourceView";
+import type { PendingComparisonView } from "../../../models/views/comparisons/PendingComparisonView";
 import type { DiffItem } from "../../../models/foundations/comparisons/DiffItem";
 import type { DiffItemView } from "../../../models/views/comparisons/DiffItemView";
 import type { FhirRecord } from "../../../models/foundations/fhirRecords/FhirRecord";
@@ -28,6 +29,11 @@ const dateDisplayFormat = "DD MMM YYYY HH:mm:ss";
 // on demand. Also stays under the server's own EnableQuery page size, which would otherwise
 // truncate a larger ask without saying so.
 export const comparisonPageSize = 25;
+
+// The compare queue is drained every worker tick, so anything here is seconds old and there should
+// be a handful of rows at most. A cap that fills is itself the finding - a backlog that deep is
+// not something to scroll through, it is something to go and look at the worker about.
+export const pendingComparisonLimit = 50;
 
 // Ordered so the summary reads the way an operator triages: what changed, then what only one side
 // has, then what the engine could not decide on its own.
@@ -111,6 +117,50 @@ export class ComparisonViewService implements IComparisonViewService {
                 "We could not load the comparisons, please try again or contact support.",
                 exception);
         }
+    }
+
+    /**
+     * The other half of what this page is for. A comparison row exists only once the worker has
+     * been round, so between a request answering and the next tick an operator following the
+     * correlation id off the structured record page arrives at a screen with nothing on it - and
+     * "no comparisons found" reads as "this went wrong" rather than "this has not happened yet".
+     * These are the records that have landed and are still queued, which is the difference.
+     */
+    public async retrievePendingComparisonViewsAsync(
+        searchTerm: string,
+        abortSignal?: AbortSignal)
+        : Promise<PendingComparisonView[]> {
+        try {
+            const fhirRecords = await this.fhirRecordService.retrievePendingFhirRecordsAsync(
+                {
+                    take: pendingComparisonLimit,
+                    searchTerm: searchTerm
+                },
+                abortSignal);
+
+            return fhirRecords.map(fhirRecord => this.toPendingComparisonView(fhirRecord));
+        } catch (exception) {
+            throw new ComparisonViewServiceException(
+                "We could not load what is still waiting to be compared, please try again or "
+                + "contact support.",
+                exception);
+        }
+    }
+
+    private toPendingComparisonView(fhirRecord: FhirRecord): PendingComparisonView {
+        return {
+            id: fhirRecord.id,
+            correlationId: fhirRecord.correlationId || notSetText,
+            sourceNameText: fhirRecord.sourceName || notSetText,
+            isPrimarySource: fhirRecord.isPrimarySource,
+            statusText: fhirRecordStatusTexts[fhirRecord.status] ?? notSetText,
+            statusClassName: fhirRecordStatusClassNames[fhirRecord.status] ?? "badge bg-secondary",
+
+            // InsertedDate, because that is when the row became visible to the compare queue -
+            // CreatedDate is stamped on the request thread before the insert is even queued, so a
+            // slow dispatch would show a wait that had not started yet.
+            landedAtText: this.formatDate(fhirRecord.insertedDate)
+        };
     }
 
     public async retrieveComparisonDetailViewAsync(

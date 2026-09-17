@@ -1,5 +1,10 @@
+import moment from "moment";
 import { expect, it } from "vitest";
-import { ComparisonViewService, comparisonPageSize } from "./comparisonViewService";
+import {
+    ComparisonViewService,
+    comparisonPageSize,
+    pendingComparisonLimit
+} from "./comparisonViewService";
 import { fhirRecordStatuses } from "../../../models/foundations/fhirRecords/FhirRecord";
 import type { FhirRecord } from "../../../models/foundations/fhirRecords/FhirRecord";
 import type { FhirRecordDifference } from "../../../models/foundations/fhirRecordDifferences/FhirRecordDifference";
@@ -82,6 +87,7 @@ const createFhirRecordService = (
     overrides: Partial<IFhirRecordService> = {})
     : IFhirRecordService => ({
     retrieveFhirRecordByIdAsync: async fhirRecordId => createFhirRecord({ id: fhirRecordId }),
+    retrievePendingFhirRecordsAsync: async () => [],
     ...overrides
 });
 
@@ -511,4 +517,103 @@ it("should refuse to accept a difference the stored result does not have", async
 
     await expect(comparisonViewService.setDiffAcceptanceAsync("any-id", [99], true))
         .rejects.toThrow("We could not save this difference");
+});
+
+// The compare queue, as the page shows it while it waits.
+it("should describe what is still queued", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({
+                    id: "cccccccc-0000-0000-0000-000000000003",
+                    correlationId: "abc-123",
+                    sourceName: "DDS2",
+                    isPrimarySource: false,
+                    isProcessed: false,
+                    status: fhirRecordStatuses.pending,
+                    insertedDate: "2026-05-04T09:29:00+00:00"
+                })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons).toHaveLength(1);
+    expect(pendingComparisons[0].correlationId).toBe("abc-123");
+    expect(pendingComparisons[0].sourceNameText).toBe("DDS2");
+    expect(pendingComparisons[0].isPrimarySource).toBe(false);
+    expect(pendingComparisons[0].statusText).toBe("Pending");
+});
+
+// Not CreatedDate. That is stamped on the request thread before the insert is even queued, so a
+// slow dispatch would show the row as having waited longer than it has.
+it("should date a queued record from when it landed", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({
+                    insertedDate: "2026-05-04T09:29:00+00:00",
+                    createdDate: "2026-05-04T08:00:00+00:00"
+                })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    // Rendered in the reader's own zone, so the assertion is against the same formatting of the
+    // two candidate fields rather than against a literal time.
+    expect(pendingComparisons[0].landedAtText)
+        .toBe(moment("2026-05-04T09:29:00+00:00").format("DD MMM YYYY HH:mm:ss"));
+
+    expect(pendingComparisons[0].landedAtText)
+        .not.toBe(moment("2026-05-04T08:00:00+00:00").format("DD MMM YYYY HH:mm:ss"));
+});
+
+// A record the worker has claimed but not finished is still waiting as far as the operator is
+// concerned, and saying which of the two it is tells them whether anything is happening.
+it("should distinguish a claimed record from an unclaimed one", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({ status: fhirRecordStatuses.processing })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons[0].statusText).toBe("Processing");
+    expect(pendingComparisons[0].statusClassName).toBe("badge bg-info text-dark");
+});
+
+it("should carry the search term and the limit through to the records service", async () => {
+    let askedFor: { take: number; searchTerm: string } | null = null;
+
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async fhirRecordQuery => {
+                askedFor = fhirRecordQuery;
+
+                return [];
+            }
+        }));
+
+    await comparisonViewService.retrievePendingComparisonViewsAsync("abc-123");
+
+    expect(askedFor).toEqual({ take: pendingComparisonLimit, searchTerm: "abc-123" });
+});
+
+it("should report a queue it could not read as something the operator can act on", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({ retrievePendingFhirRecordsAsync: rejects }));
+
+    await expect(comparisonViewService.retrievePendingComparisonViewsAsync(""))
+        .rejects.toThrow("We could not load what is still waiting to be compared");
 });
