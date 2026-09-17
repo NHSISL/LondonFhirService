@@ -34,7 +34,7 @@ const securityPoints = {
         view: administratorAndUserRoles,
     },
     // The page calls $getstructuredrecord live and shows a whole patient record, so it is granted
-    // to the same audience PatientController authorises - administrators and users. Unlike the
+    // to the same audience PatientsController authorises - administrators and users. Unlike the
     // comparison area it stores nothing: the record is fetched for the screen and gone when the
     // operator leaves it.
     structuredRecord: {
