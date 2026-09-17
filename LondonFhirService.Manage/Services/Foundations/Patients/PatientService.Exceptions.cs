@@ -55,15 +55,13 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
 
                 throw CreateDependencyException(timedOutPatientServiceException);
             }
-            catch (OperationCanceledException operationCanceledException)
+            // Rethrown, never wrapped. Cancellation is not a failure - it is the caller saying it
+            // no longer wants the answer - so it has to reach them as itself rather than as a
+            // dependency error that reads like the provider broke. This catch exists at all only
+            // to stop the catch-all below swallowing it.
+            catch (OperationCanceledException)
             {
-                var cancelledPatientServiceException =
-                    new CancelledPatientServiceException(
-                        message: "Patient request was cancelled, please try again.",
-                        innerException: operationCanceledException,
-                        data: operationCanceledException.Data);
-
-                throw CreateDependencyException(cancelledPatientServiceException);
+                throw;
             }
             catch (InvalidAccessTokenPatientServiceException invalidAccessTokenPatientServiceException)
             {

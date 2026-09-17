@@ -198,9 +198,14 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.httpBrokerMock.VerifyNoOtherCalls();
         }
 
+        /// <summary>
+        /// Cancellation reaches the caller as itself. It is not a failure of this service or of
+        /// anything it depends on - it is the caller withdrawing - so wrapping it would both
+        /// misreport it and stop an upstream caller recognising its own cancellation.
+        /// </summary>
         [Theory]
         [MemberData(nameof(CancellationExceptions))]
-        public async Task ShouldThrowDependencyExceptionOnGetStructuredRecordIfCancelledAsync(
+        public async Task ShouldPropagateCancellationOnGetStructuredRecordIfCancelledAsync(
             Exception cancellationException)
         {
             // given
@@ -208,17 +213,6 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 CreateRandomStructuredRecordRequest();
 
             StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
-
-            var cancelledPatientServiceException =
-                new CancelledPatientServiceException(
-                    message: "Patient request was cancelled, please try again.",
-                    innerException: cancellationException,
-                    data: cancellationException.Data);
-
-            var expectedPatientServiceDependencyException =
-                new PatientServiceDependencyException(
-                    message: "Patient dependency error occurred, contact support.",
-                    innerException: cancelledPatientServiceException);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostFormUrlEncodedContentAsync(
@@ -233,13 +227,14 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
-            PatientServiceDependencyException actualPatientServiceDependencyException =
-                await Assert.ThrowsAsync<PatientServiceDependencyException>(
+            OperationCanceledException actualOperationCanceledException =
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
                     testCode: getStructuredRecordTask.AsTask);
 
             // then
-            actualPatientServiceDependencyException.Should()
-                .BeEquivalentTo(expectedPatientServiceDependencyException);
+            // The very same instance, not an equivalent one - anything else means it was caught
+            // and rebuilt somewhere on the way out.
+            actualOperationCanceledException.Should().BeSameAs(cancellationException);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(
@@ -252,7 +247,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
         }
 
         [Fact]
-        public async Task ShouldThrowDependencyExceptionOnGetStructuredRecordIfTokenIsAlreadyCancelledAsync()
+        public async Task ShouldPropagateCancellationOnGetStructuredRecordIfTokenIsAlreadyCancelledAsync()
         {
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
@@ -263,18 +258,6 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 CreateRandomStructuredRecordRequest();
 
             StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
-            var operationCanceledException = new OperationCanceledException(cancelledToken);
-
-            var cancelledPatientServiceException =
-                new CancelledPatientServiceException(
-                    message: "Patient request was cancelled, please try again.",
-                    innerException: operationCanceledException,
-                    data: operationCanceledException.Data);
-
-            var expectedPatientServiceDependencyException =
-                new PatientServiceDependencyException(
-                    message: "Patient dependency error occurred, contact support.",
-                    innerException: cancelledPatientServiceException);
 
             // when
             ValueTask<string> getStructuredRecordTask =
@@ -282,13 +265,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     inputStructuredRecordRequest,
                     cancelledToken);
 
-            PatientServiceDependencyException actualPatientServiceDependencyException =
-                await Assert.ThrowsAsync<PatientServiceDependencyException>(
+            OperationCanceledException actualOperationCanceledException =
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
                     testCode: getStructuredRecordTask.AsTask);
 
             // then
-            actualPatientServiceDependencyException.Should()
-                .BeEquivalentTo(expectedPatientServiceDependencyException);
+            actualOperationCanceledException.CancellationToken.Should().Be(cancelledToken);
 
             // Neither call is made. A caller that has already given up should not cost a token
             // exchange, let alone a patient lookup.
@@ -296,29 +278,17 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
         }
 
         /// <summary>
-        /// The token is checked before the request is, so an abandoned call is reported as
-        /// cancelled rather than as whatever happens to be wrong with its arguments.
+        /// The token is checked before the request is, so an abandoned call surfaces as
+        /// cancellation rather than as whatever happens to be wrong with its arguments.
         /// </summary>
         [Fact]
-        public async Task ShouldThrowDependencyExceptionBeforeValidationOnGetStructuredRecordIfTokenIsAlreadyCancelledAsync()
+        public async Task ShouldPropagateCancellationBeforeValidationOnGetStructuredRecordIfTokenIsAlreadyCancelledAsync()
         {
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Cancel();
             CancellationToken cancelledToken = cancellationTokenSource.Token;
             StructuredRecordRequest nullStructuredRecordRequest = null;
-            var operationCanceledException = new OperationCanceledException(cancelledToken);
-
-            var cancelledPatientServiceException =
-                new CancelledPatientServiceException(
-                    message: "Patient request was cancelled, please try again.",
-                    innerException: operationCanceledException,
-                    data: operationCanceledException.Data);
-
-            var expectedPatientServiceDependencyException =
-                new PatientServiceDependencyException(
-                    message: "Patient dependency error occurred, contact support.",
-                    innerException: cancelledPatientServiceException);
 
             // when
             ValueTask<string> getStructuredRecordTask =
@@ -326,13 +296,14 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     nullStructuredRecordRequest,
                     cancelledToken);
 
-            PatientServiceDependencyException actualPatientServiceDependencyException =
-                await Assert.ThrowsAsync<PatientServiceDependencyException>(
+            OperationCanceledException actualOperationCanceledException =
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
                     testCode: getStructuredRecordTask.AsTask);
 
             // then
-            actualPatientServiceDependencyException.Should()
-                .BeEquivalentTo(expectedPatientServiceDependencyException);
+            // Cancellation, not the PatientServiceValidationException a null request would
+            // otherwise produce.
+            actualOperationCanceledException.CancellationToken.Should().Be(cancelledToken);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
         }
