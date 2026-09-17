@@ -21,9 +21,9 @@ const brokerRejecting = (status: number, data: unknown): PatientApiBroker => {
     return new PatientApiBroker(apiBroker);
 };
 
-const brokerResolving = (data: unknown): PatientApiBroker => {
+const brokerResolving = (data: unknown, headers: unknown = {}): PatientApiBroker => {
     const apiBroker = {
-        PostAsync: vi.fn().mockResolvedValue({ data: data })
+        PostAsync: vi.fn().mockResolvedValue({ data: data, headers: headers })
     } as unknown as ApiBroker;
 
     return new PatientApiBroker(apiBroker);
@@ -127,12 +127,41 @@ it("should return a string payload unchanged", async () => {
     const payload = "not json, just text";
 
     await expect(brokerResolving(payload).postStructuredRecordAsync(structuredRecordRequest))
-        .resolves.toBe(payload);
+        .resolves.toEqual({ payloadText: payload, correlationId: "" });
+});
+
+// The id the page links its comparisons from. axios lowercases header names on a real call and
+// hands back a plain object in tests, so both shapes have to read.
+it("should read the correlation id from a plain headers object", async () => {
+    const response = await brokerResolving(
+        "{}", { "x-correlation-id": "9f2c41be7a0d4e5bb6c8d3117e42a905" })
+        .postStructuredRecordAsync(structuredRecordRequest);
+
+    expect(response.correlationId).toBe("9f2c41be7a0d4e5bb6c8d3117e42a905");
+});
+
+it("should read the correlation id from an AxiosHeaders-like object", async () => {
+    const headers = {
+        get: (name: string) => name === "x-correlation-id" ? " abc123 " : undefined
+    };
+
+    const response = await brokerResolving("{}", headers)
+        .postStructuredRecordAsync(structuredRecordRequest);
+
+    expect(response.correlationId).toBe("abc123");
+});
+
+// An older build of the host sends no such header, and the page must not offer a link to nowhere.
+it("should report an empty correlation id when the host sent no header", async () => {
+    const response = await brokerResolving("{}")
+        .postStructuredRecordAsync(structuredRecordRequest);
+
+    expect(response.correlationId).toBe("");
 });
 
 it("should re-render a parsed payload as formatted json", async () => {
-    const payload = await brokerResolving({ resourceType: "Bundle", total: 1 })
+    const response = await brokerResolving({ resourceType: "Bundle", total: 1 })
         .postStructuredRecordAsync(structuredRecordRequest);
 
-    expect(payload).toBe("{\n  \"resourceType\": \"Bundle\",\n  \"total\": 1\n}");
+    expect(response.payloadText).toBe("{\n  \"resourceType\": \"Bundle\",\n  \"total\": 1\n}");
 });

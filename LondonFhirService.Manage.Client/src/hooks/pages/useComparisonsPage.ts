@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ComparisonViewService } from "../../services/views/comparisons/comparisonViewService";
 import type { ComparisonListItemView } from "../../models/views/comparisons/ComparisonListItemView";
@@ -23,8 +24,23 @@ export type ComparisonsPageState = {
 
 export function useComparisonsPage(): ComparisonsPageState {
     const comparisonViewService = useMemo(() => new ComparisonViewService(), []);
-    const [searchTerm, setSearchTerm] = useState<string>("");
-    const [appliedSearchTerm, setAppliedSearchTerm] = useState<string>("");
+    // Seeded from the query string so another page can send an operator here already filtered -
+    // the structured record screen links its correlation id in, and that id is exactly what the
+    // search box below filters on. Read once, as the initial value: after that the box belongs to
+    // the operator, and rewriting it from the url on every render would fight their typing.
+    //
+    // correlationId is the name a caller should use, because that is what they have. searchTerm
+    // is still honoured: this box searches comments too, so a link that means "show me these
+    // words" has somewhere to say so.
+    const [searchParameters] = useSearchParams();
+
+    const initialSearchTerm =
+        searchParameters.get("correlationId")
+        ?? searchParameters.get("searchTerm")
+        ?? "";
+
+    const [searchTerm, setSearchTerm] = useState<string>(initialSearchTerm);
+    const [appliedSearchTerm, setAppliedSearchTerm] = useState<string>(initialSearchTerm);
     const [unresolvedOnly, setUnresolvedOnly] = useState<boolean>(false);
 
     // Comparisons accumulate a row per compared correlation, so every keystroke would otherwise be

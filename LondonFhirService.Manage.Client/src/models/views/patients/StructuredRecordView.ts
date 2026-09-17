@@ -7,4 +7,8 @@ export type StructuredRecordView = {
     isJson: boolean;
     lineCount: number;
     characterCountText: string;
+
+    // The id the API filed the call under, or empty when it did not send one. The page shows it
+    // so an operator can follow the same call into the comparisons it produced.
+    correlationId: string;
 };

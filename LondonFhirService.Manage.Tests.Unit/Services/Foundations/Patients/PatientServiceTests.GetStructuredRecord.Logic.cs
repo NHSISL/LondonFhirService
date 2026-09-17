@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 
+using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 
 namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
@@ -24,6 +25,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 CreateRandomStructuredRecordRequest();
 
             StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+            string randomCorrelationId = GetRandomCorrelationId();
             string randomAccessToken = GetRandomString();
             string tokenResponse = CreateTokenResponse(randomAccessToken);
             string randomStructuredRecord = GetRandomString();
@@ -57,15 +59,17 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     "application/fhir+json",
                     randomAccessToken,
                     inputCancellationToken))
-                        .ReturnsAsync(randomStructuredRecord);
+                        .ReturnsAsync(new HttpContentResponse(randomStructuredRecord, randomCorrelationId));
 
             // when
-            string actualStructuredRecord = await this.patientService.GetStructuredRecordAsync(
-                inputStructuredRecordRequest,
-                inputCancellationToken);
+            StructuredRecordResponse actualStructuredRecordResponse =
+                await this.patientService.GetStructuredRecordAsync(
+                    inputStructuredRecordRequest,
+                    inputCancellationToken);
 
             // then
-            actualStructuredRecord.Should().BeEquivalentTo(expectedStructuredRecord);
+            actualStructuredRecordResponse.PayloadText.Should().Be(expectedStructuredRecord);
+            actualStructuredRecordResponse.CorrelationId.Should().Be(randomCorrelationId);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(
@@ -107,6 +111,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 CreateRandomStructuredRecordRequest();
 
             StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+            string randomCorrelationId = GetRandomCorrelationId();
             string suppliedClientId = inputStructuredRecordRequest.ClientId;
             inputStructuredRecordRequest.ClientSecret = string.Empty;
             inputStructuredRecordRequest.Scope = null;
@@ -139,15 +144,17 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     "application/fhir+json",
                     randomAccessToken,
                     inputCancellationToken))
-                        .ReturnsAsync(randomStructuredRecord);
+                        .ReturnsAsync(new HttpContentResponse(randomStructuredRecord, randomCorrelationId));
 
             // when
-            string actualStructuredRecord = await this.patientService.GetStructuredRecordAsync(
-                inputStructuredRecordRequest,
-                inputCancellationToken);
+            StructuredRecordResponse actualStructuredRecordResponse =
+                await this.patientService.GetStructuredRecordAsync(
+                    inputStructuredRecordRequest,
+                    inputCancellationToken);
 
             // then
-            actualStructuredRecord.Should().BeEquivalentTo(expectedStructuredRecord);
+            actualStructuredRecordResponse.PayloadText.Should().Be(expectedStructuredRecord);
+            actualStructuredRecordResponse.CorrelationId.Should().Be(randomCorrelationId);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(
@@ -213,7 +220,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                             string mediaType,
                             string bearerToken,
                             CancellationToken cancellationToken) => capturedRequestBody = jsonContent)
-                        .ReturnsAsync(GetRandomString());
+                        .ReturnsAsync(new HttpContentResponse(GetRandomString(), GetRandomCorrelationId()));
 
             // when
             await this.patientService.GetStructuredRecordAsync(
@@ -335,7 +342,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                             string mediaType,
                             string bearerToken,
                             CancellationToken cancellationToken) => capturedRequestBody = jsonContent)
-                        .ReturnsAsync(GetRandomString());
+                        .ReturnsAsync(new HttpContentResponse(GetRandomString(), GetRandomCorrelationId()));
 
             // when
             await this.patientService.GetStructuredRecordAsync(
@@ -421,7 +428,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                             string mediaType,
                             string bearerToken,
                             CancellationToken cancellationToken) => capturedRequestBody = jsonContent)
-                        .ReturnsAsync(GetRandomString());
+                        .ReturnsAsync(new HttpContentResponse(GetRandomString(), GetRandomCorrelationId()));
 
             // when
             await this.patientService.GetStructuredRecordAsync(

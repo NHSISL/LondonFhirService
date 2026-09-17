@@ -38,8 +38,13 @@ namespace LondonFhirService.Manage.Brokers.Https
         /// Said in the summary rather than in a param tag: documenting one parameter of five and
         /// leaving the rest raises CS1573 on each of the others, and the four it would take to
         /// silence that would say nothing their names do not already.
+        ///
+        /// Returns the body together with the correlation id the upstream filed the call under,
+        /// because the response carrying that header is disposed before this returns. The token
+        /// call above has no equivalent: an authorisation server does not send X-Correlation-Id,
+        /// so offering one there would only invite a caller to expect it.
         /// </summary>
-        ValueTask<string> PostJsonContentAsync(
+        ValueTask<HttpContentResponse> PostJsonContentAsync(
             string url,
             string jsonContent,
             string mediaType,

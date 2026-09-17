@@ -23,7 +23,10 @@ const formValues = (
 });
 
 const patientServiceReturning = (payload: string): IPatientService => ({
-    retrieveStructuredRecordAsync: vi.fn().mockResolvedValue(payload)
+    retrieveStructuredRecordAsync: vi.fn().mockResolvedValue({
+        payloadText: payload,
+        correlationId: "9f2c41be7a0d4e5bb6c8d3117e42a905"
+    })
 });
 
 it("should pre-fill the grant type and nothing else", () => {

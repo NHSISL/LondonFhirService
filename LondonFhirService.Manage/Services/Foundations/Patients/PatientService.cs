@@ -49,7 +49,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             this.loggingBroker = loggingBroker;
         }
 
-        public ValueTask<string> GetStructuredRecordAsync(
+        public ValueTask<StructuredRecordResponse> GetStructuredRecordAsync(
             StructuredRecordRequest structuredRecordRequest,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
@@ -76,12 +76,19 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                     dateOfBirth: structuredRecordRequest.DateOfBirth?.Trim(),
                     demographicsOnly: structuredRecordRequest.DemographicsOnly);
 
-                return await this.httpBroker.PostJsonContentAsync(
-                    this.patientConfiguration.GetStructuredRecordUrl.Trim(),
-                    requestBody,
-                    FhirJsonMediaType,
-                    accessToken,
-                    cancellationToken);
+                HttpContentResponse httpContentResponse =
+                    await this.httpBroker.PostJsonContentAsync(
+                        this.patientConfiguration.GetStructuredRecordUrl.Trim(),
+                        requestBody,
+                        FhirJsonMediaType,
+                        accessToken,
+                        cancellationToken);
+
+                return new StructuredRecordResponse
+                {
+                    PayloadText = httpContentResponse.Body,
+                    CorrelationId = httpContentResponse.CorrelationId
+                };
             });
 
         private async ValueTask<string> GetAccessTokenAsync(

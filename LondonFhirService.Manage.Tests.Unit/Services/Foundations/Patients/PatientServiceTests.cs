@@ -47,6 +47,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
         private static string GetRandomString() =>
             new MnemonicString().GetValue();
 
+        /// <summary>
+        /// The 32 hex digit "N" form, which is what CorrelationMiddleware writes and therefore
+        /// what the broker reads back off the header.
+        /// </summary>
+        private static string GetRandomCorrelationId() =>
+            Guid.NewGuid().ToString("N");
+
         private static string GetRandomNhsNumber() =>
             new IntRange(min: 100000000, max: 999999999).GetValue().ToString() + "0";
 

@@ -18,14 +18,19 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
 {
     internal partial class PatientService
     {
-        private delegate ValueTask<string> ReturningStringFunction();
+        private delegate ValueTask<T> ReturningFunction<T>();
 
-        private async ValueTask<string> TryCatch(
-            ReturningStringFunction returningStringFunction)
+        /// <summary>
+        /// Generic in what it returns because the mapping below cares about how a call fails, not
+        /// about what it produces when it does not. It was fixed to string until the structured
+        /// record call started carrying a correlation id back alongside the payload.
+        /// </summary>
+        private async ValueTask<T> TryCatch<T>(
+            ReturningFunction<T> returningFunction)
         {
             try
             {
-                return await returningStringFunction();
+                return await returningFunction();
             }
             catch (NullPatientServiceException nullPatientServiceException)
             {

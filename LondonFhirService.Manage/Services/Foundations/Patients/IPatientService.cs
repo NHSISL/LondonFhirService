@@ -16,8 +16,11 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         /// $getstructuredrecord with it. The provider's response body is returned as it arrived -
         /// the page renders the payload, so reformatting it here would hide what the endpoint
         /// actually answered.
+        ///
+        /// The correlation id the Api filed the call under comes back with it, so the page can
+        /// send an operator on to the comparisons that same call produced.
         /// </summary>
-        ValueTask<string> GetStructuredRecordAsync(
+        ValueTask<StructuredRecordResponse> GetStructuredRecordAsync(
             StructuredRecordRequest structuredRecordRequest,
             CancellationToken cancellationToken = default);
     }

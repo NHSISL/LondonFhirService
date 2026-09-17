@@ -8,6 +8,7 @@ import type { IPatientService } from "../../foundations/patients/iPatientService
 import type { IStructuredRecordViewService } from "./iStructuredRecordViewService";
 import type { StructuredRecordFormValues } from "../../../models/views/patients/StructuredRecordFormValues";
 import type { StructuredRecordRequest } from "../../../models/foundations/patients/StructuredRecordRequest";
+import type { StructuredRecordResponse } from "../../../models/foundations/patients/StructuredRecordResponse";
 import type { StructuredRecordView } from "../../../models/views/patients/StructuredRecordView";
 
 // The host falls back to its own configured grant type when this is blank, but client_credentials
@@ -39,11 +40,12 @@ export class StructuredRecordViewService implements IStructuredRecordViewService
         abortSignal?: AbortSignal)
         : Promise<StructuredRecordView> {
         try {
-            const payloadText = await this.patientService.retrieveStructuredRecordAsync(
-                this.toStructuredRecordRequest(structuredRecordFormValues),
-                abortSignal);
+            const structuredRecordResponse = await this.patientService
+                .retrieveStructuredRecordAsync(
+                    this.toStructuredRecordRequest(structuredRecordFormValues),
+                    abortSignal);
 
-            return this.toStructuredRecordView(payloadText);
+            return this.toStructuredRecordView(structuredRecordResponse);
         } catch (exception) {
             // A field the operator can fix is reported as itself. Wrapping it in the generic
             // "contact support" message would tell someone who mistyped a date to raise a ticket.
@@ -108,8 +110,9 @@ export class StructuredRecordViewService implements IStructuredRecordViewService
     // Pretty printed when it parses, shown as it arrived when it does not. A provider answering
     // something that is not JSON is exactly the case an operator opened this page to see, so it
     // must stay visible rather than becoming an error.
-    private toStructuredRecordView(payloadText: string): StructuredRecordView {
-        const formattedPayload = this.formatPayload(payloadText);
+    private toStructuredRecordView(
+        structuredRecordResponse: StructuredRecordResponse): StructuredRecordView {
+        const formattedPayload = this.formatPayload(structuredRecordResponse.payloadText);
 
         return {
             payloadText: formattedPayload.text,
@@ -117,7 +120,11 @@ export class StructuredRecordViewService implements IStructuredRecordViewService
             lineCount: formattedPayload.text.length === 0
                 ? 0
                 : formattedPayload.text.split("\n").length,
-            characterCountText: `${formattedPayload.text.length.toLocaleString()} characters`
+            characterCountText: `${formattedPayload.text.length.toLocaleString()} characters`,
+
+            // Empty when the host sent no header, which is what the page checks before offering
+            // the link - there is nothing to link to without it.
+            correlationId: structuredRecordResponse.correlationId ?? ""
         };
     }
 

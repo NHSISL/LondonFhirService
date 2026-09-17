@@ -35,7 +35,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     innerException: nullPatientServiceException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordResponse> getStructuredRecordTask =
                 this.patientService.GetStructuredRecordAsync(
                     nullStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
@@ -83,7 +83,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     innerException: invalidPatientServiceException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordResponse> getStructuredRecordTask =
                 this.patientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
@@ -133,7 +133,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     innerException: invalidPatientServiceException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordResponse> getStructuredRecordTask =
                 this.patientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
@@ -215,7 +215,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     innerException: invalidPatientServiceException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordResponse> getStructuredRecordTask =
                 blankCredentialsPatientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
@@ -286,7 +286,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     innerException: invalidPatientServiceException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordResponse> getStructuredRecordTask =
                 unconfiguredPatientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
@@ -334,7 +334,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     innerException: nullPatientServiceException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordResponse> getStructuredRecordTask =
                 unconfiguredPatientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
@@ -404,7 +404,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     innerException: invalidPatientServiceException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordResponse> getStructuredRecordTask =
                 placeholderPatientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
@@ -474,7 +474,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     innerException: invalidPatientServiceException);
 
             // when
-            ValueTask<string> getStructuredRecordTask =
+            ValueTask<StructuredRecordResponse> getStructuredRecordTask =
                 misconfiguredPatientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
@@ -508,6 +508,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 CreateRandomStructuredRecordRequest();
 
             StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+            string randomCorrelationId = GetRandomCorrelationId();
             string randomAccessToken = GetRandomString();
             string randomStructuredRecord = GetRandomString();
 
@@ -525,16 +526,16 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(randomStructuredRecord);
+                        .ReturnsAsync(new HttpContentResponse(randomStructuredRecord, randomCorrelationId));
 
             // when
-            string actualStructuredRecord =
+            StructuredRecordResponse actualStructuredRecordResponse =
                 await this.patientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
             // then
-            actualStructuredRecord.Should().Be(randomStructuredRecord);
+            actualStructuredRecordResponse.PayloadText.Should().Be(randomStructuredRecord);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(

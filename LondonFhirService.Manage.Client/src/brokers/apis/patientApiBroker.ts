@@ -2,6 +2,7 @@
 import { PatientApiBrokerException } from "../../models/foundations/patients/exceptions/PatientApiBrokerException";
 import type { IPatientApiBroker } from "./iPatientApiBroker";
 import type { StructuredRecordRequest } from "../../models/foundations/patients/StructuredRecordRequest";
+import type { StructuredRecordResponse } from "../../models/foundations/patients/StructuredRecordResponse";
 
 export class PatientApiBroker implements IPatientApiBroker {
     private readonly relativePatientsUrl = "/api/patients";
@@ -14,17 +15,40 @@ export class PatientApiBroker implements IPatientApiBroker {
     public async postStructuredRecordAsync(
         structuredRecordRequest: StructuredRecordRequest,
         abortSignal?: AbortSignal)
-        : Promise<string> {
+        : Promise<StructuredRecordResponse> {
         try {
             const response = await this.apiBroker.PostAsync(
                 `${this.relativePatientsUrl}/getstructuredrecord`,
                 structuredRecordRequest,
                 abortSignal);
 
-            return this.toPayloadText(response.data);
+            return {
+                payloadText: this.toPayloadText(response.data),
+                correlationId: this.readCorrelationId(response)
+            };
         } catch (exception) {
             throw new PatientApiBrokerException(this.describeFailure(exception), exception);
         }
+    }
+
+    // Header names are case insensitive on the wire and axios lowercases them, so this reads the
+    // lowercase form whatever casing the host sent. Empty rather than undefined when it is absent -
+    // an older build of the host sends no such header, and the page has to cope with not having it
+    // rather than rendering a link to nowhere.
+    private readCorrelationId(response: { headers?: unknown }): string {
+        const headers = response?.headers as
+            { [key: string]: unknown; get?: (name: string) => unknown } | undefined;
+
+        if (headers === undefined || headers === null) {
+            return "";
+        }
+
+        // axios gives an AxiosHeaders instance on a real call and a plain object in tests.
+        const raw = typeof headers.get === "function"
+            ? headers.get("x-correlation-id")
+            : headers["x-correlation-id"];
+
+        return typeof raw === "string" ? raw.trim() : "";
     }
 
     // The API's own explanation, not a generic message. PatientsController answers a validation

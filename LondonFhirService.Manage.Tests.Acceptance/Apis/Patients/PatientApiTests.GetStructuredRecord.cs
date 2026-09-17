@@ -49,7 +49,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(expectedStructuredRecord);
+                        .ReturnsAsync(new HttpContentResponse(expectedStructuredRecord, acceptanceCorrelationId));
 
             // when
             HttpResponseMessage actualResponse =
@@ -364,6 +364,79 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                         Times.Never);
         }
 
+        /// <summary>
+        /// The id has to survive the hop. The Api answers with X-Correlation-Id, this host reads
+        /// it off a response it then disposes, and the page needs it to link an operator on to the
+        /// comparisons that same call produced - so if it is dropped anywhere in between, the link
+        /// silently goes nowhere.
+        /// </summary>
+        [Fact]
+        public async Task ShouldEchoTheUpstreamCorrelationIdOnPostGetStructuredRecordAsync()
+        {
+            // given
+            StructuredRecordRequest inputStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            SetupSuccessfulCall(
+                CreateTokenResponse(GetRandomString()),
+                CreateStructuredRecordResponse(inputStructuredRecordRequest.NhsNumber));
+
+            // when
+            HttpResponseMessage actualResponse =
+                await this.apiBroker.PostGetStructuredRecordAsync(inputStructuredRecordRequest);
+
+            // then
+            actualResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            actualResponse.Headers.GetValues("X-Correlation-Id")
+                .Should().ContainSingle().Which.Should().Be(acceptanceCorrelationId);
+        }
+
+        /// <summary>
+        /// An older Api sends no such header, and an empty one reads like an id the caller failed
+        /// to parse - so the header is left off entirely rather than sent blank.
+        /// </summary>
+        [Fact]
+        public async Task ShouldOmitTheCorrelationIdHeaderWhenTheUpstreamSentNoneAsync()
+        {
+            // given
+            StructuredRecordRequest inputStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            this.apiBroker.HttpBrokerMock.Setup(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(CreateTokenResponse(GetRandomString()));
+
+            this.apiBroker.HttpBrokerMock.Setup(broker =>
+                broker.PostJsonContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new HttpContentResponse(
+                            CreateStructuredRecordResponse(inputStructuredRecordRequest.NhsNumber),
+                            string.Empty));
+
+            // when
+            HttpResponseMessage actualResponse =
+                await this.apiBroker.PostGetStructuredRecordAsync(inputStructuredRecordRequest);
+
+            // then
+            actualResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            actualResponse.Headers.Contains("X-Correlation-Id").Should().BeFalse();
+        }
+
+        /// <summary>
+        /// Fixed rather than random so a test can name it in an assertion. It is the value the
+        /// mocked broker reports the Api answered with, and the controller is expected to echo it
+        /// onto its own response header untouched.
+        /// </summary>
+        private const string acceptanceCorrelationId = "9f2c41be7a0d4e5bb6c8d3117e42a905";
+
         private static async ValueTask<ProblemDetails> ReadProblemDetailsAsync(
             HttpResponseMessage httpResponseMessage)
         {
@@ -399,7 +472,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(structuredRecordResponse);
+                        .ReturnsAsync(new HttpContentResponse(structuredRecordResponse, acceptanceCorrelationId));
         }
     }
 }

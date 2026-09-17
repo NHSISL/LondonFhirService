@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
 using Xeptions;
 
+using LondonFhirService.Core.Brokers.Correlations;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
@@ -49,11 +50,25 @@ namespace LondonFhirService.Manage.Controllers.Patients
         {
             try
             {
-                string structuredRecord = await this.patientService.GetStructuredRecordAsync(
-                    structuredRecordRequest,
-                    cancellationToken);
+                StructuredRecordResponse structuredRecordResponse =
+                    await this.patientService.GetStructuredRecordAsync(
+                        structuredRecordRequest,
+                        cancellationToken);
 
-                return Ok(structuredRecord);
+                // On a header rather than in the body, because the body is the provider's payload
+                // verbatim and wrapping it to carry one more field would change what the page is
+                // showing. Same header name the Api answered with, so the id an operator sees here
+                // is the id they would have seen calling that host directly.
+                //
+                // Omitted rather than sent empty when the Api did not supply one: a blank header
+                // reads like an id the caller failed to parse.
+                if (string.IsNullOrWhiteSpace(structuredRecordResponse.CorrelationId) is false)
+                {
+                    Response.Headers[CorrelationBroker.CorrelationIdHeaderName] =
+                        structuredRecordResponse.CorrelationId;
+                }
+
+                return Ok(structuredRecordResponse.PayloadText);
             }
             catch (PatientServiceValidationException patientServiceValidationException)
             {

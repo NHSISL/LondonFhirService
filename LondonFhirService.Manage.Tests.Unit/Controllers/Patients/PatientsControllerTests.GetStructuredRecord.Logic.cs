@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
 
+using FluentAssertions;
 using Moq;
 using RESTFulSense.Clients.Extensions;
 
@@ -25,8 +26,15 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
             string randomStructuredRecord = GetRandomString();
-            string retrievedStructuredRecord = randomStructuredRecord;
-            string expectedStructuredRecord = retrievedStructuredRecord;
+            string randomCorrelationId = GetRandomCorrelationId();
+
+            var retrievedStructuredRecordResponse = new StructuredRecordResponse
+            {
+                PayloadText = randomStructuredRecord,
+                CorrelationId = randomCorrelationId
+            };
+
+            string expectedStructuredRecord = randomStructuredRecord;
             var expectedObjectResult = new OkObjectResult(expectedStructuredRecord);
             var expectedActionResult = new ActionResult<string>(expectedObjectResult);
             CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
@@ -35,7 +43,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
                 .Setup(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     inputCancellationToken))
-                        .ReturnsAsync(retrievedStructuredRecord);
+                        .ReturnsAsync(retrievedStructuredRecordResponse);
 
             // when
             ActionResult<string> actualActionResult =
@@ -45,6 +53,11 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             // then
             actualActionResult.ShouldBeEquivalentTo(expectedActionResult);
+
+            // The payload goes in the body and the id goes on a header, so the page can follow the
+            // call into its comparisons without the payload being wrapped to carry it.
+            this.patientsController.Response.Headers["X-Correlation-Id"]
+                .ToString().Should().Be(randomCorrelationId);
 
             this.patientServiceMock
                 .Verify(service => service.GetStructuredRecordAsync(
@@ -74,7 +87,11 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
                 .Setup(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     inputCancellationToken))
-                        .ReturnsAsync(GetRandomString());
+                        .ReturnsAsync(new StructuredRecordResponse
+                        {
+                            PayloadText = GetRandomString(),
+                            CorrelationId = GetRandomCorrelationId()
+                        });
 
             // when
             await this.patientsController.PostGetStructuredRecordAsync(

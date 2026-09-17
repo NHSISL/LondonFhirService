@@ -4,6 +4,9 @@
 
 using System;
 
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
 using Moq;
 using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;
@@ -24,7 +27,17 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
         public PatientsControllerTests()
         {
             this.patientServiceMock = new Mock<IPatientService>();
-            this.patientsController = new PatientsController(this.patientServiceMock.Object);
+            // A controller built with new() has no HttpContext, so touching Response throws a
+            // NullReferenceException rather than failing an assertion. The endpoint writes the
+            // correlation id to a response header, so the tests have to give it somewhere to
+            // write - and that in turn lets them read the header back.
+            this.patientsController = new PatientsController(this.patientServiceMock.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
         }
 
         /// <summary>
@@ -66,6 +79,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
         private static string CreateRefusalBody() =>
             "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"error\"," +
                 "\"diagnostics\":\"" + GetRandomString() + "\"}]}";
+
+        /// <summary>
+        /// The 32 hex digit "N" form CorrelationMiddleware writes, which is what the controller
+        /// echoes onto its own response header.
+        /// </summary>
+        private static string GetRandomCorrelationId() =>
+            Guid.NewGuid().ToString("N");
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();

@@ -33,7 +33,8 @@ const aStructuredRecord: StructuredRecordView = {
     payloadText: "{\n  \"resourceType\": \"Bundle\"\n}",
     isJson: true,
     lineCount: 3,
-    characterCountText: "30 characters"
+    characterCountText: "30 characters",
+    correlationId: "9f2c41be7a0d4e5bb6c8d3117e42a905"
 };
 
 type Deferred = {

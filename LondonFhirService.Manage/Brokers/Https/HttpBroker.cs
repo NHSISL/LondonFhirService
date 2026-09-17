@@ -5,11 +5,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LondonFhirService.Core.Brokers.Correlations;
 
 namespace LondonFhirService.Manage.Brokers.Https
 {
@@ -50,11 +53,14 @@ namespace LondonFhirService.Manage.Brokers.Https
                     cancellationToken)
                 .ConfigureAwait(false);
 
-            return await this.ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
+            HttpContentResponse httpContentResponse = await this
+                .ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
                 .ConfigureAwait(false);
+
+            return httpContentResponse.Body;
         }
 
-        public async ValueTask<string> PostJsonContentAsync(
+        public async ValueTask<HttpContentResponse> PostJsonContentAsync(
             string url,
             string jsonContent,
             string mediaType,
@@ -91,6 +97,18 @@ namespace LondonFhirService.Manage.Brokers.Https
             return await this.ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
                 .ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Empty rather than null when the upstream sent no header, so a caller can test it the
+        /// same way whatever answered. Only the hosts in this solution set it - CorrelationMiddleware
+        /// writes the W3C trace id in "N" form - and nothing outside them is expected to.
+        /// </summary>
+        private static string ReadCorrelationId(HttpResponseMessage httpResponseMessage) =>
+            httpResponseMessage.Headers.TryGetValues(
+                CorrelationBroker.CorrelationIdHeaderName,
+                out var correlationIds)
+                ? correlationIds.FirstOrDefault() ?? string.Empty
+                : string.Empty;
 
         /// <summary>
         /// A refusal explains itself in a few hundred characters. The cap is here because the
@@ -134,7 +152,7 @@ namespace LondonFhirService.Manage.Brokers.Https
         /// message it logs. Keeping the body off both means the identifiable part travels only
         /// where something reads it on purpose.
         /// </summary>
-        private async ValueTask<string> ReadContentOrThrowAsync(
+        private async ValueTask<HttpContentResponse> ReadContentOrThrowAsync(
             HttpResponseMessage httpResponseMessage,
             CancellationToken cancellationToken)
         {
@@ -145,10 +163,14 @@ namespace LondonFhirService.Manage.Brokers.Https
 
             if (httpResponseMessage.IsSuccessStatusCode)
             {
-                return await GuardTimeout(
+                string body = await GuardTimeout(
                     httpResponseMessage.Content.ReadAsStringAsync(readCancellation.Token),
                     readCancellation,
                     cancellationToken).ConfigureAwait(false);
+
+                return new HttpContentResponse(
+                    Body: body,
+                    CorrelationId: ReadCorrelationId(httpResponseMessage));
             }
 
             string responseBody = await GuardTimeout(
