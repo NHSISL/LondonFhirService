@@ -25,7 +25,16 @@ vi.mock("../../services/views/patients/structuredRecordViewService", () => ({
     }
 }));
 
-const aStructuredRecord = { payload: "{}" } as StructuredRecordView;
+// The real shape, not a cast over a stand-in. The previous fixture asserted { payload } into
+// this type, and StructuredRecordView has no payload field at all - so the cast was hiding an
+// object that matched the contract in no respect, and would have gone on hiding it through any
+// rename or addition.
+const aStructuredRecord: StructuredRecordView = {
+    payloadText: "{\n  \"resourceType\": \"Bundle\"\n}",
+    isJson: true,
+    lineCount: 3,
+    characterCountText: "30 characters"
+};
 
 type Deferred = {
     promise: Promise<StructuredRecordView>;
