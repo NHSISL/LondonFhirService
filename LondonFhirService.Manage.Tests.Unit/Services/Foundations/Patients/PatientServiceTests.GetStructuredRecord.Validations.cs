@@ -5,13 +5,15 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+using Moq;
+using Xeptions;
+
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Manage.Services.Foundations.Patients;
-using Moq;
-using Xeptions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 {

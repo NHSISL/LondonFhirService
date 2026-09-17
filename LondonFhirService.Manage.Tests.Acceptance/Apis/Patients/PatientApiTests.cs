@@ -4,9 +4,11 @@
 
 using System;
 using System.Text.Json;
+
+using Tynamix.ObjectFiller;
+
 using LondonFhirService.Manage.Tests.Acceptance.Brokers;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Patients;
-using Tynamix.ObjectFiller;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
 {

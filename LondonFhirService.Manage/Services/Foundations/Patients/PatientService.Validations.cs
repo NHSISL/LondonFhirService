@@ -4,9 +4,11 @@
 
 using System;
 using System.Globalization;
+
+using Xeptions;
+
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
-using Xeptions;
 
 namespace LondonFhirService.Manage.Services.Foundations.Patients
 {

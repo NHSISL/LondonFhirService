@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;

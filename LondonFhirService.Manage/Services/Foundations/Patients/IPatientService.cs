@@ -4,6 +4,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+
 using LondonFhirService.Manage.Models.Foundations.Patients;
 
 namespace LondonFhirService.Manage.Services.Foundations.Patients

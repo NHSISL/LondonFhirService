@@ -9,11 +9,14 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Mvc;
+
 using FluentAssertions;
+using Moq;
+
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Patients;
-using Microsoft.AspNetCore.Mvc;
-using Moq;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
 {

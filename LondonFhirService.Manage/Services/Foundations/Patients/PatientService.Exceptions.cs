@@ -7,10 +7,12 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+
+using Xeptions;
+
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
-using Xeptions;
 
 namespace LondonFhirService.Manage.Services.Foundations.Patients
 {

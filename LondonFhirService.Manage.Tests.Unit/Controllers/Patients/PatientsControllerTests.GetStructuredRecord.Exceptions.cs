@@ -4,15 +4,18 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
-using LondonFhirService.Manage.Models.Foundations.Patients;
-using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
+using FluentAssertions;
 using Moq;
 using RESTFulSense.Clients.Extensions;
 using RESTFulSense.Models;
 using Xeptions;
+
+using LondonFhirService.Manage.Models.Foundations.Patients;
+using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 {
@@ -159,7 +162,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
         /// answer a 500 that said nothing except to contact support.
         /// </summary>
         [Fact]
-        public async Task ShouldReturnInternalServerErrorWithUpstreamBodyOnPostGetStructuredRecordIfUpstreamFailedAsync()
+        public async Task
+            ShouldReturnInternalServerErrorWithUpstreamBodyOnPostGetStructuredRecordIfUpstreamFailedAsync()
         {
             // given
             StructuredRecordRequest someStructuredRecordRequest =

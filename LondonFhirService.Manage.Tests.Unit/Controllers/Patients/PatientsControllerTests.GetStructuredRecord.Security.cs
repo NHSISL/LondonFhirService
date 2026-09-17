@@ -5,11 +5,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using Microsoft.AspNetCore.Authorization;
+
 using Attrify.Attributes;
 using FluentAssertions;
+
 using LondonFhirService.Manage.Controllers.Patients;
 using LondonFhirService.Manage.Models.Securities;
-using Microsoft.AspNetCore.Authorization;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 {

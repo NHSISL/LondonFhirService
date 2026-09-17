@@ -3,14 +3,16 @@
 // ---------------------------------------------------------
 
 using System;
-using LondonFhirService.Manage.Controllers.Patients;
-using LondonFhirService.Manage.Models.Foundations.Patients;
-using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
-using LondonFhirService.Manage.Services.Foundations.Patients;
+
 using Moq;
 using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;
 using Xeptions;
+
+using LondonFhirService.Manage.Controllers.Patients;
+using LondonFhirService.Manage.Models.Foundations.Patients;
+using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
+using LondonFhirService.Manage.Services.Foundations.Patients;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 {

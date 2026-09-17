@@ -10,13 +10,15 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+using Moq;
+using Xeptions;
+
 using LondonFhirService.Core.Extensions.Exceptions;
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
-using Moq;
-using Xeptions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 {

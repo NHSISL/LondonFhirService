@@ -4,10 +4,13 @@
 
 using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Manage.Models.Foundations.Patients;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Moq;
 using RESTFulSense.Clients.Extensions;
+
+using LondonFhirService.Manage.Models.Foundations.Patients;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 {

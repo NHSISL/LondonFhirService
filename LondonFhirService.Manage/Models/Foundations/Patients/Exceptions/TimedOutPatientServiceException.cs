@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+
 using Xeptions;
 
 namespace LondonFhirService.Manage.Models.Foundations.Patients.Exceptions

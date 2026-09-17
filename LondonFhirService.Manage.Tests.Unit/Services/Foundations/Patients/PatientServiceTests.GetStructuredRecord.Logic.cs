@@ -6,9 +6,11 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using FluentAssertions;
-using LondonFhirService.Manage.Models.Foundations.Patients;
 using Moq;
+
+using LondonFhirService.Manage.Models.Foundations.Patients;
 
 namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 {

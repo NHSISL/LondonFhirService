@@ -4,15 +4,18 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+using RESTFulSense.Controllers;
+using Xeptions;
+
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
 using LondonFhirService.Manage.Services.Foundations.Patients;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using RESTFulSense.Controllers;
-using Xeptions;
 
 namespace LondonFhirService.Manage.Controllers.Patients
 {

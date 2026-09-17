@@ -10,13 +10,15 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Moq;
+using Tynamix.ObjectFiller;
+using Xeptions;
+
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Services.Foundations.Patients;
-using Moq;
-using Tynamix.ObjectFiller;
-using Xeptions;
 
 namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 {
