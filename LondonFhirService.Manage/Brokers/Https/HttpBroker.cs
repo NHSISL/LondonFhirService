@@ -50,7 +50,7 @@ namespace LondonFhirService.Manage.Brokers.Https
                     cancellationToken)
                 .ConfigureAwait(false);
 
-            return await ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
+            return await this.ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -88,7 +88,7 @@ namespace LondonFhirService.Manage.Brokers.Https
                     cancellationToken)
                 .ConfigureAwait(false);
 
-            return await ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
+            return await this.ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -134,19 +134,27 @@ namespace LondonFhirService.Manage.Brokers.Https
         /// message it logs. Keeping the body off both means the identifiable part travels only
         /// where something reads it on purpose.
         /// </summary>
-        private static async ValueTask<string> ReadContentOrThrowAsync(
+        private async ValueTask<string> ReadContentOrThrowAsync(
             HttpResponseMessage httpResponseMessage,
             CancellationToken cancellationToken)
         {
+            using CancellationTokenSource readCancellation =
+                CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            readCancellation.CancelAfter(this.httpClient.Timeout);
+
             if (httpResponseMessage.IsSuccessStatusCode)
             {
-                return await httpResponseMessage.Content
-                    .ReadAsStringAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                return await GuardTimeout(
+                    httpResponseMessage.Content.ReadAsStringAsync(readCancellation.Token),
+                    readCancellation,
+                    cancellationToken).ConfigureAwait(false);
             }
 
-            string responseBody = await ReadBoundedContentAsync(
-                httpResponseMessage.Content,
+            string responseBody = await GuardTimeout(
+                ReadBoundedContentAsync(httpResponseMessage.Content, readCancellation.Token)
+                    .AsTask(),
+                readCancellation,
                 cancellationToken).ConfigureAwait(false);
 
             throw new HttpResponseException(
@@ -157,6 +165,40 @@ namespace LondonFhirService.Manage.Brokers.Https
 
                 statusCode: httpResponseMessage.StatusCode,
                 responseBody: Truncate(responseBody));
+        }
+
+        /// <summary>
+        /// HttpClient.Timeout does not cover this. It bounds the SendAsync call, and under
+        /// HttpCompletionOption.ResponseHeadersRead that call returns once the headers are in -
+        /// measured, a body that stalls after its headers ran until the request was abandoned
+        /// rather than timing out. Nothing else would have caught it: this host registers no
+        /// request timeout middleware.
+        ///
+        /// So the read gets its own budget, the same one the client uses for the rest of the
+        /// call, and a breach is rethrown in the shape HttpClient.Timeout produces - a cancelled
+        /// task wrapping a TimeoutException. That is what PatientService matches on to tell a
+        /// timeout from a caller who walked away, so a stalled provider still reaches the operator
+        /// as "please try again" rather than as silence.
+        /// </summary>
+        private static async Task<string> GuardTimeout(
+            Task<string> readTask,
+            CancellationTokenSource readCancellation,
+            CancellationToken callerToken)
+        {
+            try
+            {
+                return await readTask.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException operationCanceledException)
+                when (readCancellation.IsCancellationRequested
+                    && callerToken.IsCancellationRequested is false)
+            {
+                throw new TaskCanceledException(
+                    message: "The response body was not read within the configured timeout.",
+                    innerException: new TimeoutException(
+                        "Timed out reading the response body.",
+                        operationCanceledException));
+            }
         }
 
         /// <summary>

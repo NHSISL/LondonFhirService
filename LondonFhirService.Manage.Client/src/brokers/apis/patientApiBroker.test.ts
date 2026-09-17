@@ -88,14 +88,37 @@ it("should fall back to the title when there is no detail", async () => {
     expect(message).toBe("The API answered 500: Patient dependency error occurred, contact support.");
 });
 
-it("should say so plainly when the request never reached the API", async () => {
+const brokerThrowing = (failure: unknown): PatientApiBroker => {
     const apiBroker = {
-        PostAsync: vi.fn().mockRejectedValue(new Error("Network Error"))
+        PostAsync: vi.fn().mockRejectedValue(failure)
     } as unknown as ApiBroker;
 
-    const message = await messageOf(new PatientApiBroker(apiBroker));
+    return new PatientApiBroker(apiBroker);
+};
 
-    expect(message).toBe("The structured record request did not reach the API.");
+// These three used to share one sentence - "did not reach the API" - which asserted a network
+// fact none of them established. A token the portal could not acquire throws before axios sends
+// anything, and reporting that as a network failure sends the reader to the wrong place.
+it("should say the request was never sent when nothing went out", async () => {
+    const message = await messageOf(brokerThrowing(new Error("no account available")));
+
+    expect(message).toContain("never sent");
+    expect(message).toContain("no account available");
+});
+
+it("should say the API did not answer when the request went out and nothing came back", async () => {
+    const message = await messageOf(brokerThrowing(
+        { code: "ERR_NETWORK", message: "Network Error", request: {} }));
+
+    expect(message).toContain("did not answer");
+    expect(message).not.toContain("never sent");
+});
+
+it("should name a cancellation as a cancellation", async () => {
+    const message = await messageOf(brokerThrowing(
+        { code: "ERR_CANCELED", message: "canceled", request: {} }));
+
+    expect(message).toContain("cancelled");
 });
 
 // Both shapes the success path can arrive in. Which one it is depends on the content type MVC

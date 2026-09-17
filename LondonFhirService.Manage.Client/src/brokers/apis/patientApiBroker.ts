@@ -32,11 +32,29 @@ export class PatientApiBroker implements IPatientApiBroker {
     // failure with one whose detail is the token endpoint's or provider's own words. Discarding
     // either leaves an operator on a diagnostic page with nothing to diagnose.
     private describeFailure(exception: unknown): string {
-        const response =
-            (exception as { response?: { status?: number; data?: unknown } })?.response;
+        const failure = exception as {
+            code?: string;
+            message?: string;
+            request?: unknown;
+            response?: { status?: number; data?: unknown };
+        };
+
+        const response = failure?.response;
 
         if (response === undefined) {
-            return "The structured record request did not reach the API.";
+            // Three different things used to share one sentence, and it asserted a network fact
+            // none of them established. An axios error carries `request` once the call has gone
+            // out, so its absence means we never got that far - a token we could not acquire, or
+            // anything else thrown before the send.
+            if (failure?.code === "ERR_CANCELED") {
+                return "The request was cancelled before the API answered.";
+            }
+
+            const reason = failure?.message ? ` (${failure.message})` : "";
+
+            return failure?.request === undefined
+                ? `The request was never sent - the portal could not prepare it${reason}.`
+                : `The API did not answer the request${reason}.`;
         }
 
         const detail = this.readDetail(response.data);
