@@ -179,7 +179,15 @@ public partial class Program
     {
         ODataConventionModelBuilder builder = new();
         builder.EntitySet<Audit>("Audits");
-        builder.EntitySet<Metric>("Metrics");
+        // RequestSpanId is transport only - it carries the request's span id from the request
+        // that produced a metric to the worker that replays it into telemetry, and EF ignores it
+        // rather than giving it a column. The convention builder reflects over every public
+        // property though, so without this it would land in the EDM: $metadata would advertise a
+        // field that is always null, and $filter or $orderby against it would reach EF with no
+        // column to translate to and fail the request rather than return nothing.
+        builder.EntitySet<Metric>("Metrics")
+            .EntityType
+                .Ignore(metric => metric.RequestSpanId);
         builder.EntitySet<Provider>("Providers");
         builder.EntitySet<FhirRecord>("FhirRecords");
         builder.EntitySet<FhirRecordDifference>("FhirRecordDifferences");

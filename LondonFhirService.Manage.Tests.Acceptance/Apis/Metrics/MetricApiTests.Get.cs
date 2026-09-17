@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -12,6 +12,25 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Metrics
 {
     public partial class MetricApiTests
     {
+        [Fact]
+        public async Task ShouldNotAdvertiseTheTransportOnlySpanIdInTheEdmAsync()
+        {
+            // given . when
+            string metadata = await this.apiBroker.GetODataMetadataAsync();
+
+            // then
+            // RequestSpanId rides from the request that produced a metric to the worker that
+            // replays it into telemetry; EF ignores it rather than giving it a column. The
+            // convention builder reflects over every public property, so it has to be excluded by
+            // hand - otherwise $metadata advertises a field that is always null, and a $filter or
+            // $orderby against it reaches EF with no column to translate to and fails the request.
+            metadata.Should().NotContain("requestSpanId");
+
+            // The rest of the entity is still there, so this is proof of an exclusion rather than
+            // of a metadata document that failed to render.
+            metadata.Should().Contain("correlationId");
+        }
+
         [Fact]
         public async Task ShouldGetAllMetricsAsync()
         {

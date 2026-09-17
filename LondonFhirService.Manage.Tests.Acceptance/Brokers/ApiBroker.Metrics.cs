@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -37,5 +37,12 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
 
         public async ValueTask<HttpResponseMessage> GetAllMetricsWithoutKeyAsync() =>
             await this.keylessHttpClient.GetAsync($"{metricsRelativeUrl}/");
+
+        /// <summary>
+        /// The raw EDM document. Read as text rather than parsed, because what is being asserted
+        /// is which properties the host advertises at all.
+        /// </summary>
+        public async ValueTask<string> GetODataMetadataAsync() =>
+            await this.httpClient.GetStringAsync("odata/$metadata");
     }
 }
