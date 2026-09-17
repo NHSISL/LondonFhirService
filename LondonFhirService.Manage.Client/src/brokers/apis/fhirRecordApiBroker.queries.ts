@@ -1,4 +1,5 @@
 import type { FhirRecordQuery } from "../../models/foundations/fhirRecords/FhirRecordQuery";
+import { toStringLiteral } from "./odataLiterals";
 
 // OData query options on this endpoint are bound against the CLR type, so property names are
 // PascalCase here even though the payload comes back camelCased. Kept apart from the
@@ -41,10 +42,4 @@ function buildPendingFhirRecordFilter(fhirRecordQuery: FhirRecordQuery): string 
     }
 
     return clauses.join(" and ");
-}
-
-// A single quote is escaped by doubling it in an OData string literal. Without this, a search term
-// containing one would break the query.
-function toStringLiteral(value: string): string {
-    return `'${value.split("'").join("''")}'`;
 }

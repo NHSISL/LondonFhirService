@@ -1,9 +1,10 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -18,6 +19,13 @@ namespace LondonFhirService.Manage.Brokers.Https
 {
     public class HttpBroker : IHttpBroker
     {
+        /// <summary>
+        /// The least time a response body read is given, however much of the call's timeout the
+        /// send already spent. Short enough that an exhausted budget is not extended meaningfully,
+        /// long enough to read a refusal and report its status rather than a cancellation.
+        /// </summary>
+        private static readonly TimeSpan MinimumReadBudget = TimeSpan.FromSeconds(5);
+
         private readonly HttpClient httpClient;
 
         public HttpBroker(HttpClient httpClient)
@@ -40,6 +48,7 @@ namespace LondonFhirService.Manage.Brokers.Https
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            long startedAt = Stopwatch.GetTimestamp();
 
             using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url)
             {
@@ -54,7 +63,7 @@ namespace LondonFhirService.Manage.Brokers.Https
                 .ConfigureAwait(false);
 
             HttpContentResponse httpContentResponse = await this
-                .ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
+                .ReadContentOrThrowAsync(httpResponseMessage, startedAt, cancellationToken)
                 .ConfigureAwait(false);
 
             return httpContentResponse.Body;
@@ -68,6 +77,7 @@ namespace LondonFhirService.Manage.Brokers.Https
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            long startedAt = Stopwatch.GetTimestamp();
 
             using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url)
             {
@@ -94,7 +104,8 @@ namespace LondonFhirService.Manage.Brokers.Https
                     cancellationToken)
                 .ConfigureAwait(false);
 
-            return await this.ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
+            return await this
+                .ReadContentOrThrowAsync(httpResponseMessage, startedAt, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -154,12 +165,13 @@ namespace LondonFhirService.Manage.Brokers.Https
         /// </summary>
         private async ValueTask<HttpContentResponse> ReadContentOrThrowAsync(
             HttpResponseMessage httpResponseMessage,
+            long startedAt,
             CancellationToken cancellationToken)
         {
             using CancellationTokenSource readCancellation =
                 CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            readCancellation.CancelAfter(this.httpClient.Timeout);
+            readCancellation.CancelAfter(RemainingBudget(startedAt));
 
             if (httpResponseMessage.IsSuccessStatusCode)
             {
@@ -196,12 +208,36 @@ namespace LondonFhirService.Manage.Brokers.Https
         /// rather than timing out. Nothing else would have caught it: this host registers no
         /// request timeout middleware.
         ///
-        /// So the read gets its own budget, the same one the client uses for the rest of the
-        /// call, and a breach is rethrown in the shape HttpClient.Timeout produces - a cancelled
+        /// So the read gets a budget of its own - what is LEFT of the client's timeout after the
+        /// send, not a fresh copy of it. A fresh copy meant one call could take two full timeouts:
+        /// headers at 149 seconds of a 150 second budget, then another 150 for a body that never
+        /// came, against a host with no request timeout middleware to stop it.
+        ///
+        /// A breach is rethrown in the shape HttpClient.Timeout produces - a cancelled
         /// task wrapping a TimeoutException. That is what PatientService matches on to tell a
         /// timeout from a caller who walked away, so a stalled provider still reaches the operator
         /// as "please try again" rather than as silence.
         /// </summary>
+        /// <summary>
+        /// What is left of the call's timeout. Floored rather than allowed to go negative, both
+        /// because CancelAfter rejects a negative span and because a send that used the whole
+        /// budget should still get long enough to read a short error body and report the status
+        /// properly, rather than turning a 400 into a cancellation.
+        ///
+        /// An infinite timeout stays infinite; there is no budget to divide.
+        /// </summary>
+        private TimeSpan RemainingBudget(long startedAt)
+        {
+            if (this.httpClient.Timeout == Timeout.InfiniteTimeSpan)
+            {
+                return Timeout.InfiniteTimeSpan;
+            }
+
+            TimeSpan remaining = this.httpClient.Timeout - Stopwatch.GetElapsedTime(startedAt);
+
+            return remaining < MinimumReadBudget ? MinimumReadBudget : remaining;
+        }
+
         private static async Task<string> GuardTimeout(
             Task<string> readTask,
             CancellationTokenSource readCancellation,

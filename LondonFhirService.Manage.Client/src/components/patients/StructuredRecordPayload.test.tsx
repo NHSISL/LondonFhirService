@@ -16,6 +16,8 @@ const aStructuredRecord = (
     lineCount: 3,
     characterCountText: "30 characters",
     correlationId: correlationId,
+    metricsUrl: `/admin/metrics/${dashedCorrelationId}`,
+    comparisonsUrl: `/admin/comparisons?correlationId=${correlationId}`,
     ...overrides
 });
 
@@ -27,17 +29,16 @@ const renderPayload = (structuredRecord: StructuredRecordView) =>
 
 afterEach(cleanup);
 
-// The metrics route filters on a Guid, and an OData guid literal carries its dashes - the compact
-// form the header supplies does not merely miss, it fails to parse.
-it("should link to the metrics for this call in the form that route accepts", () => {
+// The card renders the urls the view built rather than building them, so these pin the wiring.
+// Which spelling each route wants is the view service's business - see its own tests.
+it("should link to the metrics for this call", () => {
     renderPayload(aStructuredRecord());
 
     expect(screen.getByRole("link", { name: /view metrics/i }).getAttribute("href"))
         .toBe(`/admin/metrics/${dashedCorrelationId}`);
 });
 
-// The comparisons search matches a string column holding the compact form.
-it("should link to the comparisons for this call in the form that search matches", () => {
+it("should link to the comparisons for this call", () => {
     renderPayload(aStructuredRecord());
 
     expect(screen.getByRole("link", { name: /view comparisons/i }).getAttribute("href"))
@@ -58,7 +59,11 @@ it("should show the correlation id as text rather than as a link", () => {
 
 // An older build of the host sends no such header, and both links would lead nowhere real.
 it("should offer neither link when the host sent no correlation id", () => {
-    renderPayload(aStructuredRecord({ correlationId: "" }));
+    renderPayload(aStructuredRecord({
+        correlationId: "",
+        metricsUrl: "",
+        comparisonsUrl: ""
+    }));
 
     expect(screen.queryAllByRole("link")).toHaveLength(0);
     expect(screen.queryByText(/CorrelationId:/)).toBeNull();

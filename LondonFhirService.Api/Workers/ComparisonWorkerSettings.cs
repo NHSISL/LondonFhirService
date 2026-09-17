@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -16,6 +16,11 @@ namespace LondonFhirService.Api.Workers
         /// following the correlation id straight off the structured record page reliably arrived
         /// before the comparison did.
         /// </summary>
+        /// <remarks>
+        /// Validated at startup to be at least one second - see Program.Configurations. Zero would
+        /// turn the worker's drain loop into a spin, and a negative value throws from a Task.Delay
+        /// outside that loop's catch, stopping the host.
+        /// </remarks>
         public int SleepIntervalSeconds { get; set; } = 10;
     }
 }

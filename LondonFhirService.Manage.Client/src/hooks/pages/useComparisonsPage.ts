@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ComparisonViewService } from "../../services/views/comparisons/comparisonViewService";
@@ -9,8 +9,15 @@ import type { PendingComparisonView } from "../../models/views/comparisons/Pendi
 const searchDebounceMilliseconds = 400;
 
 // Half the compare worker's own interval, so a comparison shows up within a tick of being written
-// rather than a tick and a half. Only ever runs while something is actually queued - see below.
+// rather than a tick and a half. Only ever runs while waitingOnTheQueue holds - see below.
 const pendingPollMilliseconds = 5000;
+
+// How long after arriving the page keeps asking even though it has been told there is nothing
+// queued. The Api answers a structured record request before the records are written - the insert
+// goes onto a dispatch queue - so an operator following the correlation id straight here can beat
+// their own rows to the page. Without this the first empty answer would be taken as final and the
+// poll would never start.
+const arrivalGraceMilliseconds = 30000;
 
 export type ComparisonsPageState = {
     comparisons: ComparisonListItemView[];
@@ -67,10 +74,6 @@ export function useComparisonsPage(): ComparisonsPageState {
 
     // What has landed but not been compared. Polled, because the thing an operator is waiting for
     // happens on a worker somewhere else and nothing pushes it here.
-    //
-    // The poll is conditional on there being something to wait for, which is what stops this being
-    // a page that talks to the server forever. An empty queue means the screen is showing a
-    // finished state, and a finished state does not change on its own.
     const {
         data: pendingData,
         error: pendingError,
@@ -81,11 +84,39 @@ export function useComparisonsPage(): ComparisonsPageState {
             await comparisonViewService.retrievePendingComparisonViewsAsync(
                 appliedSearchTerm,
                 signal),
-        refetchInterval: query =>
-            (query.state.data?.length ?? 0) > 0 ? pendingPollMilliseconds : false
+        refetchInterval: () => waitingOnTheQueueRef.current ? pendingPollMilliseconds : false
     });
 
     const pendingComparisons = useMemo(() => pendingData ?? [], [pendingData]);
+    const mountedAt = useRef<number>(Date.now());
+
+    /**
+     * Whether this page is still waiting on something, and so the one condition both queries poll
+     * on. Written once rather than twice, because a page that refreshed one of its two lists and
+     * not the other would be worse than one that refreshed neither.
+     *
+     * Three reasons to keep asking, and all three have to be here:
+     *
+     * A record the queue could still claim. Not merely an unprocessed one - see
+     * isAwaitingTheQueue, which is what stops a permanently unclaimable row pinning this on
+     * forever.
+     *
+     * A pending check that failed. Stopping on an error would mean one transient 502 silently
+     * ends live refresh on both lists while the panel claims the comparisons below are up to date.
+     *
+     * The arrival window. An empty first answer is not evidence that nothing is coming, because
+     * the records are written after the request that produced them was answered.
+     */
+    const waitingOnTheQueue =
+        pendingComparisons.some(pendingComparison => pendingComparison.isAwaitingTheQueue)
+        || pendingError !== null
+        || Date.now() - mountedAt.current < arrivalGraceMilliseconds;
+
+    // The pending query's own interval callback is declared above this line, so it reads the
+    // decision through a ref rather than closing over a value that does not exist yet. Written on
+    // every render, so the callback always sees the current answer.
+    const waitingOnTheQueueRef = useRef<boolean>(true);
+    waitingOnTheQueueRef.current = waitingOnTheQueue;
 
     const {
         data,
@@ -106,10 +137,10 @@ export function useComparisonsPage(): ComparisonsPageState {
         getNextPageParam: (lastPage, allPages) =>
             lastPage.hasMore ? allPages.length : undefined,
 
-        // Refetched on the same beat as the queue, and only while the queue has something in it,
-        // so a comparison appears here the moment the worker writes it. Every loaded page refetches
-        // together, which is affordable precisely because this stops as soon as the queue drains.
-        refetchInterval: pendingComparisons.length > 0 ? pendingPollMilliseconds : false
+        // Refetched on the same beat as the queue, so a comparison appears here the moment the
+        // worker writes it. Every loaded page refetches together, which is affordable precisely
+        // because this stops once there is nothing left to wait for.
+        refetchInterval: waitingOnTheQueue ? pendingPollMilliseconds : false
     });
 
     const comparisons = useMemo(
@@ -140,7 +171,7 @@ export function useComparisonsPage(): ComparisonsPageState {
         loading: isLoading,
         loadingMore: isFetchingNextPage,
         searching: searchTerm !== appliedSearchTerm,
-        watching: pendingComparisons.length > 0 && pendingFetching,
+        watching: pendingFetching,
         hasNextPage: hasNextPage === true,
         error: error,
 

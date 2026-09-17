@@ -140,3 +140,44 @@ it("should fall back to the generic message when there is nothing from the API",
     await expect(viewService.retrieveStructuredRecordViewAsync(formValues()))
         .rejects.toThrowError("please try again or contact support");
 });
+
+// The two routes want the correlation id spelled differently, and choosing between those
+// spellings is a transformation - so it belongs here rather than in the card that renders it.
+it("should build both follow-on links from the correlation id", async () => {
+    const patientService: IPatientService = {
+        retrieveStructuredRecordAsync: vi.fn().mockResolvedValue({
+            payloadText: "{}",
+            correlationId: "d8924d9709dab2e07cf313bef9fdf820"
+        })
+    };
+
+    const structuredRecordViewService = new StructuredRecordViewService(patientService);
+
+    const structuredRecord =
+        await structuredRecordViewService.retrieveStructuredRecordViewAsync(formValues());
+
+    expect(structuredRecord.metricsUrl)
+        .toBe("/admin/metrics/d8924d97-09da-b2e0-7cf3-13bef9fdf820");
+
+    expect(structuredRecord.comparisonsUrl)
+        .toBe("/admin/comparisons?correlationId=d8924d9709dab2e07cf313bef9fdf820");
+});
+
+// A route with no id lands on the metrics list or the unfiltered comparisons table, which reads
+// as a result. Blank is what the card checks before offering either link.
+it("should offer no links when the host sent no correlation id", async () => {
+    const patientService: IPatientService = {
+        retrieveStructuredRecordAsync: vi.fn().mockResolvedValue({
+            payloadText: "{}",
+            correlationId: ""
+        })
+    };
+
+    const structuredRecordViewService = new StructuredRecordViewService(patientService);
+
+    const structuredRecord =
+        await structuredRecordViewService.retrieveStructuredRecordViewAsync(formValues());
+
+    expect(structuredRecord.metricsUrl).toBe("");
+    expect(structuredRecord.comparisonsUrl).toBe("");
+});

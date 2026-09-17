@@ -2,7 +2,6 @@ export type ComparisonListItemView = {
     id: string;
     correlationId: string;
     sourceNameText: string;
-    isPrimarySource: boolean;
     diffCountText: string;
     diffCountClassName: string;
     acceptableDiffCountText: string;

@@ -11,4 +11,11 @@ export type StructuredRecordView = {
     // The id the API filed the call under, or empty when it did not send one. The page shows it
     // so an operator can follow the same call into the comparisons it produced.
     correlationId: string;
+
+    // Built here rather than in the component. The two screens this record can be followed to
+    // want the correlation id spelled differently, and which spelling goes where is a
+    // transformation, not markup - see helpers/correlationIds. Blank when there is no
+    // correlation id, which is what the payload card renders no links from.
+    metricsUrl: string;
+    comparisonsUrl: string;
 };

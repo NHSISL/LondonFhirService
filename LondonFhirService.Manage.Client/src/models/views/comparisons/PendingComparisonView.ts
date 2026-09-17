@@ -10,4 +10,10 @@ export type PendingComparisonView = {
     statusText: string;
     statusClassName: string;
     landedAtText: string;
+
+    // Whether the compare queue could still plausibly pick this up, rather than merely whether it
+    // is unprocessed. A record the queue will never claim - a primary with no secondary, which
+    // nothing completes - stays unprocessed forever, so "is anything unprocessed" is not a
+    // question that ever stops being true and cannot be what the page polls on.
+    isAwaitingTheQueue: boolean;
 };

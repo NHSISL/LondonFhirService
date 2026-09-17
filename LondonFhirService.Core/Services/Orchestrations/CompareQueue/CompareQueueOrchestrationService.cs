@@ -24,9 +24,13 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
         /// This is a backstop, not the normal path. A secondary is claimed as soon as its primary
         /// exists, so a complete pair is compared within a tick rather than on a timer. The wait
         /// only applies to a secondary whose primary has not arrived at all - a fan-out that
-        /// failed on the primary, or a persist that never completed - and it exists so those
-        /// surface as a comparison with nothing to compare against rather than sitting Pending
-        /// and unlooked-at forever.
+        /// failed on the primary, or a persist that never completed.
+        ///
+        /// What happens to it then is settled by the caller, not here: ComparisonCoordinationService
+        /// sees a null primary, logs a warning and finalises the record as Failed. It does NOT
+        /// write a FhirRecordDifference, so the record never appears on the comparisons page - it
+        /// appears in the portal's compare-queue panel as Failed instead. Said plainly because an
+        /// earlier version of this comment claimed the opposite.
         ///
         /// Long, because nothing waits on it. Five minutes was the old buffer and it delayed every
         /// comparison by five minutes to cover this case; thirty costs nothing now that the normal
@@ -139,8 +143,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     //
                     // The orphan branch keeps the old behaviour for the case the buffer existed
                     // for: a secondary whose primary never arrives is still claimed eventually,
-                    // and still reaches the comparison with a null primary, rather than becoming
-                    // a Pending row nobody ever looks at.
+                    // rather than staying Pending for good. The caller then settles it as Failed
+                    // without a comparison - see OrphanedSecondaryMinutes.
                     List<ClaimCandidate> claimCandidates = secondaryFhirRecordQueryable
                         .Where(fhirRecord =>
                             !fhirRecord.IsPrimarySource

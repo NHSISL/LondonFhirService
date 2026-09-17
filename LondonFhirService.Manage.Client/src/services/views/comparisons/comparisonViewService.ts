@@ -36,6 +36,12 @@ export const comparisonPageSize = 25;
 // not something to scroll through, it is something to go and look at the worker about.
 export const pendingComparisonLimit = 50;
 
+// Mirrors OrphanedSecondaryMinutes in CompareQueueOrchestrationService: the longest a record can
+// sit before the queue claims it anyway. Past it, the queue has either dealt with the record or
+// was never going to, so nothing is gained by asking again - the row stays listed, it just stops
+// being a reason to keep polling.
+export const queueBacklogMinutes = 30;
+
 // Ordered so the summary reads the way an operator triages: what changed, then what only one side
 // has, then what the engine could not decide on its own.
 const diffTypeOrder = [
@@ -160,8 +166,29 @@ export class ComparisonViewService implements IComparisonViewService {
             // InsertedDate, because that is when the row became visible to the compare queue -
             // CreatedDate is stamped on the request thread before the insert is even queued, so a
             // slow dispatch would show a wait that had not started yet.
-            landedAtText: this.formatDate(fhirRecord.insertedDate)
+            landedAtText: this.formatDate(fhirRecord.insertedDate),
+            isAwaitingTheQueue: this.isAwaitingTheQueue(fhirRecord)
         };
+    }
+
+    /**
+     * A record still worth waiting on. Unprocessed is not enough: the compare queue only ever
+     * claims secondaries, and a primary is completed only as a side effect of its secondary being
+     * compared - so a correlation that never produced a secondary leaves a primary unprocessed for
+     * good. Polling on "is anything unprocessed" therefore never stops.
+     *
+     * Age settles it. Within the backlog window the queue may still be coming; past it, it is not.
+     * An unreadable date is treated as still waiting, because the alternative is falling silent on
+     * a record whose state this cannot establish.
+     */
+    private isAwaitingTheQueue(fhirRecord: FhirRecord): boolean {
+        const landedAt = moment(fhirRecord.insertedDate);
+
+        if (landedAt.isValid() === false) {
+            return true;
+        }
+
+        return landedAt.isAfter(moment().subtract(queueBacklogMinutes, "minutes"));
     }
 
     public async retrieveComparisonDetailViewAsync(
@@ -365,7 +392,6 @@ export class ComparisonViewService implements IComparisonViewService {
             // The provider whose answer this row compared, and whether that provider is the
             // primary. Both ride in on the expand rather than a second call per row.
             sourceNameText: fhirRecordDifference.secondarySourceName || notSetText,
-            isPrimarySource: fhirRecordDifference.secondaryIsPrimarySource,
 
             diffCountText: this.formatDiffCount(fhirRecordDifference.diffCount),
             diffCountClassName: this.mapDiffCountToClassName(fhirRecordDifference.diffCount),

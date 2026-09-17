@@ -31,7 +31,9 @@ const aStructuredRecord: StructuredRecordView = {
     isJson: true,
     lineCount: 3,
     characterCountText: "30 characters",
-    correlationId: "9f2c41be7a0d4e5bb6c8d3117e42a905"
+    correlationId: "9f2c41be7a0d4e5bb6c8d3117e42a905",
+    metricsUrl: "/admin/metrics/9f2c41be-7a0d-4e5b-b6c8-d3117e42a905",
+    comparisonsUrl: "/admin/comparisons?correlationId=9f2c41be7a0d4e5bb6c8d3117e42a905"
 };
 
 // Neither happy-dom nor jsdom implements scrollIntoView, and the page calls it. Recorded rather
@@ -41,7 +43,17 @@ const scrollIntoView = vi.fn();
 let settle: (value: StructuredRecordView) => void;
 let fail: (reason: Error) => void;
 
-afterEach(cleanup);
+// Restored in teardown rather than at the end of each body. An assertion that throws never
+// reaches an inline restore, so one real failure left a prefers-reduced-motion stub installed and
+// reported a second defect in the next test that did not exist.
+const originalScrollIntoView = Element.prototype.scrollIntoView;
+
+afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    Element.prototype.scrollIntoView = originalScrollIntoView;
+});
 
 beforeEach(() => {
     Element.prototype.scrollIntoView = scrollIntoView;
@@ -105,7 +117,6 @@ it("should not let focusing the result scroll the page out from under the animat
     await act(async () => { settle(aStructuredRecord); });
 
     await waitFor(() => expect(focus).toHaveBeenCalledWith({ preventScroll: true }));
-    focus.mockRestore();
 });
 
 // A long page travelling under someone who gets motion sick from it is not a courtesy.
@@ -120,7 +131,6 @@ it("should not animate the scroll when the reader asked for no motion", async ()
     await submit();
 
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "auto", block: "start" });
-    vi.unstubAllGlobals();
 });
 
 it("should animate the scroll otherwise", async () => {

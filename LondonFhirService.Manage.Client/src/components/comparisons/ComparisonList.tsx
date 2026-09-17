@@ -88,21 +88,13 @@ export function ComparisonList({
                             nowhere, leaving the correlation id as the only way in. Same
                             destination, so either reading of "open this one" works.
 
-                            The chip stays outside the link: it labels the source rather than
-                            offering a second place to go.
+                            No Primary chip here, unlike the queue above. A difference row's
+                            expanded record is its secondary, and the compare queue only ever
+                            claims rows where IsPrimarySource is false - so the chip could not
+                            render on this table however the data fell out.
                         */}
                         <td className="text-break">
                             <Link to={comparison.detailUrl}>{comparison.sourceNameText}</Link>
-                            {comparison.isPrimarySource && (
-                                <>
-                                    {" "}
-                                    <span
-                                        className="badge bg-primary"
-                                        title="This source is the primary">
-                                        Primary
-                                    </span>
-                                </>
-                            )}
                         </td>
 
                         <th scope="row" className="fw-normal text-break">

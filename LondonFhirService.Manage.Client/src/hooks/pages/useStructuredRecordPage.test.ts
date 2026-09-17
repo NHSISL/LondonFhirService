@@ -34,7 +34,9 @@ const aStructuredRecord: StructuredRecordView = {
     isJson: true,
     lineCount: 3,
     characterCountText: "30 characters",
-    correlationId: "9f2c41be7a0d4e5bb6c8d3117e42a905"
+    correlationId: "9f2c41be7a0d4e5bb6c8d3117e42a905",
+    metricsUrl: "/admin/metrics/9f2c41be-7a0d-4e5b-b6c8-d3117e42a905",
+    comparisonsUrl: "/admin/comparisons?correlationId=9f2c41be7a0d4e5bb6c8d3117e42a905"
 };
 
 type Deferred = {

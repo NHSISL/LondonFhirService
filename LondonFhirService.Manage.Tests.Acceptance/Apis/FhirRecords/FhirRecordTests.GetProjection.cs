@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,7 +6,9 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LondonFhirService.Manage.Tests.Acceptance.Models.FhirRecords;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Apis.FhirRecords
@@ -33,52 +35,62 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.FhirRecords
             FhirRecord randomFhirRecord = await PostRandomFhirRecordAsync();
             FhirRecord inputFhirRecord = randomFhirRecord;
 
-            string select = "Id,CorrelationId,SourceName,IsPrimarySource,Status,InsertedDate";
+            string fhirRecordSelect =
+                "Id,CorrelationId,SourceName,IsPrimarySource,Status,InsertedDate";
 
             // when
             string actualBody = await this.apiBroker.GetFhirRecordsProjectionRawAsync(
-                select,
-                $"Id eq {inputFhirRecord.Id}");
+                fhirRecordSelect,
+                fhirRecordFilter: $"Id eq {inputFhirRecord.Id}");
 
             // then
-            using JsonDocument actualDocument = JsonDocument.Parse(actualBody);
-            JsonElement actualRow = actualDocument.RootElement[0];
+            try
+            {
+                using JsonDocument actualDocument = JsonDocument.Parse(actualBody);
+                JsonElement actualRow = actualDocument.RootElement[0];
 
-            // Asked for by the exact name the client reads, because a field that arrives under
-            // another name is not an error on the far side - it is a row of blanks.
-            ReadField(actualRow, "id").GetGuid().Should().Be(inputFhirRecord.Id);
+                // Asked for by the exact name the client reads, because a field that arrives under
+                // another name is not an error on the far side - it is a row of blanks.
+                ReadField(actualRow, fieldName: "id").GetGuid().Should().Be(inputFhirRecord.Id);
 
-            ReadField(actualRow, "correlationId").GetString().Should()
-                .Be(inputFhirRecord.CorrelationId);
+                ReadField(actualRow, fieldName: "correlationId").GetString().Should()
+                    .Be(inputFhirRecord.CorrelationId);
 
-            ReadField(actualRow, "sourceName").GetString().Should()
-                .Be(inputFhirRecord.SourceName);
+                ReadField(actualRow, fieldName: "sourceName").GetString().Should()
+                    .Be(inputFhirRecord.SourceName);
 
-            ReadField(actualRow, "isPrimarySource").GetBoolean().Should()
-                .Be(inputFhirRecord.IsPrimarySource);
+                ReadField(actualRow, fieldName: "isPrimarySource").GetBoolean().Should()
+                    .Be(inputFhirRecord.IsPrimarySource);
 
-            // The whole point of the projection. A payload here is not a cosmetic problem: it is
-            // the pending list quietly costing a FHIR bundle per queued record.
-            actualRow.EnumerateObject()
-                .Any(field => string.Equals(
-                    field.Name,
-                    "jsonPayload",
-                    StringComparison.OrdinalIgnoreCase))
-                .Should().BeFalse("the payload is what the projection exists to leave behind");
-
-            await this.apiBroker.DeleteFhirRecordByIdAsync(inputFhirRecord.Id);
+                // The whole point of the projection. A payload here is not a cosmetic problem: it
+                // is the pending list quietly costing a FHIR bundle per queued record.
+                actualRow.EnumerateObject()
+                    .Any(field => string.Equals(
+                        field.Name,
+                        "jsonPayload",
+                        StringComparison.OrdinalIgnoreCase))
+                    .Should().BeFalse("the payload is what the projection exists to leave behind");
+            }
+            finally
+            {
+                // In a finally, because the assertions above are the ones expected to fail when
+                // the projection's shape changes - and this database outlives the run, so a leaked
+                // record carrying a whole FHIR payload is read back by every later test that lists
+                // records, and shows up in the portal's compare-queue panel.
+                await this.apiBroker.DeleteFhirRecordByIdAsync(inputFhirRecord.Id);
+            }
         }
 
-        private static JsonElement ReadField(JsonElement row, string name)
+        private static JsonElement ReadField(JsonElement fhirRecordRow, string fieldName)
         {
-            if (row.TryGetProperty(name, out JsonElement field))
+            if (fhirRecordRow.TryGetProperty(fieldName, out JsonElement field))
             {
                 return field;
             }
 
             throw new Xunit.Sdk.XunitException(
-                $"The projection carried no '{name}' field. It answered with: " +
-                    $"{string.Join(", ", row.EnumerateObject().Select(each => each.Name))}");
+                $"The projection carried no '{fieldName}' field. It answered with: " +
+                    $"{string.Join(", ", fhirRecordRow.EnumerateObject().Select(each => each.Name))}");
         }
     }
 }

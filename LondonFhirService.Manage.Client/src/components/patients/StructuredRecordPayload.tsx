@@ -1,6 +1,5 @@
 import { Badge, Card, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { buildComparisonsUrl, buildMetricsUrl } from "../../helpers/correlationIds";
 import type { StructuredRecordPayloadProps } from "../../models/components/patients/StructuredRecordPayloadProps";
 
 export function StructuredRecordPayload({ structuredRecord }: StructuredRecordPayloadProps) {
@@ -23,7 +22,7 @@ export function StructuredRecordPayload({ structuredRecord }: StructuredRecordPa
                     {structuredRecord.correlationId.length > 0 && (
                         <span className="d-flex align-items-center flex-wrap gap-2 small fw-normal">
                             <Link
-                                to={buildMetricsUrl(structuredRecord.correlationId)}
+                                to={structuredRecord.metricsUrl}
                                 title="Every span recorded while this call ran">
                                 View metrics
                             </Link>
@@ -31,7 +30,7 @@ export function StructuredRecordPayload({ structuredRecord }: StructuredRecordPa
                             <span className="text-muted" aria-hidden="true">|</span>
 
                             <Link
-                                to={buildComparisonsUrl(structuredRecord.correlationId)}
+                                to={structuredRecord.comparisonsUrl}
                                 title="See the comparisons this call produced">
                                 View comparisons
                             </Link>

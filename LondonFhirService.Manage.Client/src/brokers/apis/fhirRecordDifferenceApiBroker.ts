@@ -85,8 +85,8 @@ export class FhirRecordDifferenceApiBroker implements IFhirRecordDifferenceApiBr
                 "The FHIR record differences endpoint returned an unreadable difference.");
         }
 
-        const source = this.readFields(rawFhirRecordDifference);
-        const secondary = this.readFields(source.secondary);
+        const source = rawFhirRecordDifference as Record<string, unknown>;
+        const secondary = this.readExpandedObject(source.secondary);
 
         return {
             id: this.readString(source.id),
@@ -100,7 +100,6 @@ export class FhirRecordDifferenceApiBroker implements IFhirRecordDifferenceApiBr
             comment: this.readNullableString(source.comment),
             isResolved: source.isResolved === true,
             secondarySourceName: this.readString(secondary.sourceName),
-            secondaryIsPrimarySource: secondary.isPrimarySource === true,
             createdBy: this.readString(source.createdBy),
             createdDate: this.readString(source.createdDate),
             updatedBy: this.readString(source.updatedBy),
@@ -109,23 +108,18 @@ export class FhirRecordDifferenceApiBroker implements IFhirRecordDifferenceApiBr
     }
 
     /**
-     * Field names lowercased before they are read. Both shapes this endpoint answers with are
-     * camelCase - the unprojected one by the host's naming policy, the expanded one by OData's
-     * wrapper, which was measured rather than assumed - so this normalises nothing in practice.
-     * It stays because this class treats the response as untyped and reads every field
-     * defensively, and because the one thing that must not happen here is a silent row of blanks.
+     * An expanded object, or an empty one. The expand is dropped whenever the record it points at
+     * has gone, so this reads a missing nested object as absent fields rather than as a failure.
+     *
+     * No casing normalisation. Both shapes this endpoint answers with are camelCase - the
+     * unprojected one by the host's naming policy, the expanded one by OData's projection wrapper
+     * - which FhirRecordTests.ShouldProjectFhirRecordsWithoutThePayloadAsync pins, so a change
+     * there fails a test rather than silently emptying this list.
      */
-    private readFields(rawValue: unknown): Record<string, unknown> {
-        if (typeof rawValue !== "object" || rawValue === null) {
-            return {};
-        }
-
-        return Object.fromEntries(
-            Object.entries(rawValue as Record<string, unknown>)
-                .map(([name, value]) => [
-                    name.charAt(0).toLowerCase() + name.slice(1),
-                    value
-                ]));
+    private readExpandedObject(rawValue: unknown): Record<string, unknown> {
+        return typeof rawValue === "object" && rawValue !== null
+            ? rawValue as Record<string, unknown>
+            : {};
     }
 
     private readString(rawValue: unknown): string {

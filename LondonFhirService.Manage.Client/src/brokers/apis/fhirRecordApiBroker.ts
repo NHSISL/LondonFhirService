@@ -1,4 +1,4 @@
-﻿import ApiBroker from "../apiBroker";
+import ApiBroker from "../apiBroker";
 import { FhirRecordApiBrokerException } from "../../models/foundations/fhirRecords/exceptions/FhirRecordApiBrokerException";
 import { buildPendingFhirRecordQueryUrl } from "./fhirRecordApiBroker.queries";
 import { fhirRecordStatuses } from "../../models/foundations/fhirRecords/FhirRecord";
@@ -23,9 +23,14 @@ export class FhirRecordApiBroker implements IFhirRecordApiBroker {
                 buildPendingFhirRecordQueryUrl(this.relativeFhirRecordsUrl, fhirRecordQuery),
                 abortSignal);
 
-            const rawFhirRecords = Array.isArray(response.data) ? response.data : [];
+            // Not coerced to an empty list. "The queue is empty" and "this endpoint answered
+            // with something I cannot read" look identical on screen and mean opposite things,
+            // and the first of them is what stops the page asking again.
+            if (Array.isArray(response.data) === false) {
+                throw new Error("The FHIR records endpoint did not return a collection.");
+            }
 
-            return rawFhirRecords.map(rawFhirRecord => this.toFhirRecord(rawFhirRecord));
+            return response.data.map(rawFhirRecord => this.toFhirRecord(rawFhirRecord));
         } catch (exception) {
             throw new FhirRecordApiBrokerException(
                 "Failed to retrieve the pending FHIR records from the API.",
@@ -62,7 +67,7 @@ export class FhirRecordApiBroker implements IFhirRecordApiBroker {
             throw new Error("The FHIR records endpoint returned an unreadable record.");
         }
 
-        const source = this.readFields(rawFhirRecord);
+        const source = rawFhirRecord as Record<string, unknown>;
 
         return {
             id: this.readString(source.id),
@@ -78,26 +83,6 @@ export class FhirRecordApiBroker implements IFhirRecordApiBroker {
             updatedBy: this.readString(source.updatedBy),
             updatedDate: this.readString(source.updatedDate)
         };
-    }
-
-    /**
-     * Field names lowercased before they are read. Both shapes this endpoint answers with are
-     * camelCase today - the unprojected one by the host's naming policy, the projected one by
-     * OData's wrapper, which an acceptance test pins - so this normalises nothing in practice. It
-     * stays because the whole of this class treats the response as untyped and reads every field
-     * defensively, and because the one thing that must not happen here is a silent row of blanks.
-     */
-    private readFields(rawValue: unknown): Record<string, unknown> {
-        if (typeof rawValue !== "object" || rawValue === null) {
-            return {};
-        }
-
-        return Object.fromEntries(
-            Object.entries(rawValue as Record<string, unknown>)
-                .map(([name, value]) => [
-                    name.charAt(0).toLowerCase() + name.slice(1),
-                    value
-                ]));
     }
 
     // The host registers no JsonStringEnumConverter, so StatusType arrives as its ordinal -

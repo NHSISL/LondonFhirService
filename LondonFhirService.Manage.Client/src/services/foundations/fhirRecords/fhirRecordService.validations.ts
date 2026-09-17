@@ -27,5 +27,14 @@ export function validateFhirRecordQuery(fhirRecordQuery: FhirRecordQuery): void 
             "take",
             "A FHIR record query take must be a whole number greater than zero.");
     }
+
+    // The filter builder calls .trim() on this. Unchecked, a caller that omitted it produced a
+    // TypeError, which the layer's catch reports as a service fault - telling the operator to
+    // contact support about input the caller got wrong.
+    if (typeof fhirRecordQuery.searchTerm !== "string") {
+        throw new FhirRecordValidationException(
+            "searchTerm",
+            "A FHIR record query search term is required, and may be blank.");
+    }
 }
 

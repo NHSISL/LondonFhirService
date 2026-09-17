@@ -1,4 +1,5 @@
 import type { FhirRecordDifferenceQuery } from "../../models/foundations/fhirRecordDifferences/FhirRecordDifferenceQuery";
+import { toStringLiteral } from "./odataLiterals";
 
 // OData query options on this endpoint are bound against the CLR type, so property names are
 // PascalCase here even though the payload comes back camelCased. Kept apart from the broker so
@@ -22,7 +23,7 @@ export function buildFhirRecordDifferenceQueryUrl(
         // than its own serialiser. Measured, that wrapper keeps the same camelCase - the expanded
         // object arrives as "secondary": { "sourceName": ... } - so the reader on the other side
         // needs no translation, only the nested object it was not previously asking for.
-        "$expand=Secondary($select=SourceName,IsPrimarySource)",
+        "$expand=Secondary($select=SourceName)",
         "$orderby=ComparedAt desc",
         `$skip=${fhirRecordDifferenceQuery.skip}`,
         `$top=${fhirRecordDifferenceQuery.take}`
@@ -61,10 +62,4 @@ function buildFhirRecordDifferenceFilter(
     }
 
     return clauses.join(" and ");
-}
-
-// A single quote is escaped by doubling it in an OData string literal. Without this, a search term
-// containing one would break the query.
-function toStringLiteral(value: string): string {
-    return `'${value.split("'").join("''")}'`;
 }

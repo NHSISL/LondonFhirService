@@ -88,17 +88,31 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             // which is how they are written today and how the tests build them, and makes the
             // migration safe against a table whose rows may already reference a FhirRecord that
             // retention has since removed.
+            // IsRequired(false) on both, and it is the whole point rather than a detail. The
+            // foreign key properties are non-nullable Guids, from which EF infers a required
+            // relationship - and a required reference navigation is projected with an INNER JOIN.
+            // With no database constraint to guarantee the other side exists, that join silently
+            // dropped any difference row whose FhirRecord had gone: the comparisons page uses
+            // $expand=Secondary, so the row vanished from the list with no error, and because the
+            // page's "is there more" check is a row count against the page size, the paging
+            // stopped early and hid every older comparison behind it.
+            //
+            // Optional makes it a LEFT JOIN and the row survives with an empty source name, which
+            // is what the list already renders as a dash. The columns stay NOT NULL - this changes
+            // how EF reads the relationship, not the table.
             model
                 .HasOne(fhirRecordDifference => fhirRecordDifference.Secondary)
                 .WithMany()
                 .HasForeignKey(fhirRecordDifference => fhirRecordDifference.SecondaryId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
 
             model
                 .HasOne(fhirRecordDifference => fhirRecordDifference.Primary)
                 .WithMany()
                 .HasForeignKey(fhirRecordDifference => fhirRecordDifference.PrimaryId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
         }
     }
 }

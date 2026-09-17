@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -493,7 +493,16 @@ public partial class Program
 
     private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<ComparisonWorkerSettings>(configuration.GetSection("ComparisonWorkerSettings"));
+        // Validated on start rather than trusted. Zero would turn the worker's drain loop into a
+        // spin against the database, and a negative value makes Task.Delay throw from a line that
+        // sits outside the loop's catch - which, under the default BackgroundService behaviour,
+        // stops the host at startup with an error that names Task.Delay rather than the setting.
+        services.AddOptions<ComparisonWorkerSettings>()
+            .Bind(configuration.GetSection("ComparisonWorkerSettings"))
+            .Validate(
+                comparisonWorkerSettings => comparisonWorkerSettings.SleepIntervalSeconds >= 1,
+                "ComparisonWorkerSettings:SleepIntervalSeconds must be at least 1 second.")
+            .ValidateOnStart();
         services.AddHostedService<ComparisonWorker>();
 
         // The retention sweep had no caller, so the metrics table only ever grew - and it takes a

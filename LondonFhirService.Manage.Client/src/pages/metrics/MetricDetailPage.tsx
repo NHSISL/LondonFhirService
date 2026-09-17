@@ -1,6 +1,5 @@
-﻿import { Button, Col, Container, Row } from "react-bootstrap";
+import { Button, Col, Container, Row } from "react-bootstrap";
 import { Link, useParams } from "react-router-dom";
-import { buildComparisonsUrl } from "../../helpers/correlationIds";
 import BreadCrumbBase from "../../components/bases/layouts/BreadCrumb/BreadCrumbBase";
 import { EmptyState } from "../../components/shared/EmptyState";
 import { ErrorSummary } from "../../components/shared/ErrorSummary";
@@ -13,7 +12,7 @@ import { useMetricDetailPage } from "../../hooks/pages/useMetricDetailPage";
 export function MetricDetailPage() {
     const { correlationId } = useParams<{ correlationId: string }>();
 
-    const { correlation, loading, error, handleBackToMetrics } =
+    const { correlation, loading, error, comparisonsUrl, handleBackToMetrics } =
         useMetricDetailPage(correlationId ?? "");
 
     const breadCrumb = (
@@ -68,9 +67,7 @@ export function MetricDetailPage() {
                         looking at one almost always wants the other, and the correlation id that
                         joins them is the one already in the address bar.
                     */}
-                    <Link
-                        to={buildComparisonsUrl(correlationId ?? "")}
-                        className="btn btn-outline-primary">
+                    <Link to={comparisonsUrl} className="btn btn-outline-primary">
                         Compare results
                     </Link>
 

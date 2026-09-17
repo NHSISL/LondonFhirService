@@ -3,7 +3,8 @@ import { expect, it } from "vitest";
 import {
     ComparisonViewService,
     comparisonPageSize,
-    pendingComparisonLimit
+    pendingComparisonLimit,
+    queueBacklogMinutes
 } from "./comparisonViewService";
 import { fhirRecordStatuses } from "../../../models/foundations/fhirRecords/FhirRecord";
 import type { FhirRecord } from "../../../models/foundations/fhirRecords/FhirRecord";
@@ -34,7 +35,6 @@ const createFhirRecordDifference = (
     comparedAt: "2026-05-04T09:30:00+00:00",
     comment: null,
     secondarySourceName: "LDS",
-    secondaryIsPrimarySource: false,
     isResolved: false,
     createdBy: "compare-queue",
     createdDate: "2026-05-04T09:30:00+00:00",
@@ -654,4 +654,59 @@ it("should give the detail view the same metrics link", async () => {
 
     expect(comparison.metricsUrl)
         .toBe("/admin/metrics/d8924d97-09da-b2e0-7cf3-13bef9fdf820");
+});
+
+// The queue's own stop condition. "Unprocessed" never stops being true for a record the queue
+// cannot claim - a primary with no secondary - so the page needed something that does.
+it("should treat a freshly landed record as still awaiting the queue", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({ insertedDate: moment().subtract(1, "minute").toISOString() })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons[0].isAwaitingTheQueue).toBe(true);
+});
+
+// Past the backlog window the queue has either dealt with it or never will, so it stays listed
+// but stops being a reason to keep asking.
+it("should stop treating a record older than the backlog window as awaited", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({
+                    insertedDate: moment()
+                        .subtract(queueBacklogMinutes + 1, "minutes")
+                        .toISOString()
+                })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons).toHaveLength(1);
+    expect(pendingComparisons[0].isAwaitingTheQueue).toBe(false);
+});
+
+// Falling silent on a record whose state cannot be read is the worse of the two mistakes.
+it("should keep awaiting a record whose landing time cannot be read", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({ insertedDate: "" })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons[0].isAwaitingTheQueue).toBe(true);
 });

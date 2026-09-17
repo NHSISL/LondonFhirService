@@ -40,9 +40,10 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
         /// into a typed model would paper over both.
         /// </summary>
         public async ValueTask<string> GetFhirRecordsProjectionRawAsync(
-            string select,
-            string filter) =>
+            string fhirRecordSelect,
+            string fhirRecordFilter) =>
             await this.httpClient.GetStringAsync(
-                $"{fhirRecordsRelativeUrl}?$select={select}&$filter={filter}");
+                $"{fhirRecordsRelativeUrl}" +
+                    $"?$select={fhirRecordSelect}&$filter={fhirRecordFilter}");
     }
 }

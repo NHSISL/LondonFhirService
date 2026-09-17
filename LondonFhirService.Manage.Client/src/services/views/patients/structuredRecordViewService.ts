@@ -1,4 +1,5 @@
 import { PatientApiBrokerException } from "../../../models/foundations/patients/exceptions/PatientApiBrokerException";
+import { buildComparisonsUrl, buildMetricsUrl } from "../../../helpers/correlationIds";
 import { PatientService } from "../../foundations/patients/patientService";
 import { PatientValidationException } from "../../../models/foundations/patients/exceptions/PatientValidationException";
 import {
@@ -113,6 +114,7 @@ export class StructuredRecordViewService implements IStructuredRecordViewService
     private toStructuredRecordView(
         structuredRecordResponse: StructuredRecordResponse): StructuredRecordView {
         const formattedPayload = this.formatPayload(structuredRecordResponse.payloadText);
+        const correlationId = structuredRecordResponse.correlationId ?? "";
 
         return {
             payloadText: formattedPayload.text,
@@ -123,8 +125,16 @@ export class StructuredRecordViewService implements IStructuredRecordViewService
             characterCountText: `${formattedPayload.text.length.toLocaleString()} characters`,
 
             // Empty when the host sent no header, which is what the page checks before offering
-            // the link - there is nothing to link to without it.
-            correlationId: structuredRecordResponse.correlationId ?? ""
+            // the links - there is nothing to link to without it.
+            correlationId: correlationId,
+
+            // Both blank rather than pointing at a route with no id, which would land on the
+            // metrics list or the unfiltered comparisons table and read as "we found everything"
+            // when the truth is that this call was not filed under anything.
+            metricsUrl: correlationId.length === 0 ? "" : buildMetricsUrl(correlationId),
+
+            comparisonsUrl:
+                correlationId.length === 0 ? "" : buildComparisonsUrl(correlationId)
         };
     }
 
