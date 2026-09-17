@@ -38,12 +38,17 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
         /// supplied rather than read here so the caller keeps the exact value written to
         /// UpdatedDate. That value is the caller's lease token: re-asserting the claim later with
         /// notUpdatedAfter set to it succeeds only while nobody has taken the row back.
+        ///
+        /// Settling a record onto a terminal status is the same operation with
+        /// <paramref name="isProcessed"/> true, which is what makes the terminal write itself
+        /// prove the lease rather than trusting a check that ran before it.
         /// </summary>
         ValueTask<bool> TryClaimFhirRecordAsync(
             Guid fhirRecordId,
             StatusType expectedStatus,
             StatusType claimedStatus,
             DateTimeOffset claimedDate,
+            bool isProcessed,
             DateTimeOffset? notUpdatedAfter = null,
             CancellationToken cancellationToken = default);
 

@@ -101,6 +101,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             StatusType expectedStatus,
             StatusType claimedStatus,
             DateTimeOffset claimedDate,
+            bool isProcessed,
             DateTimeOffset? notUpdatedAfter = null,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
@@ -115,6 +116,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                     claimedStatus,
                     claimedDate,
                     claimedBy,
+                    isProcessed,
                     notUpdatedAfter,
                     cancellationToken);
 

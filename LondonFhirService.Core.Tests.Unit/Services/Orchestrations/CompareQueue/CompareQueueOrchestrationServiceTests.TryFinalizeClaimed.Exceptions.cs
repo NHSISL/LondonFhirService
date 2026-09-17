@@ -1,11 +1,13 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
+using LondonFhirService.Core.Models.Orchestrations.CompareQueue;
 using LondonFhirService.Core.Models.Orchestrations.CompareQueue.Exceptions;
 using Moq;
 using Xeptions;
@@ -17,13 +19,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
     {
         [Theory]
         [MemberData(nameof(FhirRecordDependencyValidationExceptions))]
-        public async Task ShouldThrowDependencyValidationExceptionOnChangeFhirRecordStatusAndLogItAsync(
+        public async Task ShouldThrowDependencyValidationExceptionOnFinalizeAndLogItAsync(
             Xeption dependencyValidationException)
         {
             // given
-            Guid randomFhirRecordId = Guid.NewGuid();
-            Guid inputFhirRecordId = randomFhirRecordId;
-            StatusType inputStatus = StatusType.Processing;
+            CompareQueueItem inputCompareQueueItem = CreateClaimedCompareQueueItem();
 
             var expectedCompareQueueOrchestrationDependencyValidationException =
                 new CompareQueueOrchestrationDependencyValidationException(
@@ -31,94 +31,98 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                         "fix errors and try again.",
                     innerException: dependencyValidationException.InnerException as Xeption);
 
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(GetRandomDateTimeOffset());
+
             this.fhirRecordServiceMock.Setup(service =>
-                service.RetrieveFhirRecordByIdAsync(It.IsAny<Guid>()))
-                    .ThrowsAsync(dependencyValidationException);
+                service.TryClaimFhirRecordAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<DateTimeOffset?>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(dependencyValidationException);
 
             // when
-            ValueTask changeFhirRecordStatusTask =
-                this.compareQueueOrchestrationService
-                    .ChangeFhirRecordStatusAsync(inputFhirRecordId, inputStatus);
+            ValueTask<bool> finalizeTask = this.compareQueueOrchestrationService
+                .TryFinalizeClaimedFhirRecordAsync(inputCompareQueueItem, StatusType.Failed);
 
             CompareQueueOrchestrationDependencyValidationException
                 actualCompareQueueOrchestrationDependencyValidationException =
                     await Assert.ThrowsAsync<CompareQueueOrchestrationDependencyValidationException>(
-                        testCode: changeFhirRecordStatusTask.AsTask);
+                        testCode: finalizeTask.AsTask);
 
             // then
             actualCompareQueueOrchestrationDependencyValidationException
                 .Should().BeEquivalentTo(expectedCompareQueueOrchestrationDependencyValidationException);
-
-            this.fhirRecordServiceMock.Verify(service =>
-                service.RetrieveFhirRecordByIdAsync(It.IsAny<Guid>()),
-                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedCompareQueueOrchestrationDependencyValidationException))),
                         Times.Once);
 
-            this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
-            this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
         [MemberData(nameof(FhirRecordDependencyExceptions))]
-        public async Task ShouldThrowDependencyExceptionOnChangeFhirRecordStatusAndLogItAsync(
+        public async Task ShouldThrowDependencyExceptionOnFinalizeAndLogItAsync(
             Xeption dependencyException)
         {
             // given
-            Guid randomFhirRecordId = Guid.NewGuid();
-            Guid inputFhirRecordId = randomFhirRecordId;
-            StatusType inputStatus = StatusType.Processing;
+            CompareQueueItem inputCompareQueueItem = CreateClaimedCompareQueueItem();
 
             var expectedCompareQueueOrchestrationDependencyException =
                 new CompareQueueOrchestrationDependencyException(
                     message: "Compare queue orchestration dependency error occurred, please contact support.",
                     innerException: dependencyException.InnerException as Xeption);
 
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(GetRandomDateTimeOffset());
+
             this.fhirRecordServiceMock.Setup(service =>
-                service.RetrieveFhirRecordByIdAsync(It.IsAny<Guid>()))
-                    .ThrowsAsync(dependencyException);
+                service.TryClaimFhirRecordAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<DateTimeOffset?>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(dependencyException);
 
             // when
-            ValueTask changeFhirRecordStatusTask =
-                this.compareQueueOrchestrationService
-                    .ChangeFhirRecordStatusAsync(inputFhirRecordId, inputStatus);
+            ValueTask<bool> finalizeTask = this.compareQueueOrchestrationService
+                .TryFinalizeClaimedFhirRecordAsync(inputCompareQueueItem, StatusType.Completed);
 
             CompareQueueOrchestrationDependencyException
                 actualCompareQueueOrchestrationDependencyException =
                     await Assert.ThrowsAsync<CompareQueueOrchestrationDependencyException>(
-                        testCode: changeFhirRecordStatusTask.AsTask);
+                        testCode: finalizeTask.AsTask);
 
             // then
             actualCompareQueueOrchestrationDependencyException
                 .Should().BeEquivalentTo(expectedCompareQueueOrchestrationDependencyException);
-
-            this.fhirRecordServiceMock.Verify(service =>
-                service.RetrieveFhirRecordByIdAsync(It.IsAny<Guid>()),
-                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedCompareQueueOrchestrationDependencyException))),
                         Times.Once);
 
-            this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
-            this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldThrowServiceExceptionOnChangeFhirRecordStatusAndLogItAsync()
+        public async Task ShouldThrowServiceExceptionOnFinalizeAndLogItAsync()
         {
             // given
-            Guid randomFhirRecordId = Guid.NewGuid();
-            Guid inputFhirRecordId = randomFhirRecordId;
-            StatusType inputStatus = StatusType.Processing;
+            CompareQueueItem inputCompareQueueItem = CreateClaimedCompareQueueItem();
             var serviceException = new Exception();
 
             var failedCompareQueueOrchestrationServiceException =
@@ -132,37 +136,48 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     message: "Compare queue orchestration service error occurred, please contact support.",
                     innerException: failedCompareQueueOrchestrationServiceException);
 
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(GetRandomDateTimeOffset());
+
             this.fhirRecordServiceMock.Setup(service =>
-                service.RetrieveFhirRecordByIdAsync(It.IsAny<Guid>()))
-                    .ThrowsAsync(serviceException);
+                service.TryClaimFhirRecordAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<DateTimeOffset?>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(serviceException);
 
             // when
-            ValueTask changeFhirRecordStatusTask =
-                this.compareQueueOrchestrationService
-                    .ChangeFhirRecordStatusAsync(inputFhirRecordId, inputStatus);
+            ValueTask<bool> finalizeTask = this.compareQueueOrchestrationService
+                .TryFinalizeClaimedFhirRecordAsync(inputCompareQueueItem, StatusType.Failed);
 
             CompareQueueOrchestrationServiceException
                 actualCompareQueueOrchestrationServiceException =
                     await Assert.ThrowsAsync<CompareQueueOrchestrationServiceException>(
-                        testCode: changeFhirRecordStatusTask.AsTask);
+                        testCode: finalizeTask.AsTask);
 
             // then
             actualCompareQueueOrchestrationServiceException
                 .Should().BeEquivalentTo(expectedCompareQueueOrchestrationServiceException);
-
-            this.fhirRecordServiceMock.Verify(service =>
-                service.RetrieveFhirRecordByIdAsync(It.IsAny<Guid>()),
-                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogErrorAsync(It.Is(SameExceptionAs(
                     expectedCompareQueueOrchestrationServiceException))),
                         Times.Once);
 
-            this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
-            this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
+
+        private CompareQueueItem CreateClaimedCompareQueueItem() =>
+            new CompareQueueItem
+            {
+                SecondaryFhirRecord = CreateRandomFhirRecord(),
+                ClaimedAt = GetRandomDateTimeOffset()
+            };
     }
 }

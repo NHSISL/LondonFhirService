@@ -64,6 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     It.IsAny<StatusType>(),
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     It.IsAny<DateTimeOffset?>()))
                         .ReturnsAsync(true);
 
@@ -88,6 +89,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     StatusType.Pending,
                     StatusType.Processing,
                     inputDateTimeOffset,
+                    false,
                     null),
                         Times.Once);
         }
@@ -145,6 +147,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     StatusType.Pending,
                     StatusType.Processing,
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     null))
                         .ReturnsAsync(true);
 
@@ -177,6 +180,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     StatusType.Pending,
                     StatusType.Processing,
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     null),
                         Times.Once);
 
@@ -224,6 +228,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     StatusType.Pending,
                     StatusType.Processing,
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     null))
                         .ReturnsAsync(false);
 
@@ -248,6 +253,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     StatusType.Pending,
                     StatusType.Processing,
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     null),
                         Times.Exactly(3));
 
@@ -301,6 +307,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     StatusType.Processing,
                     StatusType.Processing,
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     expectedLeaseExpiry))
                         .ReturnsAsync(true);
 
@@ -326,6 +333,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     StatusType.Processing,
                     StatusType.Processing,
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     expectedLeaseExpiry),
                         Times.Once);
         }

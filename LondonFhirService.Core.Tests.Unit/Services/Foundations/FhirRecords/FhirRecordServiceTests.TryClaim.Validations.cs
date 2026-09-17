@@ -42,6 +42,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     GetRandomDateTimeOffset(),
+                    isProcessed: false,
                     cancellationToken: TestContext.Current.CancellationToken);
 
             FhirRecordValidationException actualFhirRecordValidationException =
@@ -68,6 +69,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()),
                         Times.Never);

@@ -39,6 +39,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputClaimedStatus,
                     claimedDate,
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
@@ -49,6 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputExpectedStatus,
                 inputClaimedStatus,
                 claimedDate,
+                false,
                 inputNotUpdatedAfter,
                 cancellationToken: TestContext.Current.CancellationToken);
 
@@ -62,6 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputClaimedStatus,
                     claimedDate,
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
@@ -105,6 +108,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputClaimedStatus,
                     claimedDate,
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
@@ -115,6 +119,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputExpectedStatus,
                 inputClaimedStatus,
                 claimedDate,
+                false,
                 inputNotUpdatedAfter,
                 cancellationToken: TestContext.Current.CancellationToken);
 
@@ -128,6 +133,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputClaimedStatus,
                     claimedDate,
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
@@ -170,6 +176,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputClaimedStatus,
                     claimedDate,
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     nullNotUpdatedAfter,
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
@@ -180,6 +187,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputExpectedStatus,
                 inputClaimedStatus,
                 claimedDate,
+                isProcessed: false,
                 cancellationToken: TestContext.Current.CancellationToken);
 
             // then
@@ -192,6 +200,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputClaimedStatus,
                     claimedDate,
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     nullNotUpdatedAfter,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
@@ -236,12 +245,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
-                        .Callback<Guid, StatusType, StatusType, DateTimeOffset, string, DateTimeOffset?,
-                            CancellationToken>(
+                        .Callback<Guid, StatusType, StatusType, DateTimeOffset, string, bool,
+                            DateTimeOffset?, CancellationToken>(
                             (fhirRecordId, expectedStatus, claimedStatus, claimedDate, claimedBy,
-                                notUpdatedAfter, _) =>
+                                isProcessed, notUpdatedAfter, _) =>
                             {
                                 actualClaimedDate = claimedDate;
                                 actualNotUpdatedAfter = notUpdatedAfter;
@@ -254,6 +264,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputExpectedStatus,
                 inputClaimedStatus,
                 expectedClaimedDate,
+                false,
                 inputNotUpdatedAfter,
                 cancellationToken: TestContext.Current.CancellationToken);
 
@@ -270,6 +281,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputClaimedStatus,
                     expectedClaimedDate,
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()),
                         Times.Once);

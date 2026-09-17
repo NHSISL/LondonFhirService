@@ -12,7 +12,20 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
     public interface ICompareQueueOrchestrationService
     {
         ValueTask<CompareQueueItem> GetUnprocessedRecordAsync();
-        ValueTask ChangeFhirRecordStatusAsync(Guid fhirRecordId, StatusType status);
+
+        /// <summary>
+        /// Settles the secondary record onto a terminal status, but only while this worker still
+        /// holds the lease - the statement carries the ownership test, so there is no window
+        /// between checking and writing. False means the row is no longer Processing under this
+        /// worker's token and nothing was written.
+        ///
+        /// It has to be one statement. Completed and Failed are both terminal and nothing
+        /// reclaims them, so a worker that checked its claim, lost the lease, and then wrote
+        /// would bury a comparison the row's new holder was still performing.
+        /// </summary>
+        ValueTask<bool> TryFinalizeClaimedFhirRecordAsync(
+            CompareQueueItem compareQueueItem,
+            StatusType terminalStatus);
 
         /// <summary>
         /// Completes the primary record of a pair, unless it already is. The primary is shared by

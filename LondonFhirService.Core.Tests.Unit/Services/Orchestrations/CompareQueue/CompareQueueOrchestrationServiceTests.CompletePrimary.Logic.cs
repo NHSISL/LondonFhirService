@@ -124,6 +124,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     It.IsAny<StatusType>(),
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(true);
@@ -145,6 +146,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     StatusType.Processing,
                     StatusType.Processing,
                     retainedAt,
+                    It.IsAny<bool>(),
                     claimedAt,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
@@ -172,6 +174,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     It.IsAny<StatusType>(),
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<bool>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(false);

@@ -173,6 +173,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
                     It.IsAny<string>(),
+                    It.IsAny<bool>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(1);
@@ -183,6 +184,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 expectedStatus: StatusType.Pending,
                 claimedStatus: StatusType.Processing,
                 claimedDate: claimedDate,
+                isProcessed: false,
                 cancellationToken: TestContext.Current.CancellationToken);
 
             // then
@@ -200,6 +202,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     StatusType.Processing,
                     claimedDate,
                     expectedClaimedBy,
+                    It.IsAny<bool>(),
                     null,
                     It.IsAny<CancellationToken>()),
                         Times.Once);

@@ -30,6 +30,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             StatusType claimedStatus,
             DateTimeOffset claimedDate,
             string claimedBy,
+            bool isProcessed,
             DateTimeOffset? notUpdatedAfter,
             CancellationToken cancellationToken = default) =>
             await this.FhirRecords
@@ -45,6 +46,18 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                         && (notUpdatedAfter == null || fhirRecord.UpdatedDate <= notUpdatedAfter))
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(fhirRecord => fhirRecord.Status, claimedStatus)
+
+                    // Always written, so that settling a record can set it in the same statement
+                    // that proves the lease is still held. The claim and reclaim arms pass false,
+                    // which is a no-op against the states they can reach - a row is Pending or
+                    // stale Processing there, and neither is processed.
+                    .SetProperty(fhirRecord => fhirRecord.IsProcessed, isProcessed)
+
+                    // The value here is the caller's lease token, so the column's precision is
+                    // load-bearing: it carries only IsRequired() today, which is
+                    // datetimeoffset(7). Adding HasPrecision to it would round stored values and
+                    // a rounded-up UpdatedDate would sit past the token, turning every fenced
+                    // write into a silent no-op.
                     .SetProperty(fhirRecord => fhirRecord.UpdatedDate, claimedDate)
 
                     // FhirRecord is IAuditable, and ExecuteUpdateAsync goes round the change

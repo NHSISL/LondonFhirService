@@ -38,6 +38,21 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             this.loggingBroker = loggingBroker;
         }
 
+        /// <summary>
+        /// Reports what the statement actually did, not why. Zero rows means the record is no
+        /// longer Processing under this worker's token - usually because the lease expired and
+        /// another worker took it over, but the same result appears if this worker already
+        /// settled the row and came back through the catch arm. The statement cannot tell those
+        /// apart, so neither does the message.
+        /// </summary>
+        private static string LeaseLostMessage(
+            CompareQueueItem compareQueueItem,
+            StatusType terminalStatus) =>
+            $"Settling CorrelationId: {compareQueueItem.SecondaryFhirRecord.CorrelationId} as " +
+            $"{terminalStatus} matched no rows - the record is no longer Processing under this " +
+            "worker's lease, so nothing was written. Whichever worker holds it now reports its " +
+            "own outcome.";
+
         public ValueTask ProcessFhirRecordsAsync() =>
             TryCatch(async () =>
             {
@@ -50,34 +65,24 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     {
                         if (compareQueueItem.PrimaryFhirRecord == null)
                         {
-                            // Fenced like the other two terminal writes. The primary lookup happens
-                            // after the claim, so a slow one leaves room for the lease to expire and
-                            // the row to be taken over - and this branch would then mark the new
-                            // holder's row Failed, which nothing reclaims, hiding a comparison that
-                            // worker may have been about to complete with a primary this one simply
-                            // read too early.
-                            bool stillClaimedWithoutPrimary = await this.compareQueueOrchestrationService
-                                .TryRetainClaimAsync(compareQueueItem);
-
-                            if (stillClaimedWithoutPrimary is false)
-                            {
-                                await this.loggingBroker.LogWarningAsync(
-                                    $"Not marking CorrelationId: " +
-                                    $"{compareQueueItem.SecondaryFhirRecord.CorrelationId} as failed " +
-                                    "for a missing primary; its lease expired mid-flight and another " +
-                                    "worker has taken the record over.");
-
-                                continue;
-                            }
-
                             await this.loggingBroker.LogWarningAsync(
                                 $"CompareQueueItem with CorrelationId: " +
                                 $"{compareQueueItem.SecondaryFhirRecord.CorrelationId} does not have " +
                                 $"a primary record. Marking as failed without comparison.");
 
-                            await this.compareQueueOrchestrationService
-                                .ChangeFhirRecordStatusAsync(
-                                    compareQueueItem.SecondaryFhirRecord.Id, StatusType.Failed);
+                            // The primary is looked up after the claim, so a slow lookup is
+                            // exactly where the lease has room to expire. The write carries the
+                            // ownership test rather than following one, so it cannot land on a
+                            // row another worker has since taken over.
+                            bool settledWithoutPrimary = await this.compareQueueOrchestrationService
+                                .TryFinalizeClaimedFhirRecordAsync(
+                                    compareQueueItem, StatusType.Failed);
+
+                            if (settledWithoutPrimary is false)
+                            {
+                                await this.loggingBroker.LogWarningAsync(
+                                    LeaseLostMessage(compareQueueItem, StatusType.Failed));
+                            }
 
                             continue;
                         }
@@ -109,11 +114,18 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 
                         compareQueueItem.FhirRecordDifference = fhirRecordDifference;
 
-                        // Checked here, immediately before anything is written. A comparison that
-                        // outran its lease has already been handed to another worker, which is
-                        // producing the same result - persisting ours too would put two difference
-                        // rows against one pair. Nothing is lost by stopping: the worker that took
-                        // the row over finishes it.
+                        // Still a check rather than a fence, and it has to be: the insert below
+                        // is not a status write, so no status guard can arbitrate it. This narrows
+                        // the window instead of closing it - if the lease expires between here and
+                        // the insert, two workers can write a difference row for one pair. The
+                        // settle that follows IS fenced, so the record itself cannot be wrongly
+                        // finished; only the difference row can duplicate.
+                        //
+                        // The order is load-bearing. TryRetainClaimAsync advances
+                        // compareQueueItem.ClaimedAt on success, so the settle below carries the
+                        // fresh token. Move the settle above this call and it would present a
+                        // token the row has already moved past, match nothing, and silently stop
+                        // completing records.
                         bool stillClaimed = await this.compareQueueOrchestrationService
                             .TryRetainClaimAsync(compareQueueItem);
 
@@ -132,9 +144,15 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                         await this.compareQueueOrchestrationService
                             .PersistFhirRecordDifferencesAsync(compareQueueItem);
 
-                        await this.compareQueueOrchestrationService
-                            .ChangeFhirRecordStatusAsync(
-                                compareQueueItem.SecondaryFhirRecord.Id, StatusType.Completed);
+                        bool settled = await this.compareQueueOrchestrationService
+                            .TryFinalizeClaimedFhirRecordAsync(
+                                compareQueueItem, StatusType.Completed);
+
+                        if (settled is false)
+                        {
+                            await this.loggingBroker.LogWarningAsync(
+                                LeaseLostMessage(compareQueueItem, StatusType.Completed));
+                        }
 
                         // Unconditional: the "is it already completed" test lives in the database
                         // statement now. The primary is shared by every secondary of this
@@ -153,30 +171,23 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                                 $"SecondaryFhirRecordId: {compareQueueItem.SecondaryFhirRecord?.Id}.",
                                 ex));
 
-                        // Fenced exactly like the success path, and for a worse reason. Failed is
-                        // terminal and nothing reclaims it - GetUnprocessedRecordAsync only takes
-                        // Pending or stale Processing rows - so a worker whose lease expired
-                        // mid-flight could bury a record another worker was comparing perfectly
-                        // well, and that record would never be compared again. Writing nothing is
-                        // safe: the worker that holds the row reports its own outcome.
-                        bool stillClaimedOnFailure = await this.compareQueueOrchestrationService
-                            .TryRetainClaimAsync(compareQueueItem);
+                        // Fenced for a worse reason than the success path. Failed is terminal
+                        // and nothing reclaims it - GetUnprocessedRecordAsync only takes Pending
+                        // or stale Processing rows - so a worker whose lease expired mid-flight
+                        // could bury a record another worker was comparing perfectly well, and
+                        // that record would never be compared again. Writing nothing is safe: the
+                        // worker that holds the row reports its own outcome.
+                        bool settledOnFailure = await this.compareQueueOrchestrationService
+                            .TryFinalizeClaimedFhirRecordAsync(
+                                compareQueueItem, StatusType.Failed);
 
-                        if (stillClaimedOnFailure is false)
+                        if (settledOnFailure is false)
                         {
                             await this.loggingBroker.LogWarningAsync(
-                                $"Not marking CorrelationId: " +
-                                $"{compareQueueItem.SecondaryFhirRecord.CorrelationId} as failed; " +
-                                "its lease expired mid-flight and another worker has taken the " +
-                                "record over. Marking it failed here would be terminal and would " +
-                                "bury a comparison that worker may yet complete.");
+                                LeaseLostMessage(compareQueueItem, StatusType.Failed));
 
                             continue;
                         }
-
-                        await this.compareQueueOrchestrationService
-                            .ChangeFhirRecordStatusAsync(
-                                compareQueueItem.SecondaryFhirRecord.Id, StatusType.Failed);
 
                         if (compareQueueItem.PrimaryFhirRecord is not null)
                         {

@@ -143,6 +143,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                         expectedStatus: claimCandidate.Status,
                         claimedStatus: StatusType.Processing,
                         claimedDate: currentDateTime,
+                        isProcessed: false,
 
                         notUpdatedAfter: claimCandidate.Status == StatusType.Processing
                             ? leaseExpiryDateTime
@@ -241,6 +242,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     expectedStatus: StatusType.Processing,
                     claimedStatus: StatusType.Processing,
                     claimedDate: currentDateTime,
+                    isProcessed: false,
                     notUpdatedAfter: compareQueueItem.ClaimedAt);
 
                 // The token has to move with the lease. This call rewrote UpdatedDate, so the
@@ -286,22 +288,42 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 }
             });
 
-        public ValueTask ChangeFhirRecordStatusAsync(Guid fhirRecordId, StatusType status) =>
+        /// <summary>
+        /// One statement, which is the whole point. This replaced a read-then-write that ran
+        /// behind a separate TryRetainClaimAsync check: the check could pass, the lease expire,
+        /// another worker reclaim the row, and this write then put a terminal status on it -
+        /// burying a comparison that worker was still performing, because nothing reclaims
+        /// Completed or Failed. Carrying the lease token into the statement removes the window
+        /// rather than narrowing it.
+        ///
+        /// It also stops dragging the whole row through memory. The read-then-write loaded and
+        /// rewrote every column, including a JsonPayload holding an entire FHIR bundle, to change
+        /// two fields.
+        ///
+        /// ClaimedAt is deliberately not advanced on success, unlike TryRetainClaimAsync: the row
+        /// has left Processing, so no later re-assertion against it can or should match.
+        /// </summary>
+        public ValueTask<bool> TryFinalizeClaimedFhirRecordAsync(
+            CompareQueueItem compareQueueItem,
+            StatusType terminalStatus) =>
             TryCatch(async () =>
             {
-                ValidateChangeFhirRecordStatus(fhirRecordId);
+                ValidateFinalizeClaimedFhirRecord(compareQueueItem, terminalStatus);
 
-                FhirRecord maybeFhirRecord =
-                    await this.fhirRecordService.RetrieveFhirRecordByIdAsync(fhirRecordId);
+                DateTimeOffset currentDateTime =
+                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
-                maybeFhirRecord.Status = status;
+                return await this.fhirRecordService.TryClaimFhirRecordAsync(
+                    compareQueueItem.SecondaryFhirRecord.Id,
+                    expectedStatus: StatusType.Processing,
+                    claimedStatus: terminalStatus,
+                    claimedDate: currentDateTime,
 
-                if (status == StatusType.Completed || status == StatusType.Failed)
-                {
-                    maybeFhirRecord.IsProcessed = true;
-                }
-
-                await this.fhirRecordService.ModifyFhirRecordAsync(maybeFhirRecord);
+                    // Terminal rows are processed rows. The read-then-write this replaced derived
+                    // the flag from the status; the validation above keeps that honest by
+                    // refusing a non-terminal status here.
+                    isProcessed: true,
+                    notUpdatedAfter: compareQueueItem.ClaimedAt);
             });
 
         public ValueTask PersistFhirRecordDifferencesAsync(CompareQueueItem compareQueueItem) =>
