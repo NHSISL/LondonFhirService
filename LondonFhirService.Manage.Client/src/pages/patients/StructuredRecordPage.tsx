@@ -74,8 +74,13 @@ export function StructuredRecordPage() {
                 </Col>
             </Row>
 
+            {/*
+                Capped while the panels are stacked, because a single column of fields stretched
+                across a large screen is unreadable. Uncapped from xl, where the panels sit side by
+                side and the width is what lets them.
+            */}
             <Row className="p-2">
-                <Col lg={9} xl={7}>
+                <Col lg={9} xl={12}>
                     <StructuredRecordForm
                         values={values}
                         errors={errors}
