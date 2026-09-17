@@ -25,10 +25,51 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.CompareQueue
     [Collection(nameof(ApiTestCollection))]
     public class FhirRecordClaimTests
     {
+        /// <summary>
+        /// Stands in for whatever the security audit broker yields. The service passes that value
+        /// down; these tests drive the broker directly, so they supply their own and assert it
+        /// reaches the column.
+        /// </summary>
+        private const string TestActor = "integration-test-actor";
+
         private readonly ApiBroker apiBroker;
 
         public FhirRecordClaimTests(ApiBroker apiBroker) =>
             this.apiBroker = apiBroker;
+
+        [Fact]
+        public async Task ShouldStampTheActorOnBothConditionalUpdatesAsync()
+        {
+            // given
+            FhirRecord fhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Pending,
+                updatedDate: DateTimeOffset.UtcNow.AddHours(-1));
+
+            // when
+            await ClaimAsync(
+                fhirRecord.Id, StatusType.Pending, StatusType.Processing, notUpdatedAfter: null);
+
+            FhirRecord claimedFhirRecord = await SelectFhirRecordAsync(fhirRecord.Id);
+
+            await TransitionAsync(
+                fhirRecord.Id,
+                excludedStatus: StatusType.Completed,
+                newStatus: StatusType.Completed,
+                isProcessed: true);
+
+            FhirRecord completedFhirRecord = await SelectFhirRecordAsync(fhirRecord.Id);
+
+            // then
+            // FhirRecord is IAuditable, and both of these are ExecuteUpdateAsync statements, which
+            // go round the change tracker - so nothing stamps the actor unless the statement says
+            // so. Asserted against the real column rather than a mock because the whole failure
+            // mode is a SetProperty that never reaches SQL: a row whose UpdatedDate has moved
+            // while UpdatedBy still names whoever last touched it through the audited path.
+            claimedFhirRecord.UpdatedBy.Should().Be(TestActor);
+            completedFhirRecord.UpdatedBy.Should().Be(TestActor);
+
+            await DeleteFhirRecordAsync(fhirRecord.Id);
+        }
 
         [Fact]
         public async Task ShouldClaimAPendingRecordExactlyOnceAsync()
@@ -216,7 +257,8 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.CompareQueue
                 excludedStatus,
                 newStatus,
                 isProcessed,
-                updatedDate: DateTimeOffset.UtcNow);
+                updatedDate: DateTimeOffset.UtcNow,
+                updatedBy: TestActor);
         }
 
         private async ValueTask<int> ClaimAsync(
@@ -233,6 +275,7 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.CompareQueue
                 expectedStatus,
                 claimedStatus,
                 claimedDate: DateTimeOffset.UtcNow,
+                claimedBy: TestActor,
                 notUpdatedAfter: notUpdatedAfter);
         }
 

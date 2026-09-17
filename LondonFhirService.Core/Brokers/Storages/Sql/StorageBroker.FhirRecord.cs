@@ -29,6 +29,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             StatusType expectedStatus,
             StatusType claimedStatus,
             DateTimeOffset claimedDate,
+            string claimedBy,
             DateTimeOffset? notUpdatedAfter,
             CancellationToken cancellationToken = default) =>
             await this.FhirRecords
@@ -44,7 +45,13 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                         && (notUpdatedAfter == null || fhirRecord.UpdatedDate <= notUpdatedAfter))
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(fhirRecord => fhirRecord.Status, claimedStatus)
-                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, claimedDate),
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, claimedDate)
+
+                    // FhirRecord is IAuditable, and ExecuteUpdateAsync goes round the change
+                    // tracker - so nothing stamps the actor unless the statement does. Moving
+                    // UpdatedDate while leaving UpdatedBy behind produces a row that says it was
+                    // touched, at a time, by whoever last touched it through a different path.
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedBy, claimedBy),
                     cancellationToken);
 
         public async ValueTask<int> UpdateFhirRecordStatusAsync(
@@ -53,6 +60,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             StatusType newStatus,
             bool isProcessed,
             DateTimeOffset updatedDate,
+            string updatedBy,
             CancellationToken cancellationToken = default) =>
             await this.FhirRecords
                 .Where(fhirRecord =>
@@ -67,7 +75,14 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                     // Passed in rather than derived from newStatus: deciding which statuses are
                     // terminal is the caller's business, not the broker's.
                     .SetProperty(fhirRecord => fhirRecord.IsProcessed, isProcessed)
-                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, updatedDate),
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, updatedDate)
+
+                    // Same reason as the claim above, and here it is a restoration rather than a
+                    // precaution: the read-then-write path this replaced ran through
+                    // ApplyModifyAuditValuesAsync, so completing a primary used to stamp the
+                    // actor. Dropping it would have left the previous actor on a row whose
+                    // UpdatedDate had moved.
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedBy, updatedBy),
                     cancellationToken);
 
         public async ValueTask<FhirRecord> SelectFhirRecordByIdAsync(

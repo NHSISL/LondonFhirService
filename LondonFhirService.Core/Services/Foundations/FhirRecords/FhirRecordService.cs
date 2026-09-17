@@ -77,12 +77,20 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 DateTimeOffset updatedDate =
                     await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
+                // The same actor ApplyModifyAuditValuesAsync would have written, from the same
+                // broker and the same ClaimsPrincipal - so the conditional statement records what
+                // the read-then-write path recorded, rather than inventing an identity for the
+                // worker. With no HttpContext behind it, that value is "anonymous", which is
+                // exactly what the audited path stamped here before.
+                string updatedBy = await this.securityAuditBroker.GetUserIdAsync();
+
                 int updatedCount = await this.storageBroker.UpdateFhirRecordStatusAsync(
                     fhirRecordId,
                     excludedStatus,
                     newStatus,
                     isProcessed,
                     updatedDate,
+                    updatedBy,
                     cancellationToken);
 
                 return updatedCount == 1;
@@ -99,11 +107,14 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             {
                 ValidateFhirRecordId(fhirRecordId);
 
+                string claimedBy = await this.securityAuditBroker.GetUserIdAsync();
+
                 int claimedCount = await this.storageBroker.ClaimFhirRecordAsync(
                     fhirRecordId,
                     expectedStatus,
                     claimedStatus,
                     claimedDate,
+                    claimedBy,
                     notUpdatedAfter,
                     cancellationToken);
 

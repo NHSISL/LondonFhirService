@@ -34,6 +34,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             StatusType expectedStatus,
             StatusType claimedStatus,
             DateTimeOffset claimedDate,
+            string claimedBy,
             DateTimeOffset? notUpdatedAfter,
             CancellationToken cancellationToken = default);
 
@@ -49,6 +50,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             StatusType newStatus,
             bool isProcessed,
             DateTimeOffset updatedDate,
+            string updatedBy,
             CancellationToken cancellationToken = default);
 
         ValueTask<FhirRecord> SelectFhirRecordByIdAsync(

@@ -67,6 +67,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     It.IsAny<StatusType>(),
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<string>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()),
                         Times.Never);

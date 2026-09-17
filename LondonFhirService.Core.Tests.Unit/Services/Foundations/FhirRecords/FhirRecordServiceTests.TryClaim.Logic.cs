@@ -38,6 +38,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
+                    It.IsAny<string>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
@@ -60,9 +61,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
+                    It.IsAny<string>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
+
+            // Fetched and put into the statement by hand, because ExecuteUpdateAsync goes
+            // round the change tracker and nothing else would stamp the actor on an
+            // IAuditable row whose UpdatedDate this call moves.
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -95,6 +104,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
+                    It.IsAny<string>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
@@ -117,9 +127,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
+                    It.IsAny<string>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
+
+            // Fetched and put into the statement by hand, because ExecuteUpdateAsync goes
+            // round the change tracker and nothing else would stamp the actor on an
+            // IAuditable row whose UpdatedDate this call moves.
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -151,6 +169,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
+                    It.IsAny<string>(),
                     nullNotUpdatedAfter,
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(changedRowCount);
@@ -172,9 +191,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     claimedDate,
+                    It.IsAny<string>(),
                     nullNotUpdatedAfter,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
+
+            // Fetched and put into the statement by hand, because ExecuteUpdateAsync goes
+            // round the change tracker and nothing else would stamp the actor on an
+            // IAuditable row whose UpdatedDate this call moves.
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -208,10 +235,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     It.IsAny<StatusType>(),
                     It.IsAny<StatusType>(),
                     It.IsAny<DateTimeOffset>(),
+                    It.IsAny<string>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
-                        .Callback<Guid, StatusType, StatusType, DateTimeOffset, DateTimeOffset?, CancellationToken>(
-                            (fhirRecordId, expectedStatus, claimedStatus, claimedDate, notUpdatedAfter, _) =>
+                        .Callback<Guid, StatusType, StatusType, DateTimeOffset, string, DateTimeOffset?,
+                            CancellationToken>(
+                            (fhirRecordId, expectedStatus, claimedStatus, claimedDate, claimedBy,
+                                notUpdatedAfter, _) =>
                             {
                                 actualClaimedDate = claimedDate;
                                 actualNotUpdatedAfter = notUpdatedAfter;
@@ -239,9 +269,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputExpectedStatus,
                     inputClaimedStatus,
                     expectedClaimedDate,
+                    It.IsAny<string>(),
                     inputNotUpdatedAfter,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
+
+            // Fetched and put into the statement by hand, because ExecuteUpdateAsync goes
+            // round the change tracker and nothing else would stamp the actor on an
+            // IAuditable row whose UpdatedDate this call moves.
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Once);
 
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.storageBrokerMock.VerifyNoOtherCalls();
