@@ -33,6 +33,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             Guid fhirRecordId,
             StatusType excludedStatus,
             StatusType newStatus,
+            bool isProcessed,
             CancellationToken cancellationToken = default);
 
         /// <summary>

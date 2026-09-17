@@ -67,9 +67,11 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             Guid fhirRecordId,
             StatusType excludedStatus,
             StatusType newStatus,
+            bool isProcessed,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ValidateFhirRecordId(fhirRecordId);
 
                 DateTimeOffset updatedDate =
@@ -79,6 +81,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                     fhirRecordId,
                     excludedStatus,
                     newStatus,
+                    isProcessed,
                     updatedDate,
                     cancellationToken);
 

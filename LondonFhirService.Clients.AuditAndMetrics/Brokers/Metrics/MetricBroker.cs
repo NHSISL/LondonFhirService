@@ -54,6 +54,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Captured BEFORE StartActivity. StartActivity makes the replay span current, so
+            // reading Activity.Current afterwards hands back the replay span itself - restoring
+            // that after Stop() would push a stopped activity back in, which the setter refuses,
+            // leaving Activity.Current null exactly as if nothing had been restored.
+            Activity ambientActivity = Activity.Current;
+
             // Positional rather than named: the name-first and name-last overloads are both
             // applicable once the arguments are named, and the call becomes ambiguous.
             Activity activity = this.activitySource.StartActivity(
@@ -100,7 +106,6 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
             // that records a metric inline on the request thread, everything logged afterwards
             // would then reach Application Insights with no operation id. Harmless when the
             // replay runs on the drain worker; not harmless everywhere, so it is put back.
-            Activity ambientActivity = Activity.Current;
             activity.Stop();
             Activity.Current = ambientActivity;
         }

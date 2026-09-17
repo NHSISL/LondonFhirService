@@ -51,6 +51,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             Guid fhirRecordId,
             StatusType excludedStatus,
             StatusType newStatus,
+            bool isProcessed,
             DateTimeOffset updatedDate,
             CancellationToken cancellationToken = default) =>
             await this.FhirRecords
@@ -59,6 +60,13 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                         && fhirRecord.Status != excludedStatus)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(fhirRecord => fhirRecord.Status, newStatus)
+
+                    // Set here too, because the read-then-write path this replaced set it for
+                    // terminal statuses. Dropping it left every completed primary marked
+                    // unprocessed, which anything reading IsProcessed would read as still pending.
+                    // Passed in rather than derived from newStatus: deciding which statuses are
+                    // terminal is the caller's business, not the broker's.
+                    .SetProperty(fhirRecord => fhirRecord.IsProcessed, isProcessed)
                     .SetProperty(fhirRecord => fhirRecord.UpdatedDate, updatedDate),
                     cancellationToken);
 

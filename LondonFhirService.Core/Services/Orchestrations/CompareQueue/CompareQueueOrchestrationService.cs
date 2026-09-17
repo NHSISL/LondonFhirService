@@ -224,7 +224,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 await this.fhirRecordService.TryTransitionFhirRecordStatusAsync(
                     fhirRecordId,
                     excludedStatus: StatusType.Completed,
-                    newStatus: StatusType.Completed);
+                    newStatus: StatusType.Completed,
+
+                    // Completed is terminal, and the read-then-write path this replaced marked
+                    // terminal rows processed. Keeping it in step matters because the queue's own
+                    // reporting reads IsProcessed rather than Status.
+                    isProcessed: true);
             });
 
         public ValueTask ChangeFhirRecordStatusAsync(Guid fhirRecordId, StatusType status) =>

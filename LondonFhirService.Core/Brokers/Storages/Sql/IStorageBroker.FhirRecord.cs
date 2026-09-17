@@ -47,6 +47,7 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             Guid fhirRecordId,
             StatusType excludedStatus,
             StatusType newStatus,
+            bool isProcessed,
             DateTimeOffset updatedDate,
             CancellationToken cancellationToken = default);
 
