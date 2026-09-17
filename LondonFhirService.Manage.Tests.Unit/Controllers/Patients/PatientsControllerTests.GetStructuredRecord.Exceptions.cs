@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -211,6 +211,55 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
                         Times.Once);
 
             this.patientServiceMock.VerifyNoOtherCalls();
+        }
+
+        /// <summary>
+        /// A timeout has no response body by definition, so the rule above would have left the
+        /// operator with a generic wrapper title and an empty detail - on the one screen whose
+        /// purpose is explaining why a call failed. This service writes the timeout message
+        /// itself, so it is worth relaying where an arbitrary inner message is not.
+        /// </summary>
+        [Fact]
+        public async Task ShouldReturnTheTimeoutMessageOnPostGetStructuredRecordIfItTimedOutAsync()
+        {
+            // given
+            StructuredRecordRequest someStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            string expectedDetail = "Patient request timed out, please try again.";
+
+            var dependencyException =
+                new PatientServiceDependencyException(
+                    message: GetRandomString(),
+                    innerException: new TimedOutPatientServiceException(
+                        message: expectedDetail,
+                        innerException: new Xeption()));
+
+            this.patientServiceMock.Setup(service =>
+                service.GetStructuredRecordAsync(
+                    It.IsAny<StructuredRecordRequest>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(dependencyException);
+
+            // when
+            ActionResult<string> actualActionResult =
+                await this.patientsController.PostGetStructuredRecordAsync(
+                    someStructuredRecordRequest,
+                    TestContext.Current.CancellationToken);
+
+            // then
+            var actualObjectResult = actualActionResult.Result as ObjectResult;
+            actualObjectResult.Should().NotBeNull();
+
+            var actualProblemDetails = actualObjectResult.Value as ProblemDetails;
+            actualProblemDetails.Should().NotBeNull();
+            actualProblemDetails.Detail.Should().Be(expectedDetail);
+
+            this.patientServiceMock.Verify(service =>
+                service.GetStructuredRecordAsync(
+                    It.IsAny<StructuredRecordRequest>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
         }
 
         /// <summary>

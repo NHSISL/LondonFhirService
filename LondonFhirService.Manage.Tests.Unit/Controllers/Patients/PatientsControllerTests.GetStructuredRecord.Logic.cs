@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -11,6 +11,7 @@ using FluentAssertions;
 using Moq;
 using RESTFulSense.Clients.Extensions;
 
+using LondonFhirService.Core.Brokers.Correlations;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
@@ -35,8 +36,19 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             };
 
             string expectedStructuredRecord = randomStructuredRecord;
-            var expectedObjectResult = new OkObjectResult(expectedStructuredRecord);
-            var expectedActionResult = new ActionResult<string>(expectedObjectResult);
+
+            // A ContentResult carrying text/plain, not an OkObjectResult. Ok(string) is
+            // content-negotiated, so a caller asking only for application/json would have had the
+            // provider's payload serialised as a quoted JSON string - which is not the verbatim
+            // body this endpoint promises.
+            var expectedContentResult = new ContentResult
+            {
+                Content = expectedStructuredRecord,
+                ContentType = "text/plain",
+                StatusCode = null
+            };
+
+            var expectedActionResult = new ActionResult<string>(expectedContentResult);
             CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
 
             this.patientServiceMock
@@ -56,7 +68,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             // The payload goes in the body and the id goes on a header, so the page can follow the
             // call into its comparisons without the payload being wrapped to carry it.
-            this.patientsController.Response.Headers["X-Correlation-Id"]
+            this.patientsController.Response.Headers[CorrelationBroker.CorrelationIdHeaderName]
                 .ToString().Should().Be(randomCorrelationId);
 
             this.patientServiceMock

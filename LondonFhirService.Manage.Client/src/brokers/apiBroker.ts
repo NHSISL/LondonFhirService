@@ -82,7 +82,7 @@ class ApiBroker {
     }
 
     public async GetAsyncAbsolute(absoluteUri: string) {
-        return axios.get(absoluteUri, await this.config());;
+        return axios.get(absoluteUri, await this.config());
     }
 
     public async PostAsync(relativeUrl: string, data: unknown, abortSignal?: AbortSignal) {

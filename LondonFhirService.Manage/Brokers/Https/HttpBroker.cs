@@ -168,6 +168,12 @@ namespace LondonFhirService.Manage.Brokers.Https
             long startedAt,
             CancellationToken cancellationToken)
         {
+            // Checked here as well as at the public entry points. The send between them can take
+            // the whole timeout, so a caller who walked away during it is most likely to have done
+            // so by the time this runs - and stopping now costs nothing, where continuing
+            // allocates a linked source and starts a read for an answer nobody is waiting for.
+            cancellationToken.ThrowIfCancellationRequested();
+
             using CancellationTokenSource readCancellation =
                 CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 

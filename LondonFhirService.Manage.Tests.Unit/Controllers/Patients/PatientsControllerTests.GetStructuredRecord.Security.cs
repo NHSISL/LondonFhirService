@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -40,7 +40,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
                 .Where(role => string.IsNullOrEmpty(role) is false)
                 .ToList();
 
-            // When
+            // when
             var methodAttribute = methodInfo?
                 .GetCustomAttributes(attributeType, inherit: true)
                 .FirstOrDefault();
@@ -51,7 +51,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             var attribute = methodAttribute ?? controllerAttribute;
 
-            // Then
+            // then
             attribute.Should().NotBeNull();
 
             var actualAttributeValue = attributeType
@@ -81,7 +81,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             var methodInfo = controllerType.GetMethod("PostGetStructuredRecordAsync");
             Type attributeType = typeof(AllowAnonymousAttribute);
 
-            // When
+            // when
             var methodAttribute = methodInfo?
                 .GetCustomAttributes(attributeType, inherit: true)
                 .FirstOrDefault();
@@ -92,7 +92,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             var attribute = methodAttribute ?? controllerAttribute;
 
-            // Then
+            // then
             attribute.Should().BeNull();
         }
 
@@ -109,7 +109,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             var methodInfo = controllerType.GetMethod("PostGetStructuredRecordAsync");
             Type attributeType = typeof(InvisibleApiAttribute);
 
-            // When
+            // when
             var methodAttribute = methodInfo?
                 .GetCustomAttributes(attributeType, inherit: true)
                 .FirstOrDefault();
@@ -120,7 +120,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             var attribute = methodAttribute ?? controllerAttribute;
 
-            // Then
+            // then
             attribute.Should().BeNull();
         }
     }

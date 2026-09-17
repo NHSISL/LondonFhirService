@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -50,6 +50,11 @@ namespace LondonFhirService.Manage.Controllers.Patients
         {
             try
             {
+                // An already-abandoned request does no provider work. This call can hold a
+                // connection for the whole of the client's timeout, so short-circuiting a caller
+                // who has gone is worth the line.
+                cancellationToken.ThrowIfCancellationRequested();
+
                 StructuredRecordResponse structuredRecordResponse =
                     await this.patientService.GetStructuredRecordAsync(
                         structuredRecordRequest,
@@ -68,7 +73,13 @@ namespace LondonFhirService.Manage.Controllers.Patients
                         structuredRecordResponse.CorrelationId;
                 }
 
-                return Ok(structuredRecordResponse.PayloadText);
+                // Content rather than Ok, and the media type named rather than negotiated.
+                // Ok(string) is content-negotiated: a caller sending Accept: application/json
+                // with no wildcard gets the payload serialised AS a JSON string - quoted and
+                // escaped - which is not what this endpoint promises. The portal happens to send
+                // a wildcard and the host happens to leave RespectBrowserAcceptHeader off, so it
+                // reads as text today; both are someone else's setting to change.
+                return Content(structuredRecordResponse.PayloadText, "text/plain");
             }
             catch (PatientServiceValidationException patientServiceValidationException)
             {
@@ -113,10 +124,31 @@ namespace LondonFhirService.Manage.Controllers.Patients
             {
                 Title = exception.Message,
                 Status = statusCode,
-                Detail = responseBody
+
+                Detail = string.IsNullOrWhiteSpace(responseBody)
+                    ? DescribeFailureWithoutUpstreamBody(exception)
+                    : responseBody
             };
 
             return StatusCode(statusCode, problemDetails);
         }
+
+        /// <summary>
+        /// What to say when the upstream said nothing to relay.
+        ///
+        /// A timed out call has no response body by definition, so the operator was shown the
+        /// wrapper's generic title over an empty detail - on the one screen whose purpose is
+        /// explaining why a call failed. The timeout message is written by this service and worth
+        /// relaying; the wrapper's own is not.
+        ///
+        /// Deliberately narrow. Relaying any inner message would surface whatever an arbitrary
+        /// dependency failure happened to carry - including Xeption's default
+        /// "Exception of type ... was thrown", which tells an operator nothing and reads like a
+        /// leak of something internal.
+        /// </summary>
+        private static string DescribeFailureWithoutUpstreamBody(Xeption exception) =>
+            exception.InnerException is TimedOutPatientServiceException timedOutException
+                ? timedOutException.Message
+                : null;
     }
 }
