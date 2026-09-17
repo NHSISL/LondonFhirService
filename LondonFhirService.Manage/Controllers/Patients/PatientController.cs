@@ -44,7 +44,7 @@ namespace LondonFhirService.Manage.Controllers.Patients
         {
             try
             {
-                string structuredRecord = await this.patientService.GetStructuredRecord(
+                string structuredRecord = await this.patientService.GetStructuredRecordAsync(
                     structuredRecordRequest,
                     cancellationToken);
 

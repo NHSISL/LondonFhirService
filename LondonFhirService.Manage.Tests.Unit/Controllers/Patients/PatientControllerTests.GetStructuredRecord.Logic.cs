@@ -28,7 +28,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             var expectedActionResult = new ActionResult<string>(expectedObjectResult);
 
             patientServiceMock
-                .Setup(service => service.GetStructuredRecord(
+                .Setup(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(retrievedStructuredRecord);
@@ -43,7 +43,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             actualActionResult.ShouldBeEquivalentTo(expectedActionResult);
 
             patientServiceMock
-                .Verify(service => service.GetStructuredRecord(
+                .Verify(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     It.IsAny<CancellationToken>()),
                         Times.Once);
@@ -67,7 +67,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             CancellationToken inputCancellationToken = cancellationTokenSource.Token;
 
             patientServiceMock
-                .Setup(service => service.GetStructuredRecord(
+                .Setup(service => service.GetStructuredRecordAsync(
                     It.IsAny<StructuredRecordRequest>(),
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(GetRandomString());
@@ -79,7 +79,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             // then
             patientServiceMock
-                .Verify(service => service.GetStructuredRecord(
+                .Verify(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     inputCancellationToken),
                         Times.Once);

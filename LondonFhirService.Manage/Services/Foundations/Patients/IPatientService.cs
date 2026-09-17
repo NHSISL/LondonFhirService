@@ -16,7 +16,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         /// the page renders the payload, so reformatting it here would hide what the endpoint
         /// actually answered.
         /// </summary>
-        ValueTask<string> GetStructuredRecord(
+        ValueTask<string> GetStructuredRecordAsync(
             StructuredRecordRequest structuredRecordRequest,
             CancellationToken cancellationToken = default);
     }

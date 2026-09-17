@@ -36,7 +36,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             this.patientConfiguration = patientConfiguration;
         }
 
-        public ValueTask<string> GetStructuredRecord(
+        public ValueTask<string> GetStructuredRecordAsync(
             StructuredRecordRequest structuredRecordRequest,
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>

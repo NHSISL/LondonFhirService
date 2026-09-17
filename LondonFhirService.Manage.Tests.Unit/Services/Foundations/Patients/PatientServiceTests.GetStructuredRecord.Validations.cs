@@ -34,7 +34,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             // when
             ValueTask<string> getStructuredRecordTask =
-                this.patientService.GetStructuredRecord(
+                this.patientService.GetStructuredRecordAsync(
                     nullStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
@@ -76,7 +76,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             // when
             ValueTask<string> getStructuredRecordTask =
-                this.patientService.GetStructuredRecord(
+                this.patientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
@@ -120,7 +120,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             // when
             ValueTask<string> getStructuredRecordTask =
-                this.patientService.GetStructuredRecord(
+                this.patientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
@@ -195,7 +195,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             // when
             ValueTask<string> getStructuredRecordTask =
-                blankCredentialsPatientService.GetStructuredRecord(
+                blankCredentialsPatientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
@@ -259,7 +259,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             // when
             ValueTask<string> getStructuredRecordTask =
-                unconfiguredPatientService.GetStructuredRecord(
+                unconfiguredPatientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
@@ -300,7 +300,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             // when
             ValueTask<string> getStructuredRecordTask =
-                unconfiguredPatientService.GetStructuredRecord(
+                unconfiguredPatientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
@@ -335,7 +335,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             // when
             ValueTask<string> getStructuredRecordTask =
-                this.patientService.GetStructuredRecord(
+                this.patientService.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 

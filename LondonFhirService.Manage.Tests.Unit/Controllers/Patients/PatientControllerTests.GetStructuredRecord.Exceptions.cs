@@ -31,7 +31,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
                 new ActionResult<string>(expectedBadRequestObjectResult);
 
             this.patientServiceMock.Setup(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     It.IsAny<StructuredRecordRequest>(),
                     It.IsAny<CancellationToken>()))
                         .ThrowsAsync(validationException);
@@ -46,7 +46,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             actualActionResult.ShouldBeEquivalentTo(expectedActionResult);
 
             this.patientServiceMock.Verify(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     It.IsAny<StructuredRecordRequest>(),
                     It.IsAny<CancellationToken>()),
                         Times.Once);
@@ -70,7 +70,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
                 new ActionResult<string>(expectedInternalServerErrorObjectResult);
 
             this.patientServiceMock.Setup(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     It.IsAny<StructuredRecordRequest>(),
                     It.IsAny<CancellationToken>()))
                         .ThrowsAsync(serverException);
@@ -85,7 +85,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             actualActionResult.ShouldBeEquivalentTo(expectedActionResult);
 
             this.patientServiceMock.Verify(service =>
-                service.GetStructuredRecord(
+                service.GetStructuredRecordAsync(
                     It.IsAny<StructuredRecordRequest>(),
                     It.IsAny<CancellationToken>()),
                         Times.Once);

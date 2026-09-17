@@ -56,7 +56,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         .ReturnsAsync(randomStructuredRecord);
 
             // when
-            string actualStructuredRecord = await this.patientService.GetStructuredRecord(
+            string actualStructuredRecord = await this.patientService.GetStructuredRecordAsync(
                 inputStructuredRecordRequest,
                 inputCancellationToken);
 
@@ -127,7 +127,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         .ReturnsAsync(randomStructuredRecord);
 
             // when
-            string actualStructuredRecord = await this.patientService.GetStructuredRecord(
+            string actualStructuredRecord = await this.patientService.GetStructuredRecordAsync(
                 inputStructuredRecordRequest,
                 TestContext.Current.CancellationToken);
 
@@ -184,7 +184,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         .ReturnsAsync(GetRandomString());
 
             // when
-            await this.patientService.GetStructuredRecord(
+            await this.patientService.GetStructuredRecordAsync(
                 inputStructuredRecordRequest,
                 TestContext.Current.CancellationToken);
 
@@ -286,7 +286,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                         .ReturnsAsync(GetRandomString());
 
             // when
-            await this.patientService.GetStructuredRecord(
+            await this.patientService.GetStructuredRecordAsync(
                 inputStructuredRecordRequest,
                 TestContext.Current.CancellationToken);
 
