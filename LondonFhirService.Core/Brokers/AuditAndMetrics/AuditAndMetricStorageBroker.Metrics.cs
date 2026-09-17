@@ -29,6 +29,11 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             return new Metric
             {
                 Id = metric.Id,
+
+                // The metric service stamps this from the audit user broker before the metric ever
+                // reaches this port, so leaving it out of the copy costs the attribution without
+                // failing anything - the row still writes, just with no caller against it.
+                UserId = metric.UserId,
                 ParentId = metric.ParentId,
                 CorrelationId = metric.CorrelationId,
                 RequestSpanId = metric.RequestSpanId,

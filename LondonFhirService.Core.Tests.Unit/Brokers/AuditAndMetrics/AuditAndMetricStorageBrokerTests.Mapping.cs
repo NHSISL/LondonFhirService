@@ -136,6 +136,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             var foreignMetric = new ForeignMetric
             {
                 Id = Guid.NewGuid(),
+                UserId = GetRandomString(),
                 ParentId = Guid.NewGuid(),
                 CorrelationId = Guid.NewGuid(),
                 Method = GetRandomString(),
@@ -168,6 +169,10 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             capturedMetric.Should().NotBeNull();
             capturedMetric.Should().BeOfType<Metric>();
             capturedMetric.Id.Should().Be(foreignMetric.Id);
+
+            // Attribution is the one field nothing downstream can reconstruct - the caller is gone
+            // by the time the row is written, so a copy that drops it leaves the span orphaned.
+            capturedMetric.UserId.Should().Be(foreignMetric.UserId);
             capturedMetric.ParentId.Should().Be(foreignMetric.ParentId);
             capturedMetric.CorrelationId.Should().Be(foreignMetric.CorrelationId);
             capturedMetric.Method.Should().Be(foreignMetric.Method);

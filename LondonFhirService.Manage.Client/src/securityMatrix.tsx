@@ -1,10 +1,7 @@
-﻿// The app registration currently carries three aliases for each logical role - the intended
-// ManageAdmin/ManageUsers names plus two older forms that are still assigned to real users. All
-// three are accepted so every existing operator keeps working, and they mirror the ManageRoles
-// constants the Manage host authorises against.
-//
-// This is deliberately temporary. Once the registration is reduced to one name per role, drop the
-// alias entries from these arrays and from ManageRoles.cs.
+﻿// The app registration carries one name per logical role - Administrators and Users - and these
+// two arrays are where the client writes them down. They mirror the ManageRoles constants the
+// Manage host authorises against, so a screen the client shows and an endpoint the host allows
+// are gated on the same strings; change one and change the other.
 const administratorRoles = ['Administrators'];
 
 const userRoles = ['Users'];

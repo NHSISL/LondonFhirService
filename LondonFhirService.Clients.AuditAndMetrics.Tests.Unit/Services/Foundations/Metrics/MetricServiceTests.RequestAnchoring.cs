@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -52,6 +52,23 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     It.Is<IMetric>(metric => metric != null && metric.RequestSpanId == expectedRequestSpanId),
                     It.IsAny<CancellationToken>()),
                         Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertMetricAsync(randomMetric, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.dispatcherMock.Verify(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()),
+                    Times.Once);
+
+            VerifyRequestSpanIdReadOnce();
+            VerifyCurrentUserResolvedOnce();
+            this.dispatcherMock.VerifyNoOtherCalls();
+            VerifyNoOtherCallsOnAllBrokers();
         }
 
         [Fact]
@@ -109,9 +126,25 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     It.IsAny<CancellationToken>()),
                         Times.Once);
 
-            this.requestTraceBrokerMock.Verify(broker =>
-                broker.GetRequestSpanIdAsync(),
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertMetricAsync(randomMetric, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.dispatcherMock.Verify(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()),
+                    Times.Once);
+
+            // Still exactly one read now that the deferred write has run - the closure carried
+            // the value it was given rather than asking again from a thread with no request
+            // behind it, which is the regression this whole file exists to catch.
+            VerifyRequestSpanIdReadOnce();
+            VerifyCurrentUserResolvedOnce();
+            this.dispatcherMock.VerifyNoOtherCalls();
+            VerifyNoOtherCallsOnAllBrokers();
         }
 
         [Fact]
@@ -136,19 +169,37 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 randomMetrics, TestContext.Current.CancellationToken);
 
             // then
-            // A flush can hold every span of a request. Asking per metric would repeat the same
-            // lookup for the same answer dozens of times, which is why the ambient values are all
-            // read once up front.
-            this.requestTraceBrokerMock.Verify(broker =>
-                broker.GetRequestSpanIdAsync(),
-                    Times.Once);
-
             this.metricBrokerMock.Verify(broker =>
                 broker.RecordAsync(
                     It.Is<List<IMetric>>(batch =>
                         batch.TrueForAll(metric => metric.RequestSpanId == randomRequestSpanId)),
                     It.IsAny<CancellationToken>()),
                         Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            // Matched on its contents rather than on the caller's list, because the deferred
+            // write is handed a snapshot - a different instance holding the same stamped spans.
+            this.storageBrokerMock.Verify(broker =>
+                broker.BulkInsertMetricsAsync(
+                    It.Is<List<IMetric>>(batch =>
+                        batch.TrueForAll(metric => metric.RequestSpanId == randomRequestSpanId)),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.dispatcherMock.Verify(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()),
+                    Times.Once);
+
+            // A flush can hold every span of a request. Asking per metric would repeat the same
+            // lookup for the same answer dozens of times, which is why the ambient values are all
+            // read once up front.
+            VerifyRequestSpanIdReadOnce();
+            VerifyCurrentUserResolvedOnce();
+            this.dispatcherMock.VerifyNoOtherCalls();
+            VerifyNoOtherCallsOnAllBrokers();
         }
 
         [Fact]
@@ -180,7 +231,26 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // AddMetricAsync is awaited rather than deferred, and had no anchoring coverage at
             // all - a regression here would only have shown up in the telemetry.
             randomMetric.RequestSpanId.Should().Be(randomRequestSpanId);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertMetricAsync(randomMetric, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.metricBrokerMock.Verify(broker =>
+                broker.RecordAsync(randomMetric, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
             VerifyRequestSpanIdReadOnce();
+            VerifyCurrentUserResolvedOnce();
+
+            // Nothing was handed to the dispatcher: this path writes in line, which is the
+            // difference between it and the log verbs above.
+            this.dispatcherMock.VerifyNoOtherCalls();
+            VerifyNoOtherCallsOnAllBrokers();
         }
 
         [Fact]
@@ -206,7 +276,25 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             // then
             randomMetrics.Should().OnlyContain(metric => metric.RequestSpanId == randomRequestSpanId);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            // The caller's own list, not a snapshot - the awaited path has nothing to protect it
+            // from, because it is finished before the call returns.
+            this.storageBrokerMock.Verify(broker =>
+                broker.BulkInsertMetricsAsync(randomMetrics, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.metricBrokerMock.Verify(broker =>
+                broker.RecordAsync(randomMetrics, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
             VerifyRequestSpanIdReadOnce();
+            VerifyCurrentUserResolvedOnce();
+            this.dispatcherMock.VerifyNoOtherCalls();
+            VerifyNoOtherCallsOnAllBrokers();
         }
 
         [Fact]
@@ -226,6 +314,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 broker.GetRequestSpanIdAsync())
                     .ReturnsAsync(GetRandomString());
 
+            // Returned as it was inserted, so the settled span can be followed the whole way to
+            // the metric broker rather than only as far as the metric in hand.
+            this.storageBrokerMock.Setup(broker =>
+                broker.InsertMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync((IMetric inserted, CancellationToken _) => inserted);
+
             // when
             await this.metricService.LogMetricAsync(
                 randomMetric, TestContext.Current.CancellationToken);
@@ -239,6 +333,32 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.requestTraceBrokerMock.Verify(broker =>
                 broker.GetRequestSpanIdAsync(),
                     Times.Never);
+
+            this.metricBrokerMock.Verify(broker =>
+                broker.RecordAsync(
+                    It.Is<IMetric>(metric => metric != null && metric.RequestSpanId == callerSuppliedSpanId),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertMetricAsync(randomMetric, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.dispatcherMock.Verify(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()),
+                    Times.Once);
+
+            VerifyCurrentUserResolvedOnce();
+
+            // Closed out by hand rather than through VerifyRequestSpanIdReadOnce, because this is
+            // the one path that must not ask at all - the read above is pinned at Never.
+            this.requestTraceBrokerMock.VerifyNoOtherCalls();
+            this.dispatcherMock.VerifyNoOtherCalls();
+            VerifyNoOtherCallsOnAllBrokers();
         }
 
         [Fact]
@@ -269,6 +389,25 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                     It.Is<IMetric>(metric => metric == null || metric.RequestSpanId == null),
                     It.IsAny<CancellationToken>()),
                         Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertMetricAsync(randomMetric, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.dispatcherMock.Verify(dispatcher =>
+                dispatcher.TryDispatch(It.IsAny<Func<CancellationToken, ValueTask>>()),
+                    Times.Once);
+
+            // Asked once and told there is no span, which is not the same as never asking - that
+            // is the case the test above pins.
+            VerifyRequestSpanIdReadOnce();
+            VerifyCurrentUserResolvedOnce();
+            this.dispatcherMock.VerifyNoOtherCalls();
+            VerifyNoOtherCallsOnAllBrokers();
         }
     }
 }

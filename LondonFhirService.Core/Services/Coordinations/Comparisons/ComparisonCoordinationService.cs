@@ -50,6 +50,26 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     {
                         if (compareQueueItem.PrimaryFhirRecord == null)
                         {
+                            // Fenced like the other two terminal writes. The primary lookup happens
+                            // after the claim, so a slow one leaves room for the lease to expire and
+                            // the row to be taken over - and this branch would then mark the new
+                            // holder's row Failed, which nothing reclaims, hiding a comparison that
+                            // worker may have been about to complete with a primary this one simply
+                            // read too early.
+                            bool stillClaimedWithoutPrimary = await this.compareQueueOrchestrationService
+                                .TryRetainClaimAsync(compareQueueItem);
+
+                            if (stillClaimedWithoutPrimary is false)
+                            {
+                                await this.loggingBroker.LogWarningAsync(
+                                    $"Not marking CorrelationId: " +
+                                    $"{compareQueueItem.SecondaryFhirRecord.CorrelationId} as failed " +
+                                    "for a missing primary; its lease expired mid-flight and another " +
+                                    "worker has taken the record over.");
+
+                                continue;
+                            }
+
                             await this.loggingBroker.LogWarningAsync(
                                 $"CompareQueueItem with CorrelationId: " +
                                 $"{compareQueueItem.SecondaryFhirRecord.CorrelationId} does not have " +

@@ -271,6 +271,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     .ReturnsAsync(inputCompareQueueItem)
                     .ReturnsAsync((CompareQueueItem)null);
 
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryRetainClaimAsync(inputCompareQueueItem))
+                    .ReturnsAsync(true);
+
             // when
             await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
@@ -278,6 +282,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.GetUnprocessedRecordAsync(),
                     Times.Exactly(2));
+
+            // Failed is terminal here too, so the claim is re-asserted before it is written -
+            // see ShouldNotMarkFailedForAMissingPrimaryWhenTheClaimWasLostAsync for the other side.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryRetainClaimAsync(inputCompareQueueItem),
+                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogWarningAsync(expectedWarningMessage),
@@ -288,6 +298,63 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     inputSecondaryFhirRecord.Id,
                     StatusType.Failed),
                         Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldNotMarkFailedForAMissingPrimaryWhenTheClaimWasLostAsync()
+        {
+            // given
+            CompareQueueItem randomCompareQueueItem = CreateRandomCompareQueueItem();
+            CompareQueueItem inputCompareQueueItem = randomCompareQueueItem;
+            inputCompareQueueItem.PrimaryFhirRecord = null;
+            FhirRecord inputSecondaryFhirRecord = inputCompareQueueItem.SecondaryFhirRecord;
+
+            string expectedWarningMessage =
+                $"Not marking CorrelationId: " +
+                $"{inputSecondaryFhirRecord.CorrelationId} as failed " +
+                "for a missing primary; its lease expired mid-flight and another " +
+                "worker has taken the record over.";
+
+            this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
+                service.GetUnprocessedRecordAsync())
+                    .ReturnsAsync(inputCompareQueueItem)
+                    .ReturnsAsync((CompareQueueItem)null);
+
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryRetainClaimAsync(inputCompareQueueItem))
+                    .ReturnsAsync(false);
+
+            // when
+            await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
+
+            // then
+            // The primary is read after the claim, so a slow read leaves room for the lease to
+            // expire and the row to be taken over. Marking it Failed here would be terminal for a
+            // record the new holder may be about to complete with a primary this worker simply
+            // read too early - and nothing reclaims Failed.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryRetainClaimAsync(inputCompareQueueItem),
+                    Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.ChangeFhirRecordStatusAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<StatusType>()),
+                        Times.Never);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogWarningAsync(expectedWarningMessage),
+                    Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.GetUnprocessedRecordAsync(),
+                    Times.Exactly(2));
 
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -23,6 +23,13 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
     {
         private readonly Mock<IHttpContextAccessor> httpContextAccessorMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
+
+        /// <summary>
+        /// Held rather than local because Moq's VerifyNoOtherCalls recurses into the
+        /// HttpContext the accessor hands back, so the context's own reads have to be
+        /// accounted for as well - see VerifyNoOtherContextCalls.
+        /// </summary>
+        private Mock<HttpContext> httpContextMock;
         private readonly ICorrelationBroker correlationBroker;
         private readonly Activity previousActivity;
 
@@ -68,7 +75,19 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
                     .Which.CorrelationId.Should().Be(expectedCorrelationId);
 
             // Nothing was minted: the id already existed, it just was not ours.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            // Every read goes through the accessor once to find the request it belongs to, and
+            // Moq counts a property get as an invocation like any other - so the count is stated
+            // here rather than left for the strict check underneath to trip over.
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -93,7 +112,17 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             // The whole point of the convention: one id spans every hop. Minting our own here
             // would leave two ids for one request and no way to join them.
             actualCorrelationId.Should().Be(expectedCorrelationId);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -113,6 +142,19 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             // down. A second id here would mean the consumer holds one value and the audit trail
             // records another.
             firstCorrelationId.Should().Be(secondCorrelationId);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            // Both reads go out to the accessor - the settled answer lives on the context, not in
+            // a field of the broker, so finding it again means finding the request again first.
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Exactly(2));
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -139,7 +181,17 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
 
             // then
             actualCorrelationId.Should().Be(expectedCorrelationId);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -171,7 +223,12 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
                 broker.GetIdentifierAsync(),
                     Times.Once);
 
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -198,6 +255,17 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             // A hierarchical activity has no trace id to read. Falling through to a minted id
             // keeps the request correlated even though it cannot join the caller's trace.
             actualCorrelationId.Should().Be(expectedCorrelationId);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -220,7 +288,16 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
 
             // Resolution happens once however it is entered, so the identifier broker is never
             // asked for an id that the trace already supplied.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Exactly(2));
+
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -240,6 +317,19 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             // then
             actualRequestSpanId.Should().Be(activity.SpanId.ToHexString());
             correlationId.ToString("N").Should().Be(activity.TraceId.ToHexString());
+
+            // Entering by the span id settles the pair just as entering by the correlation id
+            // does, so the second read finds an answer and nothing is minted either time.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Exactly(2));
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -259,6 +349,17 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             // must not capture that child's span id in place of the request's.
             firstRequestSpanId.Should().Be(secondRequestSpanId);
             firstRequestSpanId.Should().Be(activity.SpanId.ToHexString());
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Exactly(2));
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -280,6 +381,19 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             // Null rather than an invented value: the metric broker reads this as "no request"
             // and falls back to the parent it derives from the correlation id.
             actualRequestSpanId.Should().BeNull();
+
+            // The pair is settled together, so asking only for the span id still mints the
+            // correlation id no trace was there to supply - this caller just does not see it.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -295,6 +409,19 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
 
             // then
             actualRequestSpanId.Should().BeNull();
+
+            // No request means no span, but the correlation id half of the pair still has to come
+            // from somewhere, so the mint happens here too.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -325,7 +452,12 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
                 broker.GetIdentifierAsync(),
                     Times.Once);
 
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -349,6 +481,19 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             requestSpanId.Should().Be(activity.SpanId.ToHexString());
             firstCorrelationId.Should().Be(secondCorrelationId);
             firstCorrelationId.ToString("N").Should().Be(activity.TraceId.ToHexString());
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            // Three reads, three trips to the accessor, and still only the one settled answer
+            // behind them - which is the property the two-key form could not hold.
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Exactly(3));
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -376,7 +521,17 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             actualCorrelationId.Should().Be(settledCorrelationId);
             requestSpanId.Should().Be("b7ad6b7169203331");
             actualCorrelationId.ToString("N").Should().NotBe(activity.TraceId.ToHexString());
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Exactly(2));
+
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         [Fact]
@@ -410,7 +565,15 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
                 broker.GetIdentifierAsync(),
                     Times.Once);
 
+            // The field short circuits the mint, not the lookup - both reads still ask the
+            // accessor whether there is a request behind the work, since that is what decides
+            // where the answer is kept.
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Exactly(2));
+
             this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
         }
 
         private static Activity StartW3CActivity(string parentId = null)
@@ -426,9 +589,28 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
             return activity.Start();
         }
 
+        /// <summary>
+        /// VerifyNoOtherCalls on the accessor alone is not enough: Moq walks into the HttpContext
+        /// the accessor returns and fails on that mock's unverified reads. The broker reads Items
+        /// to find or store the resolved pair, and how many times depends on how often a test asks,
+        /// so the count is asserted as at-least-once and the strictness comes from the two
+        /// VerifyNoOtherCalls that follow.
+        /// </summary>
+        private void VerifyNoOtherContextCalls()
+        {
+            if (this.httpContextMock is not null)
+            {
+                this.httpContextMock.VerifyGet(httpContext => httpContext.Items, Times.AtLeastOnce());
+                this.httpContextMock.VerifyNoOtherCalls();
+            }
+
+            this.httpContextAccessorMock.VerifyNoOtherCalls();
+        }
+
         private void CreateHttpContext(IDictionary<object, object> items)
         {
             var httpContextMock = new Mock<HttpContext>();
+            this.httpContextMock = httpContextMock;
 
             httpContextMock.SetupGet(httpContext =>
                 httpContext.Items)

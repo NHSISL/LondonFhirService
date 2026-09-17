@@ -21,8 +21,20 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
         /// client that is scoped per request - creating one per instance would leak a listener
         /// registration per request. There is one distinct name in practice, so the dictionary
         /// holds one entry.
+        ///
+        /// Held as a Lazy rather than as the source itself because GetOrAdd makes no promise that
+        /// its factory runs once - two threads racing the first construction of a name both run
+        /// it, one instance is stored and the other is dropped without ever being disposed. The
+        /// dropped one is not garbage either: an ActivitySource adds a strong reference to itself
+        /// to the runtime's list of active sources when it is constructed, and only Dispose takes
+        /// it off again, so it outlives every request and is still walked on each later
+        /// AddActivityListener call. A Lazy is cheap to construct and throw away, and the source
+        /// behind whichever one wins the entry is then built exactly once. The thread safety mode
+        /// is spelled out even though it is already the default, because that single-run guarantee
+        /// is the entire point of the indirection and PublicationOnly would quietly hand the race
+        /// back.
         /// </summary>
-        private static readonly ConcurrentDictionary<string, ActivitySource> ActivitySources = new();
+        private static readonly ConcurrentDictionary<string, Lazy<ActivitySource>> ActivitySources = new();
 
         /// <summary>
         /// 16 valid hex characters that nonetheless name no span. CorrelationBroker.ReadSpanId
@@ -33,10 +45,16 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
 
         private readonly ActivitySource activitySource;
 
-        public MetricBroker(AuditAndMetricsConfigurations configurations) =>
-            this.activitySource = ActivitySources.GetOrAdd(
+        public MetricBroker(AuditAndMetricsConfigurations configurations)
+        {
+            Lazy<ActivitySource> cachedActivitySource = ActivitySources.GetOrAdd(
                 configurations.ActivitySourceName,
-                name => new ActivitySource(name));
+                name => new Lazy<ActivitySource>(
+                    () => new ActivitySource(name),
+                    LazyThreadSafetyMode.ExecutionAndPublication));
+
+            this.activitySource = cachedActivitySource.Value;
+        }
 
         public async ValueTask RecordAsync(
             List<IMetric> metrics,
