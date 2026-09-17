@@ -1,10 +1,12 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System.Net.Http;
 using Attrify.InvisibleApi.Models;
+using LondonFhirService.Manage.Brokers.Https;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using RESTFulSense.Clients;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
@@ -22,6 +24,15 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
         /// client above exists to seed and tear down; this one is what a real caller looks like.
         /// </summary>
         private readonly HttpClient keylessHttpClient;
+
+        /// <summary>
+        /// The transport PatientService calls out on, so a test can decide what the authorisation
+        /// server and the provider answer without either of them existing.
+        /// </summary>
+        internal Mock<IHttpBroker> HttpBrokerMock => this.webApplicationFactory.HttpBrokerMock;
+
+        internal void ResetHttpBroker() =>
+            this.webApplicationFactory.ResetHttpBroker();
 
         public ApiBroker()
         {

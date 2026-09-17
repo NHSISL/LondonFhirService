@@ -29,6 +29,13 @@ const securityPoints = {
     metrics: {
         view: administratorAndUserRoles,
     },
+    // The page calls $getstructuredrecord live and shows a whole patient record, so it is granted
+    // to the same audience PatientController authorises - administrators and users - rather than
+    // being administrators only like the comparison area. A comparison holds two stored bundles;
+    // this one holds nothing, and an operator diagnosing a consumer needs it.
+    structuredRecord: {
+        view: administratorAndUserRoles,
+    },
     // A comparison holds two whole patient bundles, so the area is administrators only - the same
     // audience FhirRecordDifferencesController and FhirRecordsController authorise against. Edit
     // covers the review fields an operator can set on a comparison; the differences themselves are

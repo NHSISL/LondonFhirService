@@ -32,6 +32,9 @@ using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
+using LondonFhirService.Manage.Brokers.Https;
+using LondonFhirService.Manage.Models.Foundations.Patients;
+using LondonFhirService.Manage.Services.Foundations.Patients;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -98,6 +101,7 @@ public partial class Program
         builder.Services.AddEndpointsApiExplorer();
 
         // ----------------- Domain registrations -----------------
+        AddConfigurations(builder.Services, configuration);
         AddProviders(builder.Services, configuration);
         AddBrokers(builder.Services, configuration);
         AddFoundationServices(builder.Services);
@@ -182,6 +186,27 @@ public partial class Program
         return builder.GetEdmModel();
     }
 
+    /// <summary>
+    /// Bound once here and registered as a singleton, rather than each reader taking IConfiguration
+    /// and binding its own copy. PatientService then takes the configuration it needs instead of
+    /// the host's whole configuration tree, and there is one instance behind every reader.
+    ///
+    /// A missing section binds to an all-null instance rather than throwing. That is deliberate:
+    /// the host must still start without the structured record endpoints configured, and
+    /// PatientService validates AuthUrl and GetStructuredRecordUrl per request, so an unconfigured
+    /// deployment answers that one screen with a 400 naming the missing settings instead of
+    /// refusing to boot.
+    /// </summary>
+    private static void AddConfigurations(IServiceCollection services, IConfiguration configuration)
+    {
+        PatientConfiguration patientConfiguration =
+            configuration
+                .GetSection(nameof(PatientConfiguration))
+                .Get<PatientConfiguration>() ?? new PatientConfiguration();
+
+        services.AddSingleton(patientConfiguration);
+    }
+
     private static void AddProviders(IServiceCollection services, IConfiguration configuration)
     {
     }
@@ -218,11 +243,16 @@ public partial class Program
             serviceProvider => serviceProvider.GetRequiredService<StorageBroker>());
 
         services.AddScoped<IStorageBrokerFactory, StorageBrokerFactory>();
+
+        // A typed client, so the outbound handler is pooled and rotated by the factory rather
+        // than a socket being held open - or a fresh one burned - per structured record request.
+        services.AddHttpClient<IHttpBroker, HttpBroker>();
     }
 
     private static void AddFoundationServices(IServiceCollection services)
     {
         services.AddTransient<IAuditService, AuditService>();
+        services.AddTransient<IPatientService, PatientService>();
         services.AddTransient<IMetricService, MetricService>();
         services.AddTransient<IProviderService, ProviderService>();
         services.AddTransient<IFhirRecordService, FhirRecordService>();

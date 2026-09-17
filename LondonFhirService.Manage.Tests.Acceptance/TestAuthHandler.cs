@@ -32,7 +32,14 @@ namespace LondonFhirService.Manage.Tests.Acceptance
             new Claim("jobTitle", jobTitle),
             new Claim(ClaimTypes.Name, "TestUser"),
             new Claim(ClaimTypes.Role, "ManageAdmin"),
-            new Claim(ClaimTypes.Role, "ManageUsers")
+            new Claim(ClaimTypes.Role, "ManageUsers"),
+
+            // ManageRoles now names only Administrators and Users. The two aliases above are kept
+            // so this principal still matches any [Authorize] written against the older spelling,
+            // but without these two every controller on this host answers 403 and no acceptance
+            // test can reach the code it is named for.
+            new Claim(ClaimTypes.Role, "Administrators"),
+            new Claim(ClaimTypes.Role, "Users")
         };
 
         public TestAuthHandler(

@@ -1,4 +1,4 @@
-﻿import { faChartLine, faClipboardList, faCodeCompare, faHome, faNetworkWired, faUser } from '@fortawesome/free-solid-svg-icons';
+﻿import { faChartLine, faClipboardList, faCodeCompare, faFileMedical, faHome, faNetworkWired, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { ListGroup } from 'react-bootstrap';
@@ -56,6 +56,15 @@ const MenuComponent: React.FC = () => {
                     onClick={() => handleItemClick('/admin/metrics')}>
                     <FontAwesomeIcon icon={faChartLine} className="me-2 fa-icon" />
                     Metrics
+                </ListGroup.Item>
+            </SecuredComponent>
+
+            <SecuredComponent allowedRoles={securityPoints.structuredRecord.view}>
+                <ListGroup.Item
+                    className={`bg-dark text-white ${location.pathname.startsWith('/admin/structured-record') ? 'active' : ''}`}
+                    onClick={() => handleItemClick('/admin/structured-record')}>
+                    <FontAwesomeIcon icon={faFileMedical} className="me-2 fa-icon" />
+                    Get Structured Record
                 </ListGroup.Item>
             </SecuredComponent>
 

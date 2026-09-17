@@ -59,12 +59,12 @@ class ApiBroker {
         return axios.get(absoluteUri, await this.config());;
     }
 
-    public async PostAsync(relativeUrl: string, data: unknown) {
+    public async PostAsync(relativeUrl: string, data: unknown, abortSignal?: AbortSignal) {
         const url = relativeUrl;
 
         return axios.post(url,
             data,
-            await this.config()
+            { ...await this.config(), signal: abortSignal }
         );
     }
 
