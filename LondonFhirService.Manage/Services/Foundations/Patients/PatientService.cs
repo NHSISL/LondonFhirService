@@ -104,16 +104,20 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
 
             using JsonDocument jsonDocument = JsonDocument.Parse(tokenResponse);
 
-            string accessToken = null;
-
-            if (jsonDocument.RootElement.ValueKind == JsonValueKind.Object
-                && jsonDocument.RootElement.TryGetProperty(
+            // Phrased as the rejection rather than as a match, so there is no local holding null
+            // while the checks run. Every way the payload can fail to carry a usable token leaves
+            // through the same exit, and accessTokenElement is only read once past it.
+            if (jsonDocument.RootElement.ValueKind != JsonValueKind.Object
+                || jsonDocument.RootElement.TryGetProperty(
                     propertyName: "access_token",
-                    value: out JsonElement accessTokenElement)
-                && accessTokenElement.ValueKind == JsonValueKind.String)
+                    value: out JsonElement accessTokenElement) is false
+                || accessTokenElement.ValueKind != JsonValueKind.String)
             {
-                accessToken = accessTokenElement.GetString();
+                throw new InvalidAccessTokenPatientServiceException(
+                    message: "Authorisation response carried no access token, contact support.");
             }
+
+            string accessToken = accessTokenElement.GetString();
 
             if (string.IsNullOrWhiteSpace(accessToken))
             {

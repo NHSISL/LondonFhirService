@@ -1,4 +1,12 @@
-﻿import { faChartLine, faClipboardList, faCodeCompare, faFileMedical, faHome, faNetworkWired, faUser } from '@fortawesome/free-solid-svg-icons';
+﻿import {
+    faChartLine,
+    faClipboardList,
+    faCodeCompare,
+    faFileMedical,
+    faHome,
+    faNetworkWired,
+    faUser
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { ListGroup } from 'react-bootstrap';
