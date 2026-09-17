@@ -1,6 +1,8 @@
 import { fileURLToPath, URL } from 'node:url';
 
-import { defineConfig } from 'vite';
+// From 'vitest/config' rather than 'vite', which is the same defineConfig plus the `test` key
+// below. Importing it from 'vite' compiles but drops that key on the floor.
+import { defineConfig } from 'vitest/config';
 import plugin from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
@@ -43,6 +45,18 @@ const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_H
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    // Unit tests are the *.test.ts files under src. Spelling that out matters: vitest's default
+    // include also matches tests/*.spec.ts, which are Playwright specs against a running browser -
+    // they fail at collection, and an unfiltered `vitest` run reported three failed files for that
+    // reason alone. The narrow include is also what lets the npm script drop its positional
+    // filename filter, which was quietly reducing the suite to a third of its files.
+    //
+    // environment lives here rather than as a --dom flag on the script so a bare `npx vitest` and
+    // `npm test` agree about what the DOM is.
+    test: {
+        environment: 'happy-dom',
+        include: ['src/**/*.test.{ts,tsx}']
+    },
     plugins: [plugin()],
     resolve: {
         alias: {
