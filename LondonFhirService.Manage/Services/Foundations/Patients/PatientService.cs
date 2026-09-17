@@ -146,7 +146,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         /// the consumer-facing proxy does not ask for them either - so the parameter is always
         /// sent as false rather than being exposed as a control.
         /// </summary>
-        virtual internal string CreateRequestBody(
+        internal virtual string CreateRequestBody(
             string nhsNumber,
             string dateOfBirth = "",
             bool demographicsOnly = false,

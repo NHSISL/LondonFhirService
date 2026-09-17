@@ -23,10 +23,68 @@ export class PatientApiBroker implements IPatientApiBroker {
 
             return this.toPayloadText(response.data);
         } catch (exception) {
-            throw new PatientApiBrokerException(
-                "Failed to retrieve the structured record from the API.",
-                exception);
+            throw new PatientApiBrokerException(this.describeFailure(exception), exception);
         }
+    }
+
+    // The API's own explanation, not a generic message. A 400 from PatientsController is a
+    // ProblemDetails naming the field that was wrong, and a 500 carries what the provider said
+    // when it refused. Discarding either leaves an operator on a diagnostic page with nothing to
+    // diagnose.
+    private describeFailure(exception: unknown): string {
+        const response =
+            (exception as { response?: { status?: number; data?: unknown } })?.response;
+
+        if (response === undefined) {
+            return "The structured record request did not reach the API.";
+        }
+
+        const detail = this.readDetail(response.data);
+
+        return detail.length > 0
+            ? `The API answered ${response.status}: ${detail}`
+            : `The API answered ${response.status}.`;
+    }
+
+    private readDetail(rawBody: unknown): string {
+        if (typeof rawBody === "string") {
+            return rawBody.trim();
+        }
+
+        if (typeof rawBody !== "object" || rawBody === null) {
+            return "";
+        }
+
+        const body = rawBody as Record<string, unknown>;
+
+        // The field keyed bag first: it names what the operator got wrong, which is the most
+        // actionable thing the API ever sends back.
+        const fieldErrors = this.readFieldErrors(body.errors);
+
+        if (fieldErrors.length > 0) {
+            return fieldErrors;
+        }
+
+        for (const key of ["title", "message", "detail"]) {
+            const value = body[key];
+
+            if (typeof value === "string" && value.trim().length > 0) {
+                return value.trim();
+            }
+        }
+
+        return "";
+    }
+
+    private readFieldErrors(rawErrors: unknown): string {
+        if (typeof rawErrors !== "object" || rawErrors === null) {
+            return "";
+        }
+
+        return Object.entries(rawErrors as Record<string, unknown>)
+            .map(([field, messages]) =>
+                `${field}: ${Array.isArray(messages) ? messages.join(", ") : String(messages)}`)
+            .join("; ");
     }
 
     // Format conversion only. The endpoint answers text/plain carrying the provider's payload

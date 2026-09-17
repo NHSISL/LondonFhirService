@@ -1,3 +1,4 @@
+import { PatientApiBrokerException } from "../../../models/foundations/patients/exceptions/PatientApiBrokerException";
 import { PatientService } from "../../foundations/patients/patientService";
 import { PatientValidationException } from "../../../models/foundations/patients/exceptions/PatientValidationException";
 import { StructuredRecordViewServiceException } from "../../../models/views/patients/exceptions/StructuredRecordViewServiceException";
@@ -49,9 +50,40 @@ export class StructuredRecordViewService implements IStructuredRecordViewService
             }
 
             throw new StructuredRecordViewServiceException(
-                "We could not retrieve the structured record, please try again or contact support.",
+                this.describeFailure(exception),
                 exception);
         }
+    }
+
+    // The broker records what the API actually said. Surfacing it here is the difference between
+    // an operator learning that the NHS number was rejected and being told to contact support
+    // about a page whose whole job is telling them what happened.
+    private describeFailure(exception: unknown): string {
+        const apiDetail = this.findApiBrokerMessage(exception);
+
+        return apiDetail === null
+            ? "We could not retrieve the structured record, please try again or contact support."
+            : `We could not retrieve the structured record. ${apiDetail}`;
+    }
+
+    private findApiBrokerMessage(exception: unknown): string | null {
+        let current: unknown = exception;
+
+        // Bounded rather than while-true: these chains are three deep, and a cycle in someone
+        // else's exception should not hang the page.
+        for (let depth = 0; depth < 5; depth++) {
+            if (current === null || current === undefined) {
+                return null;
+            }
+
+            if (current instanceof PatientApiBrokerException) {
+                return current.message;
+            }
+
+            current = (current as { innerException?: unknown }).innerException;
+        }
+
+        return null;
     }
 
     // Trimmed on the way out, because a credential pasted from a password manager routinely

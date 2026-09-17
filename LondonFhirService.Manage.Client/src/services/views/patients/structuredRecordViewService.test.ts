@@ -1,4 +1,6 @@
 import { expect, it, vi } from "vitest";
+import { PatientApiBrokerException } from "../../../models/foundations/patients/exceptions/PatientApiBrokerException";
+import { PatientDependencyException } from "../../../models/foundations/patients/exceptions/PatientDependencyException";
 import { PatientValidationException } from "../../../models/foundations/patients/exceptions/PatientValidationException";
 import { StructuredRecordViewService } from "./structuredRecordViewService";
 import { StructuredRecordViewServiceException } from "../../../models/views/patients/exceptions/StructuredRecordViewServiceException";
@@ -103,4 +105,33 @@ it("should wrap anything else as a view service failure", async () => {
 
     await expect(viewService.retrieveStructuredRecordViewAsync(formValues()))
         .rejects.toBeInstanceOf(StructuredRecordViewServiceException);
+});
+
+it("should surface what the API said rather than a generic message", async () => {
+    // The page exists to tell an operator what happened. A 400 naming the field they got wrong
+    // must reach them, not be replaced with "contact support".
+    const patientService: IPatientService = {
+        retrieveStructuredRecordAsync: vi.fn().mockRejectedValue(
+            new PatientDependencyException(
+                "Patient dependency error occurred, please contact support.",
+                new PatientApiBrokerException(
+                    "The API answered 400: nhsNumber: Text is invalid",
+                    new Error("Request failed with status code 400"))))
+    };
+
+    const viewService = new StructuredRecordViewService(patientService);
+
+    await expect(viewService.retrieveStructuredRecordViewAsync(formValues()))
+        .rejects.toThrowError("The API answered 400: nhsNumber: Text is invalid");
+});
+
+it("should fall back to the generic message when there is nothing from the API", async () => {
+    const patientService: IPatientService = {
+        retrieveStructuredRecordAsync: vi.fn().mockRejectedValue(new Error("socket hang up"))
+    };
+
+    const viewService = new StructuredRecordViewService(patientService);
+
+    await expect(viewService.retrieveStructuredRecordViewAsync(formValues()))
+        .rejects.toThrowError("please try again or contact support");
 });

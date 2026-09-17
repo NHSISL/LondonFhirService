@@ -284,7 +284,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
         /// cancellation rather than as whatever happens to be wrong with its arguments.
         /// </summary>
         [Fact]
-        public async Task ShouldPropagateCancellationBeforeValidationOnGetStructuredRecordIfTokenIsAlreadyCancelledAsync()
+        public async Task
+            ShouldPropagateCancellationBeforeValidationOnGetStructuredRecordIfTokenIsAlreadyCancelledAsync()
         {
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
