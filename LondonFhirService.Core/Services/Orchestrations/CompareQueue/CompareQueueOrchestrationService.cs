@@ -18,8 +18,25 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
 {
     internal partial class CompareQueueOrchestrationService : ICompareQueueOrchestrationService
     {
-        /// <summary>How long a secondary waits for its sibling primary to land before it is compared.</summary>
-        private const int CompareBufferMinutes = 5;
+        /// <summary>
+        /// How long a secondary with no sibling primary waits before it is claimed anyway.
+        ///
+        /// This is a backstop, not the normal path. A secondary is claimed as soon as its primary
+        /// exists, so a complete pair is compared within a tick rather than on a timer. The wait
+        /// only applies to a secondary whose primary has not arrived at all - a fan-out that
+        /// failed on the primary, or a persist that never completed.
+        ///
+        /// What happens to it then is settled by the caller, not here: ComparisonCoordinationService
+        /// sees a null primary, logs a warning and finalises the record as Failed. It does NOT
+        /// write a FhirRecordDifference, so the record never appears on the comparisons page - it
+        /// appears in the portal's compare-queue panel as Failed instead. Said plainly because an
+        /// earlier version of this comment claimed the opposite.
+        ///
+        /// Long, because nothing waits on it. Five minutes was the old buffer and it delayed every
+        /// comparison by five minutes to cover this case; thirty costs nothing now that the normal
+        /// path does not go through it.
+        /// </summary>
+        private const int OrphanedSecondaryMinutes = 30;
 
         /// <summary>
         /// How long a claim is honoured before another worker may take the row back. Comfortably
@@ -67,10 +84,11 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
         }
 
         /// <summary>
-        /// The buffer gives a secondary's sibling primary time to land before the pair is
-        /// compared, and it counts from InsertedDate - stamped by the database when the row became
-        /// visible - rather than from UpdatedDate, which the request thread stamps before the
-        /// insert is even queued.
+        /// A secondary is claimed once its sibling primary exists, so a complete pair is compared
+        /// on the next tick rather than after a fixed wait. A secondary whose primary never
+        /// arrives is claimed anyway once it is orphaned, and that wait counts from InsertedDate -
+        /// stamped by the database when the row became visible - rather than from UpdatedDate,
+        /// which the request thread stamps before the insert is even queued.
         ///
         /// Processing rows older than the lease are picked up again. Processing used to be a
         /// write-only state with no reader, so a process recycle or a failed status write between
@@ -101,8 +119,8 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     DateTimeOffset currentDateTime =
                         await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
-                    DateTimeOffset bufferedDateTime =
-                        currentDateTime.AddMinutes(-CompareBufferMinutes);
+                    DateTimeOffset orphanedDateTime =
+                        currentDateTime.AddMinutes(-OrphanedSecondaryMinutes);
 
                     DateTimeOffset leaseExpiryDateTime =
                         currentDateTime.AddMinutes(-ProcessingLeaseMinutes);
@@ -115,11 +133,27 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     // out of it - so pulling ClaimCandidateWindow full rows every tick, on every
                     // worker, moved megabytes to decide one identifier. The winner is read in
                     // full below, once.
+                    //
+                    // Claimed when the pair is complete, not when a timer says it probably is.
+                    // This used to wait a fixed buffer from InsertedDate so the sibling primary
+                    // had time to land, which meant every comparison waited whether or not the
+                    // primary was already there - and it was only ever a guess at something the
+                    // query can state outright. EF renders the Any below as EXISTS, and both
+                    // columns it touches are indexed.
+                    //
+                    // The orphan branch keeps the old behaviour for the case the buffer existed
+                    // for: a secondary whose primary never arrives is still claimed eventually,
+                    // rather than staying Pending for good. The caller then settles it as Failed
+                    // without a comparison - see OrphanedSecondaryMinutes.
                     List<ClaimCandidate> claimCandidates = secondaryFhirRecordQueryable
                         .Where(fhirRecord =>
                             !fhirRecord.IsPrimarySource
                             && ((fhirRecord.Status == StatusType.Pending
-                                    && fhirRecord.InsertedDate <= bufferedDateTime)
+                                    && (secondaryFhirRecordQueryable.Any(primaryFhirRecord =>
+                                            primaryFhirRecord.CorrelationId
+                                                == fhirRecord.CorrelationId
+                                            && primaryFhirRecord.IsPrimarySource)
+                                        || fhirRecord.InsertedDate <= orphanedDateTime))
                                 || (fhirRecord.Status == StatusType.Processing
                                     && fhirRecord.UpdatedDate <= leaseExpiryDateTime)))
                         .OrderBy(fhirRecord => fhirRecord.CreatedDate)

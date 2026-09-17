@@ -3,10 +3,9 @@
 // the Manage host authorises against; change one and change the other.
 //
 // The strings matching does not mean the POLICY matches. Which roles each area below grants is
-// maintained by hand against each controller's [Authorize], and one area is still out of step
-// with the server - see the note on audits. Nothing here enforces anything: this matrix decides
-// what the portal shows, the attributes decide what the API allows, and only the second is a
-// security boundary.
+// maintained by hand against each controller's [Authorize]. Nothing here enforces anything: this
+// matrix decides what the portal shows, the attributes decide what the API allows, and only the
+// second is a security boundary.
 const administratorRoles = ['Administrators'];
 
 const userRoles = ['Users'];
@@ -23,19 +22,24 @@ const securityPoints = {
     // The audit trail is read only in this portal - the API's write verbs are [InvisibleApi]
     // and unroutable - so only view is granted.
     //
-    // MISMATCH, left as found and not silently changed: this grants Administrators AND Users,
-    // but AuditsController carries [Authorize(Roles = ManageRoles.Administrators)]. A Users-role
-    // operator is therefore shown the audit screen and gets 403 from every call it makes. The
-    // safe direction to reconcile is tightening this array to administratorRoles, but which side
-    // is wrong is a policy question - an audit row carries a whole patient payload - so it is
-    // the repository owner's call, not a tidy-up.
+    // Administrators only, matching AuditsController's [Authorize]. This used to grant users as
+    // well, which put the menu item in front of an audience every call behind it answers 403 to.
+    // Reconciled towards the server rather than away from it - an audit row carries a whole
+    // patient payload, so the narrower side is the one to keep.
     audits: {
-        view: administratorAndUserRoles,
+        view: administratorRoles,
     },
     // Metrics carry no patient identifiable data by design, and the API's write verbs are
     // [InvisibleApi] and unroutable, so this is view only to the same audience
     // MetricsController allows.
     metrics: {
+        view: administratorAndUserRoles,
+    },
+    // The page calls $getstructuredrecord live and shows a whole patient record, so it is granted
+    // to the same audience PatientsController authorises - administrators and users. Unlike the
+    // comparison area it stores nothing: the record is fetched for the screen and gone when the
+    // operator leaves it.
+    structuredRecord: {
         view: administratorAndUserRoles,
     },
     // Administrators and Users, matching the server. Edit covers the review fields an operator
@@ -52,13 +56,22 @@ const securityPoints = {
         edit: administratorAndUserRoles,
         view: administratorAndUserRoles,
     },
-    // The provider registry decides who the patient fan-out calls, so the whole area - the master
-    // list as well as the detail view - is administrators only.
+    // Split the way ProvidersController splits, because that is the boundary. A provider row
+    // decides who the patient fan-out calls and which source is primary, so writing one changes
+    // what every consumer gets back - create, update and delete are Administrators only, matching
+    // the method-level attributes.
+    //
+    // Reading one is not that. The controller's class-level attribute opens both GETs to
+    // Administrators and Users, and a provider carries no credential and no patient data - a
+    // friendly name, a fully qualified name, a FHIR version, and when it is active. This used to
+    // grant view to administrators only, which hid the screen from an audience that could call
+    // GET /api/Providers directly and get the same rows. That reads as a control and is not one;
+    // hiding a screen has never been authorisation.
     providers: {
         add: administratorRoles,
         edit: administratorRoles,
         delete: administratorRoles,
-        view: administratorRoles,
+        view: administratorAndUserRoles,
     },
     testUserAction: {
         add: administratorAndUserRoles,

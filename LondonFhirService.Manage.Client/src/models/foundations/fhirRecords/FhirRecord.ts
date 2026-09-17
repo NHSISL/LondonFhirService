@@ -1,9 +1,10 @@
 // Foundation model - mirrors LondonFhirService.Core.Models.Foundations.FhirRecords.FhirRecord as
 // it is serialised by the /api/fhirrecords endpoint. No UI concerns live here.
 //
-// JsonPayload is the whole FHIR bundle the provider returned, so a record is heavy. Nothing on
-// this side should fetch a collection of these; the comparison pages fetch the two records a
-// difference names, by id.
+// JsonPayload is the whole FHIR bundle the provider returned, so a record is heavy. A collection
+// of these is only ever fetched through a projection that leaves the payload behind - see
+// fhirRecordApiBroker.queries - and a record wanted whole is fetched by id, one at a time. On a
+// projected record the fields the query did not ask for read as their empty values.
 export type FhirRecord = {
     id: string;
     correlationId: string;

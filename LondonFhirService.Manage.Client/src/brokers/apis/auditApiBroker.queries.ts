@@ -1,4 +1,5 @@
 import type { AuditQuery } from "../../models/foundations/audits/AuditQuery";
+import { toStringLiteral } from "./odataLiterals";
 
 // OData query options on this endpoint are bound against the CLR type, so property names are
 // PascalCase here even though the payload comes back camelCased. Kept apart from the broker so the
@@ -36,10 +37,4 @@ function buildAuditFilter(searchTerm: string): string {
         `contains(CreatedBy,${literal})`,
         `(CorrelationId ne null and contains(CorrelationId,${literal}))`
     ].join(" or ");
-}
-
-// A single quote is escaped by doubling it in an OData string literal. Without this, a search term
-// containing one would break the query.
-function toStringLiteral(value: string): string {
-    return `'${value.split("'").join("''")}'`;
 }

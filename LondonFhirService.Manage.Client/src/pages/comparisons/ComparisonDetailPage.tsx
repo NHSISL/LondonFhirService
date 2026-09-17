@@ -1,5 +1,5 @@
 import { Alert, Button, Col, Container, Row } from "react-bootstrap";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { BothJsonModal } from "../../components/comparisons/BothJsonModal";
 import { ComparisonResolution } from "../../components/comparisons/ComparisonResolution";
 import { DiffSidebar } from "../../components/comparisons/DiffSidebar";
@@ -96,6 +96,18 @@ export function ComparisonDetailPage() {
                     <Button variant="outline-secondary" onClick={handleBackToComparisons}>
                         Back to comparisons
                     </Button>
+
+                    {/*
+                        This page says whether the two providers agreed. The metrics screen says
+                        how long each of them took to answer, against the same correlation - which
+                        is the next question whenever a difference turns out to be one provider
+                        having returned less rather than differently.
+                    */}
+                    <Link
+                        to={comparison.metricsUrl}
+                        className="btn btn-outline-secondary">
+                        Show metrics
+                    </Link>
 
                     <Button
                         variant={syncScrollEnabled ? "outline-primary" : "outline-secondary"}

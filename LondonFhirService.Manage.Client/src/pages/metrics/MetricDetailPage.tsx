@@ -1,5 +1,5 @@
-﻿import { Button, Col, Container, Row } from "react-bootstrap";
-import { useParams } from "react-router-dom";
+import { Button, Col, Container, Row } from "react-bootstrap";
+import { Link, useParams } from "react-router-dom";
 import BreadCrumbBase from "../../components/bases/layouts/BreadCrumb/BreadCrumbBase";
 import { EmptyState } from "../../components/shared/EmptyState";
 import { ErrorSummary } from "../../components/shared/ErrorSummary";
@@ -12,7 +12,7 @@ import { useMetricDetailPage } from "../../hooks/pages/useMetricDetailPage";
 export function MetricDetailPage() {
     const { correlationId } = useParams<{ correlationId: string }>();
 
-    const { correlation, loading, error, handleBackToMetrics } =
+    const { correlation, loading, error, comparisonsUrl, handleBackToMetrics } =
         useMetricDetailPage(correlationId ?? "");
 
     const breadCrumb = (
@@ -60,7 +60,17 @@ export function MetricDetailPage() {
                     <h1 className="h3 mb-0 text-break">{correlation.methodText}</h1>
                 </Col>
 
-                <Col xs="auto">
+                <Col xs="auto" className="d-flex flex-wrap gap-2">
+                    {/*
+                        The other half of the story this page tells. Metrics say how long the
+                        providers took; the comparison says whether they agreed. An operator
+                        looking at one almost always wants the other, and the correlation id that
+                        joins them is the one already in the address bar.
+                    */}
+                    <Link to={comparisonsUrl} className="btn btn-outline-primary">
+                        Compare results
+                    </Link>
+
                     <Button variant="outline-secondary" onClick={handleBackToMetrics}>
                         Back to metrics
                     </Button>

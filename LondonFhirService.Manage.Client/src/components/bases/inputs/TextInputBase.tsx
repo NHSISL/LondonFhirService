@@ -18,6 +18,11 @@ interface TextInputBaseProps {
     type?: string;
     disabled?: boolean;
     maxLength?: number; // Added maxLength prop
+
+    // Passed through to the input so a caller can tell the browser to keep out of a field.
+    // Without it a type="password" input is one a password manager offers to save and later
+    // autofills, which is wrong for anything that is not the viewer's own credential.
+    autoComplete?: string;
 }
 
 const TextInputBase: FunctionComponent<TextInputBaseProps> = (props) => {
@@ -41,6 +46,7 @@ const TextInputBase: FunctionComponent<TextInputBaseProps> = (props) => {
                         placeholder={props.placeholder || ""}
                         disabled={props.disabled}
                         maxLength={props.maxLength} // Pass maxLength to Form.Control
+                        autoComplete={props.autoComplete}
                     //error={props.error}
                     />
                     {

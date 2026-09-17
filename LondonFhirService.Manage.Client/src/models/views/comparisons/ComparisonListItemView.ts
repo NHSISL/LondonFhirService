@@ -1,6 +1,7 @@
 export type ComparisonListItemView = {
     id: string;
     correlationId: string;
+    sourceNameText: string;
     diffCountText: string;
     diffCountClassName: string;
     acceptableDiffCountText: string;
@@ -11,4 +12,8 @@ export type ComparisonListItemView = {
     resolutionClassName: string;
     commentText: string;
     detailUrl: string;
+
+    // The same correlation on the metrics screen - how long each provider took, beside
+    // whether they agreed.
+    metricsUrl: string;
 };

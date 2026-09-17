@@ -20,6 +20,7 @@ import { AuditsPage } from './pages/audits/AuditsPage';
 import { AuditDetailPage } from './pages/audits/AuditDetailPage';
 import { MetricsPage } from './pages/metrics/MetricsPage';
 import { MetricDetailPage } from './pages/metrics/MetricDetailPage';
+import { StructuredRecordPage } from './pages/patients/StructuredRecordPage';
 import { SecuredRoute } from './components/securitys/securedRoutes';
 import securityPoints from './securityMatrix';
 
@@ -64,6 +65,14 @@ function App({ instance }: any) {
                     element: (
                         <SecuredRoute allowedRoles={securityPoints.metrics.view}>
                             <MetricDetailPage />
+                        </SecuredRoute>
+                    )
+                },
+                {
+                    path: "admin/structured-record",
+                    element: (
+                        <SecuredRoute allowedRoles={securityPoints.structuredRecord.view}>
+                            <StructuredRecordPage />
                         </SecuredRoute>
                     )
                 },

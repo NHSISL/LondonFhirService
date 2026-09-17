@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -9,6 +9,7 @@ using FluentAssertions;
 using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.OData;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
 
@@ -150,6 +151,38 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
             // then
             actualMetrics.Should().HaveCount(3);
             actualMetrics.Should().OnlyContain(metric => metric.CorrelationId == correlationId);
+        }
+        /// <summary>
+        /// Why the client dashes a correlation id before it puts one in a metrics link.
+        ///
+        /// A FhirRecord stores its correlation as a 32 character string with no dashes, and that
+        /// is the form the structured record screen and the comparisons list both hold. A Metric
+        /// stores the same value as a uniqueidentifier. An OData guid literal is defined with its
+        /// dashes, so the compact form reaching this filter is not a query that matches nothing -
+        /// it is one the parser refuses, and the screen behind it answers 400 rather than empty.
+        ///
+        /// The conversion lives in the client's correlationIds helper, which is the only place
+        /// that knows. This is here so that if a later OData version starts accepting the compact
+        /// form - or this assumption was wrong to begin with - it is a failing test rather than a
+        /// piece of folklore in a comment.
+        /// </summary>
+        [Fact]
+        public void ShouldRefuseACorrelationIdThatHasLostItsDashes()
+        {
+            // given
+            List<Metric> metrics = CreateSpanTree();
+            string undashedCorrelationId = metrics[0].CorrelationId.ToString("N");
+
+            // when
+            Action applyUndashedFilter = () =>
+                ApplyQuery($"?$filter=CorrelationId eq {undashedCorrelationId}", metrics).ToList();
+
+            // then
+            applyUndashedFilter.Should().Throw<ODataException>();
+
+            // The dashed form of the very same value is the one that works.
+            ApplyQuery($"?$filter=CorrelationId eq {metrics[0].CorrelationId}", metrics)
+                .Should().HaveCount(3);
         }
     }
 }

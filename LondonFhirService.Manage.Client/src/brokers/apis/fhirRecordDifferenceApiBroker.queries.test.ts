@@ -16,7 +16,24 @@ it("should page newest first without a filter when nothing is asked for", () => 
     const url = buildFhirRecordDifferenceQueryUrl("/api/fhirrecorddifferences", createQuery());
 
     expect(url).toBe(
-        "/api/fhirrecorddifferences?$orderby=ComparedAt desc&$skip=0&$top=25");
+        "/api/fhirrecorddifferences"
+        + "?$expand=Secondary($select=SourceName)"
+        + "&$orderby=ComparedAt desc&$skip=0&$top=25");
+});
+
+// The nested $select is the whole point of expanding rather than fetching the record: a FhirRecord
+// carries the compared bundle in JsonPayload, and a page of twenty five would drag that down with
+// it to render a short label.
+//
+// One field, not two. IsPrimarySource used to ride along to drive a "Primary" badge that could
+// never render - a difference's expanded record is its secondary, and the compare queue only ever
+// claims rows where that flag is false.
+it("should ask the expand for the source name and not the payload", () => {
+    const url = buildFhirRecordDifferenceQueryUrl("/api/fhirrecorddifferences", createQuery());
+
+    expect(url).toContain("$expand=Secondary($select=SourceName)");
+    expect(url).not.toContain("IsPrimarySource");
+    expect(url).not.toContain("JsonPayload");
 });
 
 it("should carry the paging window through", () => {

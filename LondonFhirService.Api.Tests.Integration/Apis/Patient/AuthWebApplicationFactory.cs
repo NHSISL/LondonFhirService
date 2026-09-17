@@ -26,6 +26,13 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Patient
                 builder.Configuration
                     .AddJsonFile(Path.Combine(testProjectPath, "appsettings.json"), optional: true)
                     .AddJsonFile(Path.Combine(testProjectPath, "appsettings.Integration.json"), optional: true)
+
+                    // A developer's own overrides, added last so they win, and gitignored so
+                    // they never reach anyone else. The connection string is the reason it
+                    // exists: appsettings.json points at LocalDB because that is what every
+                    // machine has, and a machine with a full SQL Server instance can say so
+                    // without editing a shared file.
+                    .AddJsonFile(Path.Combine(testProjectPath, "appsettings.Test.json"), optional: true)
                     .AddInMemoryCollection(new Dictionary<string, string?>
                     {
                         // Put your strong overrides here
