@@ -5,15 +5,13 @@
 namespace LondonFhirService.Manage.Models.Securities
 {
     /// <summary>
-    /// The app roles this host authorises against. Each logical role is spelled three ways
-    /// because the app registration currently carries three aliases for the same thing - the
-    /// intended ManageAdmin/ManageUsers names plus two older forms that are still assigned to
-    /// real users. Accepting all three keeps every existing operator working while the
-    /// registration is tidied up.
+    /// The app roles this host authorises against. The app registration carries one name per
+    /// logical role - Administrators and Users - and these constants are the single place those
+    /// two strings are written down, so every [Authorize] in this host points here rather than
+    /// repeating a literal that nothing would catch if it drifted from the registration.
     ///
-    /// This is deliberately temporary. When the registration is reduced to one name per role,
-    /// delete the alias entries here and nothing else needs to change - every [Authorize] in
-    /// this host points at these constants rather than repeating the strings.
+    /// AdministratorsAndUsers is just the pair joined the way the attribute expects: a comma
+    /// separated list where holding any one of the named roles is enough to pass.
     ///
     /// They are const rather than static readonly because [Authorize(Roles = ...)] takes a
     /// compile time constant, which also lets callers append a granular role with +.

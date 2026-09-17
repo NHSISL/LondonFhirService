@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,7 +6,6 @@ using System;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions;
 using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
-using LondonFhirService.Core.Models.Orchestrations.CompareQueue;
 using LondonFhirService.Core.Models.Orchestrations.CompareQueue.Exceptions;
 using Xeptions;
 
@@ -14,59 +13,21 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
 {
     internal partial class CompareQueueOrchestrationService
     {
-        private delegate ValueTask<CompareQueueItem> ReturningCompareQueueItemFunction();
+        private delegate ValueTask<T> ReturningValueFunction<T>();
         private delegate ValueTask ReturningNothingFunction();
 
-        private async ValueTask<CompareQueueItem> TryCatch(
-            ReturningCompareQueueItemFunction returningCompareQueueItemFunction)
+        /// <summary>
+        /// One mapping for every method on this service. There used to be three copies of this
+        /// catch ladder - one per return shape - which is how they drifted: the difference-service
+        /// exceptions were only ever caught on the void copy, so the same exception would have
+        /// surfaced as a service exception on one method and a dependency exception on another.
+        /// The return type is the only thing that varied, so it is the only thing left generic.
+        /// </summary>
+        private async ValueTask<T> TryCatch<T>(ReturningValueFunction<T> returningValueFunction)
         {
             try
             {
-                return await returningCompareQueueItemFunction();
-            }
-            catch (NullCompareQueueItemException nullCompareQueueItemException)
-            {
-                throw await CreateAndLogValidationExceptionAsync(nullCompareQueueItemException);
-            }
-            catch (InvalidCompareQueueOrchestrationException invalidCompareQueueOrchestrationException)
-            {
-                throw await CreateAndLogValidationExceptionAsync(invalidCompareQueueOrchestrationException);
-            }
-            catch (FhirRecordValidationException fhirRecordValidationException)
-            {
-                throw await CreateAndLogDependencyValidationExceptionAsync(fhirRecordValidationException);
-            }
-            catch (FhirRecordDependencyValidationException fhirRecordDependencyValidationException)
-            {
-                throw await CreateAndLogDependencyValidationExceptionAsync(
-                    fhirRecordDependencyValidationException);
-            }
-            catch (FhirRecordDependencyException fhirRecordDependencyException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(fhirRecordDependencyException);
-            }
-            catch (FhirRecordServiceException fhirRecordServiceException)
-            {
-                throw await CreateAndLogDependencyExceptionAsync(fhirRecordServiceException);
-            }
-            catch (Exception exception)
-            {
-                var failedCompareQueueOrchestrationServiceException =
-                    new FailedCompareQueueOrchestrationServiceException(
-                        message: "Failed compare queue orchestration service error occurred, please contact support.",
-                        innerException: exception,
-                        data: exception.Data);
-
-                throw await CreateAndLogServiceExceptionAsync(
-                    failedCompareQueueOrchestrationServiceException);
-            }
-        }
-
-        private async ValueTask TryCatch(ReturningNothingFunction returningNothingFunction)
-        {
-            try
-            {
-                await returningNothingFunction();
+                return await returningValueFunction();
             }
             catch (NullCompareQueueItemException nullCompareQueueItemException)
             {
@@ -124,6 +85,18 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     failedCompareQueueOrchestrationServiceException);
             }
         }
+
+        /// <summary>
+        /// The methods that return nothing map their exceptions the same way, so they run through
+        /// the same ladder and discard the placeholder.
+        /// </summary>
+        private async ValueTask TryCatch(ReturningNothingFunction returningNothingFunction) =>
+            await TryCatch<bool>(async () =>
+            {
+                await returningNothingFunction();
+
+                return true;
+            });
 
         private async ValueTask<CompareQueueOrchestrationValidationException>
             CreateAndLogValidationExceptionAsync(Xeption exception)

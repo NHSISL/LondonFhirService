@@ -10,6 +10,16 @@ namespace LondonFhirService.Core.Models.Foundations.FhirRecords
     public class FhirRecord : IKey, IAuditable
     {
         public Guid Id { get; set; }
+
+        /// <summary>
+        /// The W3C trace id of the request that produced this record, in the 32 hex digit form
+        /// ("N") - the same string the X-Correlation-Id response header carries and the same one
+        /// Application Insights files the request under as operation_Id. Rows written before
+        /// that convention landed hold the dashed form instead.
+        ///
+        /// A primary and its secondaries share this value; it is what pairs them in the compare
+        /// queue, so both sides are always written by the same request in the same format.
+        /// </summary>
         public string CorrelationId { get; set; }
         public string JsonPayload { get; set; }
         public string SourceName { get; set; }

@@ -19,14 +19,21 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                 (Rule: IsInvalid(id), Parameter: "Id"));
         }
 
-        private static void ValidateArgsOnGetStructuredRecord(string nhsNumber)
+        private static void ValidateArgsOnGetStructuredRecord(string nhsNumber, Guid correlationId)
         {
             Validate(
                 createException: () => new InvalidArgumentPatientCoordinationException(
                     message: "Invalid argument(s), please correct the errors and try again."),
 
-                (Rule: IsInvalid(nhsNumber), Parameter: "NhsNumber"));
+                (Rule: IsInvalid(nhsNumber), Parameter: "NhsNumber"),
+                (Rule: IsInvalid(correlationId), Parameter: "CorrelationId"));
         }
+
+        private static dynamic IsInvalid(Guid? id) => new
+        {
+            Condition = id == null || id == Guid.Empty,
+            Message = "Id is required"
+        };
 
         private static dynamic IsInvalid(string text) => new
         {

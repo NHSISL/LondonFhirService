@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,11 +6,11 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Api.Workers;
+using LondonFhirService.Core.Workers;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace LondonFhirService.Api.Tests.Unit.Workers
+namespace LondonFhirService.Core.Tests.Unit.Workers
 {
     public class MetricTelemetryPublisherTests
     {

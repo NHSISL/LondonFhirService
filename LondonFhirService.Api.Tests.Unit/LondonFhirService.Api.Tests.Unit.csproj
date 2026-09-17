@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -40,7 +40,6 @@
 	<ItemGroup>
 		<!-- Referenced directly so the telemetry tests can stub ITelemetryChannel and assert on
 		     what actually reaches Application Insights. -->
-		<PackageReference Include="Microsoft.ApplicationInsights" Version="3.1.2" />
 	</ItemGroup>
 
 	<ItemGroup>

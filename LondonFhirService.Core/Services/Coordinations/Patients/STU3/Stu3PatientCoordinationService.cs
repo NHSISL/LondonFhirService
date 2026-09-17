@@ -44,6 +44,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         }
 
         public ValueTask<string> GetStructuredRecordSerialisedAsync(
+            Guid correlationId,
             string nhsNumber,
             string dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -52,8 +53,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         TryCatch(async () =>
         {
             var stopwatch = Stopwatch.StartNew();
-            ValidateArgsOnGetStructuredRecord(nhsNumber);
-            Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
+            ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             // The root span. Every other span of this request is a descendant of it, so its id
@@ -103,14 +103,14 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     title: $"Coordination Service Request Submitted",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Requesting Patient Info",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 StructuredRecordsResponse structuredRecordsResponse =
                     await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
@@ -127,7 +127,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     title: $"Reconcile bundles",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 Guid consolidationSpanId = await this.identifierBroker.GetIdentifierAsync();
 
@@ -165,7 +165,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     title: $"Coordination Service Request Completed in {stopwatch.ElapsedMilliseconds}ms",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 // Last statement in the try on purpose. Anything that throws after the success
                 // span is written sends the catch down the same path, and the span id is

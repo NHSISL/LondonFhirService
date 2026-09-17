@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -58,7 +58,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU
                     await this.loggingBroker.LogWarningAsync(
                         $"Primary provider '{primaryProviderName}' returned no record; " +
                             $"returning '{bundle.Provider}' instead.  " +
-                            $"CorrelationId: {correlationId.ToString()}");
+                            $"CorrelationId: {correlationId.ToString("N")}");
                 }
             }
 

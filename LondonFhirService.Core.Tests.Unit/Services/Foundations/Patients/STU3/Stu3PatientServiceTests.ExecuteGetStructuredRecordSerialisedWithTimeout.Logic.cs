@@ -57,7 +57,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             FhirRecord fhirRecord = new()
             {
                 Id = identifier,
-                CorrelationId = correlationId.ToString(),
+                CorrelationId = correlationId.ToString("N"),
                 JsonPayload = rawOutputJson,
                 SourceName = $"{fhirProvider.DisplayName} ({inputFhirProviderName})",
                 IsPrimarySource = inputFhirProviderIsPrimary,
@@ -109,7 +109,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -118,7 +118,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith($"{fhirProvider.DisplayName} Provider Execution Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
@@ -298,7 +298,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogWarningAsync(It.Is<string>(message =>
                     message.Contains("dispatch queue was full") &&
-                    message.Contains(correlationId.ToString()))),
+                    message.Contains(correlationId.ToString("N")))),
                         Times.Once);
 
             this.storageBrokerFactoryMock.Verify(factory =>
@@ -427,7 +427,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
@@ -504,7 +504,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -513,7 +513,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     $"Parallel Provider Execution - {fhirProvider.DisplayName} failed",
                     It.IsAny<string>(),
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>
@@ -608,7 +608,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.ddsFhirProviderMock.Verify(provider =>

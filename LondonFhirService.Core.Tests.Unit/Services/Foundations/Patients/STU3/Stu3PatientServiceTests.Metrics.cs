@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Threading;
 using FluentAssertions;
@@ -39,7 +40,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             Guid providerSpanId = Guid.NewGuid();
             Guid fhirRecordId = Guid.NewGuid();
             Guid persistMetricId = Guid.NewGuid();
+            string requestSpanId = ActivitySpanId.CreateRandom().ToHexString();
             DateTimeOffset startedAt = GetRandomDateTimeOffset();
+
+            this.requestTraceBrokerMock.Setup(broker =>
+                broker.GetRequestSpanIdAsync())
+                    .ReturnsAsync(requestSpanId);
             Bundle randomBundle = CreateRandomBundle();
             string rawOutputJson = this.fhirJsonSerializer.SerializeToString(randomBundle);
             var recordedMetrics = new List<Metric>();
@@ -113,6 +119,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             persistSpan.ParentId.Should().Be(providerSpanId);
 
             recordedMetrics.Should().OnlyContain(metric => metric.CorrelationId == correlationId);
+
+            // The Persist span is the one span recorded from inside a queued closure, which runs
+            // on the drain worker after the request is gone. The metric service stamps the request
+            // span id for every other span, but by the time it sees this one there is no request
+            // left to ask - so this span captures it itself, before the work is queued. Without
+            // that, every Persist span silently lost its anchor and floated beside the request
+            // while all its siblings hung under it.
+            persistSpan.RequestSpanId.Should().Be(requestSpanId);
+
+            this.requestTraceBrokerMock.Verify(broker =>
+                broker.GetRequestSpanIdAsync(),
+                    Times.Once);
             recordedMetrics.Should().OnlyContain(metric => metric.Status == MetricStatus.Succeeded);
 
             // Completed is Started plus the duration by construction, never a second clock read.

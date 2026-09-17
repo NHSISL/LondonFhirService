@@ -50,6 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
         private readonly Mock<IStorageBroker> storageBrokerMock;
         private readonly Mock<IStorageBrokerFactory> storageBrokerFactoryMock;
         private readonly Mock<IAuditAndMetricsDispatcher> dispatcherMock;
+        private readonly Mock<IRequestTraceBroker> requestTraceBrokerMock;
         private readonly PatientServiceConfig patientServiceConfig;
         private readonly Stu3PatientService patientService;
         private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
@@ -70,6 +71,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     .Returns(ValueTask.CompletedTask);
 
             this.dispatcherMock = new Mock<IAuditAndMetricsDispatcher>();
+            this.requestTraceBrokerMock = new Mock<IRequestTraceBroker>();
 
             // Inline, so a dispatched persistence is observable by the time the call returns.
             this.dispatcherMock.Setup(dispatcher =>
@@ -121,6 +123,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 securityAuditBroker: this.securityAuditBrokerMock.Object,
                 storageBrokerFactory: this.storageBrokerFactoryMock.Object,
                 dispatcher: this.dispatcherMock.Object,
+                requestTraceBroker: this.requestTraceBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 patientServiceConfig: this.patientServiceConfig);
         }

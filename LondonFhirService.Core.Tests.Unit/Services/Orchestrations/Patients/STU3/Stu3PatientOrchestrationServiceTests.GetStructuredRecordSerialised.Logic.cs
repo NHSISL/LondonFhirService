@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -146,7 +146,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Orchestration Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -155,7 +155,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Check Access Permissions",
                     accessMessage,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -164,7 +164,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Check Access Permissions",
                     currentUserJson,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -176,10 +176,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         $"{userId} is allowed to access patient with " +
                         $"NHS number {inputNhsNumber} via org codes: " +
                         $"{string.Join(", ", returnedConsumerAccess.AllowedViaOrganisations)}  " +
-                        $"CorrelationId: {correlationId.ToString()}")),
+                        $"CorrelationId: {correlationId.ToString("N")}")),
 
                     null,
-                    correlationId.ToString(),
+                    correlationId.ToString("N"),
                     "Information",
                     default),
                         Times.Once);
@@ -190,7 +190,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Retrieve active providers and execute request",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -199,7 +199,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     It.Is<string>(title => title.StartsWith("Orchestration Service Request Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();

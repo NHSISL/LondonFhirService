@@ -6,6 +6,7 @@ using System;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using LondonFhirService.Api.Controllers.STU3;
+using LondonFhirService.Core.Brokers.Correlations;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using Moq;
@@ -18,6 +19,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
     public partial class Stu3PatientControllerTests : RESTFulController
     {
         private readonly Mock<IStu3PatientCoordinationService> patientCoordinationServiceMock;
+        private readonly Mock<ICorrelationBroker> correlationBrokerMock;
         private readonly PatientController patientController;
         private readonly FhirJsonDeserializer fhirJsonDeserializer = new();
         private readonly FhirJsonSerializer fhirJsonSerializer = new();
@@ -25,9 +27,11 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
         public Stu3PatientControllerTests()
         {
             this.patientCoordinationServiceMock = new Mock<IStu3PatientCoordinationService>();
+            this.correlationBrokerMock = new Mock<ICorrelationBroker>();
 
             this.patientController = new PatientController(
-                this.patientCoordinationServiceMock.Object);
+                this.patientCoordinationServiceMock.Object,
+                this.correlationBrokerMock.Object);
         }
 
         private static int GetRandomNumber() =>

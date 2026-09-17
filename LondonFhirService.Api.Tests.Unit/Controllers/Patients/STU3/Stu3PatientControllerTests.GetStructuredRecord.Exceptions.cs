@@ -29,6 +29,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             bool inputDemographicsOnly = false;
             bool inputIncludeInactivePatients = false;
             CancellationToken cancellationToken = CancellationToken.None;
+            Guid correlationId = Guid.NewGuid();
 
             Parameters randomParameters = CreateRandomGetStructuredRecordParameters(
                 nhsNumber: inputNhsNumber,
@@ -43,8 +44,13 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             var expectedActionResult = new ActionResult<Bundle>(expectedBadRequestObjectResult);
 
+            this.correlationBrokerMock.Setup(broker =>
+                broker.GetCorrelationIdAsync())
+                    .ReturnsAsync(correlationId);
+
             this.patientCoordinationServiceMock.Setup(coordination =>
                 coordination.GetStructuredRecordSerialisedAsync(
+                    correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -61,6 +67,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             this.patientCoordinationServiceMock.Verify(coordination =>
                 coordination.GetStructuredRecordSerialisedAsync(
+                    correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -68,7 +75,12 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                     cancellationToken),
                         Times.Once);
 
+            this.correlationBrokerMock.Verify(broker =>
+                broker.GetCorrelationIdAsync(),
+                    Times.Once);
+
             this.patientCoordinationServiceMock.VerifyNoOtherCalls();
+            this.correlationBrokerMock.VerifyNoOtherCalls();
         }
 
         [Theory]
@@ -84,6 +96,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             bool inputDemographicsOnly = false;
             bool inputIncludeInactivePatients = false;
             CancellationToken cancellationToken = CancellationToken.None;
+            Guid correlationId = Guid.NewGuid();
 
             Parameters randomParameters = CreateRandomGetStructuredRecordParameters(
                 nhsNumber: inputNhsNumber,
@@ -98,8 +111,13 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             var expectedActionResult = new ActionResult<Bundle>(expectedInternalServerErrorObjectResult);
 
+            this.correlationBrokerMock.Setup(broker =>
+                broker.GetCorrelationIdAsync())
+                    .ReturnsAsync(correlationId);
+
             this.patientCoordinationServiceMock.Setup(coordination =>
                 coordination.GetStructuredRecordSerialisedAsync(
+                    correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -116,6 +134,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
             this.patientCoordinationServiceMock.Verify(coordination =>
                 coordination.GetStructuredRecordSerialisedAsync(
+                    correlationId,
                     inputNhsNumber,
                     inputDateOfBirth,
                     inputDemographicsOnly,
@@ -123,7 +142,12 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                     cancellationToken),
                         Times.Once);
 
+            this.correlationBrokerMock.Verify(broker =>
+                broker.GetCorrelationIdAsync(),
+                    Times.Once);
+
             this.patientCoordinationServiceMock.VerifyNoOtherCalls();
+            this.correlationBrokerMock.VerifyNoOtherCalls();
         }
     }
 }
