@@ -99,6 +99,25 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Correlations
         }
 
         [Fact]
+        public async Task ShouldReturnACorrelationIdOnAnAuthorizationRefusalAsync()
+        {
+            // given . when
+            HttpResponseMessage response =
+                await this.apiBroker.GetResponseAsync(ForbiddenProbeController.Route);
+
+            // then
+            // The response class the middleware's POSITION is for. An unmatched URL is refused by
+            // routing and an unhandled exception by the error handler; neither sits behind
+            // UseAuthentication, UseAuthorization or UseRequestTimeouts. This one does: the
+            // authorization middleware writes it, and it only carries the header because the
+            // correlation middleware ran first. Move UseMiddleware<CorrelationMiddleware> below
+            // UseAuthorization and every other correlation test still passes - this one fails.
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            Guid correlationId = ReadCorrelationId(response);
+            correlationId.Should().NotBe(Guid.Empty);
+        }
+
+        [Fact]
         public async Task ShouldAdoptTheTraceTheCallerSentAsync()
         {
             // given

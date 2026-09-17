@@ -139,6 +139,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
                 UserId = GetRandomString(),
                 ParentId = Guid.NewGuid(),
                 CorrelationId = Guid.NewGuid(),
+                RequestSpanId = GetRandomString(),
                 Method = GetRandomString(),
                 Type = MetricType.Provider,
                 Name = GetRandomString(),
@@ -175,6 +176,13 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             capturedMetric.UserId.Should().Be(foreignMetric.UserId);
             capturedMetric.ParentId.Should().Be(foreignMetric.ParentId);
             capturedMetric.CorrelationId.Should().Be(foreignMetric.CorrelationId);
+
+            // Transport only, and the only field here that is not a column - which is exactly why
+            // it needs asserting. It carries the request's span id to the worker that replays the
+            // metric into telemetry, so a copy that drops it loses the anchor silently: the row
+            // still writes, and the replayed span just hangs off nothing.
+            capturedMetric.RequestSpanId.Should().Be(foreignMetric.RequestSpanId);
+
             capturedMetric.Method.Should().Be(foreignMetric.Method);
             capturedMetric.Type.Should().Be(foreignMetric.Type);
             capturedMetric.Name.Should().Be(foreignMetric.Name);

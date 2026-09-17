@@ -63,6 +63,13 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 // The host has no endpoint that throws past MVC, and the response class that
                 // produces is the one the correlation middleware was hardest to get right for.
                 services.AddSingleton<IStartupFilter, ThrowingRouteStartupFilter>();
+
+                // Nor does it have one the acceptance principal fails, so there is no way to
+                // reach a response the authorization middleware writes itself. Registering this
+                // assembly as an application part adds ForbiddenProbeController to the real
+                // routing table, behind the real UseAuthorization.
+                services.AddControllers()
+                    .AddApplicationPart(typeof(TestWebApplicationFactory).Assembly);
             });
         }
 
