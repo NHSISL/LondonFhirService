@@ -88,7 +88,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             List<IMetric> randomMetrics = CreateRandomMetrics(randomDateTimeOffset);
-            this.metricServiceConfigurations.IsEnabled = false;
+            this.metricServiceConfigurations.IsMetricsEnabled = false;
 
             // when
             await this.metricService.AddMetricsAsync(randomMetrics, TestContext.Current.CancellationToken);

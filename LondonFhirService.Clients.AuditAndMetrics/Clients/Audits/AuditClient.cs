@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -129,6 +129,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients.Audits
                 cancellationToken.ThrowIfCancellationRequested();
 
                 return await this.auditService.RemoveAuditByIdAsync(auditId, cancellationToken);
+            });
+
+        public async ValueTask<int> PurgeAuditsOlderThanRetentionPeriodAsync(
+            CancellationToken cancellationToken = default) =>
+            await TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.auditService.PurgeAuditsOlderThanRetentionPeriodAsync(cancellationToken);
             });
 
         private delegate ValueTask<T> ReturningGenericFunction<T>();

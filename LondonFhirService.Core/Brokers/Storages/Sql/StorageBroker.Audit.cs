@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -53,5 +53,19 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             IAudit audit,
             CancellationToken cancellationToken = default) =>
             await DeleteAsync((Audit)audit, cancellationToken);
+
+        /// <summary>
+        /// The predicate runs in SQL and no entity is materialised, so the cost of a purge does
+        /// not grow with the size of the retention window.
+        /// </summary>
+        public virtual async ValueTask<int> DeleteAuditsOlderThanAsync(
+            DateTimeOffset cutOffDate,
+            int batchSize,
+            CancellationToken cancellationToken = default) =>
+            await Audits
+                .Where(audit => audit.CreatedDate < cutOffDate)
+                .OrderBy(audit => audit.CreatedDate)
+                .Take(batchSize)
+                .ExecuteDeleteAsync(cancellationToken);
     }
 }

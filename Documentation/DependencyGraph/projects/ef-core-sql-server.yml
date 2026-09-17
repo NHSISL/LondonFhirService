@@ -8,7 +8,7 @@ components:
   - id: EXT.EFCore
     name: DbContext (EF Core / SQL Server)
     layer: external
-    col: 12
+    col: 13
     shared: true
     deriveMethods: true
     description: "The DbContext handed to STX.EFCore.Client's EFCoreClient. In this solution that is Core's StorageBroker itself — it derives from EFxceptionsContext (EF Core DbContext) and passes `this` into `new EFCoreClient(this)`. SQL Server with HierarchyId enabled. Three methods bypass EFCoreClient and hit EF directly: ClaimFhirRecordAsync and DeleteMetricsOlderThanAsync run set-based ExecuteUpdate/ExecuteDelete statements, and SelectAllProvidersAsListAsync materialises with ToListAsync."

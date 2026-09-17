@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -20,6 +20,7 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         private delegate ValueTask<Audit> ReturningAuditFunction();
         private delegate ValueTask<IQueryable<Audit>> ReturningAuditsFunction();
         private delegate ValueTask ReturningNothingFunction();
+        private delegate ValueTask<int> ReturningCountFunction();
 
         /// <summary>
         /// The client has already categorised the failure; this localises its exceptions into
@@ -77,6 +78,45 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             catch (ClientExceptions.AuditClientNotFoundException auditClientNotFoundException)
             {
                 throw await CreateAndLogNotFoundExceptionAsync(auditClientNotFoundException);
+            }
+            catch (ClientExceptions.AuditClientValidationException auditClientValidationException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(auditClientValidationException);
+            }
+            catch (ClientExceptions.AuditClientDependencyValidationException
+                auditClientDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    auditClientDependencyValidationException);
+            }
+            catch (ClientExceptions.AuditClientDependencyException auditClientDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(auditClientDependencyException);
+            }
+            catch (ClientExceptions.AuditClientServiceException auditClientServiceException)
+            {
+                throw await CreateAndLogServiceExceptionAsync(auditClientServiceException);
+            }
+            catch (Exception exception)
+            {
+                throw await CreateAndLogServiceExceptionAsync(exception);
+            }
+        }
+
+        /// <summary>
+        /// The purge's shape: no entry in, a count out. Same localisation as the rest - the
+        /// library's categorised exceptions become this service's, so the worker above catches
+        /// Core's contract rather than the client's.
+        /// </summary>
+        private async ValueTask<int> TryCatch(ReturningCountFunction returningCountFunction)
+        {
+            try
+            {
+                return await returningCountFunction();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (ClientExceptions.AuditClientValidationException auditClientValidationException)
             {

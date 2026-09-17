@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -44,8 +44,8 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
 
         /// <summary>
         /// Deletes metrics past the configured retention period and returns how many rows went.
-        /// Whether anything is deleted at all is decided by the library's IsPurgingAllowed and
-        /// RetentionPeriodInDays.
+        /// Whether anything is deleted at all is decided by the library's IsMetricsPurgingAllowed
+        /// and MetricsRetentionPeriodInDays.
         /// </summary>
         ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(CancellationToken cancellationToken = default);
     }

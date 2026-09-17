@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using LondonFhirService.Core.Abstractions.Models.Audits;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using Xeptions;
 
 namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
@@ -58,6 +59,24 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
                     "Invalid audit. Please correct the errors and try again."),
 
                 validations: (Rule: IsInvalid(auditId), Parameter: nameof(IAudit.Id)));
+
+        private static void ValidateRetentionPeriod(int retentionPeriodInDays) =>
+            Validate(
+                createException: () => new InvalidAuditException(
+                    "Invalid audit. Please correct the errors and try again."),
+
+                validations: (
+                    Rule: IsNotPositive(retentionPeriodInDays),
+                    Parameter: nameof(AuditAndMetricsConfigurations.AuditRetentionPeriodInDays)));
+
+        private static void ValidatePurgeBatchSize(int purgeBatchSize) =>
+            Validate(
+                createException: () => new InvalidAuditException(
+                    "Invalid audit. Please correct the errors and try again."),
+
+                validations: (
+                    Rule: IsNotPositive(purgeBatchSize),
+                    Parameter: nameof(AuditAndMetricsConfigurations.PurgeBatchSize)));
 
         private static void ValidateBatchSize(int batchSize) =>
             Validate(

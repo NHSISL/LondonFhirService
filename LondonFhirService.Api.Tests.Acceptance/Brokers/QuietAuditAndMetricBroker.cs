@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -100,6 +100,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             Guid metricId,
             CancellationToken cancellationToken = default) =>
             this.auditAndMetricBroker.RemoveMetricByIdAsync(metricId, cancellationToken);
+
+        public ValueTask<int> PurgeAuditsOlderThanRetentionPeriodAsync(
+            CancellationToken cancellationToken = default) =>
+            this.auditAndMetricBroker.PurgeAuditsOlderThanRetentionPeriodAsync(cancellationToken);
 
         public ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(
             CancellationToken cancellationToken = default) =>

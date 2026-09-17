@@ -474,7 +474,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 //
                 // Recorded through the metric broker, not written straight to storage. Going
                 // direct would skip the metric service, and with it the column validation, the
-                // IsEnabled kill switch, and the ActivitySource the telemetry publisher
+                // IsMetricsEnabled kill switch, and the ActivitySource the telemetry publisher
                 // subscribes to - so Persist would silently stop appearing in Application
                 // Insights altogether. This does mean a shutdown that has already closed the
                 // queue can refuse the span; that loss is bounded to a deployment and is now

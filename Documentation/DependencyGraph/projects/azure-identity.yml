@@ -8,7 +8,7 @@ components:
   - id: EXT.TokenCredential
     name: TokenCredential (DefaultAzureCredential)
     layer: external
-    col: 12
+    col: 13
     shared: true
     deriveMethods: true
     description: "Azure.Identity. Registered as a singleton in the API host and used by ConsumerAccessBroker to mint a bearer token for the remote consumer-access endpoint."

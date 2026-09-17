@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -17,6 +17,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         private delegate ValueTask<IAudit> ReturningAuditFunction();
         private delegate ValueTask<IQueryable<IAudit>> ReturningAuditsFunction();
         private delegate ValueTask ReturningNothingFunction();
+        private delegate ValueTask<int> ReturningCountFunction();
 
         /// <summary>
         /// As with the metric service, the storage exception types are not named here. The
@@ -103,6 +104,48 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             catch (AlreadyExistsAuditException alreadyExistsAuditException)
             {
                 throw await CreateAndLogDependencyValidationExceptionAsync(alreadyExistsAuditException);
+            }
+            catch (FailedStorageAuditException failedStorageAuditException)
+            {
+                throw await CreateAndLogCriticalDependencyExceptionAsync(failedStorageAuditException);
+            }
+            catch (Exception exception)
+            {
+                throw await CreateAndLogServiceExceptionAsync(exception);
+            }
+        }
+
+        /// <summary>
+        /// The purge's own shape. It takes no entry and returns a count, so there is no null or
+        /// not-found to map - only the invalid configuration it guards against, and the storage
+        /// failures a bulk delete can hit part way through.
+        /// </summary>
+        private async ValueTask<int> TryCatch(ReturningCountFunction returningCountFunction)
+        {
+            try
+            {
+                return await returningCountFunction();
+            }
+            catch (InvalidAuditException invalidAuditException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(invalidAuditException);
+            }
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.InnerException is TimeoutException)
+            {
+                throw await CreateAndLogTimedOutExceptionAsync(operationCanceledException);
+            }
+            catch (TimeoutException timeoutException)
+            {
+                throw await CreateAndLogTimedOutExceptionAsync(timeoutException);
+            }
+            catch (OperationCanceledException operationCanceledException)
+            {
+                throw await CreateAndLogCancelledExceptionAsync(operationCanceledException);
+            }
+            catch (LockedAuditException lockedAuditException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(lockedAuditException);
             }
             catch (FailedStorageAuditException failedStorageAuditException)
             {

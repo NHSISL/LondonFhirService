@@ -68,7 +68,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 
                 validations: (
                     Rule: IsNotPositive(retentionPeriodInDays),
-                    Parameter: nameof(AuditAndMetricsConfigurations.RetentionPeriodInDays)));
+                    Parameter: nameof(AuditAndMetricsConfigurations.MetricsRetentionPeriodInDays)));
 
         private static void ValidatePurgeBatchSize(int purgeBatchSize) =>
             Validate(

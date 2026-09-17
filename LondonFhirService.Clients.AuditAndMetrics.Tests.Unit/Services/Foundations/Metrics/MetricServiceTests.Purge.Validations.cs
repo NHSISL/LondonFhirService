@@ -25,14 +25,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             int invalidRetentionPeriodInDays)
         {
             // given
-            this.metricServiceConfigurations.RetentionPeriodInDays = invalidRetentionPeriodInDays;
+            this.metricServiceConfigurations.MetricsRetentionPeriodInDays = invalidRetentionPeriodInDays;
 
             var invalidMetricException =
                 new InvalidMetricException(
                     message: "Invalid metric. Please correct the errors and try again.");
 
             invalidMetricException.AddData(
-                key: nameof(AuditAndMetricsConfigurations.RetentionPeriodInDays),
+                key: nameof(AuditAndMetricsConfigurations.MetricsRetentionPeriodInDays),
                 values: "Value is expected to be greater than zero");
 
             var expectedMetricValidationException =
