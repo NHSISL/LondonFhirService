@@ -29,11 +29,11 @@ namespace LondonFhirService.Core.Models.Foundations.FhirRecords
 
         /// <summary>
         /// When the row actually became visible to other readers, stamped by the database rather
-        /// than by the caller. The compare queue waits a buffer period before claiming a secondary
-        /// so its sibling primary has time to land, and CreatedDate/UpdatedDate cannot measure
-        /// that: they are stamped on the request thread, while the insert itself happens later on
-        /// the dispatch queue. Filtering on those made the buffer start counting before the row
-        /// existed, so the queue's own latency ate the grace period it was meant to provide.
+        /// than by the caller. The compare queue measures how long a secondary has gone without a
+        /// sibling primary from this, and CreatedDate/UpdatedDate cannot measure that: they are
+        /// stamped on the request thread, while the insert itself happens later on the dispatch
+        /// queue. Filtering on those made the wait start counting before the row existed, so the
+        /// queue's own latency ate the grace period it was meant to provide.
         /// </summary>
         public DateTimeOffset InsertedDate { get; set; }
 

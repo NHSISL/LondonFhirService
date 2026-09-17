@@ -59,8 +59,8 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             // Never written again. ValueGeneratedOnAdd alone still emits the column in UPDATE
             // statements, so an update carrying a whole entity - the management host's PUT, say -
             // would overwrite the stamp with whatever the caller sent, and a caller that simply
-            // omitted it would write default(DateTimeOffset) and make the row instantly eligible,
-            // collapsing the compare buffer it exists to enforce.
+            // omitted it would write default(DateTimeOffset) and make the row instantly look
+            // orphaned, so a secondary would be compared against a primary still on its way.
             model
                 .Property(fhirRecord => fhirRecord.InsertedDate)
                 .HasDefaultValueSql("SYSDATETIMEOFFSET()")
@@ -72,6 +72,11 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             // ranges it, CreatedDate orders it. Status was previously in no index at all, so the
             // claim ran as a clustered-index scan on a table that grows by a row per provider per
             // request - once per record claimed, which made draining a backlog quadratic.
+            //
+            // The EXISTS looking for a candidate's sibling primary seeks the CorrelationId index
+            // above and checks IsPrimarySource on the row it lands on. That is a lookup rather
+            // than a covered read, but a correlation holds one row per provider, so it is a
+            // handful of rows per candidate rather than a scan.
             model
                 .HasIndex(fhirRecord => new
                 {

@@ -25,17 +25,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
         {
             // given
             DateTimeOffset inputDateTimeOffset = GetRandomDateTimeOffset();
-            DateTimeOffset bufferedDateTimeOffset = inputDateTimeOffset.AddMinutes(-5);
             var candidateFhirRecords = new List<FhirRecord>();
+            var allFhirRecords = new List<FhirRecord>();
 
             for (int index = 0; index < 10; index++)
             {
                 FhirRecord candidateFhirRecord =
-                    CreateRandomFhirRecord(bufferedDateTimeOffset.AddMinutes(-(10 - index)));
+                    CreateRandomFhirRecord(inputDateTimeOffset.AddMinutes(-(10 - index)));
 
                 candidateFhirRecord.Status = StatusType.Pending;
                 candidateFhirRecord.IsPrimarySource = false;
                 candidateFhirRecords.Add(candidateFhirRecord);
+
+                // Each one is eligible because its own sibling primary is already in the table,
+                // not because it has aged past anything - the oldest here is ten minutes old and
+                // the orphan wait is thirty.
+                FhirRecord primaryFhirRecord = CreateRandomFhirRecord(inputDateTimeOffset);
+                primaryFhirRecord.IsPrimarySource = true;
+                primaryFhirRecord.CorrelationId = candidateFhirRecord.CorrelationId;
+
+                allFhirRecords.Add(candidateFhirRecord);
+                allFhirRecords.Add(primaryFhirRecord);
             }
 
             FhirRecord expectedFhirRecord = candidateFhirRecords[selectedIndex];
@@ -56,7 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
 
             this.fhirRecordServiceMock.Setup(service =>
                 service.RetrieveAllFhirRecordsAsync())
-                    .ReturnsAsync(candidateFhirRecords.AsQueryable());
+                    .ReturnsAsync(allFhirRecords.AsQueryable());
 
             this.fhirRecordServiceMock.Setup(service =>
                 service.TryClaimFhirRecordAsync(
@@ -126,10 +136,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             DateTimeOffset inputDateTimeOffset = randomDateTimeOffset;
-            DateTimeOffset bufferedDateTimeOffset = inputDateTimeOffset.AddMinutes(-5);
 
+            // Inserted a second ago, nowhere near the orphan wait. It is claimed because its
+            // sibling primary is in the table, which is the whole of the normal path: a pair is
+            // complete the moment the second provider answers, and the queue can say so rather
+            // than waiting out a buffer that only ever guessed at it.
             FhirRecord randomSecondaryFhirRecord =
-                CreateRandomFhirRecord(bufferedDateTimeOffset.AddMinutes(-1));
+                CreateRandomFhirRecord(inputDateTimeOffset.AddSeconds(-1));
 
             randomSecondaryFhirRecord.Status = StatusType.Pending;
             randomSecondaryFhirRecord.IsPrimarySource = false;
@@ -143,11 +156,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             randomPrimaryFhirRecord.CorrelationId = storedSecondaryFhirRecord.CorrelationId;
             FhirRecord inputPrimaryFhirRecord = randomPrimaryFhirRecord;
 
-            IQueryable<FhirRecord> secondaryFhirRecords =
-                new List<FhirRecord> { inputSecondaryFhirRecord }.AsQueryable();
-
-            IQueryable<FhirRecord> primaryFhirRecords =
-                new List<FhirRecord> { inputPrimaryFhirRecord }.AsQueryable();
+            // One table, read twice - by the candidate query and again for the winner's primary.
+            IQueryable<FhirRecord> allFhirRecords =
+                new List<FhirRecord> { inputSecondaryFhirRecord, inputPrimaryFhirRecord }
+                    .AsQueryable();
 
             var expectedCompareQueueItem = new CompareQueueItem();
             expectedCompareQueueItem.PrimaryFhirRecord = inputPrimaryFhirRecord;
@@ -161,10 +173,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(inputDateTimeOffset);
 
-            this.fhirRecordServiceMock.SetupSequence(service =>
+            this.fhirRecordServiceMock.Setup(service =>
                 service.RetrieveAllFhirRecordsAsync())
-                    .ReturnsAsync(secondaryFhirRecords)
-                    .ReturnsAsync(primaryFhirRecords);
+                    .ReturnsAsync(allFhirRecords);
 
             // A Pending claim needs no lease bound - the status change alone is a real guard.
             this.fhirRecordServiceMock.Setup(service =>
@@ -237,16 +248,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
         {
             // given
             DateTimeOffset inputDateTimeOffset = GetRandomDateTimeOffset();
-            DateTimeOffset bufferedDateTimeOffset = inputDateTimeOffset.AddMinutes(-5);
 
             FhirRecord inputSecondaryFhirRecord =
-                CreateRandomFhirRecord(bufferedDateTimeOffset.AddMinutes(-1));
+                CreateRandomFhirRecord(inputDateTimeOffset.AddSeconds(-1));
 
             inputSecondaryFhirRecord.Status = StatusType.Pending;
             inputSecondaryFhirRecord.IsPrimarySource = false;
 
-            IQueryable<FhirRecord> secondaryFhirRecords =
-                new List<FhirRecord> { inputSecondaryFhirRecord }.AsQueryable();
+            FhirRecord inputPrimaryFhirRecord = CreateRandomFhirRecord(inputDateTimeOffset);
+            inputPrimaryFhirRecord.IsPrimarySource = true;
+            inputPrimaryFhirRecord.CorrelationId = inputSecondaryFhirRecord.CorrelationId;
+
+            IQueryable<FhirRecord> allFhirRecords =
+                new List<FhirRecord> { inputSecondaryFhirRecord, inputPrimaryFhirRecord }
+                    .AsQueryable();
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
@@ -254,7 +269,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
 
             this.fhirRecordServiceMock.Setup(service =>
                 service.RetrieveAllFhirRecordsAsync())
-                    .ReturnsAsync(secondaryFhirRecords);
+                    .ReturnsAsync(allFhirRecords);
 
             // Another worker wins every attempt, so the guarded update changes no rows.
             this.fhirRecordServiceMock.Setup(service =>
@@ -404,6 +419,159 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             // worker now holds.
             this.fhirRecordServiceMock.Verify(service =>
                 service.RetrieveFhirRecordByIdAsync(strandedFhirRecord.Id),
+                    Times.Once);
+
+            this.fhirRecordServiceMock.VerifyNoOtherCalls();
+            this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldNotClaimASecondaryWhoseSiblingPrimaryHasNotArrivedAsync()
+        {
+            // given
+            // Two providers were asked and only one has answered. Comparing now would report
+            // every field of the answer that did arrive as a difference against nothing, so the
+            // row waits - but it waits on the primary appearing, not on a clock.
+            DateTimeOffset inputDateTimeOffset = GetRandomDateTimeOffset();
+
+            FhirRecord unpairedSecondaryFhirRecord =
+                CreateRandomFhirRecord(inputDateTimeOffset.AddMinutes(-1));
+
+            unpairedSecondaryFhirRecord.Status = StatusType.Pending;
+            unpairedSecondaryFhirRecord.IsPrimarySource = false;
+
+            // Same correlation, also a secondary. A rule that matched on CorrelationId alone
+            // would read this as the sibling primary and claim a pair with nothing to compare
+            // against - three providers on one request is the ordinary case, not a contrived one.
+            FhirRecord otherSecondaryFhirRecord =
+                CreateRandomFhirRecord(inputDateTimeOffset.AddMinutes(-1));
+
+            otherSecondaryFhirRecord.Status = StatusType.Pending;
+            otherSecondaryFhirRecord.IsPrimarySource = false;
+            otherSecondaryFhirRecord.CorrelationId = unpairedSecondaryFhirRecord.CorrelationId;
+
+            IQueryable<FhirRecord> allFhirRecords =
+                new List<FhirRecord> { unpairedSecondaryFhirRecord, otherSecondaryFhirRecord }
+                    .AsQueryable();
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(inputDateTimeOffset);
+
+            this.fhirRecordServiceMock.Setup(service =>
+                service.RetrieveAllFhirRecordsAsync())
+                    .ReturnsAsync(allFhirRecords);
+
+            // when
+            CompareQueueItem actualCompareQueueItem =
+                await this.compareQueueOrchestrationService.GetUnprocessedRecordAsync();
+
+            // then
+            actualCompareQueueItem.Should().BeNull();
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.fhirRecordServiceMock.Verify(service =>
+                service.RetrieveAllFhirRecordsAsync(),
+                    Times.Once);
+
+            // Nothing claimed and nothing read back - an empty window short-circuits before a
+            // candidate is even selected, so the cycle does not burn its attempts on it either.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            this.fhirRecordServiceMock.VerifyNoOtherCalls();
+            this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldClaimAnOrphanedSecondaryOnceItsPrimaryHasStoppedComingAsync()
+        {
+            // given
+            // The backstop, and the only case the old timing buffer was really for. A fan-out
+            // that failed on the primary, or a persist that never completed, leaves a secondary
+            // with no sibling coming at all. Without this it would sit Pending forever and nobody
+            // would find out; with it the comparison happens against a null primary and the gap
+            // is visible on the comparisons page.
+            DateTimeOffset inputDateTimeOffset = GetRandomDateTimeOffset();
+
+            FhirRecord orphanedSecondaryFhirRecord =
+                CreateRandomFhirRecord(inputDateTimeOffset.AddMinutes(-31));
+
+            orphanedSecondaryFhirRecord.Status = StatusType.Pending;
+            orphanedSecondaryFhirRecord.IsPrimarySource = false;
+
+            IQueryable<FhirRecord> allFhirRecords =
+                new List<FhirRecord> { orphanedSecondaryFhirRecord }.AsQueryable();
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(inputDateTimeOffset);
+
+            this.fhirRecordServiceMock.Setup(service =>
+                service.RetrieveAllFhirRecordsAsync())
+                    .ReturnsAsync(allFhirRecords);
+
+            this.fhirRecordServiceMock.Setup(service =>
+                service.TryClaimFhirRecordAsync(
+                    orphanedSecondaryFhirRecord.Id,
+                    StatusType.Pending,
+                    StatusType.Processing,
+                    inputDateTimeOffset,
+                    false,
+                    null))
+                        .ReturnsAsync(true);
+
+            this.fhirRecordServiceMock.Setup(service =>
+                service.RetrieveFhirRecordByIdAsync(orphanedSecondaryFhirRecord.Id))
+                    .ReturnsAsync(orphanedSecondaryFhirRecord);
+
+            // when
+            CompareQueueItem actualCompareQueueItem =
+                await this.compareQueueOrchestrationService.GetUnprocessedRecordAsync();
+
+            // then
+            actualCompareQueueItem.Should().NotBeNull();
+
+            actualCompareQueueItem.SecondaryFhirRecord.Id.Should()
+                .Be(orphanedSecondaryFhirRecord.Id);
+
+            // Handed on with no primary rather than not handed on at all.
+            actualCompareQueueItem.PrimaryFhirRecord.Should().BeNull();
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.fhirRecordServiceMock.Verify(service =>
+                service.RetrieveAllFhirRecordsAsync(),
+                    Times.Exactly(2));
+
+            this.fhirRecordServiceMock.Verify(service =>
+                service.TryClaimFhirRecordAsync(
+                    orphanedSecondaryFhirRecord.Id,
+                    StatusType.Pending,
+                    StatusType.Processing,
+                    inputDateTimeOffset,
+                    false,
+                    null),
+                        Times.Once);
+
+            this.fhirRecordServiceMock.Verify(service =>
+                service.RetrieveFhirRecordByIdAsync(orphanedSecondaryFhirRecord.Id),
                     Times.Once);
 
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
