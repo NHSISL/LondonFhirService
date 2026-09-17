@@ -28,7 +28,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             var expectedActionResult = new ActionResult<string>(expectedObjectResult);
             CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
 
-            patientServiceMock
+            this.patientServiceMock
                 .Setup(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     inputCancellationToken))
@@ -36,20 +36,20 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             // when
             ActionResult<string> actualActionResult =
-                await patientsController.PostGetStructuredRecordAsync(
+                await this.patientsController.PostGetStructuredRecordAsync(
                     randomStructuredRecordRequest,
                     TestContext.Current.CancellationToken);
 
             // then
             actualActionResult.ShouldBeEquivalentTo(expectedActionResult);
 
-            patientServiceMock
+            this.patientServiceMock
                 .Verify(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     inputCancellationToken),
                         Times.Once);
 
-            patientServiceMock.VerifyNoOtherCalls();
+            this.patientServiceMock.VerifyNoOtherCalls();
         }
 
         /// <summary>
@@ -67,25 +67,25 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             using var cancellationTokenSource = new CancellationTokenSource();
             CancellationToken inputCancellationToken = cancellationTokenSource.Token;
 
-            patientServiceMock
+            this.patientServiceMock
                 .Setup(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     inputCancellationToken))
                         .ReturnsAsync(GetRandomString());
 
             // when
-            await patientsController.PostGetStructuredRecordAsync(
+            await this.patientsController.PostGetStructuredRecordAsync(
                 randomStructuredRecordRequest,
                 inputCancellationToken);
 
             // then
-            patientServiceMock
+            this.patientServiceMock
                 .Verify(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
                     inputCancellationToken),
                         Times.Once);
 
-            patientServiceMock.VerifyNoOtherCalls();
+            this.patientServiceMock.VerifyNoOtherCalls();
         }
     }
 }

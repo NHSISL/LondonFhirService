@@ -21,8 +21,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
         public PatientsControllerTests()
         {
-            patientServiceMock = new Mock<IPatientService>();
-            patientsController = new PatientsController(patientServiceMock.Object);
+            this.patientServiceMock = new Mock<IPatientService>();
+            this.patientsController = new PatientsController(this.patientServiceMock.Object);
         }
 
         public static TheoryData<Xeption> ValidationExceptions()
