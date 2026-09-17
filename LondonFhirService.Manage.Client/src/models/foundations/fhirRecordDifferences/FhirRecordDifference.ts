@@ -15,6 +15,12 @@ export type FhirRecordDifference = {
     comparedAt: string;
     comment: string | null;
     isResolved: boolean;
+
+    // From $expand=Secondary($select=SourceName,IsPrimarySource) - the provider whose answer this
+    // row compared, without the FhirRecord it came from. Empty and false when the expand was not
+    // asked for or the record has gone, which the list renders as a dash rather than a blank.
+    secondarySourceName: string;
+    secondaryIsPrimarySource: boolean;
     createdBy: string;
     createdDate: string;
     updatedBy: string;

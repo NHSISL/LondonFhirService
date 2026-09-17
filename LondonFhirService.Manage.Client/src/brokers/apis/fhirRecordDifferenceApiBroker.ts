@@ -85,7 +85,8 @@ export class FhirRecordDifferenceApiBroker implements IFhirRecordDifferenceApiBr
                 "The FHIR record differences endpoint returned an unreadable difference.");
         }
 
-        const source = rawFhirRecordDifference as Record<string, unknown>;
+        const source = this.readFields(rawFhirRecordDifference);
+        const secondary = this.readFields(source.secondary);
 
         return {
             id: this.readString(source.id),
@@ -98,11 +99,32 @@ export class FhirRecordDifferenceApiBroker implements IFhirRecordDifferenceApiBr
             comparedAt: this.readString(source.comparedAt),
             comment: this.readNullableString(source.comment),
             isResolved: source.isResolved === true,
+            secondarySourceName: this.readString(secondary.sourceName),
+            secondaryIsPrimarySource: secondary.isPrimarySource === true,
             createdBy: this.readString(source.createdBy),
             createdDate: this.readString(source.createdDate),
             updatedBy: this.readString(source.updatedBy),
             updatedDate: this.readString(source.updatedDate)
         };
+    }
+
+    /**
+     * Field names lowercased, so the same reader handles both shapes this endpoint answers with.
+     * Without a query option it serialises through the host's camelCase policy; ask for $expand or
+     * $select and OData's projection wrapper takes over and writes PascalCase instead. Reading one
+     * casing meant the other arrived as a row of empty strings rather than as an error.
+     */
+    private readFields(rawValue: unknown): Record<string, unknown> {
+        if (typeof rawValue !== "object" || rawValue === null) {
+            return {};
+        }
+
+        return Object.fromEntries(
+            Object.entries(rawValue as Record<string, unknown>)
+                .map(([name, value]) => [
+                    name.charAt(0).toLowerCase() + name.slice(1),
+                    value
+                ]));
     }
 
     private readString(rawValue: unknown): string {

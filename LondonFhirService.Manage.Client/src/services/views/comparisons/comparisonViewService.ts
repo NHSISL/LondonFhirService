@@ -309,6 +309,12 @@ export class ComparisonViewService implements IComparisonViewService {
         return {
             id: fhirRecordDifference.id,
             correlationId: fhirRecordDifference.correlationId || notSetText,
+
+            // The provider whose answer this row compared, and whether that provider is the
+            // primary. Both ride in on the expand rather than a second call per row.
+            sourceNameText: fhirRecordDifference.secondarySourceName || notSetText,
+            isPrimarySource: fhirRecordDifference.secondaryIsPrimarySource,
+
             diffCountText: this.formatDiffCount(fhirRecordDifference.diffCount),
             diffCountClassName: this.mapDiffCountToClassName(fhirRecordDifference.diffCount),
             acceptableDiffCountText: this.formatAcceptedCount(acceptableDiffCount),

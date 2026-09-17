@@ -16,7 +16,19 @@ it("should page newest first without a filter when nothing is asked for", () => 
     const url = buildFhirRecordDifferenceQueryUrl("/api/fhirrecorddifferences", createQuery());
 
     expect(url).toBe(
-        "/api/fhirrecorddifferences?$orderby=ComparedAt desc&$skip=0&$top=25");
+        "/api/fhirrecorddifferences"
+        + "?$expand=Secondary($select=SourceName,IsPrimarySource)"
+        + "&$orderby=ComparedAt desc&$skip=0&$top=25");
+});
+
+// The nested $select is the whole point of expanding rather than fetching the record: a FhirRecord
+// carries the compared bundle in JsonPayload, and a page of twenty five would drag that down with
+// it to render a short label.
+it("should ask the expand for two fields and not the payload", () => {
+    const url = buildFhirRecordDifferenceQueryUrl("/api/fhirrecorddifferences", createQuery());
+
+    expect(url).toContain("$expand=Secondary($select=SourceName,IsPrimarySource)");
+    expect(url).not.toContain("JsonPayload");
 });
 
 it("should carry the paging window through", () => {

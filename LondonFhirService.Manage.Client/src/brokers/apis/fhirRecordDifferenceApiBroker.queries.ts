@@ -14,6 +14,14 @@ export function buildFhirRecordDifferenceQueryUrl(
     fhirRecordDifferenceQuery: FhirRecordDifferenceQuery)
     : string {
     const queryOptions = [
+        // The source that produced the compared side, without its FhirRecord. A record carries the
+        // whole bundle in JsonPayload, so expanding it whole would pull a patient record per row to
+        // render a short label; the nested $select leaves the payload behind and brings two fields.
+        //
+        // Asking for an expand makes the host answer through OData's projection wrapper, and that
+        // wrapper serialises in PascalCase whatever the naming policy says - so the reader on the
+        // other side accepts either casing rather than this being a silent field of empty strings.
+        "$expand=Secondary($select=SourceName,IsPrimarySource)",
         "$orderby=ComparedAt desc",
         `$skip=${fhirRecordDifferenceQuery.skip}`,
         `$top=${fhirRecordDifferenceQuery.take}`

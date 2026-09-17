@@ -28,6 +28,8 @@ const createFhirRecordDifference = (
     acceptableDiffCount: 1,
     comparedAt: "2026-05-04T09:30:00+00:00",
     comment: null,
+    secondarySourceName: "LDS",
+    secondaryIsPrimarySource: false,
     isResolved: false,
     createdBy: "compare-queue",
     createdDate: "2026-05-04T09:30:00+00:00",

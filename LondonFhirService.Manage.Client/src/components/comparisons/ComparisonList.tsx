@@ -23,6 +23,7 @@ export function ComparisonList({ comparisons, selectedComparisonId }: Comparison
             <thead>
                 <tr>
                     <th scope="col">Compared</th>
+                    <th scope="col">Source</th>
                     <th scope="col">Correlation id</th>
                     <th scope="col">Differences</th>
                     <th scope="col">Breakdown</th>
@@ -44,6 +45,20 @@ export function ComparisonList({ comparisons, selectedComparisonId }: Comparison
                             ? "true"
                             : undefined}>
                         <td className="text-nowrap">{comparison.comparedAtText}</td>
+
+                        <td className="text-break">
+                            {comparison.sourceNameText}
+                            {comparison.isPrimarySource && (
+                                <>
+                                    {" "}
+                                    <span
+                                        className="badge bg-primary"
+                                        title="This source is the primary">
+                                        Primary
+                                    </span>
+                                </>
+                            )}
+                        </td>
 
                         <th scope="row" className="fw-normal text-break">
                             <Link to={comparison.detailUrl}>{comparison.correlationId}</Link>
