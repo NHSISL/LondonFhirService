@@ -37,6 +37,15 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                     .AddJsonFile(
                         Path.Combine(testProjectPath, "appsettings.json"),
                         optional: true)
+
+                    // A developer's own overrides, added after the file above so they win, and
+                    // gitignored so they never reach anyone else. The suite's connection string is
+                    // the reason it exists: appsettings.json points at LocalDB because that is what
+                    // every machine has, and a machine with a full SQL Server instance can say so
+                    // here without editing a file the rest of the team shares.
+                    .AddJsonFile(
+                        Path.Combine(testProjectPath, "appsettings.Test.json"),
+                        optional: true)
                     .AddInMemoryCollection(new Dictionary<string, string>
                     {
                         // Put your strong overrides here
