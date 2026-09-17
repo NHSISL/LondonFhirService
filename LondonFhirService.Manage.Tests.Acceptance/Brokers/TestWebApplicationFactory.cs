@@ -92,7 +92,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
             // Transient and resolved through the property, not captured. A singleton would pin
             // whichever mock existed when the container first handed one out, and every later
             // test would be configuring an object nothing resolves.
-            services.AddTransient<IHttpBroker>(_ => HttpBrokerMock.Object);
+            services.AddTransient<IHttpBroker>(serviceProvider => HttpBrokerMock.Object);
         }
 
         private static void OverrideSecurityForTesting(IServiceCollection services)

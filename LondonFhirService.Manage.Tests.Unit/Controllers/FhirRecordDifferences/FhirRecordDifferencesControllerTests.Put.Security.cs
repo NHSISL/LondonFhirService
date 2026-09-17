@@ -29,7 +29,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecordDifferences
             // The literal list this replaced pinned three app registration aliases per role, so
             // when the registration was reduced to one name each every one of these tests failed
             // without a single [Authorize] having changed.
-            List<string> expectedAttributeValues = (ManageRoles.AdministratorsAndUsers + ",FhirRecordDifferences.Update")
+            List<string> expectedAttributeValues =
+                (ManageRoles.AdministratorsAndUsers + ",FhirRecordDifferences.Update")
                 .Split(',')
                 .Select(role => role.Trim())
                 .Where(role => string.IsNullOrEmpty(role) is false)

@@ -203,8 +203,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     "application/fhir+json",
                     randomAccessToken,
                     inputCancellationToken))
-                        .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
-                            capturedRequestBody = jsonContent)
+                        .Callback((
+                            string url,
+                            string jsonContent,
+                            string mediaType,
+                            string bearerToken,
+                            CancellationToken cancellationToken) => capturedRequestBody = jsonContent)
                         .ReturnsAsync(GetRandomString());
 
             // when
@@ -320,8 +324,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     "application/fhir+json",
                     randomAccessToken,
                     inputCancellationToken))
-                        .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
-                            capturedRequestBody = jsonContent)
+                        .Callback((
+                            string url,
+                            string jsonContent,
+                            string mediaType,
+                            string bearerToken,
+                            CancellationToken cancellationToken) => capturedRequestBody = jsonContent)
                         .ReturnsAsync(GetRandomString());
 
             // when
@@ -401,8 +409,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     "application/fhir+json",
                     randomAccessToken,
                     inputCancellationToken))
-                        .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
-                            capturedRequestBody = jsonContent)
+                        .Callback((
+                            string url,
+                            string jsonContent,
+                            string mediaType,
+                            string bearerToken,
+                            CancellationToken cancellationToken) => capturedRequestBody = jsonContent)
                         .ReturnsAsync(GetRandomString());
 
             // when

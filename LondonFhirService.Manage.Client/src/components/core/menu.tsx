@@ -42,7 +42,8 @@ const MenuComponent: React.FC = () => {
 
             <SecuredComponent allowedRoles={securityPoints.comparisons.view}>
                 <ListGroup.Item
-                    className={`bg-dark text-white ${location.pathname.startsWith('/admin/comparisons') ? 'active' : ''}`}
+                    className={`bg-dark text-white ${
+                        location.pathname.startsWith('/admin/comparisons') ? 'active' : ''}`}
                     onClick={() => handleItemClick('/admin/comparisons')}>
                     <FontAwesomeIcon icon={faCodeCompare} className="me-2 fa-icon" />
                     Comparisons
@@ -69,7 +70,8 @@ const MenuComponent: React.FC = () => {
 
             <SecuredComponent allowedRoles={securityPoints.structuredRecord.view}>
                 <ListGroup.Item
-                    className={`bg-dark text-white ${location.pathname.startsWith('/admin/structured-record') ? 'active' : ''}`}
+                    className={`bg-dark text-white ${
+                        location.pathname.startsWith('/admin/structured-record') ? 'active' : ''}`}
                     onClick={() => handleItemClick('/admin/structured-record')}>
                     <FontAwesomeIcon icon={faFileMedical} className="me-2 fa-icon" />
                     Get Structured Record

@@ -1,7 +1,9 @@
 import { PatientApiBrokerException } from "../../../models/foundations/patients/exceptions/PatientApiBrokerException";
 import { PatientService } from "../../foundations/patients/patientService";
 import { PatientValidationException } from "../../../models/foundations/patients/exceptions/PatientValidationException";
-import { StructuredRecordViewServiceException } from "../../../models/views/patients/exceptions/StructuredRecordViewServiceException";
+import {
+    StructuredRecordViewServiceException
+} from "../../../models/views/patients/exceptions/StructuredRecordViewServiceException";
 import type { IPatientService } from "../../foundations/patients/iPatientService";
 import type { IStructuredRecordViewService } from "./iStructuredRecordViewService";
 import type { StructuredRecordFormValues } from "../../../models/views/patients/StructuredRecordFormValues";
