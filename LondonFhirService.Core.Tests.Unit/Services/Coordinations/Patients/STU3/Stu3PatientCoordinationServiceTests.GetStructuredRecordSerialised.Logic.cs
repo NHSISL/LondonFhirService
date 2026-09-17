@@ -51,9 +51,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     .ReturnsAsync(requestSpanId)
                     .ReturnsAsync(consolidationSpanId);
 
+            // It.Is rather than It.IsAny: this is a Logic file, where test-106 bans the wildcard,
+            // and the setup genuinely has to match every span the service emits - that is the
+            // point of recording them. A predicate keeps the catch-all without the wildcard.
             this.auditAndMetricBrokerMock.Setup(broker =>
-                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
-                    .Callback<Metric, CancellationToken>((metric, _) => recordedMetrics.Add(metric));
+                broker.LogMetricAsync(
+                    It.Is<Metric>(metric => metric != null),
+                    It.Is<CancellationToken>(cancellationToken => true)))
+                        .Callback<Metric, CancellationToken>(
+                            (metric, cancellationToken) => recordedMetrics.Add(metric));
 
             this.patientOrchestrationServiceMock.Setup(service =>
                 service.GetStructuredRecordSerialisedAsync(

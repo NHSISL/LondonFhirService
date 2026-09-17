@@ -3,10 +3,10 @@
 // the Manage host authorises against; change one and change the other.
 //
 // The strings matching does not mean the POLICY matches. Which roles each area below grants is
-// maintained by hand against each controller's [Authorize], and two areas are currently out of
-// step with the server - see the notes on audits and comparisons. Nothing here enforces
-// anything: this matrix decides what the portal shows, the attributes decide what the API
-// allows, and only the second is a security boundary.
+// maintained by hand against each controller's [Authorize], and one area is still out of step
+// with the server - see the note on audits. Nothing here enforces anything: this matrix decides
+// what the portal shows, the attributes decide what the API allows, and only the second is a
+// security boundary.
 const administratorRoles = ['Administrators'];
 
 const userRoles = ['Users'];
@@ -38,21 +38,19 @@ const securityPoints = {
     metrics: {
         view: administratorAndUserRoles,
     },
-    // A comparison holds two whole patient bundles, so this area is administrators only. Edit
-    // covers the review fields an operator can set on a comparison; the differences themselves are
-    // written by the comparison service and are not editable from here, so there is no add or
-    // delete.
+    // Administrators and Users, matching the server. Edit covers the review fields an operator
+    // can set on a comparison; the differences themselves are written by the comparison service
+    // and are not editable from here, so there is no add or delete.
     //
-    // MISMATCH, left as found and not silently changed, and the more serious of the two: the UI
-    // is STRICTER than the API. FhirRecordsController and FhirRecordDifferencesController are
-    // [Authorize(Roles = ManageRoles.AdministratorsAndUsers)], so a Users-role operator cannot
-    // see this area in the portal but can call those endpoints directly and read the patient
-    // bundles behind it. Hiding a screen is not authorisation. Reconciling means either widening
-    // this array or narrowing those two controllers, and that decides who can read patient data -
-    // the repository owner's call.
+    // This area used to be administrators only while FhirRecordsController and
+    // FhirRecordDifferencesController both carry
+    // [Authorize(Roles = ManageRoles.AdministratorsAndUsers)] - so the portal hid a screen whose
+    // endpoints a Users-role operator could call directly, which reads as a control but is not
+    // one. Hiding a screen is not authorisation; the attributes are the boundary. Widened
+    // deliberately rather than narrowing the controllers, so the two now agree.
     comparisons: {
-        edit: administratorRoles,
-        view: administratorRoles,
+        edit: administratorAndUserRoles,
+        view: administratorAndUserRoles,
     },
     // The provider registry decides who the patient fan-out calls, so the whole area - the master
     // list as well as the detail view - is administrators only.

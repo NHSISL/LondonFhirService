@@ -251,7 +251,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                         .Callback<Guid, StatusType, StatusType, DateTimeOffset, string, bool,
                             DateTimeOffset?, CancellationToken>(
                             (fhirRecordId, expectedStatus, claimedStatus, claimedDate, claimedBy,
-                                isProcessed, notUpdatedAfter, _) =>
+                                isProcessed, notUpdatedAfter, cancellationToken) =>
                             {
                                 actualClaimedDate = claimedDate;
                                 actualNotUpdatedAfter = notUpdatedAfter;
