@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -102,6 +102,17 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
                 await using IStorageBroker broker = await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
                 return await broker.DeleteAuditAsync(AsAuditEntity(audit), cancellationToken);
+            });
+
+        public ValueTask<int> DeleteAuditsOlderThanAsync(
+            DateTimeOffset cutOffDate,
+            int batchSize,
+            CancellationToken cancellationToken = default) =>
+            TryCatchAuditAsync(async () =>
+            {
+                await using IStorageBroker broker = await this.storageBrokerFactory.CreateStorageBrokerAsync();
+
+                return await broker.DeleteAuditsOlderThanAsync(cutOffDate, batchSize, cancellationToken);
             });
     }
 }

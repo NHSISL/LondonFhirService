@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -429,13 +429,14 @@ public partial class Program
         services.Configure<ComparisonWorkerSettings>(configuration.GetSection("ComparisonWorkerSettings"));
         services.AddHostedService<ComparisonWorker>();
 
-        // The retention sweep had no caller, so the metrics table only ever grew - and it takes a
-        // row per span rather than per request. Whether anything is deleted is still decided by
-        // IsPurgingAllowed and RetentionPeriodInDays.
-        services.Configure<MetricPurgeWorkerSettings>(
-            configuration.GetSection("MetricPurgeWorkerSettings"));
+        // The retention sweeps had no caller, so both tables only ever grew - and the metrics
+        // one takes a row per span rather than per request. One worker runs both on a shared
+        // cadence; whether either actually deletes is still decided by its own half of
+        // AuditAndMetricsConfigurations.
+        services.Configure<AuditAndMetricPurgeWorkerSettings>(
+            configuration.GetSection("AuditAndMetricPurgeWorkerSettings"));
 
-        services.AddHostedService<MetricPurgeWorker>();
+        services.AddHostedService<AuditAndMetricPurgeWorker>();
 
         // Deferred audit and metric writes go through a bounded queue rather than a thread pool
         // item each. Singleton, and shared with the worker that drains it.

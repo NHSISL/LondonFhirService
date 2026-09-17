@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -205,6 +205,32 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.RemoveAuditByIdAsync(expectedAudit.Id, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            VerifyNoOtherCallsOnAllBrokers();
+        }
+
+        [Fact]
+        public async Task ShouldReturnThePurgedCountOnPurgeAuditsOlderThanRetentionPeriodAsync()
+        {
+            // given
+            int expectedPurgedCount = GetRandomNumber();
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.PurgeAuditsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(expectedPurgedCount);
+
+            // when
+            int actualPurgedCount = await this.auditService
+                .PurgeAuditsOlderThanRetentionPeriodAsync(TestContext.Current.CancellationToken);
+
+            // then
+            // The count is what the purge worker logs, so swallowing it would leave a sweep that
+            // reports nothing about what it did.
+            actualPurgedCount.Should().Be(expectedPurgedCount);
+
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.PurgeAuditsOlderThanRetentionPeriodAsync(It.IsAny<CancellationToken>()),
                     Times.Once);
 
             VerifyNoOtherCallsOnAllBrokers();

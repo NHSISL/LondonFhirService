@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -98,18 +98,29 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
         public void ShouldBindConfigurationFromTheNamedSection()
         {
             // given
-            int expectedRetentionPeriodInDays = 42;
+            int expectedAuditRetentionPeriodInDays = 42;
+            int expectedMetricsRetentionPeriodInDays = 77;
             int expectedPurgeBatchSize = 1234;
             string expectedActivitySourceName = "Some.Other.Source";
 
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
-                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:IsEnabled"] = "false",
-                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:IsPurgingAllowed"] = "true",
+                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:IsAuditEnabled"] = "false",
 
-                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:RetentionPeriodInDays"] =
-                        expectedRetentionPeriodInDays.ToString(),
+                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:IsAuditPurgingAllowed"] =
+                        "true",
+
+                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:AuditRetentionPeriodInDays"] =
+                        expectedAuditRetentionPeriodInDays.ToString(),
+
+                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:IsMetricsEnabled"] = "false",
+
+                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:IsMetricsPurgingAllowed"] =
+                        "true",
+
+                    [$"{AuditAndMetricsClient.ConfigurationSectionName}:MetricsRetentionPeriodInDays"] =
+                        expectedMetricsRetentionPeriodInDays.ToString(),
 
                     [$"{AuditAndMetricsClient.ConfigurationSectionName}:PurgeBatchSize"] =
                         expectedPurgeBatchSize.ToString(),
@@ -127,9 +138,18 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
             // Pinned to the section name the application's appsettings has to use. A rename on
             // either side silently falls back to defaults rather than failing, so the two names
             // have to be held together by a test.
-            actualConfigurations.IsEnabled.Should().BeFalse();
-            actualConfigurations.IsPurgingAllowed.Should().BeTrue();
-            actualConfigurations.RetentionPeriodInDays.Should().Be(expectedRetentionPeriodInDays);
+            actualConfigurations.IsAuditEnabled.Should().BeFalse();
+            actualConfigurations.IsAuditPurgingAllowed.Should().BeTrue();
+
+            actualConfigurations.AuditRetentionPeriodInDays.Should()
+                .Be(expectedAuditRetentionPeriodInDays);
+
+            actualConfigurations.IsMetricsEnabled.Should().BeFalse();
+            actualConfigurations.IsMetricsPurgingAllowed.Should().BeTrue();
+
+            actualConfigurations.MetricsRetentionPeriodInDays.Should()
+                .Be(expectedMetricsRetentionPeriodInDays);
+
             actualConfigurations.PurgeBatchSize.Should().Be(expectedPurgeBatchSize);
             actualConfigurations.ActivitySourceName.Should().Be(expectedActivitySourceName);
         }
@@ -148,8 +168,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
             // A host that has not configured the library still starts, recording enabled and
             // purging off, rather than failing at construction.
             actualConfigurations.Should().NotBeNull();
-            actualConfigurations.IsEnabled.Should().BeTrue();
-            actualConfigurations.IsPurgingAllowed.Should().BeFalse();
+            actualConfigurations.IsAuditEnabled.Should().BeTrue();
+            actualConfigurations.IsAuditPurgingAllowed.Should().BeFalse();
+            actualConfigurations.IsMetricsEnabled.Should().BeTrue();
+            actualConfigurations.IsMetricsPurgingAllowed.Should().BeFalse();
         }
     }
 }

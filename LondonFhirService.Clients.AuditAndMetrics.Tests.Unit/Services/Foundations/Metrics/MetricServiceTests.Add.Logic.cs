@@ -102,7 +102,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             IMetric randomMetric = CreateRandomMetric();
             IMetric inputMetric = randomMetric;
             IMetric expectedMetric = inputMetric.DeepClone();
-            this.metricServiceConfigurations.IsEnabled = false;
+            this.metricServiceConfigurations.IsMetricsEnabled = false;
 
             // when
             IMetric actualMetric =
@@ -131,7 +131,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         {
             // given
             IMetric nullMetric = null;
-            this.metricServiceConfigurations.IsEnabled = false;
+            this.metricServiceConfigurations.IsMetricsEnabled = false;
 
             // when
             IMetric actualMetric =

@@ -56,9 +56,9 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // exercise the configured behaviour without building a second service.
             this.metricServiceConfigurations = new AuditAndMetricsConfigurations
             {
-                IsEnabled = true,
-                IsPurgingAllowed = true,
-                RetentionPeriodInDays = GetRandomNumber(),
+                IsMetricsEnabled = true,
+                IsMetricsPurgingAllowed = true,
+                MetricsRetentionPeriodInDays = GetRandomNumber(),
                 PurgeBatchSize = GetRandomNumber()
             };
 

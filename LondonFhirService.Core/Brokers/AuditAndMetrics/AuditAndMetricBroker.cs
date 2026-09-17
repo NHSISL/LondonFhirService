@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -129,6 +129,11 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             CancellationToken cancellationToken = default) =>
             (Metric)await this.auditAndMetricsClient.MetricClient
                 .RemoveMetricByIdAsync(metricId, cancellationToken);
+
+        public async ValueTask<int> PurgeAuditsOlderThanRetentionPeriodAsync(
+            CancellationToken cancellationToken = default) =>
+            await this.auditAndMetricsClient.AuditClient
+                .PurgeAuditsOlderThanRetentionPeriodAsync(cancellationToken);
 
         public async ValueTask<int> PurgeMetricsOlderThanRetentionPeriodAsync(
             CancellationToken cancellationToken = default) =>

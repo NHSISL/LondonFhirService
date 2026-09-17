@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -26,5 +26,15 @@ namespace LondonFhirService.Core.Abstractions.Brokers
         ValueTask<IAudit> SelectAuditByIdAsync(Guid auditId, CancellationToken cancellationToken = default);
         ValueTask<IAudit> UpdateAuditAsync(IAudit audit, CancellationToken cancellationToken = default);
         ValueTask<IAudit> DeleteAuditAsync(IAudit audit, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Deletes at most <paramref name="batchSize"/> audits created before
+        /// <paramref name="cutOffDate"/> and returns how many rows were removed. Expected to run
+        /// the predicate in the data store without materialising the candidates.
+        /// </summary>
+        ValueTask<int> DeleteAuditsOlderThanAsync(
+            DateTimeOffset cutOffDate,
+            int batchSize,
+            CancellationToken cancellationToken = default);
     }
 }

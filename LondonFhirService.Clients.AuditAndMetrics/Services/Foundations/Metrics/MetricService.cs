@@ -51,7 +51,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (this.metricServiceConfigurations.IsEnabled is false)
+            if (this.metricServiceConfigurations.IsMetricsEnabled is false)
             {
                 return metric;
             }
@@ -72,7 +72,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (this.metricServiceConfigurations.IsEnabled is false)
+            if (this.metricServiceConfigurations.IsMetricsEnabled is false)
             {
                 return;
             }
@@ -110,7 +110,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (this.metricServiceConfigurations.IsEnabled is false)
+            if (this.metricServiceConfigurations.IsMetricsEnabled is false)
             {
                 return;
             }
@@ -135,7 +135,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (this.metricServiceConfigurations.IsEnabled is false)
+            if (this.metricServiceConfigurations.IsMetricsEnabled is false)
             {
                 return;
             }
@@ -256,21 +256,21 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (this.metricServiceConfigurations.IsPurgingAllowed is false)
+            if (this.metricServiceConfigurations.IsMetricsPurgingAllowed is false)
             {
                 return 0;
             }
 
             // Guarded rather than obeyed. A zero or negative retention period would make the
             // cut off date the present or the future and delete the entire table.
-            ValidateRetentionPeriod(this.metricServiceConfigurations.RetentionPeriodInDays);
+            ValidateRetentionPeriod(this.metricServiceConfigurations.MetricsRetentionPeriodInDays);
             int batchSize = this.metricServiceConfigurations.PurgeBatchSize;
             ValidatePurgeBatchSize(batchSize);
 
             DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
             DateTimeOffset cutOffDate =
-                currentDateTime.AddDays(-this.metricServiceConfigurations.RetentionPeriodInDays);
+                currentDateTime.AddDays(-this.metricServiceConfigurations.MetricsRetentionPeriodInDays);
 
             // Deleted in bounded batches, in the database. Selecting the expired rows into memory
             // first would size the cost of a purge by the size of the retention window, which on

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.DateTimes;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Identifiers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits;
 using LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Audits;
 using LondonFhirService.Core.Abstractions.Brokers;
@@ -29,6 +30,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly Mock<IAuditUserBroker> auditUserBrokerMock;
         private readonly Mock<IAuditAndMetricsDispatcher> dispatcherMock;
+        private readonly AuditAndMetricsConfigurations auditServiceConfigurations;
         private readonly IAuditService auditService;
 
         public AuditServiceTests()
@@ -39,6 +41,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.auditUserBrokerMock = new Mock<IAuditUserBroker>();
             this.dispatcherMock = new Mock<IAuditAndMetricsDispatcher>();
+
+            this.auditServiceConfigurations = new AuditAndMetricsConfigurations
+            {
+                IsAuditEnabled = true,
+                IsAuditPurgingAllowed = true,
+                AuditRetentionPeriodInDays = GetRandomNumber(),
+                PurgeBatchSize = GetRandomNumber(),
+            };
 
             // Runs the deferred work inline. The production dispatcher hands it to a queue, which
             // would make every dispatched-path assertion a race; here the write has happened by
@@ -63,6 +73,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 identifierBroker: this.identifierBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 auditUserBroker: this.auditUserBrokerMock.Object,
+                auditServiceConfigurations: this.auditServiceConfigurations,
                 dispatcher: this.dispatcherMock.Object);
         }
 

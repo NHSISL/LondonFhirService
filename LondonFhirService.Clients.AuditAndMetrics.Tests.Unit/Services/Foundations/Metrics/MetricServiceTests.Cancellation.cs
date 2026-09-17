@@ -176,7 +176,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             DateTimeOffset currentDateTimeOffset = GetRandomRecentDateTimeOffset();
             int retentionPeriodInDays = GetRandomNumber();
             int batchSize = GetRandomNumber();
-            this.metricServiceConfigurations.RetentionPeriodInDays = retentionPeriodInDays;
+            this.metricServiceConfigurations.MetricsRetentionPeriodInDays = retentionPeriodInDays;
             this.metricServiceConfigurations.PurgeBatchSize = batchSize;
 
             this.dateTimeBrokerMock.Setup(broker =>
@@ -303,7 +303,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             cancellationTokenSource.Cancel();
             CancellationToken cancelledToken = cancellationTokenSource.Token;
             IMetric randomMetric = CreateRandomMetric();
-            this.metricServiceConfigurations.IsEnabled = false;
+            this.metricServiceConfigurations.IsMetricsEnabled = false;
 
             // when
             ValueTask<IMetric> addMetricTask = this.metricService.AddMetricAsync(randomMetric, cancelledToken);

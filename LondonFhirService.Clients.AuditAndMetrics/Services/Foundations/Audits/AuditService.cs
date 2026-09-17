@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.DateTimes;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Identifiers;
 using LondonFhirService.Clients.AuditAndMetrics.Brokers.Loggings;
+using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Abstractions.Models.Audits;
 
@@ -22,6 +23,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly IAuditUserBroker auditUserBroker;
+        private readonly AuditAndMetricsConfigurations auditServiceConfigurations;
         private readonly IAuditAndMetricsDispatcher dispatcher;
 
         public AuditService(
@@ -30,6 +32,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker,
             IAuditUserBroker auditUserBroker,
+            AuditAndMetricsConfigurations auditServiceConfigurations,
             IAuditAndMetricsDispatcher dispatcher)
         {
             this.storageBroker = storageBroker;
@@ -37,6 +40,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
             this.auditUserBroker = auditUserBroker;
+            this.auditServiceConfigurations = auditServiceConfigurations;
             this.dispatcher = dispatcher;
         }
 
@@ -51,6 +55,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.auditServiceConfigurations.IsAuditEnabled is false)
+            {
+                return;
+            }
 
             IAudit audit = await BuildStampedAuditAsync(
                 auditType, title, message, fileName, correlationId, logLevel);
@@ -80,6 +89,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
 
             ValidateAuditOnAdd(audit);
 
+            // Gated after the build rather than before it, unlike the dispatched paths. This
+            // one is awaited for the entry it returns, and the caller has nothing else to go
+            // on; handing back the entry that would have been written keeps the contract while
+            // storage stays untouched.
+            if (this.auditServiceConfigurations.IsAuditEnabled is false)
+            {
+                return audit;
+            }
+
             return await this.storageBroker.InsertAuditAsync(audit, cancellationToken);
         });
 
@@ -87,6 +105,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.auditServiceConfigurations.IsAuditEnabled is false)
+            {
+                return audit;
+            }
+
             ValidateAuditIsNotNull(audit);
             await StampAsync(audit);
             ValidateAuditOnAdd(audit);
@@ -98,6 +122,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.auditServiceConfigurations.IsAuditEnabled is false)
+            {
+                return;
+            }
+
             ValidateAuditIsNotNull(audit);
             await StampAsync(audit);
             ValidateAuditOnAdd(audit);
@@ -113,6 +143,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         SwallowAsync(() => TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.auditServiceConfigurations.IsAuditEnabled is false)
+            {
+                return;
+            }
+
             ValidateAuditsIsNotNull(audits);
             ValidateBatchSize(batchSize);
 
@@ -137,6 +173,12 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
         TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (this.auditServiceConfigurations.IsAuditEnabled is false)
+            {
+                return;
+            }
+
             ValidateAuditsIsNotNull(audits);
             ValidateBatchSize(batchSize);
 
@@ -202,6 +244,62 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Audits
             ValidateStorageAudit(maybeAudit, auditId);
 
             return await this.storageBroker.DeleteAuditAsync(maybeAudit, cancellationToken);
+        });
+
+        public ValueTask<int> PurgeAuditsOlderThanRetentionPeriodAsync(
+            CancellationToken cancellationToken = default) =>
+        TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // The purge switch, not the recording one. An environment that has stopped
+            // recording still has a table to age out, and one that is still recording may be
+            // required to keep everything - so neither switch implies the other.
+            if (this.auditServiceConfigurations.IsAuditPurgingAllowed is false)
+            {
+                return 0;
+            }
+
+            // Guarded rather than obeyed. A zero or negative retention period would make the
+            // cut off date the present or the future and delete the entire table.
+            ValidateRetentionPeriod(this.auditServiceConfigurations.AuditRetentionPeriodInDays);
+            int batchSize = this.auditServiceConfigurations.PurgeBatchSize;
+            ValidatePurgeBatchSize(batchSize);
+
+            DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+            DateTimeOffset cutOffDate =
+                currentDateTime.AddDays(-this.auditServiceConfigurations.AuditRetentionPeriodInDays);
+
+            // Deleted in bounded batches, in the database. Selecting the expired rows into memory
+            // first would size the cost of a purge by the size of the retention window, which on
+            // this table is exactly the case that must not fall over - the first purge after a
+            // period of not purging at all.
+            int totalDeleted = 0;
+            int deletedInBatch;
+
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                deletedInBatch = await this.storageBroker.DeleteAuditsOlderThanAsync(
+                    cutOffDate,
+                    batchSize,
+                    cancellationToken);
+
+                totalDeleted += deletedInBatch;
+            }
+            while (deletedInBatch == batchSize);
+
+            if (totalDeleted == 0)
+            {
+                return 0;
+            }
+
+            await this.loggingBroker.LogInformationAsync(
+                $"Purged {totalDeleted} audit(s) created before {cutOffDate}.");
+
+            return totalDeleted;
         });
 
         /// <summary>
