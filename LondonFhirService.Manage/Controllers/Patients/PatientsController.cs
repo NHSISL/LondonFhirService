@@ -9,8 +9,10 @@ using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
 using LondonFhirService.Manage.Services.Foundations.Patients;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RESTFulSense.Controllers;
+using Xeptions;
 
 namespace LondonFhirService.Manage.Controllers.Patients
 {
@@ -60,16 +62,43 @@ namespace LondonFhirService.Manage.Controllers.Patients
             // the dependency failure below.
             catch (PatientServiceDependencyValidationException patientServiceDependencyValidationException)
             {
-                return BadRequest(patientServiceDependencyValidationException.InnerException);
+                return UpstreamProblem(
+                    statusCode: StatusCodes.Status400BadRequest,
+                    exception: patientServiceDependencyValidationException,
+                    responseBody: patientServiceDependencyValidationException.ResponseBody);
             }
             catch (PatientServiceDependencyException patientServiceDependencyException)
             {
-                return InternalServerError(patientServiceDependencyException);
+                return UpstreamProblem(
+                    statusCode: StatusCodes.Status500InternalServerError,
+                    exception: patientServiceDependencyException,
+                    responseBody: patientServiceDependencyException.ResponseBody);
             }
             catch (PatientServiceException patientServiceException)
             {
                 return InternalServerError(patientServiceException);
             }
+        }
+
+        /// <summary>
+        /// Answers with what the upstream said, which on this screen is the answer - an operator
+        /// testing a consumer's credentials needs the token endpoint's own invalid_client text,
+        /// not a summary of it.
+        ///
+        /// The body is read from a property rather than from Exception.Data, and this is the only
+        /// place it is read. It never passed through the logging broker on the way here, so the
+        /// provider's OperationOutcome reaches the person who asked for it and nowhere else.
+        /// </summary>
+        private ObjectResult UpstreamProblem(int statusCode, Xeption exception, string responseBody)
+        {
+            var problemDetails = new ProblemDetails
+            {
+                Title = exception.Message,
+                Status = statusCode,
+                Detail = responseBody
+            };
+
+            return StatusCode(statusCode, problemDetails);
         }
     }
 }

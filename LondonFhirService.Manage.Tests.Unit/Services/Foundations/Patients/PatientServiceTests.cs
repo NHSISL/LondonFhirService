@@ -102,6 +102,15 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 ["grant_type"] = grantType
             };
 
+        /// <summary>
+        /// A refusal shaped the way a provider actually refuses - an OperationOutcome naming the
+        /// patient it would not return. Tests use it because the interesting property is where
+        /// this string is allowed to travel, not that some string travelled.
+        /// </summary>
+        private static string CreateIdentifiableRefusalBody(string nhsNumber) =>
+            "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"error\"," +
+                "\"diagnostics\":\"Patient " + nhsNumber + " not found\"}]}";
+
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
 

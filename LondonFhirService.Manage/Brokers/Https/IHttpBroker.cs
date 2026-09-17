@@ -17,21 +17,14 @@ namespace LondonFhirService.Manage.Brokers.Https
     /// response and the FHIR bundle are the service's to read, and a broker that deserialised
     /// them would be deciding what they mean.
     ///
-    /// A non-2xx response throws HttpRequestException carrying the status code, with the response
-    /// body under ResponseBodyKey in Exception.Data rather than being discarded. What an upstream
-    /// says when it refuses is the most useful thing it ever says - but it can also
-    /// name a patient, so it is kept out of the exception message, which is the part that reaches
+    /// A non-2xx response throws HttpResponseException, which carries the status code and the
+    /// response body rather than discarding it. What an upstream says when it refuses is the most
+    /// useful thing it ever says - but it can also name a patient, so it travels on a property
+    /// and stays out of both the exception message and Exception.Data, the two places that reach
     /// a log sink without anyone asking.
     /// </summary>
     public interface IHttpBroker
     {
-        /// <summary>
-        /// Where a failed call leaves the upstream response body. On the contract rather than
-        /// on the implementation, because a caller reads it through this interface and would
-        /// otherwise have to repeat the string.
-        /// </summary>
-        const string ResponseBodyKey = "ResponseBody";
-
         ValueTask<string> PostFormUrlEncodedContentAsync(
             string url,
             IDictionary<string, string> formValues,

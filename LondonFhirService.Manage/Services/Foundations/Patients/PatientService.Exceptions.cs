@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using Xeptions;
 
@@ -42,8 +43,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                 var timedOutPatientServiceException =
                     new TimedOutPatientServiceException(
                         message: "Patient request timed out, please try again.",
-                        innerException: operationCanceledException,
-                        data: operationCanceledException.Data);
+                        innerException: operationCanceledException);
 
                 throw await CreateAndLogDependencyException(timedOutPatientServiceException);
             }
@@ -52,8 +52,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                 var timedOutPatientServiceException =
                     new TimedOutPatientServiceException(
                         message: "Patient request timed out, please try again.",
-                        innerException: timeoutException,
-                        data: timeoutException.Data);
+                        innerException: timeoutException);
 
                 throw await CreateAndLogDependencyException(timedOutPatientServiceException);
             }
@@ -78,8 +77,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                 var failedPatientDependencyException =
                     new FailedPatientDependencyException(
                         message: "Failed patient dependency error occurred, contact support.",
-                        innerException: jsonException,
-                        data: jsonException.Data);
+                        innerException: jsonException);
 
                 throw await CreateAndLogDependencyException(failedPatientDependencyException);
             }
@@ -94,20 +92,22 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                     new FailedPatientDependencyValidationException(
                         message: "Failed patient dependency validation error occurred, " +
                             "please fix the errors and try again.",
-                        innerException: httpRequestException,
-                        data: httpRequestException.Data);
+                        innerException: httpRequestException);
 
-                throw await CreateAndLogDependencyValidationException(failedPatientDependencyValidationException);
+                throw await CreateAndLogDependencyValidationException(
+                    failedPatientDependencyValidationException,
+                    ReadResponseBody(httpRequestException));
             }
             catch (HttpRequestException httpRequestException)
             {
                 var failedPatientDependencyException =
                     new FailedPatientDependencyException(
                         message: "Failed patient dependency error occurred, contact support.",
-                        innerException: httpRequestException,
-                        data: httpRequestException.Data);
+                        innerException: httpRequestException);
 
-                throw await CreateAndLogDependencyException(failedPatientDependencyException);
+                throw await CreateAndLogDependencyException(
+                    failedPatientDependencyException,
+                    ReadResponseBody(httpRequestException));
             }
             catch (Exception exception)
             {
@@ -129,6 +129,14 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         /// that the provider's 404 is this endpoint's 404, and it is not: the patient was not
         /// found, the endpoint was.
         /// </summary>
+        /// <summary>
+        /// Null unless the broker had a body to keep. Anything else reaching these catches - a
+        /// refused connection, a DNS failure - is HttpRequestException without a response at all,
+        /// and there is nothing to show the operator beyond the message.
+        /// </summary>
+        private static string ReadResponseBody(HttpRequestException httpRequestException) =>
+            (httpRequestException as HttpResponseException)?.ResponseBody;
+
         private static bool IsUpstreamRefusal(HttpStatusCode? statusCode) =>
             statusCode is not null
                 && (int)statusCode >= 400
@@ -148,13 +156,14 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         }
 
         private async ValueTask<PatientServiceDependencyValidationException>
-            CreateAndLogDependencyValidationException(Xeption exception)
+            CreateAndLogDependencyValidationException(Xeption exception, string responseBody = null)
         {
             var patientServiceDependencyValidationException =
                 new PatientServiceDependencyValidationException(
                     message: "Patient dependency validation error occurred, " +
                         "please fix the errors and try again.",
-                    innerException: exception);
+                    innerException: exception,
+                    responseBody: responseBody);
 
             await this.loggingBroker.LogErrorAsync(patientServiceDependencyValidationException);
 
@@ -162,12 +171,14 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         }
 
         private async ValueTask<PatientServiceDependencyException> CreateAndLogDependencyException(
-            Xeption exception)
+            Xeption exception,
+            string responseBody = null)
         {
             var patientServiceDependencyException =
                 new PatientServiceDependencyException(
                     message: "Patient dependency error occurred, contact support.",
-                    innerException: exception);
+                    innerException: exception,
+                    responseBody: responseBody);
 
             await this.loggingBroker.LogErrorAsync(patientServiceDependencyException);
 

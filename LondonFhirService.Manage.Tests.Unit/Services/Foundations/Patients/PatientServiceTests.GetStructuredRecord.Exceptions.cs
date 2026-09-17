@@ -4,12 +4,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Extensions.Exceptions;
+using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using Moq;
@@ -33,8 +36,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             var failedPatientDependencyException =
                 new FailedPatientDependencyException(
                     message: "Failed patient dependency error occurred, contact support.",
-                    innerException: dependencyException,
-                    data: dependencyException.Data);
+                    innerException: dependencyException);
 
             var expectedPatientServiceDependencyException =
                 new PatientServiceDependencyException(
@@ -99,8 +101,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             var failedPatientDependencyException =
                 new FailedPatientDependencyException(
                     message: "Failed patient dependency error occurred, contact support.",
-                    innerException: dependencyException,
-                    data: dependencyException.Data);
+                    innerException: dependencyException);
 
             var expectedPatientServiceDependencyException =
                 new PatientServiceDependencyException(
@@ -176,8 +177,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             var timedOutPatientServiceException =
                 new TimedOutPatientServiceException(
                     message: "Patient request timed out, please try again.",
-                    innerException: timeoutException,
-                    data: timeoutException.Data);
+                    innerException: timeoutException);
 
             var expectedPatientServiceDependencyException =
                 new PatientServiceDependencyException(
@@ -522,10 +522,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
 
-            var refusal = new HttpRequestException(
+            string refusalBody =
+                CreateIdentifiableRefusalBody(inputStructuredRecordRequest.NhsNumber);
+
+            var refusal = new HttpResponseException(
                 message: GetRandomString(),
-                inner: null,
-                statusCode: refusalStatusCode);
+                statusCode: refusalStatusCode,
+                responseBody: refusalBody);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostFormUrlEncodedContentAsync(
@@ -551,6 +554,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             actualPatientServiceDependencyValidationException.InnerException.InnerException
                 .Should().BeSameAs(refusal);
+
+            actualPatientServiceDependencyValidationException.ResponseBody
+                .Should().Be(refusalBody);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(
@@ -582,10 +588,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
 
-            var failure = new HttpRequestException(
+            string failureBody =
+                CreateIdentifiableRefusalBody(inputStructuredRecordRequest.NhsNumber);
+
+            var failure = new HttpResponseException(
                 message: GetRandomString(),
-                inner: null,
-                statusCode: failureStatusCode);
+                statusCode: failureStatusCode,
+                responseBody: failureBody);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostFormUrlEncodedContentAsync(
@@ -608,6 +617,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceDependencyException.InnerException
                 .Should().BeOfType<FailedPatientDependencyException>();
 
+            actualPatientServiceDependencyException.ResponseBody
+                .Should().Be(failureBody);
+
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(
                     this.patientConfiguration.AuthUrl,
@@ -623,5 +635,93 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
+        /// <summary>
+        /// The reason the body travels on a property instead of in Exception.Data.
+        ///
+        /// LoggingBroker logs $"{exception.Message} {exception.GetValidationSummary()}", and that
+        /// summary is built by walking Data down the whole inner chain. A response body left
+        /// anywhere in Data therefore lands in the log message and in Application Insights - and a
+        /// provider refusing a lookup says why in an OperationOutcome that names the patient.
+        ///
+        /// This test reconstructs exactly what the broker throws and asserts the identifiable text
+        /// reaches the caller and nothing else. It fails if anyone reintroduces the Data hop.
+        /// </summary>
+        [Fact]
+        public async Task ShouldKeepTheUpstreamResponseBodyOutOfWhatIsLoggedAsync()
+        {
+            // given
+            StructuredRecordRequest randomStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+
+            string refusalBody =
+                CreateIdentifiableRefusalBody(inputStructuredRecordRequest.NhsNumber);
+
+            var refusal = new HttpResponseException(
+                message: "Response status code does not indicate success: 401 (Unauthorized).",
+                statusCode: HttpStatusCode.Unauthorized,
+                responseBody: refusalBody);
+
+            Exception loggedException = null;
+
+            this.loggingBrokerMock.Setup(broker =>
+                broker.LogErrorAsync(It.IsAny<Xeption>()))
+                    .Callback<Exception>(exception => loggedException = exception);
+
+            this.httpBrokerMock.Setup(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(refusal);
+
+            // when
+            ValueTask<string> getStructuredRecordTask =
+                this.patientService.GetStructuredRecordAsync(
+                    inputStructuredRecordRequest,
+                    TestContext.Current.CancellationToken);
+
+            PatientServiceDependencyValidationException
+                actualPatientServiceDependencyValidationException =
+                    await Assert.ThrowsAsync<PatientServiceDependencyValidationException>(
+                        testCode: getStructuredRecordTask.AsTask);
+
+            // then
+            actualPatientServiceDependencyValidationException.ResponseBody
+                .Should().Be(refusalBody);
+
+            loggedException.Should().NotBeNull();
+
+            string loggedText =
+                $"{loggedException.Message} {loggedException.GetValidationSummary()}";
+
+            loggedText.Should().NotContain(refusalBody);
+            loggedText.Should().NotContain(inputStructuredRecordRequest.NhsNumber);
+
+            // Nothing anywhere down the chain carries it either, which is the invariant rather
+            // than the summary happening not to render it.
+            for (Exception exception = loggedException;
+                exception is not null;
+                exception = exception.InnerException)
+            {
+                exception.Data.Values.Cast<object>()
+                    .Should().NotContain(refusalBody);
+            }
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    this.patientConfiguration.AuthUrl,
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<Xeption>()),
+                        Times.Once);
+
+            this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }

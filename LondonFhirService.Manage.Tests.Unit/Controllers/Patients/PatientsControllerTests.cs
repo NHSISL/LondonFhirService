@@ -25,6 +25,11 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             this.patientsController = new PatientsController(this.patientServiceMock.Object);
         }
 
+        /// <summary>
+        /// Only the exceptions whose answer is built from Exception.Data, which is what
+        /// RESTFulSense's BadRequest(Exception) reads. The two dependency exceptions answer with
+        /// what the upstream said instead, so they are covered on their own below.
+        /// </summary>
         public static TheoryData<Xeption> ValidationExceptions()
         {
             var someInnerException = new Xeption();
@@ -33,12 +38,6 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             return new TheoryData<Xeption>
             {
                 new PatientServiceValidationException(
-                    message: someMessage,
-                    innerException: someInnerException),
-
-                // An upstream refusal - credentials the token endpoint rejected - is the caller's
-                // to fix, so it belongs with the 400s rather than with the server errors.
-                new PatientServiceDependencyValidationException(
                     message: someMessage,
                     innerException: someInnerException)
             };
@@ -51,15 +50,20 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             return new TheoryData<Xeption>
             {
-                new PatientServiceDependencyException(
-                    message: someMessage,
-                    innerException: someInnerException),
-
                 new PatientServiceException(
                     message: someMessage,
                     innerException: someInnerException)
             };
         }
+
+        /// <summary>
+        /// What a provider actually sends back when it refuses, rather than a random string. The
+        /// assertions using it are about an identifiable payload reaching the operator who asked
+        /// and nothing else, so it has to look like one.
+        /// </summary>
+        private static string CreateRefusalBody() =>
+            "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"error\"," +
+                "\"diagnostics\":\"" + GetRandomString() + "\"}]}";
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();

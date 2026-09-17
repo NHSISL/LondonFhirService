@@ -6,11 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Patients;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
@@ -239,6 +241,9 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
             StructuredRecordRequest inputStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
 
+            string failureBody =
+                CreateIdentifiableRefusalBody(inputStructuredRecordRequest.NhsNumber);
+
             this.apiBroker.HttpBrokerMock.Setup(broker =>
                 broker.PostFormUrlEncodedContentAsync(
                     It.IsAny<string>(),
@@ -253,7 +258,11 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))
-                        .ThrowsAsync(new HttpRequestException(GetRandomString()));
+                        .ThrowsAsync(new HttpResponseException(
+                            message: "Response status code does not indicate success: 502 " +
+                                "(Bad Gateway).",
+                            statusCode: HttpStatusCode.BadGateway,
+                            responseBody: failureBody));
 
             // when
             HttpResponseMessage actualResponse =
@@ -261,6 +270,9 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
 
             // then
             actualResponse.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+
+            ProblemDetails actualProblemDetails = await ReadProblemDetailsAsync(actualResponse);
+            actualProblemDetails.Detail.Should().Be(failureBody);
         }
 
         [Fact]
@@ -306,15 +318,20 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
             StructuredRecordRequest inputStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
 
+            string refusalBody =
+                "{\"error\":\"invalid_client\",\"error_description\":\"AADSTS7000215: " +
+                    "Invalid client secret provided.\"}";
+
             this.apiBroker.HttpBrokerMock.Setup(broker =>
                 broker.PostFormUrlEncodedContentAsync(
                     It.IsAny<string>(),
                     It.IsAny<IDictionary<string, string>>(),
                     It.IsAny<CancellationToken>()))
-                        .ThrowsAsync(new HttpRequestException(
-                            message: "Response status code does not indicate success: 401.",
-                            inner: null,
-                            statusCode: HttpStatusCode.Unauthorized));
+                        .ThrowsAsync(new HttpResponseException(
+                            message: "Response status code does not indicate success: 401 " +
+                                "(Unauthorized).",
+                            statusCode: HttpStatusCode.Unauthorized,
+                            responseBody: refusalBody));
 
             // when
             HttpResponseMessage actualResponse =
@@ -322,6 +339,11 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
 
             // then
             actualResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+            // The whole point of the endpoint: the operator sees the token endpoint's own words,
+            // not a summary of them.
+            ProblemDetails actualProblemDetails = await ReadProblemDetailsAsync(actualResponse);
+            actualProblemDetails.Detail.Should().Be(refusalBody);
 
             this.apiBroker.HttpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
@@ -332,6 +354,25 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                     It.IsAny<CancellationToken>()),
                         Times.Never);
         }
+
+        private static async ValueTask<ProblemDetails> ReadProblemDetailsAsync(
+            HttpResponseMessage httpResponseMessage)
+        {
+            string responseBody = await httpResponseMessage.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize<ProblemDetails>(
+                responseBody,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        }
+
+        /// <summary>
+        /// A refusal shaped the way a provider actually refuses - an OperationOutcome naming the
+        /// patient. Using a realistic one matters: the assertions are about where this text is
+        /// allowed to travel.
+        /// </summary>
+        private static string CreateIdentifiableRefusalBody(string nhsNumber) =>
+            "{\"resourceType\":\"OperationOutcome\",\"issue\":[{\"severity\":\"error\"," +
+                "\"diagnostics\":\"Patient " + nhsNumber + " not found\"}]}";
 
         private void SetupSuccessfulCall(string tokenResponse, string structuredRecordResponse)
         {

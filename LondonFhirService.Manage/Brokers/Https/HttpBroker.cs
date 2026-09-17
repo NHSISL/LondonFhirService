@@ -95,15 +95,17 @@ namespace LondonFhirService.Manage.Brokers.Https
         /// useful part discarded - on a screen whose entire purpose is showing what the upstream
         /// actually said.
         ///
-        /// The body travels on a plain HttpRequestException rather than a broker-specific type, so
-        /// the exception crossing this boundary stays the native one the service already maps, and
-        /// the status code stays machine readable on the exception rather than only in the text.
+        /// The body travels on HttpResponseException.ResponseBody, which derives from
+        /// HttpRequestException - so the exception crossing this boundary is still the native one
+        /// the service maps, and the status code stays machine readable rather than only in the
+        /// text.
         ///
-        /// It goes in Data under IHttpBroker.ResponseBodyKey and deliberately NOT in the message.
-        /// A provider refusing a patient lookup can say why in an OperationOutcome that names the
-        /// patient, and an exception message is the part that reaches a log sink or Application
-        /// Insights by default. Keeping the message to the status line means the identifiable part
-        /// travels only where something reads it on purpose.
+        /// It goes on a property and deliberately NOT in the message or in Exception.Data. A
+        /// provider refusing a patient lookup can say why in an OperationOutcome that names the
+        /// patient; the message and Data are both parts that reach a log sink or Application
+        /// Insights by default, because LoggingBroker appends a summary built from Data to every
+        /// message it logs. Keeping the body off both means the identifiable part travels only
+        /// where something reads it on purpose.
         /// </summary>
         private static async ValueTask<string> ReadContentOrThrowAsync(
             HttpResponseMessage httpResponseMessage,
@@ -118,18 +120,14 @@ namespace LondonFhirService.Manage.Brokers.Https
                 return responseBody;
             }
 
-            var httpRequestException = new HttpRequestException(
+            throw new HttpResponseException(
                 message:
                     $"Response status code does not indicate success: " +
                         $"{(int)httpResponseMessage.StatusCode} " +
                         $"({httpResponseMessage.ReasonPhrase}).",
 
-                inner: null,
-                statusCode: httpResponseMessage.StatusCode);
-
-            httpRequestException.Data[IHttpBroker.ResponseBodyKey] = Truncate(responseBody);
-
-            throw httpRequestException;
+                statusCode: httpResponseMessage.StatusCode,
+                responseBody: Truncate(responseBody));
         }
 
         private static string Truncate(string responseBody)

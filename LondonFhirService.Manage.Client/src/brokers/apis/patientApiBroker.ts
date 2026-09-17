@@ -1,4 +1,4 @@
-import ApiBroker from "../apiBroker";
+﻿import ApiBroker from "../apiBroker";
 import { PatientApiBrokerException } from "../../models/foundations/patients/exceptions/PatientApiBrokerException";
 import type { IPatientApiBroker } from "./iPatientApiBroker";
 import type { StructuredRecordRequest } from "../../models/foundations/patients/StructuredRecordRequest";
@@ -27,10 +27,10 @@ export class PatientApiBroker implements IPatientApiBroker {
         }
     }
 
-    // The API's own explanation, not a generic message. A 400 from PatientsController is a
-    // ProblemDetails naming the field that was wrong, and a 500 carries what the provider said
-    // when it refused. Discarding either leaves an operator on a diagnostic page with nothing to
-    // diagnose.
+    // The API's own explanation, not a generic message. PatientsController answers a validation
+    // failure with a ProblemDetails naming the field that was wrong, and an upstream refusal or
+    // failure with one whose detail is the token endpoint's or provider's own words. Discarding
+    // either leaves an operator on a diagnostic page with nothing to diagnose.
     private describeFailure(exception: unknown): string {
         const response =
             (exception as { response?: { status?: number; data?: unknown } })?.response;
@@ -65,7 +65,11 @@ export class PatientApiBroker implements IPatientApiBroker {
             return fieldErrors;
         }
 
-        for (const key of ["title", "message", "detail"]) {
+        // detail before title, and the order matters. On an upstream refusal the title is this
+        // service's own generic wrapper - "Patient dependency validation error occurred" - while
+        // detail is the upstream's actual text. Reading title first would show the operator the
+        // wrapper and throw away the only part that says what went wrong.
+        for (const key of ["detail", "title", "message"]) {
             const value = body[key];
 
             if (typeof value === "string" && value.trim().length > 0) {
@@ -87,11 +91,12 @@ export class PatientApiBroker implements IPatientApiBroker {
             .join("; ");
     }
 
-    // Format conversion only. The endpoint answers text/plain carrying the provider's payload
-    // verbatim, but axios parses a body that happens to be valid JSON before this ever sees it -
-    // so the response arrives as an object when the provider answered JSON and as a string when
-    // it did not. Both are turned back into text here, because the page shows what came back
-    // rather than reading fields out of it.
+    // Format conversion only. The endpoint returns the provider's payload as a bare string, and
+    // what arrives here depends on the content type MVC picked: axios sends an Accept header, so
+    // the JSON formatter wins and the body is a JSON-encoded string, which axios has already
+    // parsed back into a string or - when the provider answered JSON - into an object. A client
+    // that sends no Accept header gets text/plain instead. Both shapes are turned back into text
+    // here, because the page shows what came back rather than reading fields out of it.
     private toPayloadText(rawPayload: unknown): string {
         if (typeof rawPayload === "string") {
             return rawPayload;
