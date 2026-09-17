@@ -1,8 +1,11 @@
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+﻿import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { StructuredRecordPage } from "./StructuredRecordPage";
 import type { StructuredRecordView } from "../../models/views/patients/StructuredRecordView";
+import {
+    StructuredRecordViewServiceException
+} from "../../models/views/patients/exceptions/StructuredRecordViewServiceException";
 
 const retrieveStructuredRecordViewAsync = vi.fn();
 
@@ -81,6 +84,11 @@ const submit = async () => {
 
 const outcomeRegion = () => screen.getByLabelText("Result");
 
+// TextInputBase wraps its own input in a div, so a field's message is a sibling of that wrapper
+// rather than inside it. The enclosing column is the nearest element holding both.
+const fieldColumn = (label: RegExp) =>
+    screen.getByLabelText(label).closest("[class*='col-']");
+
 // The request used to look like it did nothing: the form is taller than the viewport, so whatever
 // rendered below it was off screen at the moment it appeared.
 it("should move to the result area as soon as the request starts", async () => {
@@ -137,4 +145,66 @@ it("should animate the scroll otherwise", async () => {
     await submit();
 
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+});
+
+// A deployed environment deliberately configures no consumer credential - the operator is
+// expected to supply one on this form - so the API rejecting a blank clientId is the ordinary
+// case here rather than a fault. It used to arrive as "clientId: Text is invalid" flattened into
+// the error banner, nowhere near the box to type it in.
+it("should flag a rejected credential under its own field", async () => {
+    await submit();
+
+    await act(async () => {
+        fail(new StructuredRecordViewServiceException(
+            "Some of the details below need correcting.",
+            null,
+            {
+                clientId: ["Text is invalid"],
+                clientSecret: ["Text is invalid"]
+            }));
+    });
+
+    // Scoped to each field's own column rather than the document, so the test would still fail
+    // if both messages landed in one place.
+    await waitFor(() =>
+        expect(fieldColumn(/client id/i)?.textContent).toContain("Text is invalid"));
+
+    expect(fieldColumn(/client secret/i)?.textContent).toContain("Text is invalid");
+});
+
+// Repeating them in the banner as well would say the same thing twice, once where the operator
+// can act on it and once where they cannot.
+it("should not repeat field errors in the result banner", async () => {
+    await submit();
+
+    await act(async () => {
+        fail(new StructuredRecordViewServiceException(
+            "Some of the details below need correcting.",
+            null,
+            { clientId: ["Text is invalid"] }));
+    });
+
+    await waitFor(() =>
+        expect(fieldColumn(/client id/i)?.textContent).toContain("Text is invalid"));
+
+    expect(outcomeRegion().textContent).not.toContain("Text is invalid");
+});
+
+// A setting the environment is missing has no input to sit under, so it has to stay in the
+// banner - silence would leave an operator retyping credentials against a host that could never
+// have answered.
+it("should keep a configuration failure in the banner", async () => {
+    await submit();
+
+    await act(async () => {
+        fail(new StructuredRecordViewServiceException(
+            "We could not retrieve the structured record. This environment is not fully "
+            + "configured for it - getStructuredRecordUrl: Text must be a valid absolute http "
+            + "or https url.",
+            null,
+            {}));
+    });
+
+    await waitFor(() =>
+        expect(outcomeRegion().textContent).toContain("getStructuredRecordUrl"));
 });

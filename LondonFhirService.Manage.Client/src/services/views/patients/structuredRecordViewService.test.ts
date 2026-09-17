@@ -181,3 +181,56 @@ it("should offer no links when the host sent no correlation id", async () => {
     expect(structuredRecord.metricsUrl).toBe("");
     expect(structuredRecord.comparisonsUrl).toBe("");
 });
+
+// A field the operator can correct comes back as structured data rather than only as prose, so
+// the page can put each message under the input it names.
+it("should carry field errors the form can paint, and not repeat them in the message", async () => {
+    const patientService: IPatientService = {
+        retrieveStructuredRecordAsync: () => {
+            throw new PatientApiBrokerException(
+                "The API answered 400: clientId: Text is invalid",
+                null,
+                { clientId: ["Text is invalid"], clientSecret: ["Text is invalid"] });
+        }
+    };
+
+    const viewService = new StructuredRecordViewService(patientService);
+
+    await expect(viewService.retrieveStructuredRecordViewAsync(formValues()))
+        .rejects.toMatchObject({
+            message: "Some of the details below need correcting.",
+            fieldErrors: {
+                clientId: ["Text is invalid"],
+                clientSecret: ["Text is invalid"]
+            }
+        });
+});
+
+// AuthUrl and GetStructuredRecordUrl are configuration, not anything typed on this form, so a
+// message about them has no input to sit under and has to stay in the page's banner.
+it("should keep a setting the form has no field for in the message", async () => {
+    const patientService: IPatientService = {
+        retrieveStructuredRecordAsync: () => {
+            throw new PatientApiBrokerException(
+                "The API answered 400",
+                null,
+                { getStructuredRecordUrl: ["Text must be a valid absolute http or https url"] });
+        }
+    };
+
+    const viewService = new StructuredRecordViewService(patientService);
+
+    let thrown: unknown;
+
+    try {
+        await viewService.retrieveStructuredRecordViewAsync(formValues());
+    } catch (exception) {
+        thrown = exception;
+    }
+
+    const failure = thrown as { message: string; fieldErrors: Record<string, string[]> };
+
+    expect(failure.fieldErrors).toEqual({});
+    expect(failure.message).toContain("not fully configured");
+    expect(failure.message).toContain("getStructuredRecordUrl");
+});

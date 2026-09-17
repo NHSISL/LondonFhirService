@@ -1,4 +1,4 @@
-import { Button, Card, Col, Form, Row } from "react-bootstrap";
+﻿import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import TextInputBase from "../bases/inputs/TextInputBase";
 import ToggleBase from "../bases/inputs/ToggleBase";
 import type { StructuredRecordFormProps } from "../../models/components/patients/StructuredRecordFormProps";
@@ -59,9 +59,13 @@ export function StructuredRecordForm({
                                         description="Optional. Blank uses the configured client id."
                                         autoComplete="off"
                                         value={values.clientId}
+                                        error={errors.clientId}
                                         disabled={submitting}
                                         onChange={event =>
                                             onFieldChange("clientId", event.target.value)} />
+                                        {errors.clientId && (
+                                            <small className="text-danger">{errors.clientId}</small>
+                                        )}
                                 </Col>
 
                                 <Col md={6}>
@@ -73,9 +77,13 @@ export function StructuredRecordForm({
                                         description="Optional. Blank uses the configured client secret."
                                         autoComplete="new-password"
                                         value={values.clientSecret}
+                                        error={errors.clientSecret}
                                         disabled={submitting}
                                         onChange={event =>
                                             onFieldChange("clientSecret", event.target.value)} />
+                                        {errors.clientSecret && (
+                                            <small className="text-danger">{errors.clientSecret}</small>
+                                        )}
                                 </Col>
                             </Row>
 
@@ -87,8 +95,12 @@ export function StructuredRecordForm({
                                         label="Scope"
                                         description="Optional. Blank uses the configured scope."
                                         value={values.scope}
+                                        error={errors.scope}
                                         disabled={submitting}
                                         onChange={event => onFieldChange("scope", event.target.value)} />
+{errors.scope && (
+    <small className="text-danger">{errors.scope}</small>
+)}
                                 </Col>
 
                                 <Col md={6}>
@@ -99,9 +111,13 @@ export function StructuredRecordForm({
                                         placeholder="client_credentials"
                                         description="Optional. Blank uses the configured grant type."
                                         value={values.grantType}
+                                        error={errors.grantType}
                                         disabled={submitting}
                                         onChange={event =>
                                             onFieldChange("grantType", event.target.value)} />
+                                        {errors.grantType && (
+                                            <small className="text-danger">{errors.grantType}</small>
+                                        )}
                                 </Col>
                             </Row>
                         </Card.Body>
@@ -141,9 +157,13 @@ export function StructuredRecordForm({
                                         description="Optional. Format YYYY-MM-DD."
                                         maxLength={10}
                                         value={values.dateOfBirth}
+                                        error={errors.dateOfBirth}
                                         disabled={submitting}
                                         onChange={event =>
                                             onFieldChange("dateOfBirth", event.target.value)} />
+                                        {errors.dateOfBirth && (
+                                            <small className="text-danger">{errors.dateOfBirth}</small>
+                                        )}
                                 </Col>
                             </Row>
 

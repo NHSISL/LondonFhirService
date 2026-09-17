@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StructuredRecordViewService } from "../../services/views/patients/structuredRecordViewService";
 import { structuredRecordFormValidations } from "../../models/views/patients/StructuredRecordFormValidations";
 import { useValidation } from "../useValidation";
+import {
+    StructuredRecordViewServiceException
+} from "../../models/views/patients/exceptions/StructuredRecordViewServiceException";
 import type { StructuredRecordFormApiErrors } from "../../models/views/patients/StructuredRecordFormApiErrors";
 import type { StructuredRecordFormErrors } from "../../models/views/patients/StructuredRecordFormErrors";
 import type { StructuredRecordFormValues } from "../../models/views/patients/StructuredRecordFormValues";
@@ -9,7 +12,12 @@ import type { StructuredRecordView } from "../../models/views/patients/Structure
 
 const emptyStructuredRecordFormErrors: StructuredRecordFormErrors = {
     hasErrors: false,
-    nhsNumber: ""
+    clientId: "",
+    clientSecret: "",
+    scope: "",
+    grantType: "",
+    nhsNumber: "",
+    dateOfBirth: ""
 };
 
 export type StructuredRecordPageState = {
@@ -49,7 +57,7 @@ export function useStructuredRecordPage(): StructuredRecordPageState {
 
     useEffect(() => abandonInFlightRequest, [abandonInFlightRequest]);
 
-    const { errors, enableValidationMessages, disableValidationMessages, validate } =
+    const { errors, processApiErrors, enableValidationMessages, disableValidationMessages, validate } =
         useValidation<StructuredRecordFormErrors, StructuredRecordFormApiErrors>(
             emptyStructuredRecordFormErrors,
             structuredRecordFormValidations,
@@ -98,6 +106,25 @@ export function useStructuredRecordPage(): StructuredRecordPageState {
                     return;
                 }
 
+                // The API names the field it rejected, and on this form a blank credential is
+                // the ordinary case rather than a mistake - a deployed environment configures
+                // none, so the operator is expected to supply them here. Painting that under
+                // the input is the whole difference between "clientId: Text is invalid" in a
+                // banner and a message beside the box to type it in.
+                if (exception instanceof StructuredRecordViewServiceException
+                    && Object.keys(exception.fieldErrors).length > 0) {
+                    processApiErrors(exception.fieldErrors as StructuredRecordFormApiErrors);
+
+                    // Only when something remains that no field can carry. The view service says
+                    // so by leaving a message about configuration rather than about the form.
+                    setError(
+                        exception.message.startsWith("Some of the details below")
+                            ? null
+                            : exception);
+
+                    return;
+                }
+
                 setError(exception);
             })
             .finally(() => {
@@ -110,6 +137,7 @@ export function useStructuredRecordPage(): StructuredRecordPageState {
             });
     }, [
         enableValidationMessages,
+        processApiErrors,
         validate,
         values,
         structuredRecordViewService,

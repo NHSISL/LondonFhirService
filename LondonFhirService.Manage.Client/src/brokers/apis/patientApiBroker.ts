@@ -27,7 +27,10 @@ export class PatientApiBroker implements IPatientApiBroker {
                 correlationId: this.readCorrelationId(response)
             };
         } catch (exception) {
-            throw new PatientApiBrokerException(this.describeFailure(exception), exception);
+            throw new PatientApiBrokerException(
+                this.describeFailure(exception),
+                exception,
+                this.readFieldErrorBag(exception));
         }
     }
 
@@ -120,6 +123,38 @@ export class PatientApiBroker implements IPatientApiBroker {
         }
 
         return "";
+    }
+
+    /// The same bag readFieldErrors renders as prose, kept in its original shape so the page can
+    /// put each message under the input it names. Read from the response rather than re-parsed
+    /// out of the message, because a field whose own text contains a colon or a semicolon cannot
+    /// be recovered from the flattened string.
+    private readFieldErrorBag(exception: unknown): Record<string, string[]> {
+        const rawBody = (exception as { response?: { data?: unknown } })?.response?.data;
+
+        if (typeof rawBody !== "object" || rawBody === null) {
+            return {};
+        }
+
+        const rawErrors = (rawBody as Record<string, unknown>).errors;
+
+        if (typeof rawErrors !== "object" || rawErrors === null) {
+            return {};
+        }
+
+        const fieldErrors: Record<string, string[]> = {};
+
+        for (const [field, messages] of Object.entries(rawErrors as Record<string, unknown>)) {
+            const messageList = Array.isArray(messages)
+                ? messages.map(message => String(message))
+                : [String(messages)];
+
+            // camelCased on the way in regardless of how the server cased it, so a page keyed by
+            // its own form field names does not depend on the host's serialiser settings.
+            fieldErrors[field.charAt(0).toLowerCase() + field.slice(1)] = messageList;
+        }
+
+        return fieldErrors;
     }
 
     private readFieldErrors(rawErrors: unknown): string {
