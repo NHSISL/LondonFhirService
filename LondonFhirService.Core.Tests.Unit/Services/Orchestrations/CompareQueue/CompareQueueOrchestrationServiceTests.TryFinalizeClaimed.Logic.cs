@@ -36,13 +36,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
 
             this.fhirRecordServiceMock.Setup(service =>
                 service.TryClaimFhirRecordAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<CancellationToken>()))
+                    inputCompareQueueItem.SecondaryFhirRecord.Id,
+                    StatusType.Processing,
+                    terminalStatus,
+                    settledAt,
+                    true,
+                    claimedAt,
+                    CancellationToken.None))
                         .ReturnsAsync(true);
 
             // when
@@ -64,7 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     settledAt,
                     true,
                     claimedAt,
-                    It.IsAny<CancellationToken>()),
+                    CancellationToken.None),
                         Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -74,6 +74,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -82,6 +83,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
         {
             // given
             DateTimeOffset claimedAt = GetRandomDateTimeOffset();
+            DateTimeOffset settledAt = claimedAt.AddMinutes(2);
 
             var inputCompareQueueItem = new CompareQueueItem
             {
@@ -91,17 +93,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
-                    .ReturnsAsync(claimedAt.AddMinutes(2));
+                    .ReturnsAsync(settledAt);
 
             this.fhirRecordServiceMock.Setup(service =>
                 service.TryClaimFhirRecordAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<CancellationToken>()))
+                    inputCompareQueueItem.SecondaryFhirRecord.Id,
+                    StatusType.Processing,
+                    StatusType.Failed,
+                    settledAt,
+                    true,
+                    claimedAt,
+                    CancellationToken.None))
                         .ReturnsAsync(false);
 
             // when
@@ -119,10 +121,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     inputCompareQueueItem.SecondaryFhirRecord.Id,
                     StatusType.Processing,
                     StatusType.Failed,
-                    It.IsAny<DateTimeOffset>(),
+                    settledAt,
                     true,
                     claimedAt,
-                    It.IsAny<CancellationToken>()),
+                    CancellationToken.None),
                         Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -132,6 +134,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -140,6 +143,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
         {
             // given
             DateTimeOffset claimedAt = GetRandomDateTimeOffset();
+            DateTimeOffset settledAt = claimedAt.AddMinutes(2);
 
             var inputCompareQueueItem = new CompareQueueItem
             {
@@ -149,17 +153,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
-                    .ReturnsAsync(claimedAt.AddMinutes(2));
+                    .ReturnsAsync(settledAt);
 
             this.fhirRecordServiceMock.Setup(service =>
                 service.TryClaimFhirRecordAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<CancellationToken>()))
+                    inputCompareQueueItem.SecondaryFhirRecord.Id,
+                    StatusType.Processing,
+                    StatusType.Completed,
+                    settledAt,
+                    true,
+                    claimedAt,
+                    CancellationToken.None))
                         .ReturnsAsync(true);
 
             // when
@@ -171,6 +175,31 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             // Processing, so no later re-assertion against it can or should match, and moving the
             // token would only suggest a lease that no longer exists.
             inputCompareQueueItem.ClaimedAt.Should().Be(claimedAt);
+
+            // The unchanged token only means anything alongside proof the settle actually ran:
+            // on its own the assertion above would still hold if the service stopped calling
+            // TryClaimFhirRecordAsync at all. Pinning the fenced transition here keeps the claim
+            // "the token is left alone ON SETTLE" rather than "the token is left alone".
+            this.fhirRecordServiceMock.Verify(service =>
+                service.TryClaimFhirRecordAsync(
+                    inputCompareQueueItem.SecondaryFhirRecord.Id,
+                    StatusType.Processing,
+                    StatusType.Completed,
+                    settledAt,
+                    true,
+                    claimedAt,
+                    CancellationToken.None),
+                        Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.fhirRecordServiceMock.VerifyNoOtherCalls();
+            this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }
 }

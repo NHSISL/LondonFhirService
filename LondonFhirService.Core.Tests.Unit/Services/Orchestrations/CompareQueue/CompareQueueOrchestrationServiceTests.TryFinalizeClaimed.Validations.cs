@@ -58,9 +58,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     expectedCompareQueueOrchestrationValidationException))),
                         Times.Once);
 
+            // The clock read is the first thing past the guard, so proving it never happened is
+            // what makes "before the clock is read" an assertion rather than a comment. The settle
+            // itself cannot run without the value that read returns.
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Never);
+
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -112,9 +120,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     expectedCompareQueueOrchestrationValidationException))),
                         Times.Once);
 
+            // A non-terminal status is refused before the clock is read, so the fenced write that
+            // would have marked the row processed never reaches storage.
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Never);
+
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -149,9 +164,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     expectedCompareQueueOrchestrationValidationException))),
                         Times.Once);
 
+            // The null guard is structural and circuit-breaking: nothing downstream is reached,
+            // so the clock is never read either.
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Never);
+
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }

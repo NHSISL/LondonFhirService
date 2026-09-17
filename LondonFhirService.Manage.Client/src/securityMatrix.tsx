@@ -1,7 +1,12 @@
 ﻿// The app registration carries one name per logical role - Administrators and Users - and these
-// two arrays are where the client writes them down. They mirror the ManageRoles constants the
-// Manage host authorises against, so a screen the client shows and an endpoint the host allows
-// are gated on the same strings; change one and change the other.
+// two arrays are where the client writes them down. The STRINGS mirror the ManageRoles constants
+// the Manage host authorises against; change one and change the other.
+//
+// The strings matching does not mean the POLICY matches. Which roles each area below grants is
+// maintained by hand against each controller's [Authorize], and two areas are currently out of
+// step with the server - see the notes on audits and comparisons. Nothing here enforces
+// anything: this matrix decides what the portal shows, the attributes decide what the API
+// allows, and only the second is a security boundary.
 const administratorRoles = ['Administrators'];
 
 const userRoles = ['Users'];
@@ -16,7 +21,14 @@ const securityPoints = {
         view: administratorAndUserRoles,
     },
     // The audit trail is read only in this portal - the API's write verbs are [InvisibleApi]
-    // and unroutable - so only view is granted, to the same audience AuditsController allows.
+    // and unroutable - so only view is granted.
+    //
+    // MISMATCH, left as found and not silently changed: this grants Administrators AND Users,
+    // but AuditsController carries [Authorize(Roles = ManageRoles.Administrators)]. A Users-role
+    // operator is therefore shown the audit screen and gets 403 from every call it makes. The
+    // safe direction to reconcile is tightening this array to administratorRoles, but which side
+    // is wrong is a policy question - an audit row carries a whole patient payload - so it is
+    // the repository owner's call, not a tidy-up.
     audits: {
         view: administratorAndUserRoles,
     },
@@ -26,11 +38,18 @@ const securityPoints = {
     metrics: {
         view: administratorAndUserRoles,
     },
-    // A comparison holds two whole patient bundles, so the area is administrators only - the same
-    // audience FhirRecordDifferencesController and FhirRecordsController authorise against. Edit
+    // A comparison holds two whole patient bundles, so this area is administrators only. Edit
     // covers the review fields an operator can set on a comparison; the differences themselves are
     // written by the comparison service and are not editable from here, so there is no add or
     // delete.
+    //
+    // MISMATCH, left as found and not silently changed, and the more serious of the two: the UI
+    // is STRICTER than the API. FhirRecordsController and FhirRecordDifferencesController are
+    // [Authorize(Roles = ManageRoles.AdministratorsAndUsers)], so a Users-role operator cannot
+    // see this area in the portal but can call those endpoints directly and read the patient
+    // bundles behind it. Hiding a screen is not authorisation. Reconciling means either widening
+    // this array or narrowing those two controllers, and that decides who can read patient data -
+    // the repository owner's call.
     comparisons: {
         edit: administratorRoles,
         view: administratorRoles,

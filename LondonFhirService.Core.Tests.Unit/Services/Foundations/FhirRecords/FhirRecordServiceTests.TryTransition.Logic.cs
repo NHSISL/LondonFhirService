@@ -26,10 +26,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
             StatusType inputNewStatus = StatusType.Completed;
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             DateTimeOffset updatedDate = randomDateTimeOffset;
+            string randomUserId = GetRandomString();
+            string expectedUpdatedBy = randomUserId;
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(updatedDate);
+
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
 
             this.storageBrokerMock.Setup(broker =>
                 broker.UpdateFhirRecordStatusAsync(
@@ -38,8 +44,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputNewStatus,
                     true,
                     updatedDate,
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()))
+                    expectedUpdatedBy,
+                    TestContext.Current.CancellationToken))
                         .ReturnsAsync(changedRowCount);
 
             // when
@@ -68,8 +74,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     inputNewStatus,
                     true,
                     updatedDate,
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()),
+                    expectedUpdatedBy,
+                    TestContext.Current.CancellationToken),
                         Times.Once);
 
             // Fetched and put into the statement by hand, because ExecuteUpdateAsync goes
@@ -104,13 +110,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
 
             this.storageBrokerMock.Setup(broker =>
                 broker.UpdateFhirRecordStatusAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()))
+                    inputFhirRecordId,
+                    StatusType.Completed,
+                    StatusType.Completed,
+                    true,
+                    randomDateTimeOffset,
+                    expectedUpdatedBy,
+                    TestContext.Current.CancellationToken))
                         .ReturnsAsync(1);
 
             // when
@@ -140,7 +146,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     true,
                     randomDateTimeOffset,
                     expectedUpdatedBy,
-                    It.IsAny<CancellationToken>()),
+                    TestContext.Current.CancellationToken),
                         Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>
@@ -168,14 +174,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
 
             this.storageBrokerMock.Setup(broker =>
                 broker.ClaimFhirRecordAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<string>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<CancellationToken>()))
+                    inputFhirRecordId,
+                    StatusType.Pending,
+                    StatusType.Processing,
+                    claimedDate,
+                    expectedClaimedBy,
+                    false,
+                    null,
+                    TestContext.Current.CancellationToken))
                         .ReturnsAsync(1);
 
             // when
@@ -202,9 +208,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     StatusType.Processing,
                     claimedDate,
                     expectedClaimedBy,
-                    It.IsAny<bool>(),
+                    false,
                     null,
-                    It.IsAny<CancellationToken>()),
+                    TestContext.Current.CancellationToken),
                         Times.Once);
 
             this.storageBrokerMock.VerifyNoOtherCalls();
@@ -219,20 +225,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
             // given
             Guid inputFhirRecordId = Guid.NewGuid();
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            string randomUserId = GetRandomString();
+            string expectedUpdatedBy = randomUserId;
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
+            this.securityAuditBrokerMock.Setup(broker =>
+                broker.GetUserIdAsync())
+                    .ReturnsAsync(randomUserId);
+
             this.storageBrokerMock.Setup(broker =>
                 broker.UpdateFhirRecordStatusAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()))
+                    inputFhirRecordId,
+                    StatusType.Completed,
+                    StatusType.Completed,
+                    false,
+                    randomDateTimeOffset,
+                    expectedUpdatedBy,
+                    TestContext.Current.CancellationToken))
                         .ReturnsAsync(1);
 
             // when
@@ -254,8 +266,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     StatusType.Completed,
                     false,
                     randomDateTimeOffset,
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()),
+                    expectedUpdatedBy,
+                    TestContext.Current.CancellationToken),
                         Times.Once);
 
             this.dateTimeBrokerMock.Verify(broker =>

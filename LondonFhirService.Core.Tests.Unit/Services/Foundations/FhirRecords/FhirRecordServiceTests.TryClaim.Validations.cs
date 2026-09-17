@@ -62,17 +62,17 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 broker.GetCurrentDateTimeOffsetAsync(),
                     Times.Never);
 
-            this.storageBrokerMock.Verify(broker =>
-                broker.ClaimFhirRecordAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<string>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<DateTimeOffset?>(),
-                    It.IsAny<CancellationToken>()),
-                        Times.Never);
+            // The actor lookup is the first thing past the guard, so proving it never happened is
+            // what makes "validated before anything else runs" an assertion rather than a comment.
+            this.securityAuditBrokerMock.Verify(broker =>
+                broker.GetUserIdAsync(),
+                    Times.Never);
+
+            // No wildcard stand-in for the claim itself: test-106 forbids It.IsAny in a
+            // Validations file, and none of its arguments exist here anyway - validation
+            // short-circuits before the clock and the actor are read, which is what would have
+            // produced them. storageBrokerMock.VerifyNoOtherCalls() below proves the same thing
+            // without inventing values.
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
             this.securityAuditBrokerMock.VerifyNoOtherCalls();

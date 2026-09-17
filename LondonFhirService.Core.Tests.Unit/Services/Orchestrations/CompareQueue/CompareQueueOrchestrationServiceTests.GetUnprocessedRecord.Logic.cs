@@ -60,12 +60,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
 
             this.fhirRecordServiceMock.Setup(service =>
                 service.TryClaimFhirRecordAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<StatusType>(),
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
-                    It.IsAny<DateTimeOffset?>()))
+                    expectedFhirRecord.Id,
+                    StatusType.Pending,
+                    StatusType.Processing,
+                    inputDateTimeOffset,
+                    false,
+                    null))
                         .ReturnsAsync(true);
 
             this.fhirRecordServiceMock.Setup(service =>
@@ -83,6 +83,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             // first-in-first-out.
             actualCompareQueueItem.SecondaryFhirRecord.Id.Should().Be(expectedFhirRecord.Id);
 
+            // The clock is read once per claim attempt, and this claim wins on the first one.
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            // A fresh identifier per attempt is what spreads the workers; here it is the byte
+            // that pinned the chosen index.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            // Once for the candidate window, once for the winner's sibling primary.
+            this.fhirRecordServiceMock.Verify(service =>
+                service.RetrieveAllFhirRecordsAsync(),
+                    Times.Exactly(2));
+
             this.fhirRecordServiceMock.Verify(service =>
                 service.TryClaimFhirRecordAsync(
                     expectedFhirRecord.Id,
@@ -92,6 +108,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     false,
                     null),
                         Times.Once);
+
+            this.fhirRecordServiceMock.Verify(service =>
+                service.RetrieveFhirRecordByIdAsync(expectedFhirRecord.Id),
+                    Times.Once);
+
+            this.fhirRecordServiceMock.VerifyNoOtherCalls();
+            this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -146,8 +172,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     inputSecondaryFhirRecord.Id,
                     StatusType.Pending,
                     StatusType.Processing,
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
+                    inputDateTimeOffset,
+                    false,
                     null))
                         .ReturnsAsync(true);
 
@@ -164,8 +190,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             // then
             actualCompareQueueItem.Should().BeEquivalentTo(expectedCompareQueueItem);
 
+            // One read per claim attempt, and this claim wins on the first attempt.
             this.dateTimeBrokerMock.Verify(broker =>
                 broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            // The candidate is chosen from the window rather than taken from the head, so the
+            // single attempt still costs one identifier.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
                     Times.Once);
 
             this.fhirRecordServiceMock.Verify(service =>
@@ -173,14 +206,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     Times.Exactly(2));
 
             // Claimed by the database rather than by a read-then-write, so two workers cannot
-            // both take the same row.
+            // both take the same row. The claimed date is the same stamp the item carries back
+            // as its lease token, and a claim is never a processed write.
             this.fhirRecordServiceMock.Verify(service =>
                 service.TryClaimFhirRecordAsync(
                     inputSecondaryFhirRecord.Id,
                     StatusType.Pending,
                     StatusType.Processing,
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
+                    inputDateTimeOffset,
+                    false,
                     null),
                         Times.Once);
 
@@ -194,6 +228,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -227,8 +262,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     inputSecondaryFhirRecord.Id,
                     StatusType.Pending,
                     StatusType.Processing,
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
+                    inputDateTimeOffset,
+                    false,
                     null))
                         .ReturnsAsync(false);
 
@@ -241,6 +276,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             // worker must not go on to compare a pair somebody else owns.
             actualCompareQueueItem.Should().BeNull();
 
+            // The clock is read once per attempt rather than once per call, so a stamp taken up
+            // front cannot go stale across the loop and shorten the lease it is written into.
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Exactly(3));
+
+            // A fresh identifier per attempt, so a worker that loses a race does not
+            // deterministically collide with the same rival on the retry.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Exactly(3));
+
             // Retried rather than giving up on the first loss: a lost claim means another worker
             // took that row, not that the queue is empty.
             this.fhirRecordServiceMock.Verify(service =>
@@ -252,8 +299,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     inputSecondaryFhirRecord.Id,
                     StatusType.Pending,
                     StatusType.Processing,
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
+                    inputDateTimeOffset,
+                    false,
                     null),
                         Times.Exactly(3));
 
@@ -264,6 +311,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
 
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -306,8 +355,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     strandedFhirRecord.Id,
                     StatusType.Processing,
                     StatusType.Processing,
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
+                    inputDateTimeOffset,
+                    false,
                     expectedLeaseExpiry))
                         .ReturnsAsync(true);
 
@@ -324,6 +373,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             actualCompareQueueItem.SecondaryFhirRecord.Id.Should().Be(strandedFhirRecord.Id);
             actualCompareQueueItem.PrimaryFhirRecord.Id.Should().Be(inputPrimaryFhirRecord.Id);
 
+            // The clock is read once per claim attempt, and the reclaim wins on the first one.
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            // Once for the candidate window, once for the reclaimed row's sibling primary.
+            this.fhirRecordServiceMock.Verify(service =>
+                service.RetrieveAllFhirRecordsAsync(),
+                    Times.Exactly(2));
+
             // The lease bound has to reach the statement. This arm moves Processing to
             // Processing, so a status-only guard would match for every competing worker and the
             // claim would not arbitrate anything.
@@ -332,10 +395,22 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     strandedFhirRecord.Id,
                     StatusType.Processing,
                     StatusType.Processing,
-                    It.IsAny<DateTimeOffset>(),
-                    It.IsAny<bool>(),
+                    inputDateTimeOffset,
+                    false,
                     expectedLeaseExpiry),
                         Times.Once);
+
+            // The payload is fetched only after the reclaim is won, and only for the row this
+            // worker now holds.
+            this.fhirRecordServiceMock.Verify(service =>
+                service.RetrieveFhirRecordByIdAsync(strandedFhirRecord.Id),
+                    Times.Once);
+
+            this.fhirRecordServiceMock.VerifyNoOtherCalls();
+            this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -371,9 +446,16 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                 service.RetrieveAllFhirRecordsAsync(),
                     Times.Once);
 
+            // An empty window short-circuits before the candidate is selected, so no identifier
+            // is drawn and the loop does not burn its remaining attempts on an empty queue.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
     }

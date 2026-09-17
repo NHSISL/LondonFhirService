@@ -34,6 +34,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                 ClaimedAt = randomDateTimeOffset
             };
 
+            string randomMessage = GetRandomString();
+            var comparisonException = new Exception(randomMessage);
+
+            string expectedErrorMessage =
+                $"Failed processing CompareQueueItem for CorrelationId: " +
+                $"{inputSecondaryFhirRecord.CorrelationId}. " +
+                $"PrimaryFhirRecordId: {inputPrimaryFhirRecord.Id}." +
+                $"SecondaryFhirRecordId: {inputSecondaryFhirRecord.Id}.";
+
             this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
                 service.GetUnprocessedRecordAsync())
                     .ReturnsAsync(inputCompareQueueItem)
@@ -42,22 +51,39 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             // The comparison itself blows up, sending the drain loop down the catch arm.
             this.comparisonOrchestrationServiceMock.Setup(service =>
                 service.CompareAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()))
-                        .ThrowsAsync(new Exception(GetRandomString()));
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload))
+                        .ThrowsAsync(comparisonException);
 
             // The settle itself reports the lost lease; there is no separate check to stub.
             this.compareQueueOrchestrationServiceMock.Setup(service =>
                 service.TryFinalizeClaimedFhirRecordAsync(
-                    It.IsAny<CompareQueueItem>(),
-                    It.IsAny<StatusType>()))
+                    inputCompareQueueItem,
+                    StatusType.Failed))
                         .ReturnsAsync(false);
 
             // when
             await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             // then
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.GetUnprocessedRecordAsync(),
+                    Times.Exactly(2));
+
+            this.comparisonOrchestrationServiceMock.Verify(service =>
+                service.CompareAsync(
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload),
+                        Times.Once);
+
+            // The catch arm files the comparison failure before it decides what to write.
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is<Exception>(exception =>
+                    exception.Message == expectedErrorMessage)),
+                        Times.Once);
+
             // Failed is terminal and nothing reclaims it, so an overtaken worker must not write
             // it - that would bury a record the worker holding the row may yet complete, and
             // GetUnprocessedRecordAsync would never offer it again. The write is now guarded by
@@ -70,13 +96,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                         Times.Once);
 
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.CompletePrimaryFhirRecordAsync(It.IsAny<Guid>()),
+                service.CompletePrimaryFhirRecordAsync(inputPrimaryFhirRecord.Id),
                     Times.Never);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogWarningAsync(It.Is<string>(message =>
                     message.Contains("matched no rows"))),
                         Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -84,6 +116,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
         {
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            Guid randomFhirRecordDifferenceId = Guid.NewGuid();
             FhirRecord inputPrimaryFhirRecord = CreateRandomFhirRecord();
             inputPrimaryFhirRecord.IsPrimarySource = true;
 
@@ -105,9 +138,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.comparisonOrchestrationServiceMock.Setup(service =>
                 service.CompareAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()))
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload))
                         .ReturnsAsync(new ComparisonResult
                         {
                             CorrelationId = inputPrimaryFhirRecord.CorrelationId
@@ -115,7 +148,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.identifierBrokerMock.Setup(broker =>
                 broker.GetIdentifierAsync())
-                    .ReturnsAsync(Guid.NewGuid());
+                    .ReturnsAsync(randomFhirRecordDifferenceId);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
@@ -123,33 +156,72 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             // The lease expired mid-flight and another worker took the record over.
             this.compareQueueOrchestrationServiceMock.Setup(service =>
-                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                service.TryRetainClaimAsync(inputCompareQueueItem))
                     .ReturnsAsync(false);
 
             // when
             await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             // then
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.GetUnprocessedRecordAsync(),
+                    Times.Exactly(2));
+
+            this.comparisonOrchestrationServiceMock.Verify(service =>
+                service.CompareAsync(
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload),
+                        Times.Once);
+
+            // The result is built in full before the claim is re-asserted, so both brokers are
+            // still reached on the way to a result that is then thrown away.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryRetainClaimAsync(inputCompareQueueItem),
+                    Times.Once);
+
             // Nothing is written. The worker that took the record over is performing the same
             // comparison, and two difference rows for one pair is worse than one produced late.
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.PersistFhirRecordDifferencesAsync(It.IsAny<CompareQueueItem>()),
+                service.PersistFhirRecordDifferencesAsync(inputCompareQueueItem),
                     Times.Never);
 
+            // Neither terminal status lands: the settle is skipped altogether rather than
+            // attempted and fenced.
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.TryFinalizeClaimedFhirRecordAsync(
-                    It.IsAny<CompareQueueItem>(),
-                    It.IsAny<StatusType>()),
+                    inputCompareQueueItem,
+                    StatusType.Completed),
                         Times.Never);
 
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.CompletePrimaryFhirRecordAsync(It.IsAny<Guid>()),
+                service.TryFinalizeClaimedFhirRecordAsync(
+                    inputCompareQueueItem,
+                    StatusType.Failed),
+                        Times.Never);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.CompletePrimaryFhirRecordAsync(inputPrimaryFhirRecord.Id),
                     Times.Never);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogWarningAsync(It.Is<string>(message =>
                     message.Contains("Abandoning comparison"))),
                         Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -158,7 +230,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             // given
             CompareQueueItem randomCompareQueueItem = CreateRandomCompareQueueItem();
             CompareQueueItem inputCompareQueueItem = randomCompareQueueItem;
+            FhirRecord inputPrimaryFhirRecord = inputCompareQueueItem.PrimaryFhirRecord;
+            FhirRecord inputSecondaryFhirRecord = inputCompareQueueItem.SecondaryFhirRecord;
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            Guid randomFhirRecordDifferenceId = Guid.NewGuid();
 
             this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
                 service.GetUnprocessedRecordAsync())
@@ -167,48 +242,89 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.comparisonOrchestrationServiceMock.Setup(service =>
                 service.CompareAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()))
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload))
                         .ReturnsAsync(new ComparisonResult
                         {
-                            CorrelationId = inputCompareQueueItem.PrimaryFhirRecord.CorrelationId
+                            CorrelationId = inputPrimaryFhirRecord.CorrelationId
                         });
 
             this.identifierBrokerMock.Setup(broker =>
                 broker.GetIdentifierAsync())
-                    .ReturnsAsync(Guid.NewGuid());
+                    .ReturnsAsync(randomFhirRecordDifferenceId);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
             this.compareQueueOrchestrationServiceMock.Setup(service =>
-                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                service.TryRetainClaimAsync(inputCompareQueueItem))
                     .ReturnsAsync(true);
 
             // The lease held long enough to persist the difference, then went.
             this.compareQueueOrchestrationServiceMock.Setup(service =>
                 service.TryFinalizeClaimedFhirRecordAsync(
-                    It.IsAny<CompareQueueItem>(),
-                    It.IsAny<StatusType>()))
+                    inputCompareQueueItem,
+                    StatusType.Completed))
                         .ReturnsAsync(false);
 
             // when
             await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             // then
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.GetUnprocessedRecordAsync(),
+                    Times.Exactly(2));
+
+            this.comparisonOrchestrationServiceMock.Verify(service =>
+                service.CompareAsync(
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload),
+                        Times.Once);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryRetainClaimAsync(inputCompareQueueItem),
+                    Times.Once);
+
+            // The difference row is already durable when the lease goes; only the settle that
+            // follows it matches nothing.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.PersistFhirRecordDifferencesAsync(inputCompareQueueItem),
+                    Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryFinalizeClaimedFhirRecordAsync(
+                    inputCompareQueueItem,
+                    StatusType.Completed),
+                        Times.Once);
+
             // Same gate the failure path applies. A worker that no longer holds the record should
             // not keep writing on its behalf, and nothing is lost by stopping - the worker that
             // took it over completes the primary when it finishes.
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.CompletePrimaryFhirRecordAsync(It.IsAny<Guid>()),
+                service.CompletePrimaryFhirRecordAsync(inputPrimaryFhirRecord.Id),
                     Times.Never);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogWarningAsync(It.Is<string>(message =>
                     message.Contains("matched no rows"))),
                         Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -217,7 +333,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             // given
             CompareQueueItem randomCompareQueueItem = CreateRandomCompareQueueItem();
             CompareQueueItem inputCompareQueueItem = randomCompareQueueItem;
+            FhirRecord inputPrimaryFhirRecord = inputCompareQueueItem.PrimaryFhirRecord;
+            FhirRecord inputSecondaryFhirRecord = inputCompareQueueItem.SecondaryFhirRecord;
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            Guid randomFhirRecordDifferenceId = Guid.NewGuid();
+            string randomMessage = GetRandomString();
+            var primaryCompletionException = new Exception(randomMessage);
 
             this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
                 service.GetUnprocessedRecordAsync())
@@ -226,42 +347,65 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.comparisonOrchestrationServiceMock.Setup(service =>
                 service.CompareAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>()))
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload))
                         .ReturnsAsync(new ComparisonResult
                         {
-                            CorrelationId = inputCompareQueueItem.PrimaryFhirRecord.CorrelationId
+                            CorrelationId = inputPrimaryFhirRecord.CorrelationId
                         });
 
             this.identifierBrokerMock.Setup(broker =>
                 broker.GetIdentifierAsync())
-                    .ReturnsAsync(Guid.NewGuid());
+                    .ReturnsAsync(randomFhirRecordDifferenceId);
 
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(randomDateTimeOffset);
 
             this.compareQueueOrchestrationServiceMock.Setup(service =>
-                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                service.TryRetainClaimAsync(inputCompareQueueItem))
                     .ReturnsAsync(true);
 
             this.compareQueueOrchestrationServiceMock.Setup(service =>
                 service.TryFinalizeClaimedFhirRecordAsync(
-                    It.IsAny<CompareQueueItem>(),
-                    It.IsAny<StatusType>()))
+                    inputCompareQueueItem,
+                    StatusType.Completed))
                         .ReturnsAsync(true);
 
             // Everything that matters is written by now; only the shared primary's completion
             // blows up.
             this.compareQueueOrchestrationServiceMock.Setup(service =>
-                service.CompletePrimaryFhirRecordAsync(It.IsAny<Guid>()))
-                    .ThrowsAsync(new Exception(GetRandomString()));
+                service.CompletePrimaryFhirRecordAsync(inputPrimaryFhirRecord.Id))
+                    .ThrowsAsync(primaryCompletionException);
 
             // when
             await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
 
             // then
+            this.comparisonOrchestrationServiceMock.Verify(service =>
+                service.CompareAsync(
+                    correlationId: inputPrimaryFhirRecord.CorrelationId,
+                    source1Json: inputPrimaryFhirRecord.JsonPayload,
+                    source2Json: inputSecondaryFhirRecord.JsonPayload),
+                        Times.Once);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryRetainClaimAsync(inputCompareQueueItem),
+                    Times.Once);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.PersistFhirRecordDifferencesAsync(inputCompareQueueItem),
+                    Times.Once);
+
             // The comparison succeeded: the difference row and the secondary's terminal status
             // are both durable. Letting the primary's failure reach the catch would report the
             // whole comparison as failed - and report it wrongly, because that catch fences on
@@ -275,9 +419,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.TryFinalizeClaimedFhirRecordAsync(
-                    It.IsAny<CompareQueueItem>(),
+                    inputCompareQueueItem,
                     StatusType.Failed),
                         Times.Never);
+
+            // Attempted once and allowed to fail; the throw is held rather than escaping.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.CompletePrimaryFhirRecordAsync(inputPrimaryFhirRecord.Id),
+                    Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
                 broker.LogWarningAsync(It.Is<string>(message =>
@@ -296,6 +445,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.GetUnprocessedRecordAsync(),
                     Times.Exactly(2));
+
+            this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -347,12 +502,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.compareQueueOrchestrationServiceMock.Setup(service =>
                 service.TryFinalizeClaimedFhirRecordAsync(
-                    It.IsAny<CompareQueueItem>(),
-                    It.IsAny<StatusType>()))
+                    inputCompareQueueItem,
+                    StatusType.Completed))
                         .ReturnsAsync(true);
 
             this.compareQueueOrchestrationServiceMock.Setup(service =>
-                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                service.TryRetainClaimAsync(inputCompareQueueItem))
                     .ReturnsAsync(true);
 
             // when
@@ -381,7 +536,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             // Re-asserted before anything is written, so a worker whose lease expired mid-flight
             // discards its result rather than adding a second difference row for the same pair.
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()),
+                service.TryRetainClaimAsync(inputCompareQueueItem),
                     Times.Once);
 
             this.compareQueueOrchestrationServiceMock.Verify(service =>
@@ -582,12 +737,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 
             this.compareQueueOrchestrationServiceMock.Setup(service =>
                 service.TryFinalizeClaimedFhirRecordAsync(
-                    It.IsAny<CompareQueueItem>(),
-                    It.IsAny<StatusType>()))
+                    inputCompareQueueItem,
+                    StatusType.Completed))
                         .ReturnsAsync(true);
 
             this.compareQueueOrchestrationServiceMock.Setup(service =>
-                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                service.TryRetainClaimAsync(inputCompareQueueItem))
                     .ReturnsAsync(true);
 
             // when
@@ -616,7 +771,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             // Re-asserted before anything is written, so a worker whose lease expired mid-flight
             // discards its result rather than adding a second difference row for the same pair.
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()),
+                service.TryRetainClaimAsync(inputCompareQueueItem),
                     Times.Once);
 
             this.compareQueueOrchestrationServiceMock.Verify(service =>
