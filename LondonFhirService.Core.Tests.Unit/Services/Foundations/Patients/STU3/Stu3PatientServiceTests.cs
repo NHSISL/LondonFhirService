@@ -204,9 +204,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             var mock = new Mock<IFhirProvider>(MockBehavior.Strict);
             mock.SetupGet(patient => patient.ProviderName).Returns(providerName);
             mock.SetupGet(patient => patient.Capabilities).Returns(providerCaps);
-            mock.SetupGet(patient => patient.Code).Returns(GetRandomString());
-            mock.SetupGet(patient => patient.Source).Returns(GetRandomString());
-            mock.SetupGet(patient => patient.System).Returns(GetRandomString());
             mock.SetupGet(patient => patient.DisplayName).Returns(providerDisplayName);
             mock.SetupGet(patient => patient.FhirVersion).Returns(GetRandomString());
 

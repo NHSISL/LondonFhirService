@@ -112,13 +112,27 @@ jobs:
       shell: pwsh
     - name: Run Acceptance Tests
       run: >-
+        # LondonFhirService.Clients.AuditAndMetrics.Tests.Acceptance has no tests yet, so its
+
+        # dotnet test run ends in Microsoft.Testing.Platform's "zero tests" exit code (8). That's
+
+        # expected until it gains its first test, so only that project's run ignores exit code 8 -
+
+        # every other acceptance project still fails the build on a non-zero exit code.
+
         $projects = Get-ChildItem -Path . -Filter "*Tests.Acceptance*.csproj" -Recurse
+
+        $projectsWithNoTestsYet = @("LondonFhirService.Clients.AuditAndMetrics.Tests.Acceptance.csproj")
 
         $failed = @()
 
         foreach ($project in $projects) {
           Write-Host "Running tests for: $($project.FullName)"
-          dotnet test $project.FullName --no-build --verbosity normal
+          if ($projectsWithNoTestsYet -contains $project.Name) {
+            dotnet test $project.FullName --no-build --verbosity normal --ignore-exit-code 8
+          } else {
+            dotnet test $project.FullName --no-build --verbosity normal
+          }
           if ($LASTEXITCODE -ne 0) { $failed += $project.Name }
         }
 
