@@ -18,13 +18,20 @@ namespace LondonFhirService.Manage.Brokers.Https
     /// them would be deciding what they mean.
     ///
     /// A non-2xx response throws HttpRequestException carrying the status code, with the response
-    /// body under HttpBroker.ResponseBodyKey in Exception.Data rather than being discarded. What
-    /// an upstream says when it refuses is the most useful thing it ever says - but it can also
+    /// body under ResponseBodyKey in Exception.Data rather than being discarded. What an upstream
+    /// says when it refuses is the most useful thing it ever says - but it can also
     /// name a patient, so it is kept out of the exception message, which is the part that reaches
     /// a log sink without anyone asking.
     /// </summary>
     public interface IHttpBroker
     {
+        /// <summary>
+        /// Where a failed call leaves the upstream response body. On the contract rather than
+        /// on the implementation, because a caller reads it through this interface and would
+        /// otherwise have to repeat the string.
+        /// </summary>
+        const string ResponseBodyKey = "ResponseBody";
+
         ValueTask<string> PostFormUrlEncodedContentAsync(
             string url,
             IDictionary<string, string> formValues,

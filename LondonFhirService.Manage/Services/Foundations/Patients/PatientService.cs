@@ -152,7 +152,8 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             bool demographicsOnly = false,
             bool includeInactivePatients = false)
         {
-            var parameters = new object[] {
+            var parameters = new object[]
+            {
                 new
                 {
                     name = "patientNHSNumber",
@@ -162,10 +163,11 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                         value = nhsNumber
                     }
                 },
-                new {
+                new
+                {
                     name = "demographicsOnly",
                     part = new object[]
-                        {
+                    {
                         new
                         {
                             name = "includeDemographicsOnly",
@@ -173,10 +175,11 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
                         }
                     }
                 },
-                new {
+                new
+                {
                     name = "includeInactivePatients",
                     part = new object[]
-                        {
+                    {
                         new
                         {
                             name = "includeInactivePatients",

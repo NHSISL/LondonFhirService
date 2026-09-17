@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -81,6 +82,22 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
 
                 throw CreateDependencyException(failedPatientDependencyException);
             }
+            // A 4xx is the upstream judging the request rather than failing at it, and on this
+            // screen that is nearly always the operator's own credentials being rejected. Reporting
+            // it as a dependency failure turned "the token endpoint said invalid_client" into a 500
+            // and an invitation to contact support, about the one thing the page exists to test.
+            catch (HttpRequestException httpRequestException)
+                when (IsUpstreamRefusal(httpRequestException.StatusCode))
+            {
+                var failedPatientDependencyValidationException =
+                    new FailedPatientDependencyValidationException(
+                        message: "Failed patient dependency validation error occurred, " +
+                            "please fix the errors and try again.",
+                        innerException: httpRequestException,
+                        data: httpRequestException.Data);
+
+                throw CreateDependencyValidationException(failedPatientDependencyValidationException);
+            }
             catch (HttpRequestException httpRequestException)
             {
                 var failedPatientDependencyException =
@@ -102,11 +119,34 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             }
         }
 
+        /// <summary>
+        /// A status the upstream chose, rather than one the transport produced. Null means the
+        /// request never got an answer - a DNS failure, a refused connection - which is not the
+        /// caller's to fix and stays a dependency failure.
+        ///
+        /// Every 4xx is treated the same way. Translating them individually would mean deciding
+        /// that the provider's 404 is this endpoint's 404, and it is not: the patient was not
+        /// found, the endpoint was.
+        /// </summary>
+        private static bool IsUpstreamRefusal(HttpStatusCode? statusCode) =>
+            statusCode is not null
+                && (int)statusCode >= 400
+                && (int)statusCode <= 499;
+
         private static PatientServiceValidationException CreateValidationException(
             Xeption exception)
         {
             return new PatientServiceValidationException(
                 message: "Patient validation error occurred, please fix errors and try again.",
+                innerException: exception);
+        }
+
+        private static PatientServiceDependencyValidationException CreateDependencyValidationException(
+            Xeption exception)
+        {
+            return new PatientServiceDependencyValidationException(
+                message: "Patient dependency validation error occurred, " +
+                    "please fix the errors and try again.",
                 innerException: exception);
         }
 

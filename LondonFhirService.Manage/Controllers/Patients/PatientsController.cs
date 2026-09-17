@@ -54,6 +54,14 @@ namespace LondonFhirService.Manage.Controllers.Patients
             {
                 return BadRequest(patientServiceValidationException.InnerException);
             }
+
+            // Also a 400. The upstream refused something the caller supplied - credentials it did
+            // not accept, a patient it does not hold - which is the operator's to correct, unlike
+            // the dependency failure below.
+            catch (PatientServiceDependencyValidationException patientServiceDependencyValidationException)
+            {
+                return BadRequest(patientServiceDependencyValidationException.InnerException);
+            }
             catch (PatientServiceDependencyException patientServiceDependencyException)
             {
                 return InternalServerError(patientServiceDependencyException);

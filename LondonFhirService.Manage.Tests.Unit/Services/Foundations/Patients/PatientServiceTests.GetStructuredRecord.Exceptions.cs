@@ -4,6 +4,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -466,5 +468,112 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             this.httpBrokerMock.VerifyNoOtherCalls();
         }
+        /// <summary>
+        /// The case this screen exists for. An operator testing a consumer's credentials gets them
+        /// wrong, the token endpoint answers 401, and that has to reach them as something they can
+        /// correct rather than as a 500 telling them to contact support.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(UpstreamRefusals))]
+        public async Task ShouldThrowDependencyValidationExceptionOnGetStructuredRecordIfUpstreamRefusesAsync(
+            HttpStatusCode refusalStatusCode)
+        {
+            // given
+            StructuredRecordRequest randomStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+
+            var refusal = new HttpRequestException(
+                message: GetRandomString(),
+                inner: null,
+                statusCode: refusalStatusCode);
+
+            this.httpBrokerMock.Setup(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(refusal);
+
+            // when
+            ValueTask<string> getStructuredRecordTask =
+                this.patientService.GetStructuredRecordAsync(
+                    inputStructuredRecordRequest,
+                    TestContext.Current.CancellationToken);
+
+            PatientServiceDependencyValidationException
+                actualPatientServiceDependencyValidationException =
+                    await Assert.ThrowsAsync<PatientServiceDependencyValidationException>(
+                        testCode: getStructuredRecordTask.AsTask);
+
+            // then
+            actualPatientServiceDependencyValidationException.InnerException
+                .Should().BeOfType<FailedPatientDependencyValidationException>();
+
+            actualPatientServiceDependencyValidationException.InnerException.InnerException
+                .Should().BeSameAs(refusal);
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    this.patientConfiguration.AuthUrl,
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.httpBrokerMock.VerifyNoOtherCalls();
+        }
+
+        /// <summary>
+        /// The other side of the same line. A 5xx is the upstream failing rather than judging, and
+        /// nothing the operator types will change it, so it stays a dependency failure.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(UpstreamFailures))]
+        public async Task ShouldThrowDependencyExceptionOnGetStructuredRecordIfUpstreamFailsAsync(
+            HttpStatusCode failureStatusCode)
+        {
+            // given
+            StructuredRecordRequest randomStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+
+            var failure = new HttpRequestException(
+                message: GetRandomString(),
+                inner: null,
+                statusCode: failureStatusCode);
+
+            this.httpBrokerMock.Setup(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(failure);
+
+            // when
+            ValueTask<string> getStructuredRecordTask =
+                this.patientService.GetStructuredRecordAsync(
+                    inputStructuredRecordRequest,
+                    TestContext.Current.CancellationToken);
+
+            PatientServiceDependencyException actualPatientServiceDependencyException =
+                await Assert.ThrowsAsync<PatientServiceDependencyException>(
+                    testCode: getStructuredRecordTask.AsTask);
+
+            // then
+            actualPatientServiceDependencyException.InnerException
+                .Should().BeOfType<FailedPatientDependencyException>();
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    this.patientConfiguration.AuthUrl,
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.httpBrokerMock.VerifyNoOtherCalls();
+        }
+
     }
 }

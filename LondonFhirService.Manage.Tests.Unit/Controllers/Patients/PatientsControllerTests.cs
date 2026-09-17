@@ -34,6 +34,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             {
                 new PatientServiceValidationException(
                     message: someMessage,
+                    innerException: someInnerException),
+
+                // An upstream refusal - credentials the token endpoint rejected - is the caller's
+                // to fix, so it belongs with the 400s rather than with the server errors.
+                new PatientServiceDependencyValidationException(
+                    message: someMessage,
                     innerException: someInnerException)
             };
         }

@@ -294,6 +294,45 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
                         Times.Never);
         }
 
+        /// <summary>
+        /// The scenario this screen exists for: an operator tries a consumer's credentials and the
+        /// token endpoint rejects them. That is the caller's to fix, so it has to come back as a
+        /// 400 rather than a 500 inviting them to contact support.
+        /// </summary>
+        [Fact]
+        public async Task ShouldReturnBadRequestOnPostGetStructuredRecordIfUpstreamRejectsCredentialsAsync()
+        {
+            // given
+            StructuredRecordRequest inputStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            this.apiBroker.HttpBrokerMock.Setup(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(new HttpRequestException(
+                            message: "Response status code does not indicate success: 401.",
+                            inner: null,
+                            statusCode: HttpStatusCode.Unauthorized));
+
+            // when
+            HttpResponseMessage actualResponse =
+                await this.apiBroker.PostGetStructuredRecordAsync(inputStructuredRecordRequest);
+
+            // then
+            actualResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+            this.apiBroker.HttpBrokerMock.Verify(broker =>
+                broker.PostJsonContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Never);
+        }
+
         private void SetupSuccessfulCall(string tokenResponse, string structuredRecordResponse)
         {
             this.apiBroker.HttpBrokerMock.Setup(broker =>

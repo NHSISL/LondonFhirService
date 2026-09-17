@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -116,6 +117,33 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             return true;
         }
+
+        /// <summary>
+        /// Statuses the upstream chose. Each is the caller being told no rather than the call
+        /// failing, so each must reach the operator as something they can act on.
+        /// </summary>
+        public static TheoryData<HttpStatusCode> UpstreamRefusals() =>
+            new TheoryData<HttpStatusCode>
+            {
+                HttpStatusCode.BadRequest,
+                HttpStatusCode.Unauthorized,
+                HttpStatusCode.Forbidden,
+                HttpStatusCode.NotFound,
+                HttpStatusCode.Conflict
+            };
+
+        /// <summary>
+        /// The upstream failing rather than judging. These stay dependency failures: nothing the
+        /// operator types changes them.
+        /// </summary>
+        public static TheoryData<HttpStatusCode> UpstreamFailures() =>
+            new TheoryData<HttpStatusCode>
+            {
+                HttpStatusCode.InternalServerError,
+                HttpStatusCode.BadGateway,
+                HttpStatusCode.ServiceUnavailable,
+                HttpStatusCode.GatewayTimeout
+            };
 
         public static TheoryData<Exception> DependencyExceptions()
         {

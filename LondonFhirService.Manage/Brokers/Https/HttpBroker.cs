@@ -80,6 +80,14 @@ namespace LondonFhirService.Manage.Brokers.Https
         }
 
         /// <summary>
+        /// A refusal explains itself in a few hundred characters. The cap is here because the
+        /// thing on the other end is not always a FHIR server answering politely - a proxy or
+        /// gateway in between can return a whole HTML error page, and that should not be carried
+        /// around on an exception.
+        /// </summary>
+        private const int MaximumResponseBodyLength = 4000;
+
+        /// <summary>
         /// Reads the body first and only then looks at the status, which is the opposite order to
         /// EnsureSuccessStatusCode. That call throws before the content is read, so an
         /// authorisation server explaining itself in a 400, or a provider returning an
@@ -91,22 +99,12 @@ namespace LondonFhirService.Manage.Brokers.Https
         /// the exception crossing this boundary stays the native one the service already maps, and
         /// the status code stays machine readable on the exception rather than only in the text.
         ///
-        /// It goes in Data and deliberately NOT in the message. A provider refusing a patient
-        /// lookup can say why in an OperationOutcome that names the patient, and an exception
-        /// message is the part that reaches a log sink or Application Insights by default. Keeping
-        /// the message to the status line means the identifiable part travels only where something
-        /// reads it on purpose.
+        /// It goes in Data under IHttpBroker.ResponseBodyKey and deliberately NOT in the message.
+        /// A provider refusing a patient lookup can say why in an OperationOutcome that names the
+        /// patient, and an exception message is the part that reaches a log sink or Application
+        /// Insights by default. Keeping the message to the status line means the identifiable part
+        /// travels only where something reads it on purpose.
         /// </summary>
-        internal const string ResponseBodyKey = "ResponseBody";
-
-        /// <summary>
-        /// A refusal explains itself in a few hundred characters. The cap is here because the
-        /// thing on the other end is not always a FHIR server answering politely - a proxy or
-        /// gateway in between can return a whole HTML error page, and that should not be carried
-        /// around on an exception.
-        /// </summary>
-        private const int MaximumResponseBodyLength = 4000;
-
         private static async ValueTask<string> ReadContentOrThrowAsync(
             HttpResponseMessage httpResponseMessage,
             CancellationToken cancellationToken)
@@ -129,7 +127,7 @@ namespace LondonFhirService.Manage.Brokers.Https
                 inner: null,
                 statusCode: httpResponseMessage.StatusCode);
 
-            httpRequestException.Data[ResponseBodyKey] = Truncate(responseBody);
+            httpRequestException.Data[IHttpBroker.ResponseBodyKey] = Truncate(responseBody);
 
             throw httpRequestException;
         }
