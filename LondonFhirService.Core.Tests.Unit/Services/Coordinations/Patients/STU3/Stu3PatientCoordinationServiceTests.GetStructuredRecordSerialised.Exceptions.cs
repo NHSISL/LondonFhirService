@@ -23,6 +23,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // given
             string randomString = GetRandomString();
             string inputNhsNumber = randomString;
+            Guid inputCorrelationId = Guid.NewGuid();
 
             var expectedPatientCoordinationDependencyValidationException =
                 new PatientCoordinationDependencyValidationException(
@@ -37,7 +38,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
                     .GetStructuredRecordSerialisedAsync(
-                        nhsNumber: inputNhsNumber, cancellationToken: TestContext.Current.CancellationToken);
+                        correlationId: inputCorrelationId,
+                        nhsNumber: inputNhsNumber,
+                        cancellationToken: TestContext.Current.CancellationToken);
 
             PatientCoordinationDependencyValidationException
                 actualPatientCoordinationDependencyValidationException =
@@ -73,6 +76,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // given
             string randomString = GetRandomString();
             string inputNhsNumber = randomString;
+            Guid inputCorrelationId = Guid.NewGuid();
 
             var expectedPatientCoordinationDependencyException =
                 new PatientCoordinationDependencyException(
@@ -87,7 +91,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
                     .GetStructuredRecordSerialisedAsync(
-                        nhsNumber: inputNhsNumber, cancellationToken: TestContext.Current.CancellationToken);
+                        correlationId: inputCorrelationId,
+                        nhsNumber: inputNhsNumber,
+                        cancellationToken: TestContext.Current.CancellationToken);
 
             PatientCoordinationDependencyException actualPatientCoordinationDependencyException =
                 await Assert.ThrowsAsync<PatientCoordinationDependencyException>(
@@ -120,6 +126,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // Given
             string randomString = GetRandomString();
             string inputNhsNumber = randomString;
+            Guid inputCorrelationId = Guid.NewGuid();
             string randomExceptionMessage = GetRandomString();
             Exception serviceException = new Exception(randomExceptionMessage);
 
@@ -142,7 +149,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             ValueTask<string> getStructuredRecordSerialisedTask =
                 this.patientCoordinationService
                     .GetStructuredRecordSerialisedAsync(
-                        nhsNumber: inputNhsNumber, cancellationToken: TestContext.Current.CancellationToken);
+                        correlationId: inputCorrelationId,
+                        nhsNumber: inputNhsNumber,
+                        cancellationToken: TestContext.Current.CancellationToken);
 
             PatientCoordinationServiceException actualPatientCoordinationServiceException =
                 await Assert.ThrowsAsync<PatientCoordinationServiceException>(

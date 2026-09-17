@@ -38,6 +38,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         private readonly ISecurityAuditBroker securityAuditBroker;
         private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly IAuditAndMetricsDispatcher dispatcher;
+        private readonly IRequestTraceBroker requestTraceBroker;
         private readonly PatientServiceConfig patientServiceConfig;
 
         public Stu3PatientService(
@@ -48,6 +49,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             ISecurityAuditBroker securityAuditBroker,
             IStorageBrokerFactory storageBrokerFactory,
             IAuditAndMetricsDispatcher dispatcher,
+            IRequestTraceBroker requestTraceBroker,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
@@ -58,6 +60,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             this.securityAuditBroker = securityAuditBroker;
             this.storageBrokerFactory = storageBrokerFactory;
             this.dispatcher = dispatcher;
+            this.requestTraceBroker = requestTraceBroker;
             this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }
@@ -447,6 +450,12 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
             fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
 
+            // Read here, not inside the closure. The Persist span is the one span that is always
+            // recorded from a queued closure, which runs on the drain worker after this request is
+            // gone - asking there returns null and every Persist span silently loses its anchor
+            // and floats beside the request while all its siblings hang under it.
+            string requestSpanId = await this.requestTraceBroker.GetRequestSpanIdAsync();
+
             bool accepted = this.dispatcher.TryDispatch(async token =>
             {
                 DateTimeOffset persistStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
@@ -473,6 +482,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         Id = await this.identifierBroker.GetIdentifierAsync(),
                         ParentId = providerSpanId,
                         CorrelationId = correlationId,
+                        RequestSpanId = requestSpanId,
                         Method = auditType,
                         Type = MetricType.Persist,
                         Name = providerFriendlyName,

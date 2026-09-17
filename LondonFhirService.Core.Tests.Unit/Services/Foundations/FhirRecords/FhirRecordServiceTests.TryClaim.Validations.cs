@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -41,6 +41,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                     invalidFhirRecordId,
                     inputExpectedStatus,
                     inputClaimedStatus,
+                    GetRandomDateTimeOffset(),
                     cancellationToken: TestContext.Current.CancellationToken);
 
             FhirRecordValidationException actualFhirRecordValidationException =

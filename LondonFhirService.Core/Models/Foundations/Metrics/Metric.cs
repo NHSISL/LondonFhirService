@@ -38,6 +38,13 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
         public Guid CorrelationId { get; set; }
 
         /// <summary>
+        /// The span id of the HTTP request this span belongs to. Transport only and not mapped to
+        /// a column - see IMetric.RequestSpanId. It rides from the request that produced the span
+        /// to the background worker that replays it into telemetry, and is not part of the record.
+        /// </summary>
+        public string RequestSpanId { get; set; }
+
+        /// <summary>
         /// The operation being measured, matching the audit type string used for the same
         /// operation so that metrics and audit rows line up - for example
         /// "STU3-Patient-GetStructuredRecordSerialised". The FHIR version is part of this

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -31,6 +31,7 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
                 Id = metric.Id,
                 ParentId = metric.ParentId,
                 CorrelationId = metric.CorrelationId,
+                RequestSpanId = metric.RequestSpanId,
                 Method = metric.Method,
                 Type = metric.Type,
                 Name = metric.Name,

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -89,6 +89,26 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 
                         compareQueueItem.FhirRecordDifference = fhirRecordDifference;
 
+                        // Checked here, immediately before anything is written. A comparison that
+                        // outran its lease has already been handed to another worker, which is
+                        // producing the same result - persisting ours too would put two difference
+                        // rows against one pair. Nothing is lost by stopping: the worker that took
+                        // the row over finishes it.
+                        bool stillClaimed = await this.compareQueueOrchestrationService
+                            .TryRetainClaimAsync(compareQueueItem);
+
+                        if (stillClaimed is false)
+                        {
+                            await this.loggingBroker.LogWarningAsync(
+                                $"Abandoning comparison for CorrelationId: " +
+                                $"{compareQueueItem.SecondaryFhirRecord.CorrelationId}; its lease " +
+                                "expired mid-flight and another worker has taken the record over. " +
+                                "The comparison is being performed there, so this result is " +
+                                "discarded rather than written twice.");
+
+                            continue;
+                        }
+
                         await this.compareQueueOrchestrationService
                             .PersistFhirRecordDifferencesAsync(compareQueueItem);
 
@@ -96,12 +116,12 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                             .ChangeFhirRecordStatusAsync(
                                 compareQueueItem.SecondaryFhirRecord.Id, StatusType.Completed);
 
-                        if (compareQueueItem.PrimaryFhirRecord.Status != StatusType.Completed)
-                        {
-                            await this.compareQueueOrchestrationService
-                                .ChangeFhirRecordStatusAsync(
-                                    compareQueueItem.PrimaryFhirRecord.Id, StatusType.Completed);
-                        }
+                        // Unconditional: the "is it already completed" test lives in the database
+                        // statement now. The primary is shared by every secondary of this
+                        // correlation, so with more than one provider several workers reach here
+                        // for the same row and a read here with a write there is a race.
+                        await this.compareQueueOrchestrationService
+                            .CompletePrimaryFhirRecordAsync(compareQueueItem.PrimaryFhirRecord.Id);
                     }
                     catch (Exception ex)
                     {
@@ -117,12 +137,11 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                             .ChangeFhirRecordStatusAsync(
                                 compareQueueItem.SecondaryFhirRecord.Id, StatusType.Failed);
 
-                        if (compareQueueItem.PrimaryFhirRecord is not null
-                            && compareQueueItem.PrimaryFhirRecord.Status != StatusType.Completed)
+                        if (compareQueueItem.PrimaryFhirRecord is not null)
                         {
                             await this.compareQueueOrchestrationService
-                                .ChangeFhirRecordStatusAsync(
-                                    compareQueueItem.PrimaryFhirRecord.Id, StatusType.Completed);
+                                .CompletePrimaryFhirRecordAsync(
+                                    compareQueueItem.PrimaryFhirRecord.Id);
                         }
                     }
                 }

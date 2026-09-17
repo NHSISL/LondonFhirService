@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -63,18 +63,38 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 return maybeFhirRecord;
             });
 
-        public ValueTask<bool> TryClaimFhirRecordAsync(
+        public ValueTask<bool> TryTransitionFhirRecordStatusAsync(
             Guid fhirRecordId,
-            StatusType expectedStatus,
-            StatusType claimedStatus,
-            DateTimeOffset? notUpdatedAfter = null,
+            StatusType excludedStatus,
+            StatusType newStatus,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateFhirRecordId(fhirRecordId);
 
-                DateTimeOffset claimedDate =
+                DateTimeOffset updatedDate =
                     await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+                int updatedCount = await this.storageBroker.UpdateFhirRecordStatusAsync(
+                    fhirRecordId,
+                    excludedStatus,
+                    newStatus,
+                    updatedDate,
+                    cancellationToken);
+
+                return updatedCount == 1;
+            });
+
+        public ValueTask<bool> TryClaimFhirRecordAsync(
+            Guid fhirRecordId,
+            StatusType expectedStatus,
+            StatusType claimedStatus,
+            DateTimeOffset claimedDate,
+            DateTimeOffset? notUpdatedAfter = null,
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+            {
+                ValidateFhirRecordId(fhirRecordId);
 
                 int claimedCount = await this.storageBroker.ClaimFhirRecordAsync(
                     fhirRecordId,

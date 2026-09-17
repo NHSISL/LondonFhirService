@@ -47,6 +47,21 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                     .SetProperty(fhirRecord => fhirRecord.UpdatedDate, claimedDate),
                     cancellationToken);
 
+        public async ValueTask<int> UpdateFhirRecordStatusAsync(
+            Guid fhirRecordId,
+            StatusType excludedStatus,
+            StatusType newStatus,
+            DateTimeOffset updatedDate,
+            CancellationToken cancellationToken = default) =>
+            await this.FhirRecords
+                .Where(fhirRecord =>
+                    fhirRecord.Id == fhirRecordId
+                        && fhirRecord.Status != excludedStatus)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(fhirRecord => fhirRecord.Status, newStatus)
+                    .SetProperty(fhirRecord => fhirRecord.UpdatedDate, updatedDate),
+                    cancellationToken);
+
         public async ValueTask<FhirRecord> SelectFhirRecordByIdAsync(
             Guid fhirRecordId,
             CancellationToken cancellationToken = default) =>

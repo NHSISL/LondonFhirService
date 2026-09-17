@@ -37,6 +37,19 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
             DateTimeOffset? notUpdatedAfter,
             CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// Moves a record to a status unless it is already in it, in one statement. Used for the
+        /// primary record, which is shared by every secondary of the same correlation and so is
+        /// completed by whichever worker finishes first - a read-then-write there is a check by
+        /// one worker and a write by another.
+        /// </summary>
+        ValueTask<int> UpdateFhirRecordStatusAsync(
+            Guid fhirRecordId,
+            StatusType excludedStatus,
+            StatusType newStatus,
+            DateTimeOffset updatedDate,
+            CancellationToken cancellationToken = default);
+
         ValueTask<FhirRecord> SelectFhirRecordByIdAsync(
             Guid fhirRecordId,
             CancellationToken cancellationToken = default);

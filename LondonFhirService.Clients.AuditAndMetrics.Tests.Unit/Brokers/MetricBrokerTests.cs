@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -118,6 +118,125 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             this.capturedActivities.Select(activity => activity.TraceId.ToHexString())
                 .Distinct()
                 .Should().ContainSingle();
+        }
+
+        [Fact]
+        public async Task ShouldReplayTheSpanUnderTheTraceTheCorrelationIdNamesAsync()
+        {
+            // given
+            Guid correlationId = Guid.NewGuid();
+            IMetric metric = CreateMetric();
+            metric.CorrelationId = correlationId;
+
+            // when
+            await this.metricBroker.RecordAsync(
+                new List<IMetric> { metric }, TestContext.Current.CancellationToken);
+
+            // then
+            // A correlation id is a W3C trace id: the host takes it from the request's Activity,
+            // which carries whatever the caller sent in traceparent. Rebuilding it here has to be
+            // exact, or a replayed span lands under an operation of its own instead of under the
+            // caller's trace. Deriving it from Guid's bytes did exactly that - Guid stores its
+            // first three fields little endian and a trace id is not stored that way at all.
+            Activity activity = this.capturedActivities.Should().ContainSingle().Subject;
+            activity.TraceId.ToHexString().Should().Be(correlationId.ToString("N"));
+        }
+
+        [Fact]
+        public async Task ShouldAnchorTheSpanUnderTheRequestItBelongsToAsync()
+        {
+            // given
+            string requestSpanId = ActivitySpanId.CreateRandom().ToHexString();
+            IMetric metric = CreateMetric();
+            metric.RequestSpanId = requestSpanId;
+
+            // when
+            await this.metricBroker.RecordAsync(metric, TestContext.Current.CancellationToken);
+
+            // then
+            // The whole flat group hangs off the HTTP request's own span, so the metrics appear
+            // under the request in the transaction view instead of floating beside it. Flattening
+            // and anchoring are independent - the siblings stay siblings, they just now hang from
+            // something that exists.
+            Activity activity = this.capturedActivities.Should().ContainSingle().Subject;
+            activity.ParentSpanId.ToHexString().Should().Be(requestSpanId);
+        }
+
+        [Fact]
+        public async Task ShouldGiveEverySpanOfOneRequestTheSameParentAsync()
+        {
+            // given
+            string requestSpanId = ActivitySpanId.CreateRandom().ToHexString();
+            Guid correlationId = Guid.NewGuid();
+            IMetric first = CreateMetric();
+            IMetric second = CreateMetric();
+            first.CorrelationId = correlationId;
+            second.CorrelationId = correlationId;
+            first.RequestSpanId = requestSpanId;
+            second.RequestSpanId = requestSpanId;
+
+            // when
+            await this.metricBroker.RecordAsync(
+                new List<IMetric> { first, second },
+                TestContext.Current.CancellationToken);
+
+            // then
+            // Deliberately flat: reproducing the real tree made the metric view too noisy to
+            // read. The nesting lives in the metric.id and metric.parentId tags instead.
+            this.capturedActivities.Select(activity => activity.ParentSpanId.ToHexString())
+                .Distinct()
+                .Should().ContainSingle().Subject.Should().Be(requestSpanId);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("   ")]
+        [InlineData("not-a-span-id")]
+        [InlineData("zzzzzzzzzzzzzzzz")]
+        public async Task ShouldFallBackToTheDerivedParentWhenThereIsNoUsableRequestSpanAsync(
+            string unusableRequestSpanId)
+        {
+            // given
+            IMetric metric = CreateMetric();
+            metric.RequestSpanId = unusableRequestSpanId;
+
+            // when
+            await this.metricBroker.RecordAsync(metric, TestContext.Current.CancellationToken);
+
+            // then
+            // A background worker has no request span, and a malformed one must not take down the
+            // write path this rides along with. Either way the span still joins the right trace.
+            Activity activity = this.capturedActivities.Should().ContainSingle().Subject;
+            activity.TraceId.ToHexString().Should().Be(metric.CorrelationId.ToString("N"));
+            activity.ParentSpanId.ToHexString().Should().NotBe("0000000000000000");
+        }
+
+        [Fact]
+        public async Task ShouldAnchorEachMetricOfAMixedBatchUnderItsOwnRequestAsync()
+        {
+            // given
+            string firstRequestSpanId = ActivitySpanId.CreateRandom().ToHexString();
+            string secondRequestSpanId = ActivitySpanId.CreateRandom().ToHexString();
+            IMetric first = CreateMetric();
+            IMetric second = CreateMetric();
+            first.RequestSpanId = firstRequestSpanId;
+            second.RequestSpanId = secondRequestSpanId;
+
+            // when
+            await this.metricBroker.RecordAsync(
+                new List<IMetric> { first, second },
+                TestContext.Current.CancellationToken);
+
+            // then
+            // The span id rides on each metric rather than arriving as one parameter for the
+            // batch. A single parameter stamped one request's span id onto spans belonging to a
+            // different trace, where that parent does not exist and the span disappears from the
+            // transaction view instead of grouping.
+            this.capturedActivities.Should().HaveCount(2);
+
+            this.capturedActivities.Select(activity => activity.ParentSpanId.ToHexString())
+                .Should().BeEquivalentTo(new[] { firstRequestSpanId, secondRequestSpanId });
         }
 
         [Fact]

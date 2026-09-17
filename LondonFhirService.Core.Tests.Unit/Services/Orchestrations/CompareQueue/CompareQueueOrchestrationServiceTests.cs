@@ -1,10 +1,11 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Linq.Expressions;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions;
@@ -26,6 +27,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
         private readonly Mock<IFhirRecordService> fhirRecordServiceMock;
         private readonly Mock<IFhirRecordDifferenceService> fhirRecordDifferenceServiceMock;
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
+        private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly ICompareQueueOrchestrationService compareQueueOrchestrationService;
 
@@ -34,12 +36,14 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             this.fhirRecordServiceMock = new Mock<IFhirRecordService>();
             this.fhirRecordDifferenceServiceMock = new Mock<IFhirRecordDifferenceService>();
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
+            this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.compareQueueOrchestrationService = new CompareQueueOrchestrationService(
                 fhirRecordService: this.fhirRecordServiceMock.Object,
                 fhirRecordDifferenceService: this.fhirRecordDifferenceServiceMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
+                identifierBroker: this.identifierBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object);
         }
 

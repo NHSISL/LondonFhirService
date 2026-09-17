@@ -1,14 +1,14 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Diagnostics;
 using FluentAssertions;
-using LondonFhirService.Api.Workers;
+using LondonFhirService.Core.Workers;
 using Microsoft.ApplicationInsights.DataContracts;
 
-namespace LondonFhirService.Api.Tests.Unit.Workers
+namespace LondonFhirService.Core.Tests.Unit.Workers
 {
     /// <summary>
     /// What actually reaches Application Insights. A metric span carries numeric tags as well as

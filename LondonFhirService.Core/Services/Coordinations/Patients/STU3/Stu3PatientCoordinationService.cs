@@ -44,6 +44,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         }
 
         public ValueTask<string> GetStructuredRecordSerialisedAsync(
+            Guid correlationId,
             string nhsNumber,
             string dateOfBirth = null,
             bool? demographicsOnly = null,
@@ -52,8 +53,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         TryCatch(async () =>
         {
             var stopwatch = Stopwatch.StartNew();
-            ValidateArgsOnGetStructuredRecord(nhsNumber);
-            Guid correlationId = await this.identifierBroker.GetIdentifierAsync();
+            ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             // The root span. Every other span of this request is a descendant of it, so its id

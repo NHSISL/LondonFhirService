@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -64,6 +64,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.dispatcherMock.Object,
+                this.requestTraceBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -193,6 +194,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.dispatcherMock.Object,
+                this.requestTraceBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -322,6 +324,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.dispatcherMock.Object,
+                this.requestTraceBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -454,6 +457,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.dispatcherMock.Object,
+                this.requestTraceBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {
@@ -588,6 +592,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 this.securityAuditBrokerMock.Object,
                 this.storageBrokerFactoryMock.Object,
                 this.dispatcherMock.Object,
+                this.requestTraceBrokerMock.Object,
                 this.loggingBrokerMock.Object,
                 this.patientServiceConfig)
             {

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -13,7 +13,7 @@ using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace LondonFhirService.Api.Workers
+namespace LondonFhirService.Core.Workers
 {
     /// <summary>
     /// Forwards the metric library's spans into Application Insights.
@@ -27,6 +27,11 @@ namespace LondonFhirService.Api.Workers
     /// An ActivityListener rather than the OpenTelemetry Azure Monitor distro on purpose: the
     /// distro would run a second telemetry pipeline alongside the existing SDK and double-report
     /// requests and dependencies. This subscribes to one source and leaves everything else alone.
+    ///
+    /// It lives here rather than in either host because both register it, and rather than in
+    /// LondonFhirService.Clients.AuditAndMetrics because that library's whole point is to carry no
+    /// telemetry vendor of its own - it publishes to an ActivitySource and leaves the choice of
+    /// listener to whoever hosts it. This is that choice, made once for both hosts.
     /// </summary>
     public class MetricTelemetryPublisher : BackgroundService
     {

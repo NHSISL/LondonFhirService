@@ -38,6 +38,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using LondonFhirService.Core.Workers;
+// Aliased rather than imported whole: Microsoft.ApplicationInsights.Metric collides with
+// this solution's own Metric entity, which this file also registers.
+using TelemetryClient = Microsoft.ApplicationInsights.TelemetryClient;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
@@ -105,6 +109,7 @@ public partial class Program
         AddProcessingServices(builder.Services);
         AddCoordinationServices(builder.Services, configuration);
         AddClients(builder.Services, builder.Configuration);
+        AddBackgroundWorkers(builder.Services);
 
         // IConfiguration registration (optional, but mirrors original)
         builder.Services.AddSingleton<IConfiguration>(configuration);
@@ -263,5 +268,35 @@ public partial class Program
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
                 serviceProvider.GetRequiredService<AuditAndMetricsConfigurations>(),
                 serviceProvider.GetRequiredService<ILoggerFactory>()));
+    }
+
+    private static void AddBackgroundWorkers(IServiceCollection services)
+    {
+        // Registered so this host is not the one that silently drops spans, NOT because it
+        // currently produces many: the three services that record metric spans
+        // (Stu3PatientCoordinationService, Stu3PatientOrchestrationService, Stu3PatientService)
+        // are registered on the API host only, so the only producer here today is the metrics
+        // seeding endpoint. It costs one listener and earns correctness the moment this host
+        // grows a path that records a span - metric rows are purged on a retention timer, so the
+        // telemetry copy is the only record that outlives the sweep.
+        //
+        // This host registers no ICorrelationBroker, so the library falls back to its null
+        // request-trace port: these spans group by trace but are not anchored under a request.
+        // Wiring the correlation middleware here would fix that; it has not been done.
+        //
+        // The source name comes from the same bound AuditAndMetricsConfigurations instance the
+        // client uses, so the two cannot drift apart. GetService rather than GetRequiredService
+        // for the telemetry client: Application Insights is absent in some hosts and test runs,
+        // and the publisher idles rather than taking the host down when it is.
+        //
+        // This host registers no dispatcher, so the metric library falls back to its
+        // ThreadPoolDispatcher. Deferred writes still happen; they are simply not bounded or
+        // drained on shutdown the way the API host's are.
+        services.AddHostedService(serviceProvider =>
+            new MetricTelemetryPublisher(
+                serviceProvider.GetService<TelemetryClient>(),
+                serviceProvider.GetRequiredService<ILogger<MetricTelemetryPublisher>>(),
+                serviceProvider.GetRequiredService<AuditAndMetricsConfigurations>()
+                    .ActivitySourceName));
     }
 }

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -17,6 +17,77 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
 {
     public partial class CompareQueueOrchestrationServiceTests
     {
+        [Theory]
+        [InlineData(0)]
+        [InlineData(3)]
+        [InlineData(7)]
+        public async Task ShouldSpreadCandidateSelectionAcrossTheWindowAsync(int selectedIndex)
+        {
+            // given
+            DateTimeOffset inputDateTimeOffset = GetRandomDateTimeOffset();
+            DateTimeOffset bufferedDateTimeOffset = inputDateTimeOffset.AddMinutes(-5);
+            var candidateFhirRecords = new List<FhirRecord>();
+
+            for (int index = 0; index < 10; index++)
+            {
+                FhirRecord candidateFhirRecord =
+                    CreateRandomFhirRecord(bufferedDateTimeOffset.AddMinutes(-(10 - index)));
+
+                candidateFhirRecord.Status = StatusType.Pending;
+                candidateFhirRecord.IsPrimarySource = false;
+                candidateFhirRecords.Add(candidateFhirRecord);
+            }
+
+            FhirRecord expectedFhirRecord = candidateFhirRecords[selectedIndex];
+
+            // The first byte of the identifier picks within the window, so a chosen byte pins a
+            // chosen index - the point being that it is not always the head of the queue.
+            var selectionBytes = new byte[16];
+            selectionBytes[0] = (byte)selectedIndex;
+            var selectionIdentifier = new Guid(selectionBytes);
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(inputDateTimeOffset);
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(selectionIdentifier);
+
+            this.fhirRecordServiceMock.Setup(service =>
+                service.RetrieveAllFhirRecordsAsync())
+                    .ReturnsAsync(candidateFhirRecords.AsQueryable());
+
+            this.fhirRecordServiceMock.Setup(service =>
+                service.TryClaimFhirRecordAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<DateTimeOffset?>()))
+                        .ReturnsAsync(true);
+
+            // when
+            CompareQueueItem actualCompareQueueItem =
+                await this.compareQueueOrchestrationService.GetUnprocessedRecordAsync();
+
+            // then
+            // Every worker runs the same ordered query, so taking the head made N workers converge
+            // on the identical row every cycle and N-1 lose the claim by construction. Choosing
+            // within a window of the oldest rows spreads them out and keeps the queue roughly
+            // first-in-first-out.
+            actualCompareQueueItem.SecondaryFhirRecord.Id.Should().Be(expectedFhirRecord.Id);
+
+            this.fhirRecordServiceMock.Verify(service =>
+                service.TryClaimFhirRecordAsync(
+                    expectedFhirRecord.Id,
+                    StatusType.Pending,
+                    StatusType.Processing,
+                    inputDateTimeOffset,
+                    null),
+                        Times.Once);
+        }
+
         [Fact]
         public async Task ShouldGetUnprocessedRecordAsync()
         {
@@ -50,6 +121,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
             expectedCompareQueueItem.PrimaryFhirRecord = inputPrimaryFhirRecord;
             expectedCompareQueueItem.SecondaryFhirRecord = storedSecondaryFhirRecord;
 
+            // The exact value written to UpdatedDate by the claim. The caller keeps it as its
+            // lease token, so a worker overtaken mid-flight can tell and abandon its result.
+            expectedCompareQueueItem.ClaimedAt = inputDateTimeOffset;
+
             this.dateTimeBrokerMock.Setup(broker =>
                 broker.GetCurrentDateTimeOffsetAsync())
                     .ReturnsAsync(inputDateTimeOffset);
@@ -65,6 +140,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     inputSecondaryFhirRecord.Id,
                     StatusType.Pending,
                     StatusType.Processing,
+                    It.IsAny<DateTimeOffset>(),
                     null))
                         .ReturnsAsync(true);
 
@@ -90,6 +166,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     inputSecondaryFhirRecord.Id,
                     StatusType.Pending,
                     StatusType.Processing,
+                    It.IsAny<DateTimeOffset>(),
                     null),
                         Times.Once);
 
@@ -129,6 +206,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     inputSecondaryFhirRecord.Id,
                     StatusType.Pending,
                     StatusType.Processing,
+                    It.IsAny<DateTimeOffset>(),
                     null))
                         .ReturnsAsync(false);
 
@@ -152,6 +230,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     inputSecondaryFhirRecord.Id,
                     StatusType.Pending,
                     StatusType.Processing,
+                    It.IsAny<DateTimeOffset>(),
                     null),
                         Times.Exactly(3));
 
@@ -204,6 +283,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     strandedFhirRecord.Id,
                     StatusType.Processing,
                     StatusType.Processing,
+                    It.IsAny<DateTimeOffset>(),
                     expectedLeaseExpiry))
                         .ReturnsAsync(true);
 
@@ -224,6 +304,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     strandedFhirRecord.Id,
                     StatusType.Processing,
                     StatusType.Processing,
+                    It.IsAny<DateTimeOffset>(),
                     expectedLeaseExpiry),
                         Times.Once);
         }

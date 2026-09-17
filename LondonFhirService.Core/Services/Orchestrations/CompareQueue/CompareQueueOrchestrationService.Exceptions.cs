@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -15,6 +15,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
     internal partial class CompareQueueOrchestrationService
     {
         private delegate ValueTask<CompareQueueItem> ReturningCompareQueueItemFunction();
+        private delegate ValueTask<bool> ReturningBooleanFunction();
         private delegate ValueTask ReturningNothingFunction();
 
         private async ValueTask<CompareQueueItem> TryCatch(
@@ -23,6 +24,50 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
             try
             {
                 return await returningCompareQueueItemFunction();
+            }
+            catch (NullCompareQueueItemException nullCompareQueueItemException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(nullCompareQueueItemException);
+            }
+            catch (InvalidCompareQueueOrchestrationException invalidCompareQueueOrchestrationException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(invalidCompareQueueOrchestrationException);
+            }
+            catch (FhirRecordValidationException fhirRecordValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(fhirRecordValidationException);
+            }
+            catch (FhirRecordDependencyValidationException fhirRecordDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    fhirRecordDependencyValidationException);
+            }
+            catch (FhirRecordDependencyException fhirRecordDependencyException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(fhirRecordDependencyException);
+            }
+            catch (FhirRecordServiceException fhirRecordServiceException)
+            {
+                throw await CreateAndLogDependencyExceptionAsync(fhirRecordServiceException);
+            }
+            catch (Exception exception)
+            {
+                var failedCompareQueueOrchestrationServiceException =
+                    new FailedCompareQueueOrchestrationServiceException(
+                        message: "Failed compare queue orchestration service error occurred, please contact support.",
+                        innerException: exception,
+                        data: exception.Data);
+
+                throw await CreateAndLogServiceExceptionAsync(
+                    failedCompareQueueOrchestrationServiceException);
+            }
+        }
+
+        private async ValueTask<bool> TryCatch(ReturningBooleanFunction returningBooleanFunction)
+        {
+            try
+            {
+                return await returningBooleanFunction();
             }
             catch (NullCompareQueueItemException nullCompareQueueItemException)
             {

@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -21,6 +22,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
         {
             // given
             string invalidId = invalidText;
+            Guid invalidCorrelationId = Guid.Empty;
 
             var invalidArgumentPatientCoordinationException =
                 new InvalidArgumentPatientCoordinationException(
@@ -30,6 +32,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                 key: "NhsNumber",
                 values: "Text is required");
 
+            invalidArgumentPatientCoordinationException.AddData(
+                key: "CorrelationId",
+                values: "Id is required");
+
             var expectedPatientCoordinationValidationException =
                 new PatientCoordinationValidationException(
                     message: "Patient coordination validation error occurred, please try again.",
@@ -38,7 +44,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // when
             ValueTask<string> getStructuredRecordTask =
                 this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
-                    nhsNumber: invalidId, cancellationToken: TestContext.Current.CancellationToken);
+                    correlationId: invalidCorrelationId,
+                    nhsNumber: invalidId,
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             PatientCoordinationValidationException actualPatientCoordinationValidationException =
                 await Assert.ThrowsAsync<PatientCoordinationValidationException>(

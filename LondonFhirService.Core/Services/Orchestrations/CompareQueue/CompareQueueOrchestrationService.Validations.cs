@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -26,6 +26,21 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 throw new NullCompareQueueItemException(
                     message: "Compare queue item is null, fix errors and try again.");
             }
+        }
+
+        private static void ValidateCompareQueueItemOnRetainClaim(CompareQueueItem compareQueueItem)
+        {
+            if (compareQueueItem?.SecondaryFhirRecord is null)
+            {
+                throw new NullCompareQueueItemException(
+                    message: "Compare queue item is null, fix errors and try again.");
+            }
+
+            Validate(
+                createException: () => new InvalidCompareQueueOrchestrationException(
+                    message: "Invalid argument(s), please correct the errors and try again."),
+                (Rule: IsInvalid(compareQueueItem.SecondaryFhirRecord.Id),
+                    Parameter: nameof(compareQueueItem.SecondaryFhirRecord.Id)));
         }
 
         private static dynamic IsInvalid(Guid id) => new

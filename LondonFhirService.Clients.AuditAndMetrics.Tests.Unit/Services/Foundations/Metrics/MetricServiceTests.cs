@@ -29,6 +29,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly Mock<IAuditUserBroker> auditUserBrokerMock;
+        private readonly Mock<IRequestTraceBroker> requestTraceBrokerMock;
         private readonly Mock<IAuditAndMetricsDispatcher> dispatcherMock;
         private readonly AuditAndMetricsConfigurations metricServiceConfigurations;
         private readonly IMetricService metricService;
@@ -40,6 +41,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.auditUserBrokerMock = new Mock<IAuditUserBroker>();
+            this.requestTraceBrokerMock = new Mock<IRequestTraceBroker>();
             this.dispatcherMock = new Mock<IAuditAndMetricsDispatcher>();
 
             // Inline, so a dispatched write is observable by the time the call returns.
@@ -68,6 +70,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 loggingBroker: this.loggingBrokerMock.Object,
                 auditUserBroker: this.auditUserBrokerMock.Object,
+                requestTraceBroker: this.requestTraceBrokerMock.Object,
                 metricServiceConfigurations: this.metricServiceConfigurations,
                 dispatcher: this.dispatcherMock.Object);
         }
@@ -78,6 +81,24 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             this.metricBrokerMock.VerifyNoOtherCalls();
             this.dateTimeBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        /// <summary>
+        /// Excluded from VerifyNoOtherCallsOnAllBrokers for the same reason auditUserBroker is,
+        /// and pinned the same way. Every add and log path reads the request span id once, so
+        /// folding it into the strict check would mean repeating one Verify in roughly thirty
+        /// tests that are not about anchoring. What the service promises - read once per call
+        /// however many spans a batch holds, read before the write is deferred, and never
+        /// overwriting a value the caller already settled - is pinned in
+        /// MetricServiceTests.RequestAnchoring.
+        /// </summary>
+        private void VerifyRequestSpanIdReadOnce()
+        {
+            this.requestTraceBrokerMock.Verify(broker =>
+                broker.GetRequestSpanIdAsync(),
+                    Times.Once);
+
+            this.requestTraceBrokerMock.VerifyNoOtherCalls();
         }
 
         /// <summary>

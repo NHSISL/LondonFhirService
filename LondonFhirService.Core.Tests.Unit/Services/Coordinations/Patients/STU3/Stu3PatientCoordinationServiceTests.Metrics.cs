@@ -42,10 +42,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             Provider randomPrimaryProvider = CreateRandomProvider();
             var recordedMetrics = new List<Metric>();
 
-            // Sequenced so the ids can be told apart: the correlation id is drawn first, then
-            // the root span, then the consolidation span.
+            // Sequenced so the ids can be told apart. The correlation id is not among them any
+            // more - it arrives as an argument from the exposer - so the first identifier drawn
+            // is the root span, then the consolidation span.
             this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
-                .ReturnsAsync(correlationId)
                 .ReturnsAsync(requestSpanId)
                 .ReturnsAsync(consolidationSpanId);
 
@@ -81,6 +81,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             // when
             await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                correlationId,
                 inputNhsNumber,
                 cancellationToken: cancellationToken);
 
@@ -122,7 +123,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             var serviceException = new Exception(GetRandomString());
 
             this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
-                .ReturnsAsync(correlationId)
                 .ReturnsAsync(requestSpanId);
 
             this.patientOrchestrationServiceMock.Setup(service =>
@@ -143,6 +143,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // when
             Func<Task> getStructuredRecord = async () =>
                 await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
                     inputNhsNumber,
                     cancellationToken: cancellationToken);
 
@@ -175,7 +176,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             Provider randomPrimaryProvider = CreateRandomProvider();
 
             this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
-                .ReturnsAsync(correlationId)
                 .ReturnsAsync(requestSpanId)
                 .ReturnsAsync(Guid.NewGuid());
 
@@ -204,6 +204,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
 
             // when
             await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                correlationId,
                 inputNhsNumber,
                 cancellationToken: cancellationToken);
 

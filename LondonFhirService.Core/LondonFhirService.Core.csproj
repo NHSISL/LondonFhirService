@@ -64,6 +64,15 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<!--
+			For Workers\MetricTelemetryPublisher, which both hosts register: it subscribes to the
+			metric library's ActivitySource and forwards completed spans to Application Insights.
+			The vendor dependency stops here deliberately - LondonFhirService.Clients.AuditAndMetrics
+			publishes to an ActivitySource and carries no telemetry vendor at all, which is what
+			lets the choice of listener be the host's.
+		-->
+		<PackageReference Include="Microsoft.ApplicationInsights" Version="3.1.2" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.11" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.11" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.11" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.11" />

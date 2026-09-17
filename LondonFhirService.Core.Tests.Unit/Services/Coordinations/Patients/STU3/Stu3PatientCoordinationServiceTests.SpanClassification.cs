@@ -39,7 +39,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             var recordedMetrics = new List<Metric>();
 
             this.identifierBrokerMock.SetupSequence(broker => broker.GetIdentifierAsync())
-                .ReturnsAsync(correlationId)
                 .ReturnsAsync(requestSpanId);
 
             this.patientOrchestrationServiceMock.Setup(service =>
@@ -60,6 +59,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             // when
             Func<Task> getStructuredRecord = async () =>
                 await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
                     inputNhsNumber,
                     cancellationToken: cancellationToken);
 

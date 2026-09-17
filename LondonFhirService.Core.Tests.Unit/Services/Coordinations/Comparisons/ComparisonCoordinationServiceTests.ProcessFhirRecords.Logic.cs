@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -15,6 +15,79 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
 {
     public partial class ComparisonCoordinationServiceTests
     {
+        [Fact]
+        public async Task ShouldAbandonTheComparisonWhenTheClaimWasLostAsync()
+        {
+            // given
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            FhirRecord inputPrimaryFhirRecord = CreateRandomFhirRecord();
+            inputPrimaryFhirRecord.IsPrimarySource = true;
+
+            FhirRecord inputSecondaryFhirRecord = CreateRandomFhirRecord();
+            inputSecondaryFhirRecord.IsPrimarySource = false;
+            inputSecondaryFhirRecord.CorrelationId = inputPrimaryFhirRecord.CorrelationId;
+
+            var inputCompareQueueItem = new CompareQueueItem
+            {
+                PrimaryFhirRecord = inputPrimaryFhirRecord,
+                SecondaryFhirRecord = inputSecondaryFhirRecord,
+                ClaimedAt = randomDateTimeOffset
+            };
+
+            this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
+                service.GetUnprocessedRecordAsync())
+                    .ReturnsAsync(inputCompareQueueItem)
+                    .ReturnsAsync((CompareQueueItem)null);
+
+            this.comparisonOrchestrationServiceMock.Setup(service =>
+                service.CompareAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()))
+                        .ReturnsAsync(new ComparisonResult
+                        {
+                            CorrelationId = inputPrimaryFhirRecord.CorrelationId
+                        });
+
+            this.identifierBrokerMock.Setup(broker =>
+                broker.GetIdentifierAsync())
+                    .ReturnsAsync(Guid.NewGuid());
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
+
+            // The lease expired mid-flight and another worker took the record over.
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                    .ReturnsAsync(false);
+
+            // when
+            await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
+
+            // then
+            // Nothing is written. The worker that took the record over is performing the same
+            // comparison, and two difference rows for one pair is worse than one produced late.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.PersistFhirRecordDifferencesAsync(It.IsAny<CompareQueueItem>()),
+                    Times.Never);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.ChangeFhirRecordStatusAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<StatusType>()),
+                        Times.Never);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.CompletePrimaryFhirRecordAsync(It.IsAny<Guid>()),
+                    Times.Never);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogWarningAsync(It.Is<string>(message =>
+                    message.Contains("Abandoning comparison"))),
+                        Times.Once);
+        }
+
         [Fact]
         public async Task ShouldProcessFhirRecordsAsync()
         {
@@ -85,6 +158,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                 broker.GetIdentifierAsync(),
                     Times.Once);
 
+            // Re-asserted before anything is written, so a worker whose lease expired mid-flight
+            // discards its result rather than adding a second difference row for the same pair.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()),
+                    Times.Once);
+
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.PersistFhirRecordDifferencesAsync(
                     It.Is<CompareQueueItem>(item =>
@@ -104,10 +183,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                         Times.Once);
 
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.ChangeFhirRecordStatusAsync(
-                    inputPrimaryFhirRecord.Id,
-                    StatusType.Completed),
-                        Times.Once);
+                service.CompletePrimaryFhirRecordAsync(inputPrimaryFhirRecord.Id),
+                    Times.Once);
 
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();
@@ -231,6 +308,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                 broker.GetIdentifierAsync(),
                     Times.Once);
 
+            // Re-asserted before anything is written, so a worker whose lease expired mid-flight
+            // discards its result rather than adding a second difference row for the same pair.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()),
+                    Times.Once);
+
             this.compareQueueOrchestrationServiceMock.Verify(service =>
                 service.PersistFhirRecordDifferencesAsync(
                     It.Is<CompareQueueItem>(item =>
@@ -249,11 +332,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
                     StatusType.Completed),
                         Times.Once);
 
+            // Called even though the primary was already Completed, because the "already?" test
+            // now lives in the database statement. The primary is shared by every secondary of a
+            // correlation, so checking here and writing there let two workers race; the conditional
+            // update makes the second one a no-op instead.
             this.compareQueueOrchestrationServiceMock.Verify(service =>
-                service.ChangeFhirRecordStatusAsync(
-                    inputPrimaryFhirRecord.Id,
-                    StatusType.Completed),
-                        Times.Never);
+                service.CompletePrimaryFhirRecordAsync(inputPrimaryFhirRecord.Id),
+                    Times.Once);
 
             this.compareQueueOrchestrationServiceMock.VerifyNoOtherCalls();
             this.comparisonOrchestrationServiceMock.VerifyNoOtherCalls();

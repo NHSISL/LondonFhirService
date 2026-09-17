@@ -3,9 +3,11 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
+using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Orchestrations.CompareQueue;
@@ -31,20 +33,36 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
         /// </summary>
         private const int MaxClaimAttempts = 3;
 
+        /// <summary>
+        /// How many of the oldest eligible rows a worker chooses from, rather than always taking
+        /// the single oldest.
+        ///
+        /// Every worker runs the same ordered query, so taking the head meant N workers converged
+        /// on the identical row every cycle and N-1 of them lost the claim by construction -
+        /// contention was guaranteed rather than incidental, and with more workers than
+        /// MaxClaimAttempts a worker could lose every attempt and idle a whole tick with a backlog
+        /// waiting. Picking within a small window of the oldest rows spreads them out while
+        /// keeping the queue approximately first-in-first-out.
+        /// </summary>
+        private const int ClaimCandidateWindow = 10;
+
         private readonly IFhirRecordService fhirRecordService;
         private readonly IFhirRecordDifferenceService fhirRecordDifferenceService;
         private readonly IDateTimeBroker dateTimeBroker;
+        private readonly IIdentifierBroker identifierBroker;
         private readonly ILoggingBroker loggingBroker;
 
         public CompareQueueOrchestrationService(
             IFhirRecordService fhirRecordService,
             IFhirRecordDifferenceService fhirRecordDifferenceService,
             IDateTimeBroker dateTimeBroker,
+            IIdentifierBroker identifierBroker,
             ILoggingBroker loggingBroker)
         {
             this.fhirRecordService = fhirRecordService;
             this.fhirRecordDifferenceService = fhirRecordDifferenceService;
             this.dateTimeBroker = dateTimeBroker;
+            this.identifierBroker = identifierBroker;
             this.loggingBroker = loggingBroker;
         }
 
@@ -83,7 +101,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     IQueryable<FhirRecord> secondaryFhirRecordQueryable =
                         await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
 
-                    FhirRecord candidateFhirRecord = secondaryFhirRecordQueryable
+                    List<FhirRecord> candidateFhirRecords = secondaryFhirRecordQueryable
                         .Where(fhirRecord =>
                             !fhirRecord.IsPrimarySource
                             && ((fhirRecord.Status == StatusType.Pending
@@ -91,12 +109,16 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                                 || (fhirRecord.Status == StatusType.Processing
                                     && fhirRecord.UpdatedDate <= leaseExpiryDateTime)))
                         .OrderBy(fhirRecord => fhirRecord.CreatedDate)
-                        .FirstOrDefault();
+                        .Take(ClaimCandidateWindow)
+                        .ToList();
 
-                    if (candidateFhirRecord == null)
+                    if (candidateFhirRecords.Count == 0)
                     {
                         return null;
                     }
+
+                    FhirRecord candidateFhirRecord =
+                        await SelectCandidateAsync(candidateFhirRecords);
 
                     // Claimed by the database, not by a read-then-write. Two workers - a
                     // scale-out, or the overlap of a rolling deployment - could both read the same
@@ -110,6 +132,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                         candidateFhirRecord.Id,
                         expectedStatus: candidateFhirRecord.Status,
                         claimedStatus: StatusType.Processing,
+                        claimedDate: currentDateTime,
 
                         notUpdatedAfter: candidateFhirRecord.Status == StatusType.Processing
                             ? leaseExpiryDateTime
@@ -148,8 +171,60 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 var compareQueueItem = new CompareQueueItem();
                 compareQueueItem.PrimaryFhirRecord = primaryFhirRecord;
                 compareQueueItem.SecondaryFhirRecord = secondaryFhirRecord;
+                compareQueueItem.ClaimedAt = currentDateTime;
 
                 return compareQueueItem;
+            });
+
+        /// <summary>
+        /// One of the window at random, so concurrent workers do not all reach for the same row.
+        /// The spread comes from the identifier broker rather than System.Random: the source of
+        /// non-determinism stays behind a broker, which is what makes the choice substitutable in
+        /// a test, and a fresh identifier per attempt means a worker that loses a race does not
+        /// deterministically collide with the same rival on the retry.
+        /// </summary>
+        private async ValueTask<FhirRecord> SelectCandidateAsync(List<FhirRecord> candidateFhirRecords)
+        {
+            Guid selectionIdentifier = await this.identifierBroker.GetIdentifierAsync();
+            int selectionSeed = selectionIdentifier.ToByteArray()[0];
+
+            return candidateFhirRecords[selectionSeed % candidateFhirRecords.Count];
+        }
+
+        /// <summary>
+        /// Re-asserts this worker's claim and, in the same statement, extends the lease. False
+        /// means another worker has taken the row back - the lease expired while this worker was
+        /// still going, which reclaim cannot tell apart from a worker that died.
+        ///
+        /// A worker that has lost the row must not go on to persist its result: the worker that
+        /// took it over is producing the same comparison, and two difference rows for one pair is
+        /// worse than one produced slightly later.
+        /// </summary>
+        public ValueTask<bool> TryRetainClaimAsync(CompareQueueItem compareQueueItem) =>
+            TryCatch(async () =>
+            {
+                ValidateCompareQueueItemOnRetainClaim(compareQueueItem);
+
+                DateTimeOffset currentDateTime =
+                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+                return await this.fhirRecordService.TryClaimFhirRecordAsync(
+                    compareQueueItem.SecondaryFhirRecord.Id,
+                    expectedStatus: StatusType.Processing,
+                    claimedStatus: StatusType.Processing,
+                    claimedDate: currentDateTime,
+                    notUpdatedAfter: compareQueueItem.ClaimedAt);
+            });
+
+        public ValueTask CompletePrimaryFhirRecordAsync(Guid fhirRecordId) =>
+            TryCatch(async () =>
+            {
+                ValidateChangeFhirRecordStatus(fhirRecordId);
+
+                await this.fhirRecordService.TryTransitionFhirRecordStatusAsync(
+                    fhirRecordId,
+                    excludedStatus: StatusType.Completed,
+                    newStatus: StatusType.Completed);
             });
 
         public ValueTask ChangeFhirRecordStatusAsync(Guid fhirRecordId, StatusType status) =>

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -47,15 +47,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputFhirRecordId,
                 inputExpectedStatus,
                 inputClaimedStatus,
+                claimedDate,
                 inputNotUpdatedAfter,
                 cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().Be(expectedResult);
-
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.ClaimFhirRecordAsync(
@@ -107,15 +104,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputFhirRecordId,
                 inputExpectedStatus,
                 inputClaimedStatus,
+                claimedDate,
                 inputNotUpdatedAfter,
                 cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().Be(expectedResult);
-
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.ClaimFhirRecordAsync(
@@ -166,14 +160,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputFhirRecordId,
                 inputExpectedStatus,
                 inputClaimedStatus,
+                claimedDate,
                 cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().Be(expectedResult);
-
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.ClaimFhirRecordAsync(
@@ -232,16 +223,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecords
                 inputFhirRecordId,
                 inputExpectedStatus,
                 inputClaimedStatus,
+                expectedClaimedDate,
                 inputNotUpdatedAfter,
                 cancellationToken: TestContext.Current.CancellationToken);
 
             // then
+            // Forwarded unchanged. The caller owns this value because it is also its lease token:
+            // re-asserting the claim with it is what proves the row was not taken back.
             actualClaimedDate.Should().Be(expectedClaimedDate);
             actualNotUpdatedAfter.Should().Be(inputNotUpdatedAfter);
-
-            this.dateTimeBrokerMock.Verify(broker =>
-                broker.GetCurrentDateTimeOffsetAsync(),
-                    Times.Once);
 
             this.storageBrokerMock.Verify(broker =>
                 broker.ClaimFhirRecordAsync(
