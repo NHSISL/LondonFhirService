@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -28,7 +28,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconcil
             var notFoundFhirReconciliationOrchestrationException =
                 new NotFoundFhirReconciliationOrchestrationException(
                     $"NotFound:Patient resource not found.  " +
-                    $"CorrelationId: {correlationId.ToString()}");
+                    $"CorrelationId: {correlationId.ToString("N")}");
 
             // The NHS number rides in the exception's data rather than its message, which keeps
             // it out of the telemetry store this exception is logged into twice.
@@ -83,7 +83,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconcil
             var notFoundFhirReconciliationOrchestrationException =
                 new NotFoundFhirReconciliationOrchestrationException(
                     $"NotFound:Patient resource not found.  " +
-                    $"CorrelationId: {correlationId.ToString()}");
+                    $"CorrelationId: {correlationId.ToString("N")}");
 
             // The NHS number rides in the exception's data rather than its message, which keeps
             // it out of the telemetry store this exception is logged into twice.

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -59,6 +59,10 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 OverrideSecurityForTesting(services);
                 OverrideFhirProvidersForTesting(services);
                 MockExternalClientsForTesting(services);
+
+                // The host has no endpoint that throws past MVC, and the response class that
+                // produces is the one the correlation middleware was hardest to get right for.
+                services.AddSingleton<IStartupFilter, ThrowingRouteStartupFilter>();
             });
         }
 

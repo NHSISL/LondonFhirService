@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU
                 var notFoundFhirReconciliationOrchestrationException =
                     new NotFoundFhirReconciliationOrchestrationException(
                         $"NotFound:Patient resource not found.  " +
-                        $"CorrelationId: {correlationId.ToString()}");
+                        $"CorrelationId: {correlationId.ToString("N")}");
 
                 notFoundFhirReconciliationOrchestrationException.UpsertDataList(
                     key: "nhsNumber",

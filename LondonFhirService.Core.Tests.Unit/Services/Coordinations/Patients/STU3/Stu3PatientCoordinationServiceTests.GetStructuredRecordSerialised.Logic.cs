@@ -137,7 +137,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     "Coordination Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -146,7 +146,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     "Requesting Patient Info",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -155,7 +155,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     "Reconcile bundles",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -164,7 +164,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     It.Is<string>(title => title.StartsWith("Coordination Service Request Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();

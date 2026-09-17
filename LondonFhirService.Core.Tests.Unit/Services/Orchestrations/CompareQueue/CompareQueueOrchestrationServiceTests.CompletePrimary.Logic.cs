@@ -57,6 +57,51 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
         }
 
         [Fact]
+        public async Task ShouldRecordThatCompletingThePrimaryChangedNoRowsAsync()
+        {
+            // given
+            Guid inputFhirRecordId = Guid.NewGuid();
+
+            this.fhirRecordServiceMock.Setup(service =>
+                service.TryTransitionFhirRecordStatusAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<StatusType>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(false);
+
+            // when
+            await this.compareQueueOrchestrationService
+                .CompletePrimaryFhirRecordAsync(inputFhirRecordId);
+
+            // then
+            // Recorded rather than thrown or warned. Zero rows is the ordinary outcome when a
+            // sibling secondary completed the shared primary first, so this must not read as a
+            // fault - but it is also what a missing row looks like, and the count cannot tell
+            // them apart, so the one case that would otherwise vanish leaves a line.
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogDebugAsync(It.Is<string>(message =>
+                    message.Contains(inputFhirRecordId.ToString())
+                    && message.Contains("changed no rows"))),
+                        Times.Once);
+
+            this.fhirRecordServiceMock.Verify(service =>
+                service.TryTransitionFhirRecordStatusAsync(
+                    inputFhirRecordId,
+                    StatusType.Completed,
+                    StatusType.Completed,
+                    true,
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.fhirRecordServiceMock.VerifyNoOtherCalls();
+            this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
         public async Task ShouldAdvanceTheLeaseTokenWhenTheClaimIsRetainedAsync()
         {
             // given

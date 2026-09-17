@@ -67,6 +67,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     It.IsAny<DateTimeOffset?>()))
                         .ReturnsAsync(true);
 
+            this.fhirRecordServiceMock.Setup(service =>
+                service.RetrieveFhirRecordByIdAsync(expectedFhirRecord.Id))
+                    .ReturnsAsync(expectedFhirRecord);
+
             // when
             CompareQueueItem actualCompareQueueItem =
                 await this.compareQueueOrchestrationService.GetUnprocessedRecordAsync();
@@ -144,6 +148,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     null))
                         .ReturnsAsync(true);
 
+            // Read back after the claim won, which is why it reads Processing rather than the
+            // Pending the candidate query saw.
+            this.fhirRecordServiceMock.Setup(service =>
+                service.RetrieveFhirRecordByIdAsync(inputSecondaryFhirRecord.Id))
+                    .ReturnsAsync(storedSecondaryFhirRecord);
+
             // when
             CompareQueueItem actualCompareQueueItem =
                 await this.compareQueueOrchestrationService.GetUnprocessedRecordAsync();
@@ -169,6 +179,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     It.IsAny<DateTimeOffset>(),
                     null),
                         Times.Once);
+
+            // Only the winner's payload is fetched. The candidate query projects to the two
+            // columns the claim needs, so a tick no longer drags ClaimCandidateWindow whole FHIR
+            // bundles across the wire to choose one identifier.
+            this.fhirRecordServiceMock.Verify(service =>
+                service.RetrieveFhirRecordByIdAsync(inputSecondaryFhirRecord.Id),
+                    Times.Once);
 
             this.fhirRecordServiceMock.VerifyNoOtherCalls();
             this.fhirRecordDifferenceServiceMock.VerifyNoOtherCalls();
@@ -286,6 +303,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.CompareQueue
                     It.IsAny<DateTimeOffset>(),
                     expectedLeaseExpiry))
                         .ReturnsAsync(true);
+
+            this.fhirRecordServiceMock.Setup(service =>
+                service.RetrieveFhirRecordByIdAsync(strandedFhirRecord.Id))
+                    .ReturnsAsync(strandedFhirRecord);
 
             // when
             CompareQueueItem actualCompareQueueItem =

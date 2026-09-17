@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -89,7 +89,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Orchestration Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -98,7 +98,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     accessMessage,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -107,7 +107,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Retrieve active providers and execute request",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();
@@ -187,7 +187,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Orchestration Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -196,7 +196,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     accessMessage,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -205,7 +205,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Retrieve active providers and execute request",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();
@@ -433,7 +433,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Orchestration Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -442,7 +442,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     accessMessage,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -451,7 +451,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Retrieve active providers and execute request",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();

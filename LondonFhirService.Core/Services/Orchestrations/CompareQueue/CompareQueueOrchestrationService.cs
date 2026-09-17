@@ -89,7 +89,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 DateTimeOffset leaseExpiryDateTime =
                     currentDateTime.AddMinutes(-ProcessingLeaseMinutes);
 
-                FhirRecord secondaryFhirRecord = null;
+                Guid? claimedFhirRecordId = null;
 
                 // Losing a claim means another worker took that row, not that the queue is empty,
                 // so the next candidate is tried rather than returning null - the caller uses null
@@ -101,7 +101,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     IQueryable<FhirRecord> secondaryFhirRecordQueryable =
                         await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
 
-                    List<FhirRecord> candidateFhirRecords = secondaryFhirRecordQueryable
+                    // Projected, not materialised whole. Every row in this window carries a
+                    // JsonPayload holding an entire FHIR bundle, and the claim needs two columns
+                    // out of it - so pulling ClaimCandidateWindow full rows every tick, on every
+                    // worker, moved megabytes to decide one identifier. The winner is read in
+                    // full below, once.
+                    List<ClaimCandidate> claimCandidates = secondaryFhirRecordQueryable
                         .Where(fhirRecord =>
                             !fhirRecord.IsPrimarySource
                             && ((fhirRecord.Status == StatusType.Pending
@@ -110,15 +115,20 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                                     && fhirRecord.UpdatedDate <= leaseExpiryDateTime)))
                         .OrderBy(fhirRecord => fhirRecord.CreatedDate)
                         .Take(ClaimCandidateWindow)
+                        .Select(fhirRecord => new ClaimCandidate
+                        {
+                            Id = fhirRecord.Id,
+                            Status = fhirRecord.Status
+                        })
                         .ToList();
 
-                    if (candidateFhirRecords.Count == 0)
+                    if (claimCandidates.Count == 0)
                     {
                         return null;
                     }
 
-                    FhirRecord candidateFhirRecord =
-                        await SelectCandidateAsync(candidateFhirRecords);
+                    ClaimCandidate claimCandidate =
+                        await SelectCandidateAsync(claimCandidates);
 
                     // Claimed by the database, not by a read-then-write. Two workers - a
                     // scale-out, or the overlap of a rolling deployment - could both read the same
@@ -129,24 +139,24 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     // moves Processing to Processing and a status-only guard would match for
                     // every competing worker.
                     bool claimed = await this.fhirRecordService.TryClaimFhirRecordAsync(
-                        candidateFhirRecord.Id,
-                        expectedStatus: candidateFhirRecord.Status,
+                        claimCandidate.Id,
+                        expectedStatus: claimCandidate.Status,
                         claimedStatus: StatusType.Processing,
                         claimedDate: currentDateTime,
 
-                        notUpdatedAfter: candidateFhirRecord.Status == StatusType.Processing
+                        notUpdatedAfter: claimCandidate.Status == StatusType.Processing
                             ? leaseExpiryDateTime
                             : null);
 
                     if (claimed)
                     {
-                        secondaryFhirRecord = candidateFhirRecord;
+                        claimedFhirRecordId = claimCandidate.Id;
 
                         break;
                     }
                 }
 
-                if (secondaryFhirRecord == null)
+                if (claimedFhirRecordId is null)
                 {
                     await this.loggingBroker.LogWarningAsync(
                         $"Gave up claiming a compare-queue record after {MaxClaimAttempts} " +
@@ -156,7 +166,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     return null;
                 }
 
-                secondaryFhirRecord.Status = StatusType.Processing;
+                // Read after the claim rather than before it, so the payload is fetched once and
+                // only for the row this worker actually holds - and it reads back as Processing
+                // because the claim wrote that, rather than needing the status patched in memory.
+                FhirRecord secondaryFhirRecord =
+                    await this.fhirRecordService.RetrieveFhirRecordByIdAsync(
+                        claimedFhirRecordId.Value);
 
                 IQueryable<FhirRecord> primaryFhirRecordQueryable =
                     await this.fhirRecordService.RetrieveAllFhirRecordsAsync();
@@ -183,12 +198,25 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
         /// a test, and a fresh identifier per attempt means a worker that loses a race does not
         /// deterministically collide with the same rival on the retry.
         /// </summary>
-        private async ValueTask<FhirRecord> SelectCandidateAsync(List<FhirRecord> candidateFhirRecords)
+        private async ValueTask<ClaimCandidate> SelectCandidateAsync(List<ClaimCandidate> claimCandidates)
         {
             Guid selectionIdentifier = await this.identifierBroker.GetIdentifierAsync();
             int selectionSeed = selectionIdentifier.ToByteArray()[0];
 
-            return candidateFhirRecords[selectionSeed % candidateFhirRecords.Count];
+            return claimCandidates[selectionSeed % claimCandidates.Count];
+        }
+
+        /// <summary>
+        /// The two columns the claim statement needs, and nothing else. Status comes along because
+        /// it decides which arm of the claim runs - a Pending row is taken, a Processing one is
+        /// reclaimed past its lease - so reading it keeps the guard in the statement matching the
+        /// row this worker actually chose.
+        /// </summary>
+        private sealed class ClaimCandidate
+        {
+            public Guid Id { get; set; }
+
+            public StatusType Status { get; set; }
         }
 
         /// <summary>
@@ -233,7 +261,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
             {
                 ValidateChangeFhirRecordStatus(fhirRecordId);
 
-                await this.fhirRecordService.TryTransitionFhirRecordStatusAsync(
+                bool transitioned = await this.fhirRecordService.TryTransitionFhirRecordStatusAsync(
                     fhirRecordId,
                     excludedStatus: StatusType.Completed,
                     newStatus: StatusType.Completed,
@@ -242,6 +270,20 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                     // terminal rows processed. Keeping it in step matters because the queue's own
                     // reporting reads IsProcessed rather than Status.
                     isProcessed: true);
+
+                // Debug rather than warning, and not an exception, because the ordinary reason for
+                // no rows is the one this method exists to tolerate: a primary is shared by every
+                // secondary of its correlation, so the second worker to finish finds it already
+                // Completed. The count cannot tell that apart from a row that is not there at all,
+                // which would be a real fault - so the line is recorded, quietly, for the case
+                // where a primary turns out to be missing.
+                if (transitioned is false)
+                {
+                    await this.loggingBroker.LogDebugAsync(
+                        $"Completing primary FhirRecordId: {fhirRecordId} changed no rows. " +
+                            "Either a sibling secondary completed it first, which is expected, " +
+                            "or the row is gone.");
+                }
             });
 
         public ValueTask ChangeFhirRecordStatusAsync(Guid fhirRecordId, StatusType status) =>

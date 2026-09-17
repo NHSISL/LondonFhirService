@@ -90,7 +90,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 title: $"Orchestration Service Request Submitted",
                 message,
                 fileName: null,
-                correlationId: correlationId.ToString());
+                correlationId: correlationId.ToString("N"));
 
             await CheckAccessPermissionsAsync(
                 nhsNumber, correlationId, parentId, cancellationToken);
@@ -100,7 +100,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 title: $"Retrieve active providers and execute request",
                 message,
                 fileName: null,
-                correlationId: correlationId.ToString());
+                correlationId: correlationId.ToString("N"));
 
             // ProviderRequests wraps discovery and the fan out together, so it is the single
             // figure to set against AccessCheck. Discovery is measured again inside it, as a
@@ -196,7 +196,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 title: $"Orchestration Service Request Completed in {elapsedTime}ms",
                 message,
                 fileName: null,
-                correlationId: correlationId.ToString());
+                correlationId: correlationId.ToString("N"));
 
             return new StructuredRecordsResponse
             {
@@ -276,7 +276,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         title: $"Check Access Permissions",
                         message,
                         fileName: null,
-                        correlationId: correlationId.ToString());
+                        correlationId: correlationId.ToString("N"));
 
                     User currentUser = await this.securityBroker.GetCurrentUserAsync();
 
@@ -295,7 +295,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         title: "Check Access Permissions",
                         message: currentUserJson,
                         fileName: null,
-                        correlationId: correlationId.ToString());
+                        correlationId: correlationId.ToString("N"));
 
                     if (currentUser is null)
                     {
@@ -332,10 +332,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                             message:
                                 $"Access was denied as consumer with id {currentUser.UserId} is not permitted " +
                                 $"to access patient with NHS number {nhsNumber}. Reasons: {reasons}  " +
-                                $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
+                                $"CorrelationId: {correlationId.ToString("N")}, ElapsedTime: {elapsedTime}ms",
 
                             fileName: null,
-                            correlationId: correlationId.ToString());
+                            correlationId: correlationId.ToString("N"));
 
                         await RecordAccessCheckSpanAsync(
                             MetricStatus.Failed,
@@ -345,7 +345,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 
                         throw new ForbiddenPatientOrchestrationException(
                             "Current consumer is not permitted to access this patient.  " +
-                            $"CorrelationId: {correlationId.ToString()}");
+                            $"CorrelationId: {correlationId.ToString("N")}");
                     }
 
                     // Awaited - see the forbidden branch above.
@@ -357,10 +357,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                             $"{currentUser.UserId} is allowed to access patient with " +
                             $"NHS number {nhsNumber} via org codes: " +
                             $"{string.Join(", ", consumerAccess.AllowedViaOrganisations)}  " +
-                            $"CorrelationId: {correlationId.ToString()}, ElapsedTime: {elapsedTime}ms",
+                            $"CorrelationId: {correlationId.ToString("N")}, ElapsedTime: {elapsedTime}ms",
 
                         fileName: null,
-                        correlationId: correlationId.ToString());
+                        correlationId: correlationId.ToString("N"));
 
                     await RecordAccessCheckSpanAsync(
                         MetricStatus.Succeeded,
@@ -393,7 +393,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     title: $"Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 // Recorded rather than omitted, so a request with no access check is visibly a
                 // configuration choice rather than a gap in the trace.

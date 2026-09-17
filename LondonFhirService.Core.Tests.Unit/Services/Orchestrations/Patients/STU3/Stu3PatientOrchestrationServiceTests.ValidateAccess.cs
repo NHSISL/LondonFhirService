@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -67,7 +67,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Check Access Permissions",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.securityBrokerMock.Verify(broker =>
@@ -80,7 +80,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Check Access Permissions",
                     currentUserJson,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.consumerAccessServiceMock.Verify(service =>
@@ -98,10 +98,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         $"{userId} is allowed to access patient with " +
                         $"NHS number {inputNhsNumber} via org codes: " +
                         $"{string.Join(", ", returnedConsumerAccess.AllowedViaOrganisations)}  " +
-                        $"CorrelationId: {correlationId.ToString()}")),
+                        $"CorrelationId: {correlationId.ToString("N")}")),
 
                     null,
-                    correlationId.ToString(),
+                    correlationId.ToString("N"),
                     "Information",
                     default),
                         Times.Once);
@@ -137,7 +137,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.securityBrokerMock.Verify(broker =>
@@ -270,7 +270,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Check Access Permissions",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -279,7 +279,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Check Access Permissions",
                     currentUserJson,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.loggingBrokerMock.Verify(broker =>
@@ -331,7 +331,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             var forbiddenPatientOrchestrationException =
                 new ForbiddenPatientOrchestrationException(
                     "Current consumer is not permitted to access this patient.  " +
-                    $"CorrelationId: {correlationId.ToString()}");
+                    $"CorrelationId: {correlationId.ToString("N")}");
 
             var expectedPatientOrchestrationValidationException =
                 new PatientOrchestrationValidationException(
@@ -377,7 +377,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Check Access Permissions",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -386,7 +386,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Check Access Permissions",
                     currentUserJson,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -397,10 +397,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     It.Is<string>(auditMessage => auditMessage.StartsWith(
                         $"Access was denied as consumer with id {userId} is not permitted " +
                         $"to access patient with NHS number {inputNhsNumber}. Reasons: {reasons}  " +
-                        $"CorrelationId: {correlationId.ToString()}")),
+                        $"CorrelationId: {correlationId.ToString("N")}")),
 
                     null,
-                    correlationId.ToString(),
+                    correlationId.ToString("N"),
                     "Information",
                     default),
                         Times.Once);

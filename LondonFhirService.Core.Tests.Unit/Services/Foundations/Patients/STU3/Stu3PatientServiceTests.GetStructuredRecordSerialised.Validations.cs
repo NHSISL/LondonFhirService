@@ -318,7 +318,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Foundation Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -327,7 +327,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Parallel Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -336,7 +336,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -345,7 +345,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();
@@ -491,7 +491,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Foundation Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -500,7 +500,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Parallel Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -509,7 +509,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -518,7 +518,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();
@@ -680,7 +680,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Foundation Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -689,7 +689,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Parallel Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -698,7 +698,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -707,7 +707,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();
@@ -864,7 +864,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Foundation Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -873,7 +873,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Parallel Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -882,7 +882,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -891,7 +891,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();
@@ -1051,7 +1051,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Foundation Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -1060,7 +1060,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Parallel Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -1069,7 +1069,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -1078,7 +1078,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();
@@ -1233,7 +1233,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Foundation Service Request Submitted",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -1242,7 +1242,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     "Parallel Provider Execution Started",
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -1251,7 +1251,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
@@ -1260,7 +1260,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
                     null,
-                    correlationId.ToString()),
+                    correlationId.ToString("N")),
                         Times.Once);
 
             AcceptMetricSpans();

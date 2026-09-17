@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -75,6 +75,25 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Correlations
             // request that failed needs something to quote, and a response produced before any
             // controller ran used to carry nothing at all.
             response.IsSuccessStatusCode.Should().BeFalse();
+            Guid correlationId = ReadCorrelationId(response);
+            correlationId.Should().NotBe(Guid.Empty);
+        }
+
+        [Fact]
+        public async Task ShouldReturnACorrelationIdOnAnUnhandledExceptionAsync()
+        {
+            // given . when
+            HttpResponseMessage response =
+                await this.apiBroker.GetResponseAsync(ThrowingRouteStartupFilter.ThrowingRoute);
+
+            // then
+            // The response class this whole arrangement exists for, and the one that cannot be
+            // taken on trust. An exception that escapes MVC reaches Kestrel, which resets the
+            // response headers and synthesises a 500 without firing Response.OnStarting - and the
+            // header is written from an OnStarting callback, so it came back bare until the
+            // exception handler was put behind the correlation middleware to turn the failure
+            // into an ordinary response. Remove that handler and only this test notices.
+            response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
             Guid correlationId = ReadCorrelationId(response);
             correlationId.Should().NotBe(Guid.Empty);
         }
