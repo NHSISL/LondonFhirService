@@ -5,6 +5,7 @@
 #nullable enable annotations
 
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.Json;
 using Azure.Core;
@@ -16,7 +17,9 @@ using ISL.Providers.Captcha.GoogleReCaptcha.Models.Brokers.GoogleReCaptcha;
 using ISL.Providers.Captcha.GoogleReCaptcha.Providers;
 using ISL.Security.Client.Models.Clients;
 using LondonFhirService.Api.Dispatchers;
+using LondonFhirService.Api.Middlewares;
 using LondonFhirService.Api.Workers;
+using LondonFhirService.Core.Workers;
 using LondonFhirService.Clients.AuditAndMetrics.Clients;
 using Microsoft.ApplicationInsights;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
@@ -24,6 +27,7 @@ using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
+using LondonFhirService.Core.Brokers.Correlations;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
 using LondonFhirService.Core.Brokers.Identifiers;
@@ -182,6 +186,25 @@ public partial class Program
 
     internal static void ConfigurePipeline(WebApplication app)
     {
+        // First, deliberately. Every response leaving this host - including the ones produced by
+        // the authentication, authorization and timeout middleware below, which never reach a
+        // controller - carries the correlation id its logs and metric spans were written under.
+        app.UseMiddleware<CorrelationMiddleware>();
+
+        // Immediately behind it, because without a handler an exception that escapes MVC reaches
+        // Kestrel, which resets the response headers and synthesises a 500 WITHOUT firing the
+        // OnStarting callbacks - so the one response class the correlation middleware exists for
+        // came back bare. Catching it here turns it into an ordinary response, which starts
+        // normally and therefore carries the header. The body stays empty so the FHIR contract is
+        // unchanged; the id is in the header, which is what a consumer needs to quote.
+        app.UseExceptionHandler(errorApplication =>
+            errorApplication.Run(context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
+                return Task.CompletedTask;
+            }));
+
         app.MapGet("/", () => Results.Ok(new
         {
             Name = "London FHIR Service API",
@@ -218,15 +241,50 @@ public partial class Program
         //app.MapFallbackToFile("/index.html");
     }
 
+    /// <summary>
+    /// Absolute on its own is not enough, which is what these checks used to ask. Uri.TryCreate
+    /// reads "localhost:7284/x" as an absolute uri whose scheme is localhost, so the single
+    /// likeliest mistake - dropping the https from a setting - passed the guard and failed later
+    /// inside the provider instead. Naming the two schemes a provider can dial is what makes the
+    /// message true.
+    /// </summary>
+    private static bool IsDialableUrl(string url) =>
+        string.IsNullOrWhiteSpace(url) is false
+        && Uri.TryCreate(url.Trim(), UriKind.Absolute, out Uri parsedUrl)
+        && (parsedUrl.Scheme == Uri.UriSchemeHttp || parsedUrl.Scheme == Uri.UriSchemeHttps);
+
     private static void AddProviders(IServiceCollection services, IConfiguration configuration)
     {
         PatientServiceConfig patientServiceConfig = configuration
             .GetSection("PatientServiceConfig")
             .Get<PatientServiceConfig>();
 
+        // Guarded the same way LdsConfigurations is below, because it was not and a clean checkout
+        // paid for it. Every url in this section ships as the
+        // override_this_in_your_appsettings.Development.json_file_or_environment_variables marker,
+        // and DdsStu3Provider is constructed unconditionally - so the first thing a new developer
+        // met was a UriFormatException thrown from a collection initialiser that names neither the
+        // setting nor the file it belongs in. Failing here instead says which key to set.
         DdsConfigurations ddsConfig = configuration
             .GetSection("DdsConfigurations")
-            .Get<DdsConfigurations>();
+            .Get<DdsConfigurations>()
+            ?? throw new InvalidOperationException(
+                "DdsConfigurations is missing or invalid. Please check appsettings.json.");
+
+        if (IsDialableUrl(ddsConfig.BaseUrl) is false)
+        {
+            throw new InvalidOperationException(
+                "DdsConfigurations:BaseUrl is missing or is not an absolute http or https URI. "
+                    + "Please check appsettings.json or the corresponding environment variable/secret.");
+        }
+
+        if (IsDialableUrl(ddsConfig.AuthorisationUrl) is false)
+        {
+            throw new InvalidOperationException(
+                "DdsConfigurations:AuthorisationUrl is missing or is not an absolute http or "
+                    + "https URI. Please check appsettings.json or the corresponding environment "
+                    + "variable/secret.");
+        }
 
         LdsConfigurations ldsConfig = configuration
             .GetSection("LdsConfigurations")
@@ -234,10 +292,10 @@ public partial class Program
             ?? throw new InvalidOperationException(
                 "LdsConfigurations is missing or invalid. Please check appsettings.json.");
 
-        if (!Uri.TryCreate(ldsConfig.BaseUrl, UriKind.Absolute, out _))
+        if (IsDialableUrl(ldsConfig.BaseUrl) is false)
         {
             throw new InvalidOperationException(
-                "LdsConfigurations:BaseUrl is missing or is not a valid absolute URI. "
+                "LdsConfigurations:BaseUrl is missing or is not an absolute http or https URI. "
                     + "Please check appsettings.json or the corresponding environment variable/secret.");
         }
 
@@ -328,6 +386,14 @@ public partial class Program
         services.AddSingleton<TokenCredential>(new DefaultAzureCredential());
         services.AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>();
         services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
+
+        // Scoped, because the correlation id is per request. The value itself lives on
+        // HttpContext.Items, so a second instance within the same request still reads the first
+        // one's id - the lifetime is what the broker means, not what makes it work.
+        services.AddScoped<ICorrelationBroker, CorrelationBroker>();
+
+        // Scoped for the same reason: it forwards a value captured on the request in flight.
+        services.AddScoped<IRequestTraceBroker, RequestTraceBroker>();
         services.AddScoped<IAuditAndMetricStorageBroker, AuditAndMetricStorageBroker>();
         services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
@@ -421,12 +487,22 @@ public partial class Program
                 serviceProvider.GetRequiredService<IAuditUserBroker>(),
                 serviceProvider.GetRequiredService<AuditAndMetricsConfigurations>(),
                 serviceProvider.GetRequiredService<ILoggerFactory>(),
-                serviceProvider.GetRequiredService<IAuditAndMetricsDispatcher>()));
+                serviceProvider.GetRequiredService<IAuditAndMetricsDispatcher>(),
+                serviceProvider.GetRequiredService<IRequestTraceBroker>()));
     }
 
     private static void AddBackgroundWorkers(IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<ComparisonWorkerSettings>(configuration.GetSection("ComparisonWorkerSettings"));
+        // Validated on start rather than trusted. Zero would turn the worker's drain loop into a
+        // spin against the database, and a negative value makes Task.Delay throw from a line that
+        // sits outside the loop's catch - which, under the default BackgroundService behaviour,
+        // stops the host at startup with an error that names Task.Delay rather than the setting.
+        services.AddOptions<ComparisonWorkerSettings>()
+            .Bind(configuration.GetSection("ComparisonWorkerSettings"))
+            .Validate(
+                comparisonWorkerSettings => comparisonWorkerSettings.SleepIntervalSeconds >= 1,
+                "ComparisonWorkerSettings:SleepIntervalSeconds must be at least 1 second.")
+            .ValidateOnStart();
         services.AddHostedService<ComparisonWorker>();
 
         // The retention sweeps had no caller, so both tables only ever grew - and the metrics

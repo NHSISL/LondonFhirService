@@ -165,13 +165,19 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Clients
                 AuditAndMetricsClient.BindConfigurations(configuration);
 
             // then
-            // A host that has not configured the library still starts, recording enabled and
-            // purging off, rather than failing at construction.
+            // A host that has not configured the library still starts rather than failing at
+            // construction, with recording on and both retention sweeps live at 30 days. The
+            // defaults purge, so an unconfigured host ages its tables out rather than growing
+            // them forever - the section is what an environment sets to keep longer, or to
+            // stop deleting altogether.
             actualConfigurations.Should().NotBeNull();
             actualConfigurations.IsAuditEnabled.Should().BeTrue();
-            actualConfigurations.IsAuditPurgingAllowed.Should().BeFalse();
+            actualConfigurations.IsAuditPurgingAllowed.Should().BeTrue();
+            actualConfigurations.AuditRetentionPeriodInDays.Should().Be(30);
             actualConfigurations.IsMetricsEnabled.Should().BeTrue();
-            actualConfigurations.IsMetricsPurgingAllowed.Should().BeFalse();
+            actualConfigurations.IsMetricsPurgingAllowed.Should().BeTrue();
+            actualConfigurations.MetricsRetentionPeriodInDays.Should().Be(30);
+            actualConfigurations.PurgeBatchSize.Should().Be(5000);
         }
     }
 }

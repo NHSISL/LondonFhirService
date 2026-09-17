@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading.Tasks;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Metrics;
 
@@ -37,5 +38,23 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
 
         public async ValueTask<HttpResponseMessage> GetAllMetricsWithoutKeyAsync() =>
             await this.keylessHttpClient.GetAsync($"{metricsRelativeUrl}/");
+
+        /// <summary>
+        /// The raw EDM document. Read as text rather than parsed, because what is being asserted
+        /// is which properties the host advertises at all.
+        /// </summary>
+        public async ValueTask<string> GetODataMetadataAsync() =>
+            await this.httpClient.GetStringAsync("odata/$metadata");
+
+        /// <summary>
+        /// Posts hand-written JSON rather than a typed model, so a test can send a field the
+        /// typed model does not have and see what the host does with it.
+        /// </summary>
+        public async ValueTask<HttpResponseMessage> PostRawMetricAsync(string json)
+        {
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            return await this.httpClient.PostAsync(metricsRelativeUrl, content);
+        }
     }
 }

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -21,14 +21,34 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// True when this call performed the transition, false when the record was already in the
+        /// target status - so the caller can tell "I completed it" from "someone else already had".
+        /// </summary>
+        ValueTask<bool> TryTransitionFhirRecordStatusAsync(
+            Guid fhirRecordId,
+            StatusType excludedStatus,
+            StatusType newStatus,
+            bool isProcessed,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Claims a record only if it is still exactly as the caller saw it - same status, and no
         /// newer than <paramref name="notUpdatedAfter"/> when supplied - returning true when this
-        /// caller won it. Lets the database arbitrate between competing workers.
+        /// caller won it. Lets the database arbitrate between competing workers. The claim date is
+        /// supplied rather than read here so the caller keeps the exact value written to
+        /// UpdatedDate. That value is the caller's lease token: re-asserting the claim later with
+        /// notUpdatedAfter set to it succeeds only while nobody has taken the row back.
+        ///
+        /// Settling a record onto a terminal status is the same operation with
+        /// <paramref name="isProcessed"/> true, which is what makes the terminal write itself
+        /// prove the lease rather than trusting a check that ran before it.
         /// </summary>
         ValueTask<bool> TryClaimFhirRecordAsync(
             Guid fhirRecordId,
             StatusType expectedStatus,
             StatusType claimedStatus,
+            DateTimeOffset claimedDate,
+            bool isProcessed,
             DateTimeOffset? notUpdatedAfter = null,
             CancellationToken cancellationToken = default);
 

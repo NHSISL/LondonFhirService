@@ -22,7 +22,7 @@ namespace LondonFhirService.Manage.Controllers.Providers
     /// here changes what every consumer gets back, not just what one operator sees.
     ///
     /// That is why the roles split rather than sit at one level: reads are open to the same roles
-    /// as the rest of this host, but create, update and delete are ManageAdmin only. The
+    /// as the rest of this host, but create, update and delete are Administrators only. The
     /// class-level attribute still applies to those verbs - ASP.NET Core requires every
     /// [Authorize] in scope to pass - so the method attribute narrows rather than replaces it.
     ///

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -37,6 +37,15 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                     .AddJsonFile(
                         Path.Combine(testProjectPath, "appsettings.json"),
                         optional: true)
+
+                    // A developer's own overrides, added after the file above so they win, and
+                    // gitignored so they never reach anyone else. The suite's connection string is
+                    // the reason it exists: appsettings.json points at LocalDB because that is what
+                    // every machine has, and a machine with a full SQL Server instance can say so
+                    // here without editing a file the rest of the team shares.
+                    .AddJsonFile(
+                        Path.Combine(testProjectPath, "appsettings.Test.json"),
+                        optional: true)
                     .AddInMemoryCollection(new Dictionary<string, string>
                     {
                         // Put your strong overrides here
@@ -59,6 +68,17 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
                 OverrideSecurityForTesting(services);
                 OverrideFhirProvidersForTesting(services);
                 MockExternalClientsForTesting(services);
+
+                // The host has no endpoint that throws past MVC, and the response class that
+                // produces is the one the correlation middleware was hardest to get right for.
+                services.AddSingleton<IStartupFilter, ThrowingRouteStartupFilter>();
+
+                // Nor does it have one the acceptance principal fails, so there is no way to
+                // reach a response the authorization middleware writes itself. Registering this
+                // assembly as an application part adds ForbiddenProbeController to the real
+                // routing table, behind the real UseAuthorization.
+                services.AddControllers()
+                    .AddApplicationPart(typeof(TestWebApplicationFactory).Assembly);
             });
         }
 

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -63,24 +63,60 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
                 return maybeFhirRecord;
             });
 
+        public ValueTask<bool> TryTransitionFhirRecordStatusAsync(
+            Guid fhirRecordId,
+            StatusType excludedStatus,
+            StatusType newStatus,
+            bool isProcessed,
+            CancellationToken cancellationToken = default) =>
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateFhirRecordId(fhirRecordId);
+
+                DateTimeOffset updatedDate =
+                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+
+                // The same actor ApplyModifyAuditValuesAsync would have written, from the same
+                // broker and the same ClaimsPrincipal - so the conditional statement records what
+                // the read-then-write path recorded, rather than inventing an identity for the
+                // worker. With no HttpContext behind it, that value is "anonymous", which is
+                // exactly what the audited path stamped here before.
+                string updatedBy = await this.securityAuditBroker.GetUserIdAsync();
+
+                int updatedCount = await this.storageBroker.UpdateFhirRecordStatusAsync(
+                    fhirRecordId,
+                    excludedStatus,
+                    newStatus,
+                    isProcessed,
+                    updatedDate,
+                    updatedBy,
+                    cancellationToken);
+
+                return updatedCount == 1;
+            });
+
         public ValueTask<bool> TryClaimFhirRecordAsync(
             Guid fhirRecordId,
             StatusType expectedStatus,
             StatusType claimedStatus,
+            DateTimeOffset claimedDate,
+            bool isProcessed,
             DateTimeOffset? notUpdatedAfter = null,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
                 ValidateFhirRecordId(fhirRecordId);
 
-                DateTimeOffset claimedDate =
-                    await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+                string claimedBy = await this.securityAuditBroker.GetUserIdAsync();
 
                 int claimedCount = await this.storageBroker.ClaimFhirRecordAsync(
                     fhirRecordId,
                     expectedStatus,
                     claimedStatus,
                     claimedDate,
+                    claimedBy,
+                    isProcessed,
                     notUpdatedAfter,
                     cancellationToken);
 

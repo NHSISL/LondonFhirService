@@ -1,5 +1,11 @@
+import moment from "moment";
 import { expect, it } from "vitest";
-import { ComparisonViewService, comparisonPageSize } from "./comparisonViewService";
+import {
+    ComparisonViewService,
+    comparisonPageSize,
+    pendingComparisonLimit,
+    queueBacklogMinutes
+} from "./comparisonViewService";
 import { fhirRecordStatuses } from "../../../models/foundations/fhirRecords/FhirRecord";
 import type { FhirRecord } from "../../../models/foundations/fhirRecords/FhirRecord";
 import type { FhirRecordDifference } from "../../../models/foundations/fhirRecordDifferences/FhirRecordDifference";
@@ -28,6 +34,7 @@ const createFhirRecordDifference = (
     acceptableDiffCount: 1,
     comparedAt: "2026-05-04T09:30:00+00:00",
     comment: null,
+    secondarySourceName: "LDS",
     isResolved: false,
     createdBy: "compare-queue",
     createdDate: "2026-05-04T09:30:00+00:00",
@@ -80,6 +87,7 @@ const createFhirRecordService = (
     overrides: Partial<IFhirRecordService> = {})
     : IFhirRecordService => ({
     retrieveFhirRecordByIdAsync: async fhirRecordId => createFhirRecord({ id: fhirRecordId }),
+    retrievePendingFhirRecordsAsync: async () => [],
     ...overrides
 });
 
@@ -509,4 +517,196 @@ it("should refuse to accept a difference the stored result does not have", async
 
     await expect(comparisonViewService.setDiffAcceptanceAsync("any-id", [99], true))
         .rejects.toThrow("We could not save this difference");
+});
+
+// The compare queue, as the page shows it while it waits.
+it("should describe what is still queued", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({
+                    id: "cccccccc-0000-0000-0000-000000000003",
+                    correlationId: "abc-123",
+                    sourceName: "DDS2",
+                    isPrimarySource: false,
+                    isProcessed: false,
+                    status: fhirRecordStatuses.pending,
+                    insertedDate: "2026-05-04T09:29:00+00:00"
+                })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons).toHaveLength(1);
+    expect(pendingComparisons[0].correlationId).toBe("abc-123");
+    expect(pendingComparisons[0].sourceNameText).toBe("DDS2");
+    expect(pendingComparisons[0].isPrimarySource).toBe(false);
+    expect(pendingComparisons[0].statusText).toBe("Pending");
+});
+
+// Not CreatedDate. That is stamped on the request thread before the insert is even queued, so a
+// slow dispatch would show the row as having waited longer than it has.
+it("should date a queued record from when it landed", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({
+                    insertedDate: "2026-05-04T09:29:00+00:00",
+                    createdDate: "2026-05-04T08:00:00+00:00"
+                })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    // Rendered in the reader's own zone, so the assertion is against the same formatting of the
+    // two candidate fields rather than against a literal time.
+    expect(pendingComparisons[0].landedAtText)
+        .toBe(moment("2026-05-04T09:29:00+00:00").format("DD MMM YYYY HH:mm:ss"));
+
+    expect(pendingComparisons[0].landedAtText)
+        .not.toBe(moment("2026-05-04T08:00:00+00:00").format("DD MMM YYYY HH:mm:ss"));
+});
+
+// A record the worker has claimed but not finished is still waiting as far as the operator is
+// concerned, and saying which of the two it is tells them whether anything is happening.
+it("should distinguish a claimed record from an unclaimed one", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({ status: fhirRecordStatuses.processing })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons[0].statusText).toBe("Processing");
+    expect(pendingComparisons[0].statusClassName).toBe("badge bg-info text-dark");
+});
+
+it("should carry the search term and the limit through to the records service", async () => {
+    let askedFor: { take: number; searchTerm: string } | null = null;
+
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async fhirRecordQuery => {
+                askedFor = fhirRecordQuery;
+
+                return [];
+            }
+        }));
+
+    await comparisonViewService.retrievePendingComparisonViewsAsync("abc-123");
+
+    expect(askedFor).toEqual({ take: pendingComparisonLimit, searchTerm: "abc-123" });
+});
+
+it("should report a queue it could not read as something the operator can act on", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({ retrievePendingFhirRecordsAsync: rejects }));
+
+    await expect(comparisonViewService.retrievePendingComparisonViewsAsync(""))
+        .rejects.toThrow("We could not load what is still waiting to be compared");
+});
+
+// The row's route to the metrics screen. A FhirRecordDifference stores the correlation as the
+// compact 32 character form, and the metrics route filters on a Guid, so the view is where the
+// two spellings are reconciled - not the component, which just renders the href it is handed.
+it("should give a row a metrics link in the form that route accepts", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            retrieveFhirRecordDifferencesAsync: async () => [
+                createFhirRecordDifference({
+                    correlationId: "d8924d9709dab2e07cf313bef9fdf820"
+                })
+            ]
+        }),
+        createFhirRecordService());
+
+    const { comparisons } =
+        await comparisonViewService.retrieveComparisonPageViewAsync(0, "", false);
+
+    expect(comparisons[0].metricsUrl)
+        .toBe("/admin/metrics/d8924d97-09da-b2e0-7cf3-13bef9fdf820");
+});
+
+it("should give the detail view the same metrics link", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService({
+            retrieveFhirRecordDifferenceByIdAsync: async () =>
+                createFhirRecordDifference({
+                    correlationId: "d8924d9709dab2e07cf313bef9fdf820"
+                })
+        }),
+        createFhirRecordService());
+
+    const comparison =
+        await comparisonViewService.retrieveComparisonDetailViewAsync("any-id");
+
+    expect(comparison.metricsUrl)
+        .toBe("/admin/metrics/d8924d97-09da-b2e0-7cf3-13bef9fdf820");
+});
+
+// The queue's own stop condition. "Unprocessed" never stops being true for a record the queue
+// cannot claim - a primary with no secondary - so the page needed something that does.
+it("should treat a freshly landed record as still awaiting the queue", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({ insertedDate: moment().subtract(1, "minute").toISOString() })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons[0].isAwaitingTheQueue).toBe(true);
+});
+
+// Past the backlog window the queue has either dealt with it or never will, so it stays listed
+// but stops being a reason to keep asking.
+it("should stop treating a record older than the backlog window as awaited", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({
+                    insertedDate: moment()
+                        .subtract(queueBacklogMinutes + 1, "minutes")
+                        .toISOString()
+                })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons).toHaveLength(1);
+    expect(pendingComparisons[0].isAwaitingTheQueue).toBe(false);
+});
+
+// Falling silent on a record whose state cannot be read is the worse of the two mistakes.
+it("should keep awaiting a record whose landing time cannot be read", async () => {
+    const comparisonViewService = new ComparisonViewService(
+        createFhirRecordDifferenceService(),
+        createFhirRecordService({
+            retrievePendingFhirRecordsAsync: async () => [
+                createFhirRecord({ insertedDate: "" })
+            ]
+        }));
+
+    const pendingComparisons =
+        await comparisonViewService.retrievePendingComparisonViewsAsync("");
+
+    expect(pendingComparisons[0].isAwaitingTheQueue).toBe(true);
 });

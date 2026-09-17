@@ -5,14 +5,28 @@
 
 project: api
 components:
+  - id: API.CorrelationMiddleware
+    name: CorrelationMiddleware
+    layer: exposer
+    col: 4
+    description: "First in the pipeline, ahead of authentication, authorization and the timeout policy. It settles the request's correlation id through CorrelationBroker and registers an OnStarting callback that writes it back as the X-Correlation-Id response header, so a response produced before any controller runs — a 401, a 403, a timeout, a malformed body — still carries the id its logs and metric spans were written under. The header is deferred rather than written inline so it lands on whatever response is eventually produced."
+    methods:
+      - InvokeAsync
+    calls:
+      - from: InvokeAsync
+        to: CorrelationBroker
+        method: GetCorrelationIdAsync
   - id: API.Patient
     name: PatientController (STU3)
     layer: exposer
     col: 4
-    description: "The solution's headline endpoint. Accepts a FHIR Parameters body (custom FhirJson input/output formatters) and returns the reconciled STU3 bundle. Wrapped in a 130-second request-timeout policy."
+    description: "The solution's headline endpoint. Accepts a FHIR Parameters body (custom FhirJson input/output formatters) and returns the reconciled STU3 bundle. Wrapped in a 130-second request-timeout policy. Reads the request correlation id the middleware has already promised the consumer and hands it to the coordination service, so the header and the audit trail carry the same id."
     methods:
       - POST /api/STU3/Patient/$getstructuredrecord
     calls:
+      - from: POST /api/STU3/Patient/$getstructuredrecord
+        to: CorrelationBroker
+        method: GetCorrelationIdAsync
       - from: POST /api/STU3/Patient/$getstructuredrecord
         to: CO.Stu3Patient
         method: GetStructuredRecordSerialisedAsync
@@ -61,18 +75,6 @@ components:
       - from: ExecuteAsync
         to: API.Dispatcher
         method: Complete
-  - id: API.MetricTelemetryPublisher
-    name: MetricTelemetryPublisher
-    layer: exposer
-    col: 4
-    description: "Subscribes to the metric library's ActivitySource by name and forwards completed spans to Application Insights. Nothing was subscribed before this existed, so every span the library published was dropped. The source name comes from the same bound AuditAndMetricsConfigurations instance the client uses, so the two cannot drift apart."
-    methods:
-      - ExecuteAsync
-      - Dispose
-    calls:
-      - from: ExecuteAsync
-        to: EXT.ActivitySource
-        method: ActivityListener
   - id: API.Features
     name: FeaturesController
     layer: exposer

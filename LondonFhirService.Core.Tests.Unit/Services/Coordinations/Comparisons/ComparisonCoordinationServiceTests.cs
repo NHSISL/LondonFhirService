@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -38,6 +38,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
+
+            // The claim is still held unless a test says otherwise. A worker that has been
+            // overtaken abandons its result instead of persisting a second difference row, so
+            // leaving this at Moq's default false would make every happy-path test abandon.
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                    .ReturnsAsync(true);
 
             this.comparisonCoordinationService = new ComparisonCoordinationService(
                 compareQueueOrchestrationService: this.compareQueueOrchestrationServiceMock.Object,

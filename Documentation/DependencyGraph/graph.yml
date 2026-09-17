@@ -91,12 +91,13 @@ roots:
   - MC.ProvidersPage
   - MC.ProviderAddPage
   - MC.ProviderDetailPage
+  - API.CorrelationMiddleware
   - API.Patient
   - API.ComparisonWorker
   - API.AuditAndMetricPurgeWorker
   - API.DispatchWorker
   - API.Dispatcher
-  - API.MetricTelemetryPublisher
+  - CORE.MetricTelemetryPublisher
   - API.Features
   - API.FrontendConfigurations
   - MG.Audits
@@ -154,6 +155,8 @@ roots:
   - StorageBrokerFactory
   - Stu3FhirBroker
   - ConsumerAccessBroker
+  - CorrelationBroker
+  - RequestTraceBroker
   - DateTimeBroker
   - IdentifierBroker
   - LoggingBroker

@@ -365,6 +365,23 @@ namespace LondonFhirService.Core.Migrations
 
                     b.ToTable("Providers", (string)null);
                 });
+
+            modelBuilder.Entity("LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.FhirRecordDifference", b =>
+                {
+                    b.HasOne("LondonFhirService.Core.Models.Foundations.FhirRecords.FhirRecord", "Primary")
+                        .WithMany()
+                        .HasForeignKey("PrimaryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("LondonFhirService.Core.Models.Foundations.FhirRecords.FhirRecord", "Secondary")
+                        .WithMany()
+                        .HasForeignKey("SecondaryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Primary");
+
+                    b.Navigation("Secondary");
+                });
 #pragma warning restore 612, 618
         }
     }

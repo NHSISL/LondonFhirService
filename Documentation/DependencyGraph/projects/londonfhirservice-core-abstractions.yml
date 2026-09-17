@@ -15,12 +15,16 @@ components:
       - IAuditAndMetricStorageBroker
       - IAuditUserBroker
       - IAuditAndMetricsDispatcher
+      - IRequestTraceBroker
     calls:
       - from: IAuditAndMetricStorageBroker
         to: AuditAndMetricStorageBroker
         method: null
       - from: IAuditUserBroker
         to: AuditUserBroker
+        method: null
+      - from: IRequestTraceBroker
+        to: RequestTraceBroker
         method: null
       - from: IAuditAndMetricsDispatcher
         to: API.Dispatcher

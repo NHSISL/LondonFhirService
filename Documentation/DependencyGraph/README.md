@@ -67,9 +67,14 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 115 declared components and 518 declared edges draw as
-**112 components · 493 flows** in the single-copy view and **475 nodes ·
-1496 flows** per consumer (115 · 518 and 516 · 1554 with utility brokers on).
+At the last scan, 118 declared components and 534 declared edges draw as
+**115 components · 502 flows** in the single-copy view and **480 nodes ·
+1488 flows** per consumer (118 · 534 and 530 · 1571 with utility brokers on).
+
+> When re-verifying locally, serve on a **fresh port**. The page fetches the data
+> files, and a browser that has already loaded them on that port will keep
+> serving the cached copies — the counts then look unchanged however much the
+> YAML was edited.
 
 `.github/workflows/pages.yml` publishes this folder to GitHub Pages on every
 push to `main` that touches it — `index.html` is the site root. Nothing is
@@ -127,8 +132,14 @@ Actions).
   `AuditAndMetricPurgeWorkerSettings` to match.
 - **One span, two sinks.** The library's `MetricService` persists each span
   through the storage port *and* publishes it to an `ActivitySource`.
-  `MetricTelemetryPublisher` on the API host is what subscribes; before it
-  existed every published span was dropped before reaching Application Insights.
+  `MetricTelemetryPublisher` is what subscribes; before it existed every
+  published span was dropped before reaching Application Insights. It lives in
+  `LondonFhirService.Core/Workers` and **both hosts register it** — in Core
+  rather than in either host because both need it, and rather than in the metrics
+  library because that library deliberately carries no telemetry vendor of its
+  own. Metric rows are purged on a retention timer, so the telemetry copy is the
+  only record that outlives the sweep; a host that did not publish would lose its
+  spans entirely.
 - **The access decision is now delegated to a remote service, and lives with
   the patient orchestration.** `Stu3PatientOrchestrationService.ValidateAccess`
   resolves the caller, builds a `ValidateAccessRequest` (consumer user id +
@@ -145,6 +156,66 @@ Actions).
   and returns. `GetStructuredRecordSerialisedAsync` runs the same check first
   via the private helper `ValidateAccess` wraps, so a forbidden caller is
   localised once rather than twice.
+- **The correlation id is established in the request pipeline, not in Core.**
+  `CorrelationMiddleware` runs first in the API host, ahead of authentication,
+  authorization and the timeout policy. It settles the id through
+  `CorrelationBroker` — which keeps it on `HttpContext.Items`, so every reader
+  in the request sees one value — and registers an `OnStarting` callback that
+  returns it as the `X-Correlation-Id` response header. `PatientController`
+  reads that same id and passes it to `Stu3PatientCoordinationService`, which
+  no longer mints one of its own; it still draws its span ids from
+  `IdentifierBroker`. A response that never reaches a controller — a 401, a
+  403, a timeout — therefore carries the id its logs and metric spans were
+  written under, which it previously could not.
+- **The correlation id is a W3C trace id, not one of our own.** A caller or
+  gateway that sends `traceparent` is already naming the trace the request
+  belongs to; ASP.NET parses it into `Activity.Current` before any of our code
+  runs, and Application Insights correlates on the same value. `CorrelationBroker`
+  takes the trace id from there rather than minting a second id for the same
+  request, and falls back to `IdentifierBroker` only when there is no W3C
+  activity to read — a background worker, or a host with nothing listening for
+  activities. The two are the same 128 bits and the same 32 hex characters, so
+  `Guid.ToString("N")` of a correlation id **is** the trace id and an id read
+  off a response header or an audit row pastes straight into the telemetry
+  viewer. `MetricBroker.CreateTraceContext` rebuilds it from the hex for the
+  same reason: it previously went through `Guid.ToByteArray`, and because Guid
+  stores its first three fields little endian while a trace id is not stored
+  that way at all, every replayed span landed under a byte-shuffled trace of
+  its own instead of under the caller's.
+- **The compare queue is safe for more than one worker, in three separate ways.**
+  The claim is a single conditional `UPDATE` (`ExecuteUpdateAsync`) returning
+  rows-affected, so two workers can never both take a row — on the Pending arm
+  the status flip invalidates the loser, and on the reclaim arm, where
+  `Processing → Processing` would make a status check vacuous, the
+  `UpdatedDate <= leaseExpiry` term does it. Workers pick at **random from a
+  window** of the oldest candidates rather than the head, because every worker
+  runs the same ordered query and taking the head made all N converge on one row
+  every cycle. And `TryRetainClaimAsync` re-asserts the claim immediately before
+  anything is written: a lease that expires while work is still running looks
+  exactly like one left by a worker that died, so an overtaken worker has to be
+  able to find out and discard its result rather than write a second difference
+  row for the pair. The primary record is completed through a conditional
+  transition for the same reason — it is shared by every secondary of a
+  correlation, so several workers reach it and a read-then-write there is a check
+  by one and a write by another.
+- **Replayed metric spans are flattened on purpose, and anchored under the
+  request.** Every span of a request is given the same parent, so they reach
+  Application Insights as siblings rather than as the tree they actually form.
+  Reproducing the real nesting made the metric view too noisy to read; the
+  telemetry copy is meant to be a scannable overview, and the exact tree stays
+  in the `metric.id` / `metric.parentId` tags and in the metrics table, which is
+  the authoritative store. Do not turn this into a faithful hierarchy without
+  agreeing the UI change that goes with it. That shared parent is the HTTP
+  request's own span, so the flat group hangs *under* the incoming request in
+  the transaction view rather than beside it — flattening and anchoring are
+  independent, and only the second changed. The span id reaches the replay
+  through `IRequestTraceBroker`, a port the host satisfies from
+  `CorrelationBroker`: `MetricService` asks for it while the request is still
+  alive and carries it into the deferred write, because the replay itself runs
+  on a background worker with no request left to ask. Without a request span —
+  a background worker, or a host that registers no implementation and gets the
+  library's null object — it falls back to a parent derived from the correlation
+  id, which groups correctly but places the spans at the top of the trace.
 - **Reconciliation moved up to `Stu3PatientCoordinationService`.** The
   orchestration returns a `StructuredRecordsResponse` (primary provider +
   per-provider bundles); the coordination service hands them to
@@ -167,19 +238,22 @@ Actions).
   lives on Manage.** `LondonFhirService.Api` keeps the headline patient
   endpoint, the two config endpoints and all the background work
   (`ComparisonWorker`, `AuditAndMetricPurgeWorker`,
-  `AuditAndMetricsDispatchWorker`, `MetricTelemetryPublisher`). `LondonFhirService.Manage` carries
+  `AuditAndMetricsDispatchWorker`). `MetricTelemetryPublisher` is the one
+  hosted service both run. `LondonFhirService.Manage` carries
   `Audits`, `Metrics`, `Providers`, `FhirRecords` and
   `FhirRecordDifferences` — audit rows carry whole patient payloads, and Manage
   is reachable only from the business IP range.
-- **`Audits` and `Metrics` hide their write verbs; `Providers` does not.** All
-  three are `[Authorize(Roles = "ManageAdmin,ManageUsers")]`. Audit and metric
-  writes additionally carry `[InvisibleApi]`, so the middleware answers 404
-  without the key header and they exist for the acceptance suite to seed and
-  tear down. Provider writes instead narrow to `ManageAdmin` with a second
-  `[Authorize]` — a provider row decides who the patient fan-out calls and
-  which source is primary, so it is operator-managed configuration rather than
-  a record only tests should touch. `Metrics` has no PUT at all: a span records
-  work that already happened.
+- **`Audits` and `Metrics` hide their write verbs; `Providers` does not.**
+  `Metrics` and `Providers` admit `Administrators` and `Users`; `Audits` admits
+  `Administrators` only, because an audit row carries a whole patient payload.
+  Audit and metric writes additionally carry `[InvisibleApi]`, so the middleware
+  answers 404 without the key header and they exist for the acceptance suite to
+  seed and tear down. Provider writes instead narrow to `Administrators` with a
+  second `[Authorize]` — a provider row decides who the patient fan-out calls
+  and which source is primary, so it is operator-managed configuration rather
+  than a record only tests should touch. `Metrics` has no PUT at all: a span
+  records work that already happened. The role names come from `ManageRoles`,
+  one constant per name the app registration carries.
 - **`HashBroker` and the NHS-number hashing config are gone.** The SHA-256 hash
   existed only to build the patient identifier for the in-process PDS check;
   the remote consumer-access API does its own hashing, so `IHashBroker`,

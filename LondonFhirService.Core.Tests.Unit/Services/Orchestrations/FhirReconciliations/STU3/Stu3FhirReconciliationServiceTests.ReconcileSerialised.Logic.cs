@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -101,7 +101,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.FhirReconcil
             string expectedWarning =
                 $"Primary provider '{primaryProviderName}' returned no record; " +
                     $"returning '{secondaryProviderName}' instead.  " +
-                    $"CorrelationId: {correlationId}";
+                    $"CorrelationId: {correlationId:N}";
 
             // when
             string actualJson = await this.fhirReconciliationService.ReconcileSerialisedAsync(

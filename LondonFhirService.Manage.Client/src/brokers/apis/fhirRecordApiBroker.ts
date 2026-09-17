@@ -1,7 +1,9 @@
 import ApiBroker from "../apiBroker";
 import { FhirRecordApiBrokerException } from "../../models/foundations/fhirRecords/exceptions/FhirRecordApiBrokerException";
+import { buildPendingFhirRecordQueryUrl } from "./fhirRecordApiBroker.queries";
 import { fhirRecordStatuses } from "../../models/foundations/fhirRecords/FhirRecord";
 import type { FhirRecord, FhirRecordStatus } from "../../models/foundations/fhirRecords/FhirRecord";
+import type { FhirRecordQuery } from "../../models/foundations/fhirRecords/FhirRecordQuery";
 import type { IFhirRecordApiBroker } from "./iFhirRecordApiBroker";
 
 export class FhirRecordApiBroker implements IFhirRecordApiBroker {
@@ -10,6 +12,30 @@ export class FhirRecordApiBroker implements IFhirRecordApiBroker {
 
     constructor(apiBroker: ApiBroker = new ApiBroker()) {
         this.apiBroker = apiBroker;
+    }
+
+    public async getPendingFhirRecordsAsync(
+        fhirRecordQuery: FhirRecordQuery,
+        abortSignal?: AbortSignal)
+        : Promise<FhirRecord[]> {
+        try {
+            const response = await this.apiBroker.GetAsync(
+                buildPendingFhirRecordQueryUrl(this.relativeFhirRecordsUrl, fhirRecordQuery),
+                abortSignal);
+
+            // Not coerced to an empty list. "The queue is empty" and "this endpoint answered
+            // with something I cannot read" look identical on screen and mean opposite things,
+            // and the first of them is what stops the page asking again.
+            if (Array.isArray(response.data) === false) {
+                throw new Error("The FHIR records endpoint did not return a collection.");
+            }
+
+            return response.data.map(rawFhirRecord => this.toFhirRecord(rawFhirRecord));
+        } catch (exception) {
+            throw new FhirRecordApiBrokerException(
+                "Failed to retrieve the pending FHIR records from the API.",
+                exception);
+        }
     }
 
     public async getFhirRecordByIdAsync(
@@ -31,6 +57,11 @@ export class FhirRecordApiBroker implements IFhirRecordApiBroker {
 
     // Format conversion only - the API is an untyped boundary, so every field is read
     // defensively rather than asserted into shape.
+    //
+    // A record read by id arrives whole; one read through the pending query arrives as an OData
+    // projection carrying only the fields that query asked for. A field the projection left out
+    // reads as its empty value rather than as a failure - the pending list shows no payload, so it
+    // must not require one.
     private toFhirRecord(rawFhirRecord: unknown): FhirRecord {
         if (typeof rawFhirRecord !== "object" || rawFhirRecord === null) {
             throw new Error("The FHIR records endpoint returned an unreadable record.");
@@ -54,8 +85,9 @@ export class FhirRecordApiBroker implements IFhirRecordApiBroker {
         };
     }
 
-    // The host registers no JsonStringEnumConverter, so StatusType arrives as its ordinal. An
-    // unknown value falls back to Pending rather than leaking a number the view layer cannot name.
+    // The host registers no JsonStringEnumConverter, so StatusType arrives as its ordinal -
+    // through a projection too, which an acceptance test pins. An unknown value falls back to
+    // Pending rather than leaking a number the view layer cannot name.
     private readStatus(rawValue: unknown): FhirRecordStatus {
         const knownStatuses: number[] = Object.values(fhirRecordStatuses);
 

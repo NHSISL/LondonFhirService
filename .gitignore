@@ -419,6 +419,7 @@ FodyWeavers.xsd
 **/appsettings.Development.json
 **/appsettings.Acceptance.json
 **/appsettings.Integration.json
+**/appsettings.Test.json
 **/local.appsettings.json
 /Documentation/*.bkp
 /Documentation/*.dtmp

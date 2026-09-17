@@ -25,6 +25,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly ILoggingBroker loggingBroker;
         private readonly IAuditUserBroker auditUserBroker;
+        private readonly IRequestTraceBroker requestTraceBroker;
         private readonly AuditAndMetricsConfigurations metricServiceConfigurations;
         private readonly IAuditAndMetricsDispatcher dispatcher;
 
@@ -34,6 +35,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             IDateTimeBroker dateTimeBroker,
             ILoggingBroker loggingBroker,
             IAuditUserBroker auditUserBroker,
+            IRequestTraceBroker requestTraceBroker,
             AuditAndMetricsConfigurations metricServiceConfigurations,
             IAuditAndMetricsDispatcher dispatcher)
         {
@@ -42,6 +44,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             this.dateTimeBroker = dateTimeBroker;
             this.loggingBroker = loggingBroker;
             this.auditUserBroker = auditUserBroker;
+            this.requestTraceBroker = requestTraceBroker;
             this.metricServiceConfigurations = metricServiceConfigurations;
             this.dispatcher = dispatcher;
         }
@@ -61,6 +64,9 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             metric.UserId = await this.auditUserBroker.GetCurrentUserIdAsync();
             metric.Consumer = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
             ValidateMetricOnAdd(metric);
+
+            // After validation, so a metric that is about to be rejected does no telemetry work.
+            metric.RequestSpanId ??= await this.requestTraceBroker.GetRequestSpanIdAsync();
             IMetric addedMetric = await this.storageBroker.InsertMetricAsync(metric, cancellationToken);
             await this.metricBroker.RecordAsync(addedMetric, cancellationToken);
 
@@ -92,12 +98,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             string currentUserDisplayName =
                 await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
 
+            string requestSpanId = await this.requestTraceBroker.GetRequestSpanIdAsync();
+
             foreach (IMetric metric in metrics)
             {
                 ValidateMetricIsNotNull(metric);
                 metric.CreatedDate = currentDateTime;
                 metric.UserId = currentUserId;
                 metric.Consumer = currentUserDisplayName;
+                metric.RequestSpanId ??= requestSpanId;
                 ValidateMetricOnAdd(metric);
             }
 
@@ -119,7 +128,14 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
             metric.UserId = await this.auditUserBroker.GetCurrentUserIdAsync();
             metric.Consumer = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
+
+            // Stamped here rather than inside Dispatch. The closure runs on a background worker
+            // with no request behind it, and asking then would get null for every span. Coalesced
+            // rather than assigned: a caller that is already running deferred - the Persist span
+            // is queued before it is recorded - has set it itself while its request was alive, and
+            // that value is the correct one.
             ValidateMetricOnAdd(metric);
+            metric.RequestSpanId ??= await this.requestTraceBroker.GetRequestSpanIdAsync();
 
             Dispatch(async token =>
             {
@@ -155,12 +171,15 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             string currentUserDisplayName =
                 await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
 
+            string requestSpanId = await this.requestTraceBroker.GetRequestSpanIdAsync();
+
             foreach (IMetric metric in metrics)
             {
                 ValidateMetricIsNotNull(metric);
                 metric.CreatedDate = currentDateTime;
                 metric.UserId = currentUserId;
                 metric.Consumer = currentUserDisplayName;
+                metric.RequestSpanId ??= requestSpanId;
                 ValidateMetricOnAdd(metric);
             }
 

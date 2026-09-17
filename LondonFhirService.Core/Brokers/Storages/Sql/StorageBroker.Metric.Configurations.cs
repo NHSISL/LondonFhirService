@@ -35,6 +35,13 @@ namespace LondonFhirService.Core.Brokers.Storages.Sql
                 .Property(metric => metric.CorrelationId)
                 .IsRequired();
 
+            // Not a column. It carries the request's span id from the request that produced the
+            // span to the background worker that replays it into telemetry; the metrics table is
+            // the authoritative store and this adds nothing to it. Without the Ignore, EF would
+            // infer a column and the next migration would add one.
+            model
+                .Ignore(metric => metric.RequestSpanId);
+
             model
                 .Property(metric => metric.Method)
                 .HasMaxLength(255)

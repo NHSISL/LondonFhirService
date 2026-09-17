@@ -38,6 +38,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
         private readonly ISecurityAuditBroker securityAuditBroker;
         private readonly IStorageBrokerFactory storageBrokerFactory;
         private readonly IAuditAndMetricsDispatcher dispatcher;
+        private readonly IRequestTraceBroker requestTraceBroker;
         private readonly PatientServiceConfig patientServiceConfig;
 
         public Stu3PatientService(
@@ -48,6 +49,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             ISecurityAuditBroker securityAuditBroker,
             IStorageBrokerFactory storageBrokerFactory,
             IAuditAndMetricsDispatcher dispatcher,
+            IRequestTraceBroker requestTraceBroker,
             ILoggingBroker loggingBroker,
             PatientServiceConfig patientServiceConfig)
         {
@@ -58,6 +60,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             this.securityAuditBroker = securityAuditBroker;
             this.storageBrokerFactory = storageBrokerFactory;
             this.dispatcher = dispatcher;
+            this.requestTraceBroker = requestTraceBroker;
             this.loggingBroker = loggingBroker;
             this.patientServiceConfig = patientServiceConfig;
         }
@@ -93,7 +96,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     title: $"Foundation Service Request Submitted",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 List<(string providerFriendlyName, bool isPrimaryProvider, IFhirProvider provider)> fhirProviders =
                     await GetFhirProviders(activeProviders);
@@ -103,7 +106,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     title: $"Parallel Provider Execution Started",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 // The fan out span is the parent of every provider task, so subtracting a
                 // Provider span from it gives the time that provider's result sat idle
@@ -170,7 +173,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     title: $"Parallel Provider Execution Completed in {stopwatchOutcomes.ElapsedMilliseconds}ms",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 var jsonBundles = new List<(string, string)>(outcomes.Length);
                 var exceptions = new List<Exception>();
@@ -204,7 +207,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     title: $"Foundation Service Request Completed in {elapsedTime}ms",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 return jsonBundles;
             });
@@ -288,7 +291,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 title: $"{provider.DisplayName} Provider Execution Started",
                 message,
                 fileName: null,
-                correlationId: correlationId.ToString());
+                correlationId: correlationId.ToString("N"));
 
             Guid providerSpanId = await this.identifierBroker.GetIdentifierAsync();
             DateTimeOffset providerStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
@@ -338,7 +341,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     title: $"{provider.DisplayName} Provider Execution Completed in {elapsedTime}ms",
                     message,
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 providerStopwatch.Stop();
 
@@ -400,7 +403,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         $"{exception.InnerException?.InnerException?.Message}",
 
                     fileName: null,
-                    correlationId: correlationId.ToString());
+                    correlationId: correlationId.ToString("N"));
 
                 await RecordFailedProviderSpanAsync(
                     providerSpanId, parentId, correlationId, provider, providerFriendlyName,
@@ -437,7 +440,13 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             FhirRecord fhirRecord = new()
             {
                 Id = identifier,
-                CorrelationId = correlationId.ToString(),
+
+                // "N" rather than the default dashed form, because this is the W3C trace id and
+                // that is how it is written everywhere else the operator sees it: the
+                // X-Correlation-Id response header, traceparent, and operation_Id in Application
+                // Insights. A dashed copy here would mean the one value a consumer can quote back
+                // finds nothing in this table.
+                CorrelationId = correlationId.ToString("N"),
                 JsonPayload = json,
                 SourceName = $"{providerDisplayName} ({providerFriendlyName})",
                 IsPrimarySource = isPrimaryProvider,
@@ -446,6 +455,12 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             };
 
             fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
+
+            // Read here, not inside the closure. The Persist span is the one span that is always
+            // recorded from a queued closure, which runs on the drain worker after this request is
+            // gone - asking there returns null and every Persist span silently loses its anchor
+            // and floats beside the request while all its siblings hang under it.
+            string requestSpanId = await this.requestTraceBroker.GetRequestSpanIdAsync();
 
             bool accepted = this.dispatcher.TryDispatch(async token =>
             {
@@ -473,6 +488,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         Id = await this.identifierBroker.GetIdentifierAsync(),
                         ParentId = providerSpanId,
                         CorrelationId = correlationId,
+                        RequestSpanId = requestSpanId,
                         Method = auditType,
                         Type = MetricType.Persist,
                         Name = providerFriendlyName,
@@ -500,7 +516,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     await this.loggingBroker.LogWarningAsync(
                         "A FHIR record was not persisted. " +
-                            $"CorrelationId: {correlationId}, FhirRecordId: {fhirRecord.Id}, " +
+                            $"CorrelationId: {correlationId:N}, FhirRecordId: {fhirRecord.Id}, " +
                             $"Source: {providerDisplayName} ({providerFriendlyName}).");
 
                     try
@@ -520,7 +536,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             {
                 await this.loggingBroker.LogWarningAsync(
                     "A FHIR record persistence was dropped because the dispatch queue was full. " +
-                        $"CorrelationId: {correlationId}, Source: {providerDisplayName} " +
+                        $"CorrelationId: {correlationId:N}, Source: {providerDisplayName} " +
                         $"({providerFriendlyName}).");
             }
         }

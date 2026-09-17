@@ -86,6 +86,7 @@ export class FhirRecordDifferenceApiBroker implements IFhirRecordDifferenceApiBr
         }
 
         const source = rawFhirRecordDifference as Record<string, unknown>;
+        const secondary = this.readExpandedObject(source.secondary);
 
         return {
             id: this.readString(source.id),
@@ -98,11 +99,27 @@ export class FhirRecordDifferenceApiBroker implements IFhirRecordDifferenceApiBr
             comparedAt: this.readString(source.comparedAt),
             comment: this.readNullableString(source.comment),
             isResolved: source.isResolved === true,
+            secondarySourceName: this.readString(secondary.sourceName),
             createdBy: this.readString(source.createdBy),
             createdDate: this.readString(source.createdDate),
             updatedBy: this.readString(source.updatedBy),
             updatedDate: this.readString(source.updatedDate)
         };
+    }
+
+    /**
+     * An expanded object, or an empty one. The expand is dropped whenever the record it points at
+     * has gone, so this reads a missing nested object as absent fields rather than as a failure.
+     *
+     * No casing normalisation. Both shapes this endpoint answers with are camelCase - the
+     * unprojected one by the host's naming policy, the expanded one by OData's projection wrapper
+     * - which FhirRecordTests.ShouldProjectFhirRecordsWithoutThePayloadAsync pins, so a change
+     * there fails a test rather than silently emptying this list.
+     */
+    private readExpandedObject(rawValue: unknown): Record<string, unknown> {
+        return typeof rawValue === "object" && rawValue !== null
+            ? rawValue as Record<string, unknown>
+            : {};
     }
 
     private readString(rawValue: unknown): string {

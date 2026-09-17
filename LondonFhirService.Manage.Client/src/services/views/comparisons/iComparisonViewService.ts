@@ -1,6 +1,7 @@
 import type { ComparisonDetailView } from "../../../models/views/comparisons/ComparisonDetailView";
 import type { ComparisonFormValues } from "../../../models/views/comparisons/ComparisonFormValues";
 import type { ComparisonPageView } from "../../../models/views/comparisons/ComparisonPageView";
+import type { PendingComparisonView } from "../../../models/views/comparisons/PendingComparisonView";
 
 export interface IComparisonViewService {
     retrieveComparisonPageViewAsync(
@@ -8,6 +9,10 @@ export interface IComparisonViewService {
         searchTerm: string,
         unresolvedOnly: boolean,
         abortSignal?: AbortSignal): Promise<ComparisonPageView>;
+
+    retrievePendingComparisonViewsAsync(
+        searchTerm: string,
+        abortSignal?: AbortSignal): Promise<PendingComparisonView[]>;
 
     retrieveComparisonDetailViewAsync(
         fhirRecordDifferenceId: string,

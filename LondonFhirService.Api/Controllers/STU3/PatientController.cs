@@ -5,7 +5,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
+using System;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Brokers.Correlations;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.FhirReconciliations.Exceptions;
 using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
@@ -22,10 +24,14 @@ namespace LondonFhirService.Api.Controllers.STU3
     public class PatientController : RESTFulController
     {
         private readonly IStu3PatientCoordinationService patientCoordinationService;
+        private readonly ICorrelationBroker correlationBroker;
 
-        public PatientController(IStu3PatientCoordinationService patientCoordinationService)
+        public PatientController(
+            IStu3PatientCoordinationService patientCoordinationService,
+            ICorrelationBroker correlationBroker)
         {
             this.patientCoordinationService = patientCoordinationService;
+            this.correlationBroker = correlationBroker;
         }
 
         [HttpPost("$getstructuredrecord")]
@@ -37,6 +43,10 @@ namespace LondonFhirService.Api.Controllers.STU3
         {
             try
             {
+                // The same id the middleware has already promised the consumer in the response
+                // header. Drawing a second one here would put the header and the audit trail on
+                // different values, which is worse than not returning one at all.
+                Guid correlationId = await this.correlationBroker.GetCorrelationIdAsync();
                 string nhsNumber = ExtractStringParameter(parameters, "patientNHSNumber");
                 string dateOfBirth = ExtractStringParameter(parameters, "patientDOB");
 
@@ -47,6 +57,7 @@ namespace LondonFhirService.Api.Controllers.STU3
                     ExtractBoolParameter(parameters, "includeInactivePatients", partName: "includeInactivePatients");
 
                 string json = await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
                     nhsNumber,
                     dateOfBirth,
                     demographicsOnly,

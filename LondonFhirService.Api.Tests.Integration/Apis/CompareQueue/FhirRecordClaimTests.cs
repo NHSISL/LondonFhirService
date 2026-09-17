@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -25,10 +25,51 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.CompareQueue
     [Collection(nameof(ApiTestCollection))]
     public class FhirRecordClaimTests
     {
+        /// <summary>
+        /// Stands in for whatever the security audit broker yields. The service passes that value
+        /// down; these tests drive the broker directly, so they supply their own and assert it
+        /// reaches the column.
+        /// </summary>
+        private const string TestActor = "integration-test-actor";
+
         private readonly ApiBroker apiBroker;
 
         public FhirRecordClaimTests(ApiBroker apiBroker) =>
             this.apiBroker = apiBroker;
+
+        [Fact]
+        public async Task ShouldStampTheActorOnBothConditionalUpdatesAsync()
+        {
+            // given
+            FhirRecord fhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Pending,
+                updatedDate: DateTimeOffset.UtcNow.AddHours(-1));
+
+            // when
+            await ClaimAsync(
+                fhirRecord.Id, StatusType.Pending, StatusType.Processing, notUpdatedAfter: null);
+
+            FhirRecord claimedFhirRecord = await SelectFhirRecordAsync(fhirRecord.Id);
+
+            await TransitionAsync(
+                fhirRecord.Id,
+                excludedStatus: StatusType.Completed,
+                newStatus: StatusType.Completed,
+                isProcessed: true);
+
+            FhirRecord completedFhirRecord = await SelectFhirRecordAsync(fhirRecord.Id);
+
+            // then
+            // FhirRecord is IAuditable, and both of these are ExecuteUpdateAsync statements, which
+            // go round the change tracker - so nothing stamps the actor unless the statement says
+            // so. Asserted against the real column rather than a mock because the whole failure
+            // mode is a SetProperty that never reaches SQL: a row whose UpdatedDate has moved
+            // while UpdatedBy still names whoever last touched it through the audited path.
+            claimedFhirRecord.UpdatedBy.Should().Be(TestActor);
+            completedFhirRecord.UpdatedBy.Should().Be(TestActor);
+
+            await DeleteFhirRecordAsync(fhirRecord.Id);
+        }
 
         [Fact]
         public async Task ShouldClaimAPendingRecordExactlyOnceAsync()
@@ -109,10 +150,195 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.CompareQueue
             await DeleteFhirRecordAsync(liveFhirRecord.Id);
         }
 
+        [Fact]
+        public async Task ShouldTransitionARecordThatIsNotAlreadyInTheTargetStatusAsync()
+        {
+            // given
+            FhirRecord processingFhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Processing,
+                updatedDate: DateTimeOffset.UtcNow.AddMinutes(-5));
+
+            // when
+            int transitionCount = await TransitionAsync(
+                processingFhirRecord.Id,
+                excludedStatus: StatusType.Completed,
+                newStatus: StatusType.Completed,
+                isProcessed: true);
+
+            // then
+            // The predicate and the SET list both have to survive translation. IsProcessed in
+            // particular: the read-then-write path this replaced set it for terminal statuses, and
+            // a mocked service cannot show that the statement actually writes it.
+            transitionCount.Should().Be(1);
+
+            FhirRecord completedFhirRecord = await SelectFhirRecordAsync(processingFhirRecord.Id);
+            completedFhirRecord.Status.Should().Be(StatusType.Completed);
+            completedFhirRecord.IsProcessed.Should().BeTrue();
+
+            await DeleteFhirRecordAsync(processingFhirRecord.Id);
+        }
+
+        [Fact]
+        public async Task ShouldNotTransitionARecordAlreadyInTheTargetStatusAsync()
+        {
+            // given
+            FhirRecord completedFhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Completed,
+                updatedDate: DateTimeOffset.UtcNow.AddMinutes(-5));
+
+            // when
+            int transitionCount = await TransitionAsync(
+                completedFhirRecord.Id,
+                excludedStatus: StatusType.Completed,
+                newStatus: StatusType.Completed,
+                isProcessed: true);
+
+            // then
+            // Zero rows is what makes the primary safe to complete from several workers at once:
+            // the shared primary is reached once per secondary, and the second and later callers
+            // must be no-ops rather than racing a read against a write.
+            transitionCount.Should().Be(0);
+
+            FhirRecord unchangedFhirRecord = await SelectFhirRecordAsync(completedFhirRecord.Id);
+            unchangedFhirRecord.Status.Should().Be(StatusType.Completed);
+
+            // Untouched, not rewritten with the value this call would have set.
+            unchangedFhirRecord.IsProcessed.Should().BeFalse();
+
+            await DeleteFhirRecordAsync(completedFhirRecord.Id);
+        }
+
+        [Fact]
+        public async Task ShouldRetainAClaimOnlyWhileTheLeaseTokenStillMatchesAsync()
+        {
+            // given
+            DateTimeOffset claimedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+
+            FhirRecord claimedFhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Processing,
+                updatedDate: claimedAt);
+
+            // when
+            // The first re-assertion is the worker proving it still owns the row; it also moves
+            // UpdatedDate on, which is exactly why the caller has to advance its token.
+            int firstRetainCount = await ClaimAsync(
+                claimedFhirRecord.Id,
+                StatusType.Processing,
+                StatusType.Processing,
+                notUpdatedAfter: claimedAt);
+
+            int staleRetainCount = await ClaimAsync(
+                claimedFhirRecord.Id,
+                StatusType.Processing,
+                StatusType.Processing,
+                notUpdatedAfter: claimedAt);
+
+            // then
+            firstRetainCount.Should().Be(1);
+
+            // Replaying the ORIGINAL token now matches nothing - which is the same shape as
+            // another worker having reclaimed the row, and is what the fence relies on.
+            staleRetainCount.Should().Be(0);
+
+            await DeleteFhirRecordAsync(claimedFhirRecord.Id);
+        }
+
+        [Fact]
+        public async Task ShouldSettleOnlyUnderTheLeaseTokenTheClaimActuallyWroteAsync()
+        {
+            // given
+            FhirRecord fhirRecord = await InsertFhirRecordAsync(
+                status: StatusType.Pending,
+                updatedDate: DateTimeOffset.UtcNow.AddHours(-1));
+
+            // The token is the value the CLAIM statement wrote, presented back through the same
+            // parameter binding - not a value this test chose and stored itself. That round trip
+            // is the link the rest of the suite does not exercise.
+            DateTimeOffset firstWorkersToken = DateTimeOffset.UtcNow;
+
+            await ClaimAsync(
+                fhirRecord.Id,
+                StatusType.Pending,
+                StatusType.Processing,
+                firstWorkersToken,
+                notUpdatedAfter: null);
+
+            // when
+            // A second worker finds the lease expired and reclaims the row, which moves
+            // UpdatedDate past the first worker's token.
+            DateTimeOffset secondWorkersToken = firstWorkersToken.AddMinutes(1);
+
+            int reclaimCount = await ClaimAsync(
+                fhirRecord.Id,
+                StatusType.Processing,
+                StatusType.Processing,
+                secondWorkersToken,
+                notUpdatedAfter: firstWorkersToken);
+
+            int staleSettleCount = await SettleAsync(
+                fhirRecord.Id, StatusType.Failed, leaseToken: firstWorkersToken);
+
+            int liveSettleCount = await SettleAsync(
+                fhirRecord.Id, StatusType.Completed, leaseToken: secondWorkersToken);
+
+            // then
+            // This is the race the pre-check could not close. The first worker had passed an
+            // ownership check, then lost the lease; with the test outside the statement its
+            // Failed would have landed on the second worker's row, and nothing reclaims Failed -
+            // so a comparison that was still running would have been buried permanently.
+            reclaimCount.Should().Be(1);
+            staleSettleCount.Should().Be(0);
+            liveSettleCount.Should().Be(1);
+
+            FhirRecord settledFhirRecord = await SelectFhirRecordAsync(fhirRecord.Id);
+            settledFhirRecord.Status.Should().Be(StatusType.Completed);
+
+            // Terminal rows are processed rows, set in the same statement that proved the lease
+            // rather than by a read-then-write afterwards.
+            settledFhirRecord.IsProcessed.Should().BeTrue();
+
+            await DeleteFhirRecordAsync(fhirRecord.Id);
+        }
+
+        private async ValueTask<int> TransitionAsync(
+            Guid fhirRecordId,
+            StatusType excludedStatus,
+            StatusType newStatus,
+            bool isProcessed)
+        {
+            using var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope();
+            var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+
+            return await storageBroker.UpdateFhirRecordStatusAsync(
+                fhirRecordId,
+                excludedStatus,
+                newStatus,
+                isProcessed,
+                updatedDate: DateTimeOffset.UtcNow,
+                updatedBy: TestActor);
+        }
+
         private async ValueTask<int> ClaimAsync(
             Guid fhirRecordId,
             StatusType expectedStatus,
             StatusType claimedStatus,
+            DateTimeOffset? notUpdatedAfter) =>
+            await ClaimAsync(
+                fhirRecordId,
+                expectedStatus,
+                claimedStatus,
+                DateTimeOffset.UtcNow,
+                notUpdatedAfter);
+
+        /// <summary>
+        /// The claim date is the caller's lease token, so a test that wants to present it later
+        /// has to choose it here rather than read it back.
+        /// </summary>
+        private async ValueTask<int> ClaimAsync(
+            Guid fhirRecordId,
+            StatusType expectedStatus,
+            StatusType claimedStatus,
+            DateTimeOffset claimedDate,
             DateTimeOffset? notUpdatedAfter)
         {
             using var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope();
@@ -122,8 +348,32 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.CompareQueue
                 fhirRecordId,
                 expectedStatus,
                 claimedStatus,
-                claimedDate: DateTimeOffset.UtcNow,
+                claimedDate: claimedDate,
+                claimedBy: TestActor,
+                isProcessed: false,
                 notUpdatedAfter: notUpdatedAfter);
+        }
+
+        /// <summary>
+        /// Settling: the same statement, moving the record onto a terminal status and marking it
+        /// processed, fenced on the lease token the caller holds.
+        /// </summary>
+        private async ValueTask<int> SettleAsync(
+            Guid fhirRecordId,
+            StatusType terminalStatus,
+            DateTimeOffset leaseToken)
+        {
+            using var scope = this.apiBroker.WebApplicationFactory.Services.CreateScope();
+            var storageBroker = scope.ServiceProvider.GetRequiredService<StorageBroker>();
+
+            return await storageBroker.ClaimFhirRecordAsync(
+                fhirRecordId,
+                expectedStatus: StatusType.Processing,
+                claimedStatus: terminalStatus,
+                claimedDate: DateTimeOffset.UtcNow,
+                claimedBy: TestActor,
+                isProcessed: true,
+                notUpdatedAfter: leaseToken);
         }
 
         private async ValueTask<FhirRecord> InsertFhirRecordAsync(

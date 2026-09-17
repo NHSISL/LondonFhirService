@@ -18,6 +18,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Metrics
         public string UserId { get; set; }
         public Guid? ParentId { get; set; }
         public Guid CorrelationId { get; set; }
+        public string RequestSpanId { get; set; }
         public string Method { get; set; }
         public MetricType Type { get; set; }
         public string Name { get; set; }

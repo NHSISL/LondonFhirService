@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Text.Json.Serialization;
 using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Abstractions.Models;
 
@@ -36,6 +37,22 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
 
         /// <summary>Ties every span of a single request together.</summary>
         public Guid CorrelationId { get; set; }
+
+        /// <summary>
+        /// The span id of the HTTP request this span belongs to. Transport only and not mapped to
+        /// a column - see IMetric.RequestSpanId. It rides from the request that produced the span
+        /// to the background worker that replays it into telemetry, and is not part of the record.
+        ///
+        /// JsonIgnore because Metric is also the entity the Manage host exposes, and a field that
+        /// is neither stored nor meaningful to a caller should not appear on that API in either
+        /// direction. Without it the convention binder would accept a client-supplied value on
+        /// POST and echo it back in the response, while a later GET returned null - a field the
+        /// API appears to accept and then silently drops. The transport this property exists for
+        /// is in-process: the metric client passes IMetric objects, never JSON, so nothing that
+        /// needs the value goes through a serializer.
+        /// </summary>
+        [JsonIgnore]
+        public string RequestSpanId { get; set; }
 
         /// <summary>
         /// The operation being measured, matching the audit type string used for the same

@@ -25,12 +25,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Audits
 
             List<string> expectedAttributeValues = new List<string>
             {
-                "ManageAdmin",
-                "LondonDataServices.Manage.Administrators",
-                "Administrators",
-                "ManageUsers",
-                "LondonDataServices.Manage.Users",
-                "Users"
+                "Administrators"
             };
 
             // When

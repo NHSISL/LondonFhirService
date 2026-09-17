@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -40,14 +40,16 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
             ILoggerFactory loggerFactory = null,
-            IAuditAndMetricsDispatcher dispatcher = null)
+            IAuditAndMetricsDispatcher dispatcher = null,
+            IRequestTraceBroker requestTraceBroker = null)
         {
             IServiceProvider serviceProvider = RegisterServices(
                 storageBroker,
                 auditUserBroker,
                 configurations,
                 loggerFactory,
-                dispatcher);
+                dispatcher,
+                requestTraceBroker);
 
             InitializeClients(serviceProvider);
         }
@@ -85,7 +87,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             IAuditUserBroker auditUserBroker,
             AuditAndMetricsConfigurations configurations,
             ILoggerFactory loggerFactory,
-            IAuditAndMetricsDispatcher dispatcher)
+            IAuditAndMetricsDispatcher dispatcher,
+            IRequestTraceBroker requestTraceBroker)
         {
             // The storage broker is supplied rather than constructed: it is the seam that keeps
             // this library free of any reference to the application that hosts it. It surfaces
@@ -94,6 +97,11 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Clients
             IServiceCollection serviceCollection = new ServiceCollection()
                 .AddSingleton(storageBroker)
                 .AddSingleton(auditUserBroker)
+
+                // Optional, like the dispatcher below it. A host that does not establish a
+                // request span - or has not been updated to supply one - still works; its
+                // replayed spans simply group by trace instead of hanging under a request.
+                .AddSingleton(requestTraceBroker ?? UnknownRequestTraceBroker.Instance)
                 .AddSingleton(configurations)
 
                 // The consuming application's factory, not a fresh one. AddLogging() on its own
