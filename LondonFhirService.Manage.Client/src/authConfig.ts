@@ -65,6 +65,17 @@ export class MsalConfig {
                 storeAuthStateInCookie: false, // Set this to "true" if you are having issues on IE11 or Edge
             },
             system: {
+                // MSAL renews a token silently by opening a hidden iframe at redirectUri and
+                // waiting for the hash to come back. redirectUri is '/', so that iframe boots the
+                // whole React app before it can answer, and the default window is six seconds -
+                // which a cold Vite dev load does not make. The failure surfaces as
+                // monitor_window_timeout and strands the operator on whatever they were doing.
+                //
+                // Widening the window is a mitigation, not the fix. The fix is a blank redirect
+                // page so the iframe loads a few hundred bytes instead of the application, and
+                // that needs the URI registering against the app registration first.
+                iframeHashTimeout: 20000,
+                loadFrameTimeout: 20000,
                 loggerOptions: {
                     loggerCallback: (level, message, containsPii) => {
                         if (containsPii) {
