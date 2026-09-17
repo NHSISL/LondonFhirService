@@ -72,6 +72,15 @@ export function useComparisonsPage(): ComparisonsPageState {
         return () => window.clearTimeout(timeoutId);
     }, [searchTerm, appliedSearchTerm]);
 
+    const mountedAt = useRef<number>(Date.now());
+
+    // Declared before the query below, not after it. A function-form refetchInterval is evaluated
+    // during setOptions - which react-query runs inside the useQuery call, on the first render -
+    // so a ref declared underneath was read in its temporal dead zone and threw before the page
+    // could paint. It starts true so that first evaluation polls, which is what the arrival
+    // window wants anyway.
+    const waitingOnTheQueueRef = useRef<boolean>(true);
+
     // What has landed but not been compared. Polled, because the thing an operator is waiting for
     // happens on a worker somewhere else and nothing pushes it here.
     const {
@@ -88,7 +97,6 @@ export function useComparisonsPage(): ComparisonsPageState {
     });
 
     const pendingComparisons = useMemo(() => pendingData ?? [], [pendingData]);
-    const mountedAt = useRef<number>(Date.now());
 
     /**
      * Whether this page is still waiting on something, and so the one condition both queries poll
@@ -112,10 +120,8 @@ export function useComparisonsPage(): ComparisonsPageState {
         || pendingError !== null
         || Date.now() - mountedAt.current < arrivalGraceMilliseconds;
 
-    // The pending query's own interval callback is declared above this line, so it reads the
-    // decision through a ref rather than closing over a value that does not exist yet. Written on
-    // every render, so the callback always sees the current answer.
-    const waitingOnTheQueueRef = useRef<boolean>(true);
+    // Written on every render, so the interval callback declared above always reads the current
+    // answer rather than the one that held when it was created.
     waitingOnTheQueueRef.current = waitingOnTheQueue;
 
     const {
