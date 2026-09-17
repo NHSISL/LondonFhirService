@@ -33,6 +33,7 @@ namespace LondonFhirService.Manage.Brokers.Https
             IDictionary<string, string> formValues,
             CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             using var formUrlEncodedContent = new FormUrlEncodedContent(formValues);
 
             using HttpResponseMessage httpResponseMessage = await this.httpClient
@@ -52,6 +53,8 @@ namespace LondonFhirService.Manage.Brokers.Https
             string bearerToken,
             CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url)
             {
                 Content = new StringContent(
@@ -63,8 +66,12 @@ namespace LondonFhirService.Manage.Brokers.Https
             // Set per request rather than on DefaultRequestHeaders. The typed client's message
             // handler is pooled and shared, so a token written onto the defaults would outlive the
             // request that supplied it and travel on the next caller's call.
+            //
+            // "Bearer" with a capital B, as ConsumerAccessBroker sends it. RFC 7235 makes the
+            // scheme case-insensitive, so this is about matching the rest of the codebase and not
+            // relying on a third-party provider having read that part of the spec.
             httpRequestMessage.Headers.Authorization =
-                new AuthenticationHeaderValue("bearer", bearerToken);
+                new AuthenticationHeaderValue("Bearer", bearerToken);
 
             using HttpResponseMessage httpResponseMessage = await this.httpClient
                 .SendAsync(httpRequestMessage, cancellationToken)

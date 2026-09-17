@@ -71,6 +71,8 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             StructuredRecordCredentials structuredRecordCredentials,
             CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var formValues = new Dictionary<string, string>
             {
                 ["client_id"] = structuredRecordCredentials.ClientId,
