@@ -4,13 +4,14 @@
 # assembles them. Strings with special characters are double-quoted JSON.
 #
 # Column map (components' col in the project files):
-#   0 Manage.Client entry points   1 Manage.Client view services
-#   2 Manage.Client brokers        3 host exposers (controllers/worker)
-#   4 Core coordinations           5 Core orchestrations
-#   6 Core processings             7 Core foundations
-#   8 Core brokers                 9 Core clients
-#   10 library exposers            11 library internals
-#   12 far externals
+#   0 Manage.Client pages          1 Manage.Client view services
+#   2 Manage.Client foundations    3 Manage.Client brokers
+#   4 host exposers (controllers/workers)
+#   5 Core coordinations           6 Core orchestrations
+#   7 Core processings             8 Core foundations
+#   9 Core brokers                 10 Core clients
+#   11 library exposers            12 library internals
+#   13 far externals
 # `projects` order controls layout bands; `roots` order controls the
 # per-consumer view's tree order. A component flagged shared in its
 # project file must appear in roots or its inbound edges are dropped.
@@ -81,9 +82,18 @@ projects:
 roots:
   - MC.Bootstrap
   - MC.FeatureSwitch
+  - MC.AuditsPage
+  - MC.AuditDetailPage
+  - MC.MetricsPage
+  - MC.MetricDetailPage
+  - MC.ComparisonsPage
+  - MC.ComparisonDetailPage
+  - MC.ProvidersPage
+  - MC.ProviderAddPage
+  - MC.ProviderDetailPage
   - API.Patient
   - API.ComparisonWorker
-  - API.MetricPurgeWorker
+  - API.AuditAndMetricPurgeWorker
   - API.DispatchWorker
   - API.Dispatcher
   - API.MetricTelemetryPublisher

@@ -35,9 +35,11 @@ view you were on, and switching carries your current selection across.
 
 ## Reading the graph
 
-- **Left → right layering**: SPA → host exposers → coordinations →
-  orchestrations → processings → foundations → brokers → clients → client
-  libraries → external services.
+- **Left → right layering**: SPA pages → SPA view services → SPA foundation
+  services → SPA API brokers → host exposers → coordinations → orchestrations
+  → processings → foundations → brokers → clients → client libraries →
+  external services. The SPA mirrors the server's layering because it is
+  written to the same standard.
 - **Dashed boxes** are project / package boundaries. External packages show
   only the public surface that this solution calls.
 - **Edge colours**:
@@ -65,9 +67,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 92 declared components and 431 declared edges draw as
-**89 components · 406 flows** in the single-copy view and **258 nodes ·
-1016 flows** per consumer (92 · 431 and 294 · 1069 with utility brokers on).
+At the last scan, 115 declared components and 518 declared edges draw as
+**112 components · 493 flows** in the single-copy view and **475 nodes ·
+1496 flows** per consumer (115 · 518 and 516 · 1554 with utility brokers on).
 
 `.github/workflows/pages.yml` publishes this folder to GitHub Pages on every
 push to `main` that touches it — `index.html` is the site root. Nothing is
@@ -75,7 +77,7 @@ compiled; `index.html`, `graph.yml` and `projects/` are copied as-is. Pages
 has to be enabled once in the repository's Settings → Pages (source: GitHub
 Actions).
 
-## Current truths captured in the data (scanned 2026-08-25)
+## Current truths captured in the data (scanned 2026-09-17)
 
 - **`LondonFhirService.Core` has no event bus.** Every flow is a direct call.
   The comparison half of the solution is driven by polling, not messaging:
@@ -105,6 +107,24 @@ Actions).
   work being recorded, but only a host with a lifecycle can bound the queue and
   drain it on shutdown. Without one the library falls back to
   `ThreadPoolDispatcher` — one work item per write, unbounded, draining nothing.
+- **Audit and metric recording are switched independently, and so is each
+  retention sweep.** `AuditAndMetricsConfigurations` splits into
+  `IsAuditEnabled` / `IsAuditPurgingAllowed` / `AuditRetentionPeriodInDays`
+  and the matching metric trio, sharing only `PurgeBatchSize` and
+  `ActivitySourceName`. They are the same library but not the same
+  obligation: metrics are volume telemetry and the first thing an environment
+  turns off, while audit entries are a record of who did what. One switch
+  over both meant silencing the noisy one also silenced the required one.
+  Recording and purging stay independent in both directions — a table that
+  has stopped being written to still has rows ageing past retention.
+- **Audits now age out too, through the same worker as metrics.**
+  `AuditService.PurgeAuditsOlderThanRetentionPeriodAsync` runs the same
+  bounded-batch `ExecuteDeleteAsync` loop the metric purge does, down through
+  `AuditAndMetricStorageBroker.DeleteAuditsOlderThanAsync`. The worker that
+  drives both was renamed from `MetricPurgeWorker` and runs the two sweeps in
+  separate try blocks with a scope each, so a fault in one table's sweep
+  cannot stop the other from ageing out. Its settings section was renamed to
+  `AuditAndMetricPurgeWorkerSettings` to match.
 - **One span, two sinks.** The library's `MetricService` persists each span
   through the storage port *and* publishes it to an `ActivitySource`.
   `MetricTelemetryPublisher` on the API host is what subscribes; before it
@@ -146,8 +166,8 @@ Actions).
 - **The two hosts are not equivalent, and every admin CRUD controller now
   lives on Manage.** `LondonFhirService.Api` keeps the headline patient
   endpoint, the two config endpoints and all the background work
-  (`ComparisonWorker`, `MetricPurgeWorker`, `AuditAndMetricsDispatchWorker`,
-  `MetricTelemetryPublisher`). `LondonFhirService.Manage` carries
+  (`ComparisonWorker`, `AuditAndMetricPurgeWorker`,
+  `AuditAndMetricsDispatchWorker`, `MetricTelemetryPublisher`). `LondonFhirService.Manage` carries
   `Audits`, `Metrics`, `Providers`, `FhirRecords` and
   `FhirRecordDifferences` — audit rows carry whole patient payloads, and Manage
   is reachable only from the business IP range.
@@ -166,9 +186,27 @@ Actions).
   `System.Security.Cryptography` and `AccessConfigurations.UseHashedNhsNumber` /
   `HashPepper` were all removed. `CheckAccessPermissions` is the only setting
   left on `AccessConfigurations`.
-- **`LondonFhirService.Manage.Client` is a thin SPA.** It reaches only two
-  Manage endpoints: `GET /api/FrontendConfigurations` (anonymous, called
-  before MSAL exists) and `GET /api/Features`.
+- **`LondonFhirService.Manage.Client` is no longer a thin SPA.** It was two
+  endpoints at the previous scan; it now carries a full page → view service →
+  foundation service → API broker stack over audits, metrics, providers and
+  comparisons — 9 routed admin pages, 4 view services, 6 foundation services
+  and 8 brokers. Every one of them goes through `apiBroker`, which is the
+  single place an MSAL token is attached, except `frontendConfiguration`,
+  which runs before MSAL exists and calls axios directly.
+- **The SPA reads far more than it writes, and that mirrors the host.**
+  Providers are the only entity it can create, update or delete, because they
+  are operator-managed configuration; audit and metric writes are
+  `[InvisibleApi]` on the host so the SPA has no write path to model, and
+  difference rows are written by the comparison worker and only annotated by
+  the screens. `MC.ProviderService` is the SPA's one full CRUD service.
+- **Marking a diff acceptable is a read-modify-write, not an endpoint.**
+  `comparisonViewService.setDiffAcceptanceAsync` re-reads the difference row
+  and PUTs it back, as does `updateComparisonAsync`, so a save cannot clobber
+  a field the page never showed. There is no accept-diff route on the host.
+- **The metrics screens never fetch a metric by id.** All three metric broker
+  verbs are GETs against the OData list endpoint with different filters: a
+  span is only meaningful alongside the other spans of its request, so even
+  the detail page queries by correlation id rather than by metric id.
 
 ## Modelling decisions
 

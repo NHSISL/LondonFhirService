@@ -8,7 +8,7 @@ components:
   - id: API.Patient
     name: PatientController (STU3)
     layer: exposer
-    col: 3
+    col: 4
     description: "The solution's headline endpoint. Accepts a FHIR Parameters body (custom FhirJson input/output formatters) and returns the reconciled STU3 bundle. Wrapped in a 130-second request-timeout policy."
     methods:
       - POST /api/STU3/Patient/$getstructuredrecord
@@ -19,7 +19,7 @@ components:
   - id: API.ComparisonWorker
     name: ComparisonWorker
     layer: exposer
-    col: 3
+    col: 4
     description: "BackgroundService registered by AddBackgroundWorkers. Creates a DI scope per pass, drains the compare queue, then sleeps ComparisonWorkerSettings.SleepIntervalSeconds. This is the only entry point into the comparison half of the solution."
     methods:
       - ExecuteAsync
@@ -27,21 +27,24 @@ components:
       - from: ExecuteAsync
         to: CO.Comparison
         method: ProcessFhirRecordsAsync
-  - id: API.MetricPurgeWorker
-    name: MetricPurgeWorker
+  - id: API.AuditAndMetricPurgeWorker
+    name: AuditAndMetricPurgeWorker
     layer: exposer
-    col: 3
-    description: "Runs the metric retention sweep. The purge existed since metrics were added but nothing ever called it, so the table only ever grew — and it takes a row per span rather than per request. Whether anything is deleted is still governed by IsPurgingAllowed and RetentionPeriodInDays; this worker only decides when to ask. A scope per sweep, because the broker beneath the service resolves a scoped client. It goes through the metric foundation service rather than the broker directly, so a failed sweep is reported in this application's exception types."
+    col: 4
+    description: "Runs both retention sweeps on one cadence. The purges existed since audits and metrics were added but nothing ever called them, so the tables only ever grew — and the metrics one takes a row per span rather than per request. Each sweep is governed by its own half of AuditAndMetricsConfigurations (IsAuditPurgingAllowed / AuditRetentionPeriodInDays, IsMetricsPurgingAllowed / MetricsRetentionPeriodInDays); this worker only decides when to ask. Separate try blocks and a scope each, so a fault in one table's sweep cannot stop the other from ageing out. Both go through the foundation services rather than the brokers directly, so a failed sweep is reported in this application's exception types."
     methods:
       - ExecuteAsync
     calls:
+      - from: ExecuteAsync
+        to: FS.Audit
+        method: PurgeAuditsOlderThanRetentionPeriodAsync
       - from: ExecuteAsync
         to: FS.Metric
         method: PurgeMetricsOlderThanRetentionPeriodAsync
   - id: API.Dispatcher
     name: AuditAndMetricsDispatcher
     layer: exposer
-    col: 3
+    col: 4
     description: "Where a deferred audit or metric write goes. The library defers these so recording does not add to the elapsed time of the work being recorded, but how that deferral happens is the host's business: a host with a lifecycle can queue the work and drain it under control, which a library with no lifecycle of its own cannot. Rejection is a return value rather than an exception, because the caller is recording telemetry and a full queue must not take down the requests it is trying to measure. Registered as a singleton and shared with the drain worker. Without a host-supplied dispatcher the library falls back to ThreadPoolDispatcher — one work item per write, unbounded, with nothing draining it on shutdown."
     methods:
       - TryDispatch
@@ -49,7 +52,7 @@ components:
   - id: API.DispatchWorker
     name: AuditAndMetricsDispatchWorker
     layer: exposer
-    col: 3
+    col: 4
     description: "Drains the bounded dispatcher queue. StopAsync completes the queue and waits for in-flight writes, so a shutdown does not silently drop audits that were already accepted."
     methods:
       - ExecuteAsync
@@ -61,7 +64,7 @@ components:
   - id: API.MetricTelemetryPublisher
     name: MetricTelemetryPublisher
     layer: exposer
-    col: 3
+    col: 4
     description: "Subscribes to the metric library's ActivitySource by name and forwards completed spans to Application Insights. Nothing was subscribed before this existed, so every span the library published was dropped. The source name comes from the same bound AuditAndMetricsConfigurations instance the client uses, so the two cannot drift apart."
     methods:
       - ExecuteAsync
@@ -73,14 +76,14 @@ components:
   - id: API.Features
     name: FeaturesController
     layer: exposer
-    col: 3
+    col: 4
     description: "Reads the Features array straight from IConfiguration. No Core dependency."
     methods:
       - GET /api/Features
   - id: API.FrontendConfigurations
     name: FrontendConfigurationsController
     layer: exposer
-    col: 3
+    col: 4
     description: "Anonymous endpoint returning the FrontendConfiguration section (clientId / authority / scopes) so a SPA can build its MSAL config before sign-in. No Core dependency."
     methods:
       - GET /api/FrontendConfigurations

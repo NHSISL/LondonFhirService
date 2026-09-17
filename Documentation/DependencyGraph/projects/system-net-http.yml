@@ -8,7 +8,7 @@ components:
   - id: EXT.HttpClient
     name: HttpClient
     layer: external
-    col: 12
+    col: 13
     shared: true
     deriveMethods: true
     description: "Typed HttpClient registered via AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>()."
