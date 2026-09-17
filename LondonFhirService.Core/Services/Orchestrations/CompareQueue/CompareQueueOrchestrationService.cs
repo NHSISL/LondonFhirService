@@ -208,12 +208,24 @@ namespace LondonFhirService.Core.Services.Orchestrations.CompareQueue
                 DateTimeOffset currentDateTime =
                     await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
 
-                return await this.fhirRecordService.TryClaimFhirRecordAsync(
+                bool retained = await this.fhirRecordService.TryClaimFhirRecordAsync(
                     compareQueueItem.SecondaryFhirRecord.Id,
                     expectedStatus: StatusType.Processing,
                     claimedStatus: StatusType.Processing,
                     claimedDate: currentDateTime,
                     notUpdatedAfter: compareQueueItem.ClaimedAt);
+
+                // The token has to move with the lease. This call rewrote UpdatedDate, so the
+                // value the item is carrying is now older than the row and a SECOND re-assertion
+                // would match nothing and report the claim lost when it is still held. Only
+                // advanced on success: a failed re-assertion did not write, so the row still
+                // carries whatever the worker that took it over put there.
+                if (retained)
+                {
+                    compareQueueItem.ClaimedAt = currentDateTime;
+                }
+
+                return retained;
             });
 
         public ValueTask CompletePrimaryFhirRecordAsync(Guid fhirRecordId) =>

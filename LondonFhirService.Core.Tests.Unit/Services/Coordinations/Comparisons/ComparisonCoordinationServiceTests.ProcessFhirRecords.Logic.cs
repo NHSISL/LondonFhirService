@@ -16,6 +16,65 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Comparisons
     public partial class ComparisonCoordinationServiceTests
     {
         [Fact]
+        public async Task ShouldNotMarkFailedWhenTheClaimWasLostBeforeTheFailureAsync()
+        {
+            // given
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            FhirRecord inputPrimaryFhirRecord = CreateRandomFhirRecord();
+            inputPrimaryFhirRecord.IsPrimarySource = true;
+
+            FhirRecord inputSecondaryFhirRecord = CreateRandomFhirRecord();
+            inputSecondaryFhirRecord.IsPrimarySource = false;
+            inputSecondaryFhirRecord.CorrelationId = inputPrimaryFhirRecord.CorrelationId;
+
+            var inputCompareQueueItem = new CompareQueueItem
+            {
+                PrimaryFhirRecord = inputPrimaryFhirRecord,
+                SecondaryFhirRecord = inputSecondaryFhirRecord,
+                ClaimedAt = randomDateTimeOffset
+            };
+
+            this.compareQueueOrchestrationServiceMock.SetupSequence(service =>
+                service.GetUnprocessedRecordAsync())
+                    .ReturnsAsync(inputCompareQueueItem)
+                    .ReturnsAsync((CompareQueueItem)null);
+
+            // The comparison itself blows up, sending the drain loop down the catch arm.
+            this.comparisonOrchestrationServiceMock.Setup(service =>
+                service.CompareAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()))
+                        .ThrowsAsync(new Exception(GetRandomString()));
+
+            this.compareQueueOrchestrationServiceMock.Setup(service =>
+                service.TryRetainClaimAsync(It.IsAny<CompareQueueItem>()))
+                    .ReturnsAsync(false);
+
+            // when
+            await this.comparisonCoordinationService.ProcessFhirRecordsAsync();
+
+            // then
+            // Failed is terminal and nothing reclaims it, so an overtaken worker must not write
+            // it - that would bury a record the worker holding the row may yet complete, and
+            // GetUnprocessedRecordAsync would never offer it again.
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.ChangeFhirRecordStatusAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<StatusType>()),
+                        Times.Never);
+
+            this.compareQueueOrchestrationServiceMock.Verify(service =>
+                service.CompletePrimaryFhirRecordAsync(It.IsAny<Guid>()),
+                    Times.Never);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogWarningAsync(It.Is<string>(message =>
+                    message.Contains("Not marking"))),
+                        Times.Once);
+        }
+
+        [Fact]
         public async Task ShouldAbandonTheComparisonWhenTheClaimWasLostAsync()
         {
             // given

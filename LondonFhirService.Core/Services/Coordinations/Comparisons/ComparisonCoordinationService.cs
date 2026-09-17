@@ -133,6 +133,27 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                                 $"SecondaryFhirRecordId: {compareQueueItem.SecondaryFhirRecord?.Id}.",
                                 ex));
 
+                        // Fenced exactly like the success path, and for a worse reason. Failed is
+                        // terminal and nothing reclaims it - GetUnprocessedRecordAsync only takes
+                        // Pending or stale Processing rows - so a worker whose lease expired
+                        // mid-flight could bury a record another worker was comparing perfectly
+                        // well, and that record would never be compared again. Writing nothing is
+                        // safe: the worker that holds the row reports its own outcome.
+                        bool stillClaimedOnFailure = await this.compareQueueOrchestrationService
+                            .TryRetainClaimAsync(compareQueueItem);
+
+                        if (stillClaimedOnFailure is false)
+                        {
+                            await this.loggingBroker.LogWarningAsync(
+                                $"Not marking CorrelationId: " +
+                                $"{compareQueueItem.SecondaryFhirRecord.CorrelationId} as failed; " +
+                                "its lease expired mid-flight and another worker has taken the " +
+                                "record over. Marking it failed here would be terminal and would " +
+                                "bury a comparison that worker may yet complete.");
+
+                            continue;
+                        }
+
                         await this.compareQueueOrchestrationService
                             .ChangeFhirRecordStatusAsync(
                                 compareQueueItem.SecondaryFhirRecord.Id, StatusType.Failed);
