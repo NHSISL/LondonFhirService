@@ -90,7 +90,23 @@ namespace LondonFhirService.Manage.Brokers.Https
         /// The body travels on a plain HttpRequestException rather than a broker-specific type, so
         /// the exception crossing this boundary stays the native one the service already maps, and
         /// the status code stays machine readable on the exception rather than only in the text.
+        ///
+        /// It goes in Data and deliberately NOT in the message. A provider refusing a patient
+        /// lookup can say why in an OperationOutcome that names the patient, and an exception
+        /// message is the part that reaches a log sink or Application Insights by default. Keeping
+        /// the message to the status line means the identifiable part travels only where something
+        /// reads it on purpose.
         /// </summary>
+        internal const string ResponseBodyKey = "ResponseBody";
+
+        /// <summary>
+        /// A refusal explains itself in a few hundred characters. The cap is here because the
+        /// thing on the other end is not always a FHIR server answering politely - a proxy or
+        /// gateway in between can return a whole HTML error page, and that should not be carried
+        /// around on an exception.
+        /// </summary>
+        private const int MaximumResponseBodyLength = 4000;
+
         private static async ValueTask<string> ReadContentOrThrowAsync(
             HttpResponseMessage httpResponseMessage,
             CancellationToken cancellationToken)
@@ -104,14 +120,28 @@ namespace LondonFhirService.Manage.Brokers.Https
                 return responseBody;
             }
 
-            throw new HttpRequestException(
+            var httpRequestException = new HttpRequestException(
                 message:
                     $"Response status code does not indicate success: " +
                         $"{(int)httpResponseMessage.StatusCode} " +
-                        $"({httpResponseMessage.ReasonPhrase}). Response body: {responseBody}",
+                        $"({httpResponseMessage.ReasonPhrase}).",
 
                 inner: null,
                 statusCode: httpResponseMessage.StatusCode);
+
+            httpRequestException.Data[ResponseBodyKey] = Truncate(responseBody);
+
+            throw httpRequestException;
+        }
+
+        private static string Truncate(string responseBody)
+        {
+            if (responseBody is null || responseBody.Length <= MaximumResponseBodyLength)
+            {
+                return responseBody;
+            }
+
+            return responseBody.Substring(0, MaximumResponseBodyLength) + "... [truncated]";
         }
     }
 }

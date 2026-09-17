@@ -47,37 +47,37 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         public ValueTask<string> GetStructuredRecordAsync(
             StructuredRecordRequest structuredRecordRequest,
             CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            StructuredRecordCredentials structuredRecordCredentials =
-                ResolveCredentials(structuredRecordRequest, this.patientConfiguration);
+                StructuredRecordCredentials structuredRecordCredentials =
+                    ResolveCredentials(structuredRecordRequest, this.patientConfiguration);
 
-            ValidateOnGetStructuredRecord(
-                structuredRecordRequest,
-                structuredRecordCredentials,
-                this.patientConfiguration);
+                ValidateOnGetStructuredRecord(
+                    structuredRecordRequest,
+                    structuredRecordCredentials,
+                    this.patientConfiguration);
 
-            string accessToken = await GetAccessTokenAsync(
-                structuredRecordCredentials,
-                cancellationToken);
+                string accessToken = await GetAccessTokenAsync(
+                    structuredRecordCredentials,
+                    cancellationToken);
 
-            // Trimmed on the way into the body, not just for the validation checks. Validation
-            // parses the date from a trimmed copy, so " 2002-10-01 " was accepted and then sent
-            // with its spaces intact for the provider to reject.
-            string requestBody = CreateRequestBody(
-                nhsNumber: structuredRecordRequest.NhsNumber?.Trim(),
-                dateOfBirth: structuredRecordRequest.DateOfBirth?.Trim(),
-                demographicsOnly: structuredRecordRequest.DemographicsOnly);
+                // Trimmed on the way into the body, not just for the validation checks. Validation
+                // parses the date from a trimmed copy, so " 2002-10-01 " was accepted and then sent
+                // with its spaces intact for the provider to reject.
+                string requestBody = CreateRequestBody(
+                    nhsNumber: structuredRecordRequest.NhsNumber?.Trim(),
+                    dateOfBirth: structuredRecordRequest.DateOfBirth?.Trim(),
+                    demographicsOnly: structuredRecordRequest.DemographicsOnly);
 
-            return await this.httpBroker.PostJsonContentAsync(
-                this.patientConfiguration.GetStructuredRecordUrl,
-                requestBody,
-                FhirJsonMediaType,
-                accessToken,
-                cancellationToken);
-        });
+                return await this.httpBroker.PostJsonContentAsync(
+                    this.patientConfiguration.GetStructuredRecordUrl,
+                    requestBody,
+                    FhirJsonMediaType,
+                    accessToken,
+                    cancellationToken);
+            });
 
         private async ValueTask<string> GetAccessTokenAsync(
             StructuredRecordCredentials structuredRecordCredentials,
