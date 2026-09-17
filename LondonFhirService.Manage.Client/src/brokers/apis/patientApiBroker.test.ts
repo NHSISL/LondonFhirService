@@ -165,3 +165,50 @@ it("should re-render a parsed payload as formatted json", async () => {
 
     expect(response.payloadText).toBe("{\n  \"resourceType\": \"Bundle\",\n  \"total\": 1\n}");
 });
+
+// The field keyed bag survives the broker boundary now. It used to be flattened into the message
+// and the structure lost, which is why a rejected credential could only ever be shown as prose.
+it("should keep the API's field errors as structured data", async () => {
+    const apiBroker = {
+        PostAsync: () => Promise.reject({
+            request: {},
+            response: {
+                status: 400,
+                data: {
+                    errors: {
+                        // PascalCase as the host's serialiser may send it - normalised on the way
+                        // in so the page can key by its own field names either way.
+                        ClientId: ["Text is invalid"],
+                        clientSecret: ["Text is invalid"]
+                    }
+                }
+            }
+        })
+    } as unknown as ApiBroker;
+
+    const broker = new PatientApiBroker(apiBroker);
+
+    await expect(broker.postStructuredRecordAsync(structuredRecordRequest))
+        .rejects.toMatchObject({
+            fieldErrors: {
+                clientId: ["Text is invalid"],
+                clientSecret: ["Text is invalid"]
+            }
+        });
+});
+
+// Nothing to key by is an empty bag rather than a missing property, so callers can read it
+// without guarding first.
+it("should give an empty field error bag when the failure is not a validation one", async () => {
+    const apiBroker = {
+        PostAsync: () => Promise.reject({
+            request: {},
+            response: { status: 500, data: { title: "Something failed" } }
+        })
+    } as unknown as ApiBroker;
+
+    const broker = new PatientApiBroker(apiBroker);
+
+    await expect(broker.postStructuredRecordAsync(structuredRecordRequest))
+        .rejects.toMatchObject({ fieldErrors: {} });
+});

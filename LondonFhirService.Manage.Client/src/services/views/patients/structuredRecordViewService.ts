@@ -1,4 +1,4 @@
-import { PatientApiBrokerException } from "../../../models/foundations/patients/exceptions/PatientApiBrokerException";
+﻿import { PatientApiBrokerException } from "../../../models/foundations/patients/exceptions/PatientApiBrokerException";
 import { buildComparisonsUrl, buildMetricsUrl } from "../../../helpers/correlationIds";
 import { PatientService } from "../../foundations/patients/patientService";
 import { PatientValidationException } from "../../../models/foundations/patients/exceptions/PatientValidationException";
@@ -16,6 +16,18 @@ import type { StructuredRecordView } from "../../../models/views/patients/Struct
 // is what every consumer of this endpoint uses, so the field is pre-filled rather than left empty
 // for an operator to guess at.
 const defaultGrantType = "client_credentials";
+
+// The fields the form actually shows. The server also validates AuthUrl and
+// GetStructuredRecordUrl, which are configuration rather than anything an operator typed, so a
+// message about them has no input to sit under and belongs in the page's banner instead.
+const formBackedFields: ReadonlySet<string> = new Set([
+    "clientId",
+    "clientSecret",
+    "scope",
+    "grantType",
+    "nhsNumber",
+    "dateOfBirth"
+]);
 
 export class StructuredRecordViewService implements IStructuredRecordViewService {
     private readonly patientService: IPatientService;
@@ -54,21 +66,81 @@ export class StructuredRecordViewService implements IStructuredRecordViewService
                 throw exception;
             }
 
+            const apiFieldErrors = this.findApiBrokerFieldErrors(exception);
+            const fieldErrors = this.selectFormBacked(apiFieldErrors);
+            const unfieldedErrors = this.selectNotFormBacked(apiFieldErrors);
+
             throw new StructuredRecordViewServiceException(
-                this.describeFailure(exception),
-                exception);
+                this.describeFailure(exception, fieldErrors, unfieldedErrors),
+                exception,
+                fieldErrors);
         }
     }
 
     // The broker records what the API actually said. Surfacing it here is the difference between
     // an operator learning that the NHS number was rejected and being told to contact support
     // about a page whose whole job is telling them what happened.
-    private describeFailure(exception: unknown): string {
+    private describeFailure(
+        exception: unknown,
+        fieldErrors: Record<string, string[]>,
+        unfieldedErrors: Record<string, string[]>)
+        : string {
+        const unfieldedCount = Object.keys(unfieldedErrors).length;
+
+        // Everything the API rejected is going under an input, so repeating it in the banner
+        // would say the same thing twice - once where the operator can act on it and once where
+        // they cannot.
+        if (unfieldedCount === 0 && Object.keys(fieldErrors).length > 0) {
+            return "Some of the details below need correcting.";
+        }
+
+        // A setting this environment is missing, not anything the operator typed. Named here
+        // because there is no field to name it on, and silence would leave them retyping
+        // credentials against a host that could never have worked.
+        if (unfieldedCount > 0) {
+            const settings = Object.entries(unfieldedErrors)
+                .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+                .join("; ");
+
+            return "We could not retrieve the structured record. This environment is not fully "
+                + `configured for it - ${settings}.`;
+        }
+
         const apiDetail = this.findApiBrokerMessage(exception);
 
         return apiDetail === null
             ? "We could not retrieve the structured record, please try again or contact support."
             : `We could not retrieve the structured record. ${apiDetail}`;
+    }
+
+    private selectFormBacked(
+        fieldErrors: Record<string, string[]>): Record<string, string[]> {
+        return Object.fromEntries(
+            Object.entries(fieldErrors).filter(([field]) => formBackedFields.has(field)));
+    }
+
+    private selectNotFormBacked(
+        fieldErrors: Record<string, string[]>): Record<string, string[]> {
+        return Object.fromEntries(
+            Object.entries(fieldErrors).filter(([field]) => formBackedFields.has(field) === false));
+    }
+
+    private findApiBrokerFieldErrors(exception: unknown): Record<string, string[]> {
+        let current: unknown = exception;
+
+        for (let depth = 0; depth < 5; depth++) {
+            if (current === null || current === undefined) {
+                return {};
+            }
+
+            if (current instanceof PatientApiBrokerException) {
+                return current.fieldErrors;
+            }
+
+            current = (current as { innerException?: unknown }).innerException;
+        }
+
+        return {};
     }
 
     private findApiBrokerMessage(exception: unknown): string | null {
