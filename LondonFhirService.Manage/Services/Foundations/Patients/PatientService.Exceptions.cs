@@ -121,15 +121,6 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         }
 
         /// <summary>
-        /// A status the upstream chose, rather than one the transport produced. Null means the
-        /// request never got an answer - a DNS failure, a refused connection - which is not the
-        /// caller's to fix and stays a dependency failure.
-        ///
-        /// Every 4xx is treated the same way. Translating them individually would mean deciding
-        /// that the provider's 404 is this endpoint's 404, and it is not: the patient was not
-        /// found, the endpoint was.
-        /// </summary>
-        /// <summary>
         /// Null unless the broker had a body to keep. Anything else reaching these catches - a
         /// refused connection, a DNS failure - is HttpRequestException without a response at all,
         /// and there is nothing to show the operator beyond the message.
@@ -137,10 +128,27 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         private static string ReadResponseBody(HttpRequestException httpRequestException) =>
             (httpRequestException as HttpResponseException)?.ResponseBody;
 
+        /// <summary>
+        /// A status the upstream chose about the request itself, rather than one the transport
+        /// produced. Null means the request never got an answer - a DNS failure, a refused
+        /// connection - which is not the caller's to fix and stays a dependency failure.
+        ///
+        /// The 4xx range is otherwise treated as one thing. Translating each status individually
+        /// would mean deciding that the provider's 404 is this endpoint's 404, and it is not: the
+        /// patient was not found, the endpoint was.
+        ///
+        /// The two exceptions are the two 4xx statuses that say nothing about what was sent.
+        /// Reporting a 429 as please fix the errors and try again tells an operator whose
+        /// credentials are perfectly good to retype them and submit again, which is the one
+        /// response that makes a throttle worse; and a gateway's 408 belongs on the timeout path
+        /// that already exists rather than being blamed on what they typed.
+        /// </summary>
         private static bool IsUpstreamRefusal(HttpStatusCode? statusCode) =>
             statusCode is not null
                 && (int)statusCode >= 400
-                && (int)statusCode <= 499;
+                && (int)statusCode <= 499
+                && statusCode is not HttpStatusCode.RequestTimeout
+                && statusCode is not HttpStatusCode.TooManyRequests;
 
         private async ValueTask<PatientServiceValidationException> CreateAndLogValidationException(
             Xeption exception)

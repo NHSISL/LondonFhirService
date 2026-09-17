@@ -118,16 +118,25 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
         /// is to ship a setting as override_this_in_your_appsettings.Development.json_file_or_...,
         /// which is not blank and is not a url either - and HttpClient answers a relative or
         /// malformed uri with an InvalidOperationException, which would land here as a 500 about
-        /// nothing in particular. Checking it is absolute keeps an unconfigured host on the 400
-        /// that names the setting.
+        /// nothing in particular. Checking it keeps an unconfigured host on the 400 that names the
+        /// setting.
+        ///
+        /// Absolute is necessary but not sufficient, and the gap is not academic: Uri.TryCreate
+        /// parses localhost:7284/token as an absolute uri whose scheme is localhost, so the single
+        /// likeliest mistake - dropping the https prefix from a setting whose neighbour has one -
+        /// passed this check and then failed inside HttpClient with a NotSupportedException that
+        /// reached the operator as a 500 mentioning nothing. TODO:set-me and mailto: addresses
+        /// parsed too. Naming the two schemes this broker can actually dial is what makes the rule
+        /// do what its message says.
         /// </summary>
         private static dynamic IsInvalidAbsoluteUrl(string text) => new
         {
             Condition =
                 string.IsNullOrWhiteSpace(text)
-                || Uri.TryCreate(text.Trim(), UriKind.Absolute, out _) is false,
+                || Uri.TryCreate(text.Trim(), UriKind.Absolute, out Uri uri) is false
+                || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps),
 
-            Message = "Text must be a valid absolute url"
+            Message = "Text must be a valid absolute http or https url"
         };
 
         /// <summary>

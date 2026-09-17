@@ -91,12 +91,13 @@ export class PatientApiBroker implements IPatientApiBroker {
             .join("; ");
     }
 
-    // Format conversion only. The endpoint returns the provider's payload as a bare string, and
-    // what arrives here depends on the content type MVC picked: axios sends an Accept header, so
-    // the JSON formatter wins and the body is a JSON-encoded string, which axios has already
-    // parsed back into a string or - when the provider answered JSON - into an object. A client
-    // that sends no Accept header gets text/plain instead. Both shapes are turned back into text
-    // here, because the page shows what came back rather than reading fields out of it.
+    // Format conversion only. The endpoint answers text/plain carrying the provider's payload
+    // verbatim - axios's default Accept header ends in */*, and MvcOptions
+    // .RespectBrowserAcceptHeader is false, so MVC disregards that header and writes the string
+    // through StringOutputFormatter. axios then parses a body that happens to be valid JSON before
+    // this ever sees it, so the response arrives as an object when the provider answered JSON and
+    // as a string when it did not. Both are turned back into text here, because the page shows
+    // what came back rather than reading fields out of it.
     private toPayloadText(rawPayload: unknown): string {
         if (typeof rawPayload === "string") {
             return rawPayload;

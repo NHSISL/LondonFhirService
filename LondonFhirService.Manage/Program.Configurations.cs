@@ -259,7 +259,22 @@ public partial class Program
 
         // A typed client, so the outbound handler is pooled and rotated by the factory rather
         // than a socket being held open - or a fresh one burned - per structured record request.
-        services.AddHttpClient<IHttpBroker, HttpBroker>();
+        services.AddHttpClient<IHttpBroker, HttpBroker>(httpClient =>
+        {
+            // Longer than the endpoint this is pointed at is allowed to take. The Api host's
+            // structured record endpoint carries a 130 second request timeout and fans out to
+            // providers configured at 120, so HttpClient's 100 second default aborted calls the
+            // Api would have completed - reported to the operator as a request that timed out,
+            // about a lookup that was not in trouble. Slow providers are the normal case on the
+            // screen this serves, so the client has to outlast the thing it waits for.
+            httpClient.Timeout = TimeSpan.FromSeconds(150);
+
+            // What an upstream this host does not control is allowed to make it hold. Without it a
+            // gateway answering with a multi megabyte html error page dictates the allocation, and
+            // the body is read in full before the status is even looked at. Well past anything a
+            // structured record bundle needs, and far short of a denial of service.
+            httpClient.MaxResponseContentBufferSize = 64 * 1024 * 1024;
+        });
     }
 
     private static void AddFoundationServices(IServiceCollection services)

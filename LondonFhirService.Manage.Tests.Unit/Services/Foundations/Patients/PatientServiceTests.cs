@@ -153,10 +153,17 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
         /// <summary>
         /// The upstream failing rather than judging. These stay dependency failures: nothing the
         /// operator types changes them.
+        ///
+        /// The two 4xx entries are here on purpose. They are the only statuses in that range that
+        /// say nothing about what was sent: a 429 is the upstream asking for less traffic, and
+        /// telling the operator to fix their input invites the retry that deepens the throttle;
+        /// a gateway's 408 is the call running out of time, not the request being wrong.
         /// </summary>
         public static TheoryData<HttpStatusCode> UpstreamFailures() =>
             new TheoryData<HttpStatusCode>
             {
+                HttpStatusCode.RequestTimeout,
+                HttpStatusCode.TooManyRequests,
                 HttpStatusCode.InternalServerError,
                 HttpStatusCode.BadGateway,
                 HttpStatusCode.ServiceUnavailable,
@@ -213,6 +220,21 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                 string.Empty,
                 " ",
                 "   "
+            };
+
+        /// <summary>
+        /// Every one of these satisfies Uri.TryCreate with UriKind.Absolute, which is why checking
+        /// only that was not enough. The first is the mistake this rule is most likely to meet -
+        /// the https prefix left off a setting - and it parses as a uri whose scheme is localhost.
+        /// </summary>
+        public static TheoryData<string> UndialableAbsoluteUrls() =>
+            new TheoryData<string>
+            {
+                "localhost:7284/token",
+                "TODO:set-me",
+                "mailto:someone@example.nhs.uk",
+                "file:///c:/temp/token.json",
+                "ftp://example.nhs.uk/token"
             };
 
         public static TheoryData<string> InvalidDatesOfBirth() =>

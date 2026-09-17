@@ -37,6 +37,8 @@
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@playwright/test": "^1.62.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/lodash": "^4.17.12",
     "@types/node": "^22.5.0",
     "@types/react": "^18.3.3",

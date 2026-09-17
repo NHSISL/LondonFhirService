@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StructuredRecordViewService } from "../../services/views/patients/structuredRecordViewService";
 import { structuredRecordFormValidations } from "../../models/views/patients/StructuredRecordFormValidations";
 import { useValidation } from "../useValidation";
@@ -35,7 +35,21 @@ export function useStructuredRecordPage(): StructuredRecordPageState {
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
 
-    const { errors, enableValidationMessages, validate } =
+    // The call in flight, so leaving the page or starting another one can abandon it. A structured
+    // record is a whole patient bundle and a slow provider is the normal case here, so without this
+    // an operator who navigates away leaves the fetch running to completion and its result landing
+    // on an unmounted component - and two quick submissions race, with the loser able to overwrite
+    // the winner's record on screen.
+    const inFlightRequest = useRef<AbortController | null>(null);
+
+    const abandonInFlightRequest = useCallback(() => {
+        inFlightRequest.current?.abort();
+        inFlightRequest.current = null;
+    }, []);
+
+    useEffect(() => abandonInFlightRequest, [abandonInFlightRequest]);
+
+    const { errors, enableValidationMessages, disableValidationMessages, validate } =
         useValidation<StructuredRecordFormErrors, StructuredRecordFormApiErrors>(
             emptyStructuredRecordFormErrors,
             structuredRecordFormValidations,
@@ -57,6 +71,10 @@ export function useStructuredRecordPage(): StructuredRecordPageState {
             return;
         }
 
+        abandonInFlightRequest();
+        const abortController = new AbortController();
+        inFlightRequest.current = abortController;
+
         setSubmitting(true);
         setError(null);
 
@@ -64,17 +82,53 @@ export function useStructuredRecordPage(): StructuredRecordPageState {
         // screen next to an error about this one.
         setStructuredRecord(null);
 
-        structuredRecordViewService.retrieveStructuredRecordViewAsync(values)
-            .then(retrievedStructuredRecord => setStructuredRecord(retrievedStructuredRecord))
-            .catch((exception: Error) => setError(exception))
-            .finally(() => setSubmitting(false));
-    }, [enableValidationMessages, validate, values, structuredRecordViewService]);
+        structuredRecordViewService
+            .retrieveStructuredRecordViewAsync(values, abortController.signal)
+            .then(retrievedStructuredRecord => {
+                if (abortController.signal.aborted) {
+                    return;
+                }
+
+                setStructuredRecord(retrievedStructuredRecord);
+            })
+            .catch((exception: Error) => {
+                // An abandoned call is not a failure the operator needs told about - they are the
+                // one who abandoned it - and by now the component may be gone anyway.
+                if (abortController.signal.aborted) {
+                    return;
+                }
+
+                setError(exception);
+            })
+            .finally(() => {
+                if (abortController.signal.aborted) {
+                    return;
+                }
+
+                inFlightRequest.current = null;
+                setSubmitting(false);
+            });
+    }, [
+        enableValidationMessages,
+        validate,
+        values,
+        structuredRecordViewService,
+        abandonInFlightRequest
+    ]);
 
     const handleClear = useCallback(() => {
+        abandonInFlightRequest();
         setValues(structuredRecordViewService.createStructuredRecordFormValues());
         setStructuredRecord(null);
         setError(null);
-    }, [structuredRecordViewService]);
+        setSubmitting(false);
+
+        // Without this the form comes back blank with a required-field error already on it.
+        // enableValidationMessages latches on at the first submit and never turns itself off, so
+        // the effect in useValidation re-validates the freshly emptied values and paints an error
+        // under an input the operator has not touched.
+        disableValidationMessages();
+    }, [structuredRecordViewService, abandonInFlightRequest, disableValidationMessages]);
 
     return {
         values: values,

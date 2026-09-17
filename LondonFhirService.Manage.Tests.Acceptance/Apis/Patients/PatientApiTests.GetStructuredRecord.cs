@@ -55,10 +55,16 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Patients
             // then
             actualResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            // MVC's StringOutputFormatter writes a string action result verbatim as text/plain
-            // rather than quoting it as a JSON string, so the provider's payload reaches the page
-            // byte for byte. That is the contract the page's broker reads, so it is asserted here
-            // rather than assumed.
+            // The contract a browser actually gets, now that the client above sends the Accept
+            // header axios sends. text/plain, and the payload byte for byte - MVC's
+            // StringOutputFormatter writes a string action result verbatim rather than quoting it
+            // as a JSON string.
+            //
+            // It is text/plain because of the */* in that header: RespectBrowserAcceptHeader is
+            // false by default, so MVC disregards an Accept header containing a wildcard and takes
+            // the first formatter that can write a string. Turning that option on, or reordering
+            // the formatters, flips this to a quoted application/json string and breaks the page's
+            // payload box - which is exactly what this assertion is here to catch.
             actualResponse.Content.Headers.ContentType?.MediaType.Should().Be("text/plain");
 
             string actualStructuredRecord = await actualResponse.Content.ReadAsStringAsync(

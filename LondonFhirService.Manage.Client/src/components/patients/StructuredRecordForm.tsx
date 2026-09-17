@@ -27,6 +27,15 @@ export function StructuredRecordForm({
                         with. Fill one in to call as that consumer instead.
                     </p>
 
+                    {/*
+                        autoComplete is off on both credential fields, and "new-password" rather
+                        than "off" on the secret because Chrome ignores "off" for a password input.
+                        These are a consumer's credentials being tested, not the viewer's own, so a
+                        browser that saves and later autofills them puts consumer A's secret behind
+                        consumer B's client id - producing a 401 nobody can explain, on the one
+                        screen whose whole purpose is proving which credentials work.
+                    */}
+
                     <Row className="mb-3">
                         <Col md={6}>
                             <TextInputBase
@@ -34,6 +43,7 @@ export function StructuredRecordForm({
                                 name="clientId"
                                 label="Client id"
                                 description="Optional. Blank uses the configured client id."
+                                autoComplete="off"
                                 value={values.clientId}
                                 disabled={submitting}
                                 onChange={event =>
@@ -47,6 +57,7 @@ export function StructuredRecordForm({
                                 label="Client secret"
                                 type="password"
                                 description="Optional. Blank uses the configured client secret."
+                                autoComplete="new-password"
                                 value={values.clientSecret}
                                 disabled={submitting}
                                 onChange={event =>

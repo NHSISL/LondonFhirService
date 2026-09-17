@@ -272,11 +272,11 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             invalidPatientServiceException.UpsertDataList(
                 key: nameof(PatientConfiguration.AuthUrl),
-                value: "Text must be a valid absolute url");
+                value: "Text must be a valid absolute http or https url");
 
             invalidPatientServiceException.UpsertDataList(
                 key: nameof(PatientConfiguration.GetStructuredRecordUrl),
-                value: "Text must be a valid absolute url");
+                value: "Text must be a valid absolute http or https url");
 
             var expectedPatientServiceValidationException =
                 new PatientServiceValidationException(
@@ -390,11 +390,11 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             invalidPatientServiceException.UpsertDataList(
                 key: nameof(PatientConfiguration.AuthUrl),
-                value: "Text must be a valid absolute url");
+                value: "Text must be a valid absolute http or https url");
 
             invalidPatientServiceException.UpsertDataList(
                 key: nameof(PatientConfiguration.GetStructuredRecordUrl),
-                value: "Text must be a valid absolute url");
+                value: "Text must be a valid absolute http or https url");
 
             var expectedPatientServiceValidationException =
                 new PatientServiceValidationException(
@@ -424,5 +424,134 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
+        /// <summary>
+        /// An absolute uri is not automatically one HttpClient will dial. Before the scheme check
+        /// these all passed validation and failed later inside HttpClient with a
+        /// NotSupportedException, which reached the operator as a 500 naming nothing - on a rule
+        /// whose whole job is to name the setting that is wrong.
+        /// </summary>
+        [Theory]
+        [MemberData(nameof(UndialableAbsoluteUrls))]
+        public async Task ShouldThrowValidationExceptionOnGetStructuredRecordIfUrlSchemeIsNotHttpAsync(
+            string undialableUrl)
+        {
+            // given
+            var misconfiguredPatientConfiguration = new PatientConfiguration
+            {
+                AuthUrl = undialableUrl,
+                ClientId = GetRandomString(),
+                ClientSecret = GetRandomString(),
+                Scope = GetRandomString(),
+                GrantType = GetRandomString(),
+                GetStructuredRecordUrl = $"https://{GetRandomString()}.example.nhs.uk/record"
+            };
+
+            var misconfiguredHttpBrokerMock = new Mock<IHttpBroker>();
+
+            var misconfiguredPatientService = new PatientService(
+                httpBroker: misconfiguredHttpBrokerMock.Object,
+                patientConfiguration: misconfiguredPatientConfiguration,
+                loggingBroker: this.loggingBrokerMock.Object);
+
+            StructuredRecordRequest randomStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+
+            var invalidPatientServiceException =
+                new InvalidPatientServiceException(
+                    message: "Invalid patient request. Please correct the errors and try again.");
+
+            invalidPatientServiceException.UpsertDataList(
+                key: nameof(PatientConfiguration.AuthUrl),
+                value: "Text must be a valid absolute http or https url");
+
+            var expectedPatientServiceValidationException =
+                new PatientServiceValidationException(
+                    message: "Patient validation error occurred, please fix errors and try again.",
+                    innerException: invalidPatientServiceException);
+
+            // when
+            ValueTask<string> getStructuredRecordTask =
+                misconfiguredPatientService.GetStructuredRecordAsync(
+                    inputStructuredRecordRequest,
+                    TestContext.Current.CancellationToken);
+
+            PatientServiceValidationException actualPatientServiceValidationException =
+                await Assert.ThrowsAsync<PatientServiceValidationException>(
+                    testCode: getStructuredRecordTask.AsTask);
+
+            // then
+            actualPatientServiceValidationException.Should()
+                .BeEquivalentTo(expectedPatientServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientServiceValidationException))),
+                        Times.Once);
+
+            misconfiguredHttpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        /// <summary>
+        /// The other half of the same rule: a well formed https url has to keep working, or the
+        /// scheme check would have simply broken the feature.
+        /// </summary>
+        [Fact]
+        public async Task ShouldAcceptAnHttpsUrlOnGetStructuredRecordAsync()
+        {
+            // given
+            StructuredRecordRequest randomStructuredRecordRequest =
+                CreateRandomStructuredRecordRequest();
+
+            StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
+            string randomAccessToken = GetRandomString();
+            string randomStructuredRecord = GetRandomString();
+
+            this.httpBrokerMock.Setup(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(CreateTokenResponse(randomAccessToken));
+
+            this.httpBrokerMock.Setup(broker =>
+                broker.PostJsonContentAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(randomStructuredRecord);
+
+            // when
+            string actualStructuredRecord =
+                await this.patientService.GetStructuredRecordAsync(
+                    inputStructuredRecordRequest,
+                    TestContext.Current.CancellationToken);
+
+            // then
+            actualStructuredRecord.Should().Be(randomStructuredRecord);
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.PostFormUrlEncodedContentAsync(
+                    this.patientConfiguration.AuthUrl,
+                    It.IsAny<IDictionary<string, string>>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.PostJsonContentAsync(
+                    this.patientConfiguration.GetStructuredRecordUrl,
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+
+            this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }
