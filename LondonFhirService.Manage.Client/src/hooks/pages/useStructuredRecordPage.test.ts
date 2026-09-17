@@ -1,5 +1,5 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { useStructuredRecordPage } from "./useStructuredRecordPage";
 import type { StructuredRecordView } from "../../models/views/patients/StructuredRecordView";
 
@@ -68,6 +68,11 @@ const nextDeferral = (): Deferred => {
 
 const signalOfCall = (callIndex: number): AbortSignal =>
     retrieveStructuredRecordViewAsync.mock.calls[callIndex][1] as AbortSignal;
+
+// vitest runs with globals off, so testing-library's automatic cleanup is never registered and
+// every renderHook in this file would otherwise stay mounted for the rest of the run - holding an
+// AbortController and a pending promise apiece.
+afterEach(cleanup);
 
 beforeEach(() => {
     deferrals.length = 0;

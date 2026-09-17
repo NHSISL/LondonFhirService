@@ -269,11 +269,13 @@ public partial class Program
             // screen this serves, so the client has to outlast the thing it waits for.
             httpClient.Timeout = TimeSpan.FromSeconds(150);
 
-            // What an upstream this host does not control is allowed to make it hold. Without it a
-            // gateway answering with a multi megabyte html error page dictates the allocation, and
-            // the body is read in full before the status is even looked at. Well past anything a
-            // structured record bundle needs, and far short of a denial of service.
-            httpClient.MaxResponseContentBufferSize = 64 * 1024 * 1024;
+            // No MaxResponseContentBufferSize. It was set here, and measurement showed it doing
+            // nothing: HttpBroker now sends with HttpCompletionOption.ResponseHeadersRead, so the
+            // body is never buffered by HttpClient and the cap has nothing to apply to - a 70MB
+            // response came back whole with it set to 64MB. Worse than useless, it would have been
+            // misleading: a reader would take it for a limit that is not in force. A failed
+            // response is bounded by the broker, which stops reading after 16KB; a successful one
+            // is the payload the operator asked for and is theirs to have.
         });
     }
 

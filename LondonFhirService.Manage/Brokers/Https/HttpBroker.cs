@@ -2,9 +2,12 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,10 +37,17 @@ namespace LondonFhirService.Manage.Brokers.Https
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            using var formUrlEncodedContent = new FormUrlEncodedContent(formValues);
+
+            using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new FormUrlEncodedContent(formValues)
+            };
 
             using HttpResponseMessage httpResponseMessage = await this.httpClient
-                .PostAsync(url, formUrlEncodedContent, cancellationToken)
+                .SendAsync(
+                    httpRequestMessage,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken)
                 .ConfigureAwait(false);
 
             return await ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
@@ -72,7 +82,10 @@ namespace LondonFhirService.Manage.Brokers.Https
                 new AuthenticationHeaderValue("Bearer", bearerToken);
 
             using HttpResponseMessage httpResponseMessage = await this.httpClient
-                .SendAsync(httpRequestMessage, cancellationToken)
+                .SendAsync(
+                    httpRequestMessage,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken)
                 .ConfigureAwait(false);
 
             return await ReadContentOrThrowAsync(httpResponseMessage, cancellationToken)
@@ -88,12 +101,26 @@ namespace LondonFhirService.Manage.Brokers.Https
         private const int MaximumResponseBodyLength = 4000;
 
         /// <summary>
-        /// Reads the body first and only then looks at the status, which is the opposite order to
-        /// EnsureSuccessStatusCode. That call throws before the content is read, so an
+        /// The byte ceiling on a failed response, which is what actually bounds the allocation -
+        /// MaximumResponseBodyLength is a character count applied after decoding, and by then the
+        /// bytes have already been held. Four bytes per character is the worst case UTF-8 can
+        /// produce, so this is enough to fill the character cap from any encoding and no more.
+        /// </summary>
+        private const int MaximumErrorBodyBytes = 4 * MaximumResponseBodyLength;
+
+        /// <summary>
+        /// Not EnsureSuccessStatusCode, which throws before the content is read - so an
         /// authorisation server explaining itself in a 400, or a provider returning an
-        /// OperationOutcome with a 404, arrived at the operator as a bare status line with the one
-        /// useful part discarded - on a screen whose entire purpose is showing what the upstream
+        /// OperationOutcome with a 404, reached the operator as a bare status line with the one
+        /// useful part discarded, on a screen whose entire purpose is showing what the upstream
         /// actually said.
+        ///
+        /// A success is read whole: it is the payload the caller asked for. A failure is read up
+        /// to MaximumErrorBodyBytes and no further, because only the first few thousand characters
+        /// of it are ever kept and the thing on the other end is not always a FHIR server
+        /// answering politely - a proxy or gateway in between can return a multi megabyte HTML
+        /// error page. Reading the whole of that only to keep 4000 characters meant an upstream
+        /// this host does not control decided how much memory the failure path used.
         ///
         /// The body travels on HttpResponseException.ResponseBody, which derives from
         /// HttpRequestException - so the exception crossing this boundary is still the native one
@@ -111,14 +138,16 @@ namespace LondonFhirService.Manage.Brokers.Https
             HttpResponseMessage httpResponseMessage,
             CancellationToken cancellationToken)
         {
-            string responseBody = await httpResponseMessage.Content
-                .ReadAsStringAsync(cancellationToken)
-                .ConfigureAwait(false);
-
             if (httpResponseMessage.IsSuccessStatusCode)
             {
-                return responseBody;
+                return await httpResponseMessage.Content
+                    .ReadAsStringAsync(cancellationToken)
+                    .ConfigureAwait(false);
             }
+
+            string responseBody = await ReadBoundedContentAsync(
+                httpResponseMessage.Content,
+                cancellationToken).ConfigureAwait(false);
 
             throw new HttpResponseException(
                 message:
@@ -128,6 +157,40 @@ namespace LondonFhirService.Manage.Brokers.Https
 
                 statusCode: httpResponseMessage.StatusCode,
                 responseBody: Truncate(responseBody));
+        }
+
+        /// <summary>
+        /// Stops reading once there is enough to fill the character cap, rather than draining the
+        /// stream and discarding the rest. Decoding is UTF-8 regardless of what the response
+        /// claims: this text is shown to an operator and never parsed, and a body cut at a byte
+        /// boundary can leave a partial character at the end whatever the encoding.
+        /// </summary>
+        private static async ValueTask<string> ReadBoundedContentAsync(
+            HttpContent httpContent,
+            CancellationToken cancellationToken)
+        {
+            using Stream contentStream = await httpContent
+                .ReadAsStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            byte[] buffer = new byte[MaximumErrorBodyBytes];
+            int filled = 0;
+
+            while (filled < buffer.Length)
+            {
+                int read = await contentStream
+                    .ReadAsync(buffer.AsMemory(filled, buffer.Length - filled), cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (read == 0)
+                {
+                    break;
+                }
+
+                filled += read;
+            }
+
+            return Encoding.UTF8.GetString(buffer, 0, filled);
         }
 
         private static string Truncate(string responseBody)
