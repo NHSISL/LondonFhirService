@@ -26,11 +26,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             string expectedStructuredRecord = retrievedStructuredRecord;
             var expectedObjectResult = new OkObjectResult(expectedStructuredRecord);
             var expectedActionResult = new ActionResult<string>(expectedObjectResult);
+            CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
 
             patientServiceMock
                 .Setup(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
-                    It.IsAny<CancellationToken>()))
+                    inputCancellationToken))
                         .ReturnsAsync(retrievedStructuredRecord);
 
             // when
@@ -45,7 +46,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             patientServiceMock
                 .Verify(service => service.GetStructuredRecordAsync(
                     inputStructuredRecordRequest,
-                    It.IsAny<CancellationToken>()),
+                    inputCancellationToken),
                         Times.Once);
 
             patientServiceMock.VerifyNoOtherCalls();
@@ -68,8 +69,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             patientServiceMock
                 .Setup(service => service.GetStructuredRecordAsync(
-                    It.IsAny<StructuredRecordRequest>(),
-                    It.IsAny<CancellationToken>()))
+                    inputStructuredRecordRequest,
+                    inputCancellationToken))
                         .ReturnsAsync(GetRandomString());
 
             // when

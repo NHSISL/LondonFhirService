@@ -50,7 +50,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.httpBrokerMock.Setup(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
-                    It.IsAny<string>(),
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
                     "application/fhir+json",
                     randomAccessToken,
                     inputCancellationToken))
@@ -75,7 +76,8 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
-                    It.IsAny<string>(),
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
 
                     // Pinned, not It.IsAny. A FHIR server is entitled to answer plain
                     // application/json with a 415, and every other caller of this operation in
@@ -110,6 +112,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             string tokenResponse = CreateTokenResponse(randomAccessToken);
             string randomStructuredRecord = GetRandomString();
             string expectedStructuredRecord = randomStructuredRecord;
+            CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
 
             Dictionary<string, string> expectedFormValues = CreateExpectedFormValues(
                 clientId: suppliedClientId,
@@ -122,22 +125,23 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     this.patientConfiguration.AuthUrl,
                     It.Is<IDictionary<string, string>>(formValues =>
                         SameFormValuesAs(formValues, expectedFormValues)),
-                    It.IsAny<CancellationToken>()))
+                    inputCancellationToken))
                         .ReturnsAsync(tokenResponse);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
+                    "application/fhir+json",
                     randomAccessToken,
-                    It.IsAny<CancellationToken>()))
+                    inputCancellationToken))
                         .ReturnsAsync(randomStructuredRecord);
 
             // when
             string actualStructuredRecord = await this.patientService.GetStructuredRecordAsync(
                 inputStructuredRecordRequest,
-                TestContext.Current.CancellationToken);
+                inputCancellationToken);
 
             // then
             actualStructuredRecord.Should().BeEquivalentTo(expectedStructuredRecord);
@@ -147,16 +151,17 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
                     this.patientConfiguration.AuthUrl,
                     It.Is<IDictionary<string, string>>(formValues =>
                         SameFormValuesAs(formValues, expectedFormValues)),
-                    It.IsAny<CancellationToken>()),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
+                    "application/fhir+json",
                     randomAccessToken,
-                    It.IsAny<CancellationToken>()),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
@@ -174,21 +179,30 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             string randomAccessToken = GetRandomString();
             string tokenResponse = CreateTokenResponse(randomAccessToken);
             string capturedRequestBody = null;
+            CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
+
+            Dictionary<string, string> expectedFormValues = CreateExpectedFormValues(
+                clientId: inputStructuredRecordRequest.ClientId,
+                clientSecret: inputStructuredRecordRequest.ClientSecret,
+                scope: inputStructuredRecordRequest.Scope,
+                grantType: inputStructuredRecordRequest.GrantType);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostFormUrlEncodedContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<IDictionary<string, string>>(),
-                    It.IsAny<CancellationToken>()))
+                    this.patientConfiguration.AuthUrl,
+                    It.Is<IDictionary<string, string>>(formValues =>
+                        SameFormValuesAs(formValues, expectedFormValues)),
+                    inputCancellationToken))
                         .ReturnsAsync(tokenResponse);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostJsonContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()))
+                    this.patientConfiguration.GetStructuredRecordUrl,
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
+                    "application/fhir+json",
+                    randomAccessToken,
+                    inputCancellationToken))
                         .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
                             capturedRequestBody = jsonContent)
                         .ReturnsAsync(GetRandomString());
@@ -196,7 +210,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             // when
             await this.patientService.GetStructuredRecordAsync(
                 inputStructuredRecordRequest,
-                TestContext.Current.CancellationToken);
+                inputCancellationToken);
 
             // then
             using JsonDocument actualRequestBody = JsonDocument.Parse(capturedRequestBody);
@@ -245,17 +259,19 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(
                     this.patientConfiguration.AuthUrl,
-                    It.IsAny<IDictionary<string, string>>(),
-                    It.IsAny<CancellationToken>()),
+                    It.Is<IDictionary<string, string>>(formValues =>
+                        SameFormValuesAs(formValues, expectedFormValues)),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
+                    "application/fhir+json",
                     randomAccessToken,
-                    It.IsAny<CancellationToken>()),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
@@ -279,21 +295,31 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             inputStructuredRecordRequest.NhsNumber = $"  {expectedNhsNumber} ";
             inputStructuredRecordRequest.DateOfBirth = $" {expectedDateOfBirth}   ";
             string capturedRequestBody = null;
+            string randomAccessToken = GetRandomString();
+            CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
+
+            Dictionary<string, string> expectedFormValues = CreateExpectedFormValues(
+                clientId: inputStructuredRecordRequest.ClientId,
+                clientSecret: inputStructuredRecordRequest.ClientSecret,
+                scope: inputStructuredRecordRequest.Scope,
+                grantType: inputStructuredRecordRequest.GrantType);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostFormUrlEncodedContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<IDictionary<string, string>>(),
-                    It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(CreateTokenResponse(GetRandomString()));
+                    this.patientConfiguration.AuthUrl,
+                    It.Is<IDictionary<string, string>>(formValues =>
+                        SameFormValuesAs(formValues, expectedFormValues)),
+                    inputCancellationToken))
+                        .ReturnsAsync(CreateTokenResponse(randomAccessToken));
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostJsonContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()))
+                    this.patientConfiguration.GetStructuredRecordUrl,
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
+                    "application/fhir+json",
+                    randomAccessToken,
+                    inputCancellationToken))
                         .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
                             capturedRequestBody = jsonContent)
                         .ReturnsAsync(GetRandomString());
@@ -301,7 +327,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             // when
             await this.patientService.GetStructuredRecordAsync(
                 inputStructuredRecordRequest,
-                TestContext.Current.CancellationToken);
+                inputCancellationToken);
 
             // then
             using JsonDocument actualRequestBody = JsonDocument.Parse(capturedRequestBody);
@@ -315,18 +341,20 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<IDictionary<string, string>>(),
-                    It.IsAny<CancellationToken>()),
+                    this.patientConfiguration.AuthUrl,
+                    It.Is<IDictionary<string, string>>(formValues =>
+                        SameFormValuesAs(formValues, expectedFormValues)),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()),
+                    this.patientConfiguration.GetStructuredRecordUrl,
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
+                    "application/fhir+json",
+                    randomAccessToken,
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();
@@ -349,21 +377,30 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             string randomAccessToken = GetRandomString();
             string tokenResponse = CreateTokenResponse(randomAccessToken);
             string capturedRequestBody = null;
+            CancellationToken inputCancellationToken = TestContext.Current.CancellationToken;
+
+            Dictionary<string, string> expectedFormValues = CreateExpectedFormValues(
+                clientId: inputStructuredRecordRequest.ClientId,
+                clientSecret: inputStructuredRecordRequest.ClientSecret,
+                scope: inputStructuredRecordRequest.Scope,
+                grantType: inputStructuredRecordRequest.GrantType);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostFormUrlEncodedContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<IDictionary<string, string>>(),
-                    It.IsAny<CancellationToken>()))
+                    this.patientConfiguration.AuthUrl,
+                    It.Is<IDictionary<string, string>>(formValues =>
+                        SameFormValuesAs(formValues, expectedFormValues)),
+                    inputCancellationToken))
                         .ReturnsAsync(tokenResponse);
 
             this.httpBrokerMock.Setup(broker =>
                 broker.PostJsonContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()))
+                    this.patientConfiguration.GetStructuredRecordUrl,
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
+                    "application/fhir+json",
+                    randomAccessToken,
+                    inputCancellationToken))
                         .Callback((string _, string jsonContent, string __, string ___, CancellationToken ____) =>
                             capturedRequestBody = jsonContent)
                         .ReturnsAsync(GetRandomString());
@@ -371,7 +408,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             // when
             await this.patientService.GetStructuredRecordAsync(
                 inputStructuredRecordRequest,
-                TestContext.Current.CancellationToken);
+                inputCancellationToken);
 
             // then
             using JsonDocument actualRequestBody = JsonDocument.Parse(capturedRequestBody);
@@ -386,17 +423,19 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             this.httpBrokerMock.Verify(broker =>
                 broker.PostFormUrlEncodedContentAsync(
                     this.patientConfiguration.AuthUrl,
-                    It.IsAny<IDictionary<string, string>>(),
-                    It.IsAny<CancellationToken>()),
+                    It.Is<IDictionary<string, string>>(formValues =>
+                        SameFormValuesAs(formValues, expectedFormValues)),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     this.patientConfiguration.GetStructuredRecordUrl,
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
+                    It.Is<string>(requestBody =>
+                        requestBody.Contains("\"resourceType\":\"Parameters\"")),
+                    "application/fhir+json",
                     randomAccessToken,
-                    It.IsAny<CancellationToken>()),
+                    inputCancellationToken),
                         Times.Once);
 
             this.httpBrokerMock.VerifyNoOtherCalls();

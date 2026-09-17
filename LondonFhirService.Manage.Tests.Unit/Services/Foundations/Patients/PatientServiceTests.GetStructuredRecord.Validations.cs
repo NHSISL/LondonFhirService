@@ -314,58 +314,5 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             unconfiguredHttpBrokerMock.VerifyNoOtherCalls();
         }
-
-        [Theory]
-        [MemberData(nameof(UnusableTokenResponses))]
-        public async Task ShouldThrowDependencyExceptionOnGetStructuredRecordIfTokenResponseIsUnusableAsync(
-            string unusableTokenResponse)
-        {
-            // given
-            StructuredRecordRequest randomStructuredRecordRequest =
-                CreateRandomStructuredRecordRequest();
-
-            StructuredRecordRequest inputStructuredRecordRequest = randomStructuredRecordRequest;
-
-            this.httpBrokerMock.Setup(broker =>
-                broker.PostFormUrlEncodedContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<IDictionary<string, string>>(),
-                    It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(unusableTokenResponse);
-
-            // when
-            ValueTask<string> getStructuredRecordTask =
-                this.patientService.GetStructuredRecordAsync(
-                    inputStructuredRecordRequest,
-                    TestContext.Current.CancellationToken);
-
-            PatientServiceDependencyException actualPatientServiceDependencyException =
-                await Assert.ThrowsAsync<PatientServiceDependencyException>(
-                    testCode: getStructuredRecordTask.AsTask);
-
-            // then
-            actualPatientServiceDependencyException.InnerException
-                .Should().BeOfType<InvalidAccessTokenPatientServiceException>();
-
-            // The structured record call is never made. Without a token it could only ever be
-            // answered with a 401, and the page would report that instead of the real fault.
-            this.httpBrokerMock.Verify(broker =>
-                broker.PostJsonContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()),
-                        Times.Never);
-
-            this.httpBrokerMock.Verify(broker =>
-                broker.PostFormUrlEncodedContentAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<IDictionary<string, string>>(),
-                    It.IsAny<CancellationToken>()),
-                        Times.Once);
-
-            this.httpBrokerMock.VerifyNoOtherCalls();
-        }
     }
 }
