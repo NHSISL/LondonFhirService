@@ -30,10 +30,15 @@ namespace LondonFhirService.Manage.Brokers.Https
             IDictionary<string, string> formValues,
             CancellationToken cancellationToken = default);
 
-        /// <param name="mediaType">
-        /// The Content-Type to send the body as. The caller supplies it because the broker has no
-        /// business knowing that one endpoint speaks FHIR and another speaks plain JSON.
-        /// </param>
+        /// <summary>
+        /// mediaType is the Content-Type to send the body as, and the caller supplies it because
+        /// the broker has no business knowing that one endpoint speaks FHIR and another speaks
+        /// plain JSON.
+        ///
+        /// Said in the summary rather than in a param tag: documenting one parameter of five and
+        /// leaving the rest raises CS1573 on each of the others, and the four it would take to
+        /// silence that would say nothing their names do not already.
+        /// </summary>
         ValueTask<string> PostJsonContentAsync(
             string url,
             string jsonContent,
