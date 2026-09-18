@@ -5,6 +5,8 @@ import { ErrorSummary } from "../../components/shared/ErrorSummary";
 import { LoadingIndicator } from "../../components/shared/LoadingIndicator";
 import { ProviderList } from "../../components/providers/ProviderList";
 import { ProviderSearch } from "../../components/providers/ProviderSearch";
+import { SecuredComponent } from "../../components/securitys/securedComponents";
+import securityPoints from "../../securityMatrix";
 
 export function ProvidersPage() {
     const {
@@ -45,9 +47,11 @@ export function ProvidersPage() {
                 </Col>
 
                 <Col xs="auto">
-                    <Link to="/admin/providers/new" className="btn btn-primary">
-                        Add provider
-                    </Link>
+                    <SecuredComponent allowedRoles={securityPoints.providers.add}>
+                        <Link to="/admin/providers/new" className="btn btn-primary">
+                            Add provider
+                        </Link>
+                    </SecuredComponent>
                 </Col>
             </Row>
 
