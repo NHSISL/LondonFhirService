@@ -5,7 +5,8 @@ import { ExpandableRow } from "./ExpandableRow";
 import { ResourceJsonToggle } from "./ResourceJsonToggle";
 import { buildAllergyIntoleranceMatchKey } from "../../../helpers/comparisons/allergyIntoleranceMatchKey";
 import { buildConditionMatchKey } from "../../../helpers/comparisons/conditionMatchKey";
-import { buildDdsIdentifierMatchKey } from "../../../helpers/comparisons/ddsIdentifierMatchKey";
+import { buildPracticeQualifiedDdsMatchKey } from "../../../helpers/comparisons/practiceQualifiedDdsMatchKey";
+import { buildPractitionerMatchKey } from "../../../helpers/comparisons/practitionerMatchKey";
 import { buildMedicationStatementMatchKey } from "../../../helpers/comparisons/medicationStatementMatchKey";
 import { formatFhirDate } from "./patientFormatters";
 import { findIdentifierBySystem, readString } from "../../../helpers/fhir/fhirJson";
@@ -136,17 +137,21 @@ function getResourceMatchKey(
         case "AllergyIntolerance":
             return buildAllergyIntoleranceMatchKey(resource);
 
+        // Every type that pairs on a DDS identifier pairs on it qualified by the issuing
+        // practice - see buildPracticeQualifiedDdsMatchKey. This must stay in step with the
+        // matchers server side: the key is how a difference finds the row it belongs to, so the
+        // two move together or differences stop attaching.
         case "Observation":
+        case "FamilyMemberHistory":
         case "Immunization":
         case "Encounter":
-        case "FamilyMemberHistory":
         case "MedicationRequest":
         case "DiagnosticReport":
         case "Procedure":
         case "ProcedureRequest":
         case "ReferralRequest":
         case "Appointment":
-            return buildDdsIdentifierMatchKey(resource);
+            return buildPracticeQualifiedDdsMatchKey(resource);
 
         // The SDS role profile id is what PractitionerRoleMatcherService pairs these on server
         // side - the same fragment-matched identifier lookup parsePractitionerRole itself reads.
@@ -162,10 +167,11 @@ function getResourceMatchKey(
         case "Location":
             return readString(findIdentifierBySystem(resource, "ods-site-code")?.value);
 
-        // The SDS user id is what PractitionerMatcherService pairs these on server side - the
-        // same lookup parsePractitioner itself reads.
+        // The SDS user id is what PractitionerMatcherService pairs these on server side, falling
+        // back to the practice-qualified DDS identifier when the feed leaves the SDS id empty -
+        // see buildPractitionerMatchKey.
         case "Practitioner":
-            return readString(findIdentifierBySystem(resource, "sds-user-id")?.value);
+            return buildPractitionerMatchKey(resource);
 
         // RelatedPerson has no matcher registered server side at all, so there is no key to
         // rebuild - its differences stay in the card's unattributed list rather than being
@@ -1338,7 +1344,7 @@ function ObservationItem({ reference, expansionKey, visitedRefs, context }: Nest
     const resource = context.resourceIndex.get(reference) ?? null;
     const observation = resource === null ? null : parseObservation(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
     const diffsForType = context.diffsByResourceType.get("Observation") ?? [];
     const itemDiffs = getMatchedDiffs(diffsForType, matchKey);
     const ambiguousDiffs = getAmbiguousDiffs(diffsForType, matchKey);
@@ -1476,7 +1482,7 @@ function ImmunizationItem({ reference, expansionKey, visitedRefs, context }: Nes
     const resource = context.resourceIndex.get(reference) ?? null;
     const immunization = resource === null ? null : parseImmunization(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
     const itemDiffs = getMatchedDiffs(context.diffsByResourceType.get("Immunization") ?? [], matchKey);
     const patientDiffs = itemDiffs.filter(diff => diff.path.endsWith(".patient.reference"));
 
@@ -1591,7 +1597,7 @@ function EncounterItem({ reference, expansionKey, visitedRefs, context }: Nestin
     const resource = context.resourceIndex.get(reference) ?? null;
     const encounter = resource === null ? null : parseEncounter(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
     const itemDiffs = getMatchedDiffs(context.diffsByResourceType.get("Encounter") ?? [], matchKey);
     const subjectDiffs = itemDiffs.filter(diff => diff.path.endsWith(".subject.reference"));
 
@@ -1705,7 +1711,7 @@ function FamilyMemberHistoryItem({ reference, expansionKey, visitedRefs, context
     const resource = context.resourceIndex.get(reference) ?? null;
     const familyMemberHistory = resource === null ? null : parseFamilyMemberHistory(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
     const diffsForType = context.diffsByResourceType.get("FamilyMemberHistory") ?? [];
     const itemDiffs = getMatchedDiffs(diffsForType, matchKey);
     const ambiguousDiffs = getAmbiguousDiffs(diffsForType, matchKey);
@@ -1930,7 +1936,7 @@ function MedicationRequestItem({ reference, expansionKey, visitedRefs, context }
     const resource = context.resourceIndex.get(reference) ?? null;
     const medicationRequest = resource === null ? null : parseMedicationRequest(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
 
     const itemDiffs = getMatchedDiffs(
         context.diffsByResourceType.get("MedicationRequest") ?? [],
@@ -2028,7 +2034,7 @@ function DiagnosticReportItem({ reference, expansionKey, context }: ReferenceOnl
     const resource = context.resourceIndex.get(reference) ?? null;
     const diagnosticReport = resource === null ? null : parseDiagnosticReport(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
 
     const itemDiffs = getMatchedDiffs(
         context.diffsByResourceType.get("DiagnosticReport") ?? [],
@@ -2204,7 +2210,7 @@ function ProcedureItem({ reference, expansionKey, context }: ReferenceOnlyProps)
     const resource = context.resourceIndex.get(reference) ?? null;
     const procedure = resource === null ? null : parseProcedure(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
     const itemDiffs = getMatchedDiffs(context.diffsByResourceType.get("Procedure") ?? [], matchKey);
 
     return (
@@ -2279,7 +2285,7 @@ function ProcedureRequestItem({ reference, expansionKey, context }: ReferenceOnl
     const resource = context.resourceIndex.get(reference) ?? null;
     const procedureRequest = resource === null ? null : parseProcedureRequest(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
 
     const itemDiffs = getMatchedDiffs(
         context.diffsByResourceType.get("ProcedureRequest") ?? [],
@@ -2358,7 +2364,7 @@ function ReferralRequestItem({ reference, expansionKey, context }: ReferenceOnly
     const resource = context.resourceIndex.get(reference) ?? null;
     const referralRequest = resource === null ? null : parseReferralRequest(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
 
     const itemDiffs = getMatchedDiffs(
         context.diffsByResourceType.get("ReferralRequest") ?? [],
@@ -2497,7 +2503,7 @@ function AppointmentItem({ reference, expansionKey, context }: ReferenceOnlyProp
     const resource = context.resourceIndex.get(reference) ?? null;
     const appointment = resource === null ? null : parseAppointment(resource);
 
-    const matchKey = resource === null ? null : buildDdsIdentifierMatchKey(resource);
+    const matchKey = resource === null ? null : buildPracticeQualifiedDdsMatchKey(resource);
     const itemDiffs = getMatchedDiffs(context.diffsByResourceType.get("Appointment") ?? [], matchKey);
 
     return (

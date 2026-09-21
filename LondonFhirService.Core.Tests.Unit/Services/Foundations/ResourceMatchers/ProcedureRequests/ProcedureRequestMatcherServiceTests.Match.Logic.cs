@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -34,7 +34,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, inputDdsIdentifierValue));
+                new MatchedResource(source1Resource, source2Resource, ExpectedMatchKey(inputDdsIdentifierValue)));
 
             // when
             ResourceMatch actualResourceMatch = await this.procedureRequestMatcherService.MatchAsync(
@@ -66,7 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Unmatched.Add(
-                new UnmatchedResource(source1Resource, "ProcedureRequest", inputDdsIdentifierValue, true));
+                new UnmatchedResource(source1Resource, "ProcedureRequest", ExpectedMatchKey(inputDdsIdentifierValue), true));
 
             // when
             ResourceMatch actualResourceMatch = await this.procedureRequestMatcherService.MatchAsync(
@@ -98,7 +98,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Unmatched.Add(
-                new UnmatchedResource(source2Resource, "ProcedureRequest", inputDdsIdentifierValue, false));
+                new UnmatchedResource(source2Resource, "ProcedureRequest", ExpectedMatchKey(inputDdsIdentifierValue), false));
 
             // when
             ResourceMatch actualResourceMatch = await this.procedureRequestMatcherService.MatchAsync(
@@ -134,7 +134,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, inputDdsIdentifierValue));
+                new MatchedResource(source1Resource, source2Resource, ExpectedMatchKey(inputDdsIdentifierValue)));
 
             // when
             ResourceMatch actualResourceMatch = await this.procedureRequestMatcherService.MatchAsync(

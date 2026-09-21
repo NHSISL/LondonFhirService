@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Models.Foundations.ResourceMatchers.Exceptions;
+using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
 using Moq;
 
@@ -34,7 +35,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     innerException: failedResourceMatcherServiceException);
 
             var listMatcherServiceMock = 
-                new Mock<ListMatcherService>(loggingBrokerMock.Object) { CallBase = true };
+                new Mock<ListMatcherService>(new JsonElementService(), loggingBrokerMock.Object) { CallBase = true };
 
             listMatcherServiceMock.Setup(service =>
                 service.ValidateOnGetMatchKeyArguments(

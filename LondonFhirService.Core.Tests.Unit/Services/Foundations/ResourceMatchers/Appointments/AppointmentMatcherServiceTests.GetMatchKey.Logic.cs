@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     resourceIndex);
 
             // then
-            actualMatchKey.Should().Be(expectedDdsIdentifierValue);
+            actualMatchKey.Should().Be(ExpectedMatchKey(expectedDdsIdentifierValue));
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
@@ -51,7 +51,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                     resourceIndex);
 
             // then
-            actualMatchKey.Should().Be(expectedDdsIdentifierValue);
+            actualMatchKey.Should().Be(ExpectedMatchKey(expectedDdsIdentifierValue));
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 

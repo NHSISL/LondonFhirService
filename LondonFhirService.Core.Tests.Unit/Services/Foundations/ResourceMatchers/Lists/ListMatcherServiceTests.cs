@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text.Json;
 using LondonFhirService.Core.Brokers.Loggings;
+using LondonFhirService.Core.Services.Foundations.JsonElements;
 using LondonFhirService.Core.Services.Foundations.ResourceMatchers.Lists;
 using Moq;
 using Xeptions;
@@ -22,9 +23,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
         {
             this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
-
+            // The real service rather than a mock: MatchAsync builds the merged grouping it
+            // returns, so a stubbed element factory would make every assertion about what a
+            // grouping contains a restatement of the stub.
             this.listMatcherService =
                 new ListMatcherService(
+                    jsonElementService: new JsonElementService(),
                     loggingBroker: this.loggingBrokerMock.Object);
         }
 

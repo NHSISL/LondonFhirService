@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -89,23 +89,56 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Practitio
             return resourceMatch;
         });
 
+        /// <summary>
+        /// The SDS user id when the practitioner carries one, and the practice-qualified DDS
+        /// identifier when it does not.
+        ///
+        /// The fallback exists because the SDS id is not reliably populated: feeds have been seen
+        /// carrying the identifier entry with its system and no value at all. Keyed on SDS alone
+        /// those practitioners produced no key, and a resource with no key is dropped before
+        /// matching - not paired, not reported as unmatched, simply absent from the comparison.
+        /// Every practitioner in a record could go uncompared and the result would still read
+        /// clean.
+        ///
+        /// SDS is tried first because it is a national identifier and so means the same thing to
+        /// both providers, where a DDS identifier is local to the feed that issued it. The two key
+        /// spaces cannot collide: the DDS form is always prefixed with its practice and a
+        /// separator, which an SDS id never contains.
+        /// </summary>
         internal virtual string InternalGetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
         {
-            if (!resource.TryGetProperty("identifier", out var identifiers))
-                return null;
+            string sdsUserId = GetSdsUserId(resource);
 
-            foreach (var identifierElement in identifiers.EnumerateArray())
+            if (!string.IsNullOrWhiteSpace(sdsUserId))
             {
-                if (!identifierElement.TryGetProperty("system", out var system))
-                    continue;
+                return sdsUserId;
+            }
 
-                var systemValue = system.GetString();
-                if (systemValue == SdsUserIdSystem)
+            return PracticeQualifiedDdsMatchKey.Build(resource);
+        }
+
+        private static string GetSdsUserId(JsonElement resource)
+        {
+            if (!resource.TryGetProperty("identifier", out JsonElement identifiers)
+                || identifiers.ValueKind != JsonValueKind.Array)
+            {
+                return null;
+            }
+
+            foreach (JsonElement identifierElement in identifiers.EnumerateArray())
+            {
+                if (identifierElement.ValueKind != JsonValueKind.Object)
                 {
-                    if (identifierElement.TryGetProperty("value", out var value))
-                    {
-                        return value.GetString();
-                    }
+                    continue;
+                }
+
+                if (identifierElement.TryGetProperty("system", out JsonElement system)
+                    && system.ValueKind == JsonValueKind.String
+                    && system.GetString() == SdsUserIdSystem
+                    && identifierElement.TryGetProperty("value", out JsonElement value)
+                    && value.ValueKind == JsonValueKind.String)
+                {
+                    return value.GetString();
                 }
             }
 

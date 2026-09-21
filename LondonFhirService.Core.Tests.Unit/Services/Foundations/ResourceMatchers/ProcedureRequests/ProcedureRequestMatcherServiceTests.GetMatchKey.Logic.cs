@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -23,7 +23,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
                 id: randomId);
 
             Dictionary<string, JsonElement> resourceIndex = CreateResourceIndex();
-            string expectedMatchKey = inputDdsIdentifierValue;
+            string expectedMatchKey = ExpectedMatchKey(inputDdsIdentifierValue);
 
             // when
             string actualMatchKey =
