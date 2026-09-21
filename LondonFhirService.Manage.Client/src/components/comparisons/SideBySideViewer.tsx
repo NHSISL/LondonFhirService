@@ -81,11 +81,20 @@ export function SideBySideViewer({
     return (
         <div className="card">
             <div className="card-body p-0">
+                {/*
+                    Bootstrap's grid columns default to min-width: auto, so a column refuses to
+                    shrink to its allotted 50% once anything inside it - a long reference in a
+                    <code> tag, say - wants to be wider than that. Without min-width: 0 here that
+                    one wide element drags the whole row, both columns and everything after them
+                    off screen instead of wrapping.
+                */}
                 <Row className="g-0">
-                    <Col md={6} className="border-end">
+                    <Col md={6} className="border-end" style={{ minWidth: 0 }}>
                         <SourcePanel
                             source={comparison.primarySource}
                             sideLabel="Primary source"
+                            diffCountText={comparison.diffCountText}
+                            diffCountClassName={comparison.diffCountClassName}
                             panelRef={primaryPanel}
                             onScroll={() => handleScroll("primary")}>
                             {comparison.primarySource !== null && (
@@ -98,10 +107,12 @@ export function SideBySideViewer({
                         </SourcePanel>
                     </Col>
 
-                    <Col md={6}>
+                    <Col md={6} style={{ minWidth: 0 }}>
                         <SourcePanel
                             source={comparison.secondarySource}
                             sideLabel="Secondary source"
+                            diffCountText={comparison.diffCountText}
+                            diffCountClassName={comparison.diffCountClassName}
                             panelRef={secondaryPanel}
                             onScroll={() => handleScroll("secondary")}>
                             {comparison.secondarySource !== null && (
@@ -122,12 +133,26 @@ export function SideBySideViewer({
 type SourcePanelProps = {
     source: ComparisonSourceView | null;
     sideLabel: string;
+
+    // The comparison's own total, not this source's fetch status - a card here is about how much
+    // of the record differs, not whether the record came back.
+    diffCountText: string;
+    diffCountClassName: string;
+
     panelRef: React.RefObject<HTMLDivElement>;
     onScroll: () => void;
     children: React.ReactNode;
 };
 
-function SourcePanel({ source, sideLabel, panelRef, onScroll, children }: SourcePanelProps) {
+function SourcePanel({
+    source,
+    sideLabel,
+    diffCountText,
+    diffCountClassName,
+    panelRef,
+    onScroll,
+    children
+}: SourcePanelProps) {
     return (
         <>
             <div className="p-3 bg-light border-bottom d-flex align-items-center gap-2">
@@ -135,7 +160,8 @@ function SourcePanel({ source, sideLabel, panelRef, onScroll, children }: Source
 
                 {source !== null && (
                     <>
-                        <span className={source.statusClassName}>{source.statusText}</span>
+                        <span className={source.roleClassName}>{source.roleText}</span>
+                        <span className={diffCountClassName}>{diffCountText}</span>
 
                         <span className="text-muted small ms-auto">
                             Received {source.createdDateText}

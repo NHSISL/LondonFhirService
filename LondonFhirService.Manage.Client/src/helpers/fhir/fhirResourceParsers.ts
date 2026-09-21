@@ -10,16 +10,27 @@ import {
     readStringArray
 } from "./fhirJson";
 import type { AllergyIntoleranceData } from "../../models/foundations/fhir/AllergyIntoleranceData";
+import type { AppointmentData } from "../../models/foundations/fhir/AppointmentData";
 import type { ConditionData } from "../../models/foundations/fhir/ConditionData";
+import type { DiagnosticReportData } from "../../models/foundations/fhir/DiagnosticReportData";
+import type { EncounterData } from "../../models/foundations/fhir/EncounterData";
 import type { EpisodeOfCareData } from "../../models/foundations/fhir/EpisodeOfCareData";
+import type { FamilyMemberHistoryData } from "../../models/foundations/fhir/FamilyMemberHistoryData";
 import type { FhirResource } from "../../models/foundations/fhir/FhirResource";
+import type { ImmunizationData } from "../../models/foundations/fhir/ImmunizationData";
 import type { ListData } from "../../models/foundations/fhir/ListData";
+import type { LocationData } from "../../models/foundations/fhir/LocationData";
 import type { MedicationData } from "../../models/foundations/fhir/MedicationData";
+import type { MedicationRequestData } from "../../models/foundations/fhir/MedicationRequestData";
 import type { MedicationStatementData } from "../../models/foundations/fhir/MedicationStatementData";
 import type { ObservationData } from "../../models/foundations/fhir/ObservationData";
 import type { OrganizationData } from "../../models/foundations/fhir/OrganizationData";
 import type { PractitionerData } from "../../models/foundations/fhir/PractitionerData";
 import type { PractitionerRoleData } from "../../models/foundations/fhir/PractitionerRoleData";
+import type { ProcedureData } from "../../models/foundations/fhir/ProcedureData";
+import type { ProcedureRequestData } from "../../models/foundations/fhir/ProcedureRequestData";
+import type { ReferralRequestData } from "../../models/foundations/fhir/ReferralRequestData";
+import type { RelatedPersonData } from "../../models/foundations/fhir/RelatedPersonData";
 
 // A Reference can be relative ("Organization/1") or absolute
 // ("https://provider.example/fhir/Organization/1"). The two sides of a comparison come from
@@ -140,7 +151,8 @@ export function parseCondition(resource: FhirResource): ConditionData {
         system: readString(coding?.system),
         clinicalStatus: readCode(resource.clinicalStatus),
         onsetDateTime: readString(resource.onsetDateTime),
-        significance: readProblemSignificance(resource)
+        significance: readProblemSignificance(resource),
+        subjectRef: extractReference(resource.subject)
     };
 }
 
@@ -175,7 +187,8 @@ export function parseMedicationStatement(resource: FhirResource): MedicationStat
         status: readString(resource.status),
         dateAsserted: readString(resource.dateAsserted),
         informationSourceRef: extractReference(resource.informationSource),
-        medicationRef: extractReference(resource.medicationReference)
+        medicationRef: extractReference(resource.medicationReference),
+        subjectRef: extractReference(resource.subject)
     };
 }
 
@@ -203,7 +216,209 @@ export function parseObservation(resource: FhirResource): ObservationData {
         unit: readString(valueQuantity?.unit),
         effectiveDateTime: readString(resource.effectiveDateTime),
         effectivePeriodStart: readString(readPath(resource, "effectivePeriod", "start")),
-        performerRefs: performerRefs
+        performerRefs: performerRefs,
+        subjectRef: extractReference(resource.subject)
+    };
+}
+
+export function parseImmunization(resource: FhirResource): ImmunizationData {
+    const coding = readFirstCoding(resource.vaccineCode) ?? readVaccineExtensionCoding(resource);
+
+    const practitionerRefs = readObjectArray(resource.practitioner)
+        .map(practitioner => extractReference(practitioner.actor))
+        .filter((practitionerRef): practitionerRef is string => practitionerRef !== null);
+
+    return {
+        id: readString(resource.id) ?? "",
+        display: readString(coding?.display) ?? readString(readPath(resource, "vaccineCode", "text")),
+        code: readString(coding?.code),
+        system: readString(coding?.system),
+        status: readString(resource.status),
+        occurrenceDateTime: readString(resource.date) ?? readString(resource.occurrenceDateTime),
+        encounterRef: extractReference(resource.encounter),
+        patientRef: extractReference(resource.patient),
+        practitionerRefs: practitionerRefs
+    };
+}
+
+// Some feeds carry the vaccine given as an extension's CodeableConcept instead of the core
+// vaccineCode element - the first extension with one is taken, since the other extensions this
+// profile carries (date recorded, recorder) never do.
+function readVaccineExtensionCoding(resource: FhirResource): FhirResource | null {
+    const extensionWithCoding = readObjectArray(resource.extension)
+        .find(extension => readFirstCoding(extension.valueCodeableConcept) !== null)
+        ?? null;
+
+    return readFirstCoding(extensionWithCoding?.valueCodeableConcept);
+}
+
+export function parseEncounter(resource: FhirResource): EncounterData {
+    const typeCoding = readFirstCoding(readObjectArray(resource.type)[0]);
+
+    // STU3 carries class as a bare Coding rather than a CodeableConcept, unlike type.
+    const classCoding = readObject(resource.class);
+
+    const participantRefs = readObjectArray(resource.participant)
+        .map(participant => extractReference(participant.individual))
+        .filter((participantRef): participantRef is string => participantRef !== null);
+
+    return {
+        id: readString(resource.id) ?? "",
+        display: readString(typeCoding?.display) ?? readString(classCoding?.display),
+        code: readString(typeCoding?.code),
+        system: readString(typeCoding?.system),
+        status: readString(resource.status),
+        periodStart: readString(readPath(resource, "period", "start")),
+        periodEnd: readString(readPath(resource, "period", "end")),
+        serviceProviderRef: extractReference(resource.serviceProvider),
+        subjectRef: extractReference(resource.subject),
+        participantRefs: participantRefs
+    };
+}
+
+export function parseFamilyMemberHistory(resource: FhirResource): FamilyMemberHistoryData {
+    const relationshipCoding = readFirstCoding(resource.relationship);
+
+    // Some feeds record this as a screening statement about the whole family rather than one
+    // relative - "no family history of malignancy" - with no name or relationship at all, the
+    // fact living entirely in the first condition's code instead.
+    const conditionCoding = readFirstCoding(readObjectArray(resource.condition)[0]?.code);
+
+    // The practitioner who recorded this is carried as an extension rather than a core element -
+    // the same one the DDS-fed Recorder-1 extension already uses elsewhere in this feed.
+    const recorderExtension = readObjectArray(resource.extension)
+        .find(extension => readString(extension.url)?.includes("Recorder") === true)
+        ?? null;
+
+    return {
+        id: readString(resource.id) ?? "",
+        name: readString(resource.name),
+        relationshipDisplay: readString(relationshipCoding?.display),
+        relationshipCode: readString(relationshipCoding?.code),
+        relationshipSystem: readString(relationshipCoding?.system),
+        status: readString(resource.status),
+        bornDate: readString(resource.bornDate),
+        conditionDisplay: readString(conditionCoding?.display),
+        conditionCode: readString(conditionCoding?.code),
+        conditionSystem: readString(conditionCoding?.system),
+        patientRef: extractReference(resource.patient),
+        recorderRef: extractReference(recorderExtension?.valueReference)
+    };
+}
+
+export function parseMedicationRequest(resource: FhirResource): MedicationRequestData {
+    const medicationCoding = readFirstCoding(resource.medicationCodeableConcept);
+
+    return {
+        id: readString(resource.id) ?? "",
+
+        display: readString(medicationCoding?.display)
+            ?? readString(readPath(resource, "medicationCodeableConcept", "text")),
+
+        code: readString(medicationCoding?.code),
+        system: readString(medicationCoding?.system),
+        dosage: readString(readObjectArray(resource.dosageInstruction)[0]?.text),
+        status: readString(resource.status),
+        authoredOn: readString(resource.authoredOn),
+        requesterRef: extractReference(readObject(resource.requester)?.agent ?? resource.requester)
+    };
+}
+
+export function parseDiagnosticReport(resource: FhirResource): DiagnosticReportData {
+    const coding = readFirstCoding(resource.code);
+
+    return {
+        id: readString(resource.id) ?? "",
+        display: readString(coding?.display) ?? readString(readPath(resource, "code", "text")),
+        code: readString(coding?.code),
+        system: readString(coding?.system),
+        status: readString(resource.status),
+        effectiveDateTime: readString(resource.effectiveDateTime) ?? readString(resource.issued)
+    };
+}
+
+export function parseLocation(resource: FhirResource): LocationData {
+    const odsSiteIdentifier = findIdentifierBySystem(resource, "ods-site-code");
+    const address = readObject(resource.address);
+
+    return {
+        id: readString(resource.id) ?? "",
+        name: readString(resource.name),
+        status: readString(resource.status),
+        odsSiteCode: readString(odsSiteIdentifier?.value),
+        odsSiteSystem: readString(odsSiteIdentifier?.system),
+        addressLine: joinOrNull(readStringArray(address?.line), ", "),
+        addressCity: readString(address?.city),
+        addressPostalCode: readString(address?.postalCode)
+    };
+}
+
+export function parseProcedure(resource: FhirResource): ProcedureData {
+    const coding = readFirstCoding(resource.code);
+
+    return {
+        id: readString(resource.id) ?? "",
+        display: readString(coding?.display) ?? readString(readPath(resource, "code", "text")),
+        code: readString(coding?.code),
+        system: readString(coding?.system),
+        status: readString(resource.status),
+
+        performedDateTime: readString(resource.performedDateTime)
+            ?? readString(readPath(resource, "performedPeriod", "start"))
+    };
+}
+
+export function parseProcedureRequest(resource: FhirResource): ProcedureRequestData {
+    const coding = readFirstCoding(resource.code);
+
+    return {
+        id: readString(resource.id) ?? "",
+        display: readString(coding?.display) ?? readString(readPath(resource, "code", "text")),
+        code: readString(coding?.code),
+        system: readString(coding?.system),
+        status: readString(resource.status),
+        authoredOn: readString(resource.authoredOn) ?? readString(resource.occurrenceDateTime)
+    };
+}
+
+export function parseReferralRequest(resource: FhirResource): ReferralRequestData {
+    const coding = readFirstCoding(resource.serviceRequested)
+        ?? readFirstCoding(readObjectArray(resource.type)[0]);
+
+    return {
+        id: readString(resource.id) ?? "",
+
+        display: readString(coding?.display)
+            ?? readString(readPath(resource, "serviceRequested", "text")),
+
+        code: readString(coding?.code),
+        system: readString(coding?.system),
+        status: readString(resource.status),
+        authoredOn: readString(resource.authoredOn) ?? readString(resource.dateSent)
+    };
+}
+
+export function parseRelatedPerson(resource: FhirResource): RelatedPersonData {
+    const names = readObjectArray(resource.name);
+    const nameToUse = names.find(name => readString(name.use) === "official") ?? names[0] ?? null;
+    const relationshipCoding = readFirstCoding(resource.relationship);
+
+    return {
+        id: readString(resource.id) ?? "",
+        name: nameToUse === null ? null : formatHumanName(nameToUse),
+        relationshipDisplay: readString(relationshipCoding?.display),
+        relationshipCode: readString(relationshipCoding?.code),
+        relationshipSystem: readString(relationshipCoding?.system)
+    };
+}
+
+export function parseAppointment(resource: FhirResource): AppointmentData {
+    return {
+        id: readString(resource.id) ?? "",
+        description: readString(resource.description),
+        status: readString(resource.status),
+        start: readString(resource.start),
+        end: readString(resource.end)
     };
 }
 

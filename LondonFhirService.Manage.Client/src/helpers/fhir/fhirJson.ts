@@ -81,3 +81,12 @@ export function findIdentifierBySystem(
         .find(identifier => readString(identifier.system)?.includes(systemFragment) === true)
         ?? null;
 }
+
+// The coding in a CodeableConcept whose system matches exactly, e.g. picking the SNOMED coding out
+// of a code that also carries a local or Read code. Unlike readFirstCoding this does not assume
+// the wanted coding is the first one.
+export function readCodingBySystem(codeableConcept: unknown, system: string): FhirResource | null {
+    return readObjectArray(readObject(codeableConcept)?.coding)
+        .find(coding => readString(coding.system) === system)
+        ?? null;
+}

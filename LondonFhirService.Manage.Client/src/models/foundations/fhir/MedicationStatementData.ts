@@ -8,4 +8,5 @@ export type MedicationStatementData = {
     dateAsserted: string | null;
     informationSourceRef: string | null;
     medicationRef: string | null;
+    subjectRef: string | null;
 };

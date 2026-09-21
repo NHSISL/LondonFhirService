@@ -49,7 +49,13 @@ export function DiffHighlight({ fieldDiffs, acceptance, children, inline }: Diff
 
     return (
         <div style={style} className="d-flex justify-content-between align-items-start gap-2">
-            <div className="flex-grow-1">{children}</div>
+            {/*
+                min-width: 0 overrides a flex item's default auto min-width, which otherwise
+                refuses to shrink below the width of its widest unbroken content - a long
+                reference like "Patient/7e5b6023-..." would push the checkbox after it hundreds
+                of pixels off screen instead of wrapping.
+            */}
+            <div className="flex-grow-1" style={{ minWidth: 0 }}>{children}</div>
 
             <Form.Check
                 type="checkbox"

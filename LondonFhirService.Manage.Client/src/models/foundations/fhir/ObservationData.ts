@@ -11,4 +11,5 @@ export type ObservationData = {
     effectiveDateTime: string | null;
     effectivePeriodStart: string | null;
     performerRefs: string[];
+    subjectRef: string | null;
 };
