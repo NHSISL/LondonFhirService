@@ -125,6 +125,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                     {
                         try
                         {
+                            if (await IsIndistinguishableFromKeptResourceAsync(
+                                unmatchedResource, resourceMatch, resourceType))
+                            {
+                                continue;
+                            }
+
                             if (unmatchedResource.IsFromSource1)
                             {
                                 diffs.Add(new DiffItem
@@ -305,15 +311,85 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
             return diffs;
         }
 
+        /// <summary>
+        /// Whether an unmatched resource is one the comparison can drop in silence.
+        ///
+        /// A matcher keys on a business identifier, and nothing upstream guarantees those are
+        /// unique within a bundle. When a key repeats, the matcher keeps the first and hands the
+        /// rest over as unmatched - which is right, because it genuinely cannot tell which of them
+        /// the other side's resource corresponds to. Two observations sharing a DDS id turned out
+        /// to be different measurements from different practices, and reporting that ambiguity is
+        /// the safe answer.
+        ///
+        /// But a repeat that is indistinguishable from the one already kept is not ambiguous.
+        /// A record carrying the same practitioner twice - identical name, identical identifiers,
+        /// differing only in the id each side minted for it - poses no question a reviewer could
+        /// answer, and asking it on every comparison trains people to tick past the ones that
+        /// matter.
+        ///
+        /// Indistinguishable is judged after the ignore rules run, which is why this lives here
+        /// rather than in the matcher: the matcher sees raw resources, where a per-request id is
+        /// enough to make two copies of one record look different. Deciding it on raw text would
+        /// mean never suppressing anything.
+        ///
+        /// Only a repeat is eligible. An unmatched resource whose key has no counterpart on the
+        /// other side is a real finding and has nothing to be compared against, so it is always
+        /// reported.
+        /// </summary>
+        private async ValueTask<bool> IsIndistinguishableFromKeptResourceAsync(
+            UnmatchedResource unmatchedResource,
+            ResourceMatch resourceMatch,
+            string resourceType)
+        {
+            if (string.IsNullOrEmpty(unmatchedResource.Identifier))
+            {
+                return false;
+            }
+
+            MatchedResource keptMatch = resourceMatch.Matched.FirstOrDefault(match =>
+                match.MatchKey == unmatchedResource.Identifier);
+
+            if (keptMatch is null)
+            {
+                return false;
+            }
+
+            // The kept resource from the same side as the repeat. Comparing against the other
+            // side's would answer a different question - whether the two providers agree - which
+            // is what the rest of the comparison is for.
+            JsonElement keptResource = unmatchedResource.IsFromSource1
+                ? keptMatch.Source1
+                : keptMatch.Source2;
+
+            string path = $"$.{resourceType}[{unmatchedResource.Identifier}]";
+
+            JsonElement normalizedKept = await ApplyIgnoreRules(keptResource, path);
+
+            JsonElement normalizedRepeat =
+                await ApplyIgnoreRules(unmatchedResource.Resource, path);
+
+            return normalizedKept.GetRawText() == normalizedRepeat.GetRawText();
+        }
+
+        /// <summary>
+        /// Normalises an element for comparison: children first, then the rules against the
+        /// normalised element.
+        ///
+        /// The order matters, and getting it the other way round was a bug worth naming. Running
+        /// the rules first meant the first rule to claim an element returned its replacement and
+        /// nothing below that element was ever visited. ArrayOrderIgnoreProcessingRule claims
+        /// *every* array, so nothing inside any array reached the GUID, id or meta rules, and the
+        /// array branch that used to sit below the rule loop was unreachable. A reference buried
+        /// in List.entry[] was compared raw while the identical reference on a resource's own
+        /// property was masked - the same data treated two different ways depending on whether an
+        /// array sat above it.
+        ///
+        /// Descending first also means the array rule sorts values that have already been
+        /// normalised, so its ordering is stable across two sources whose GUIDs differ.
+        /// </summary>
         private async ValueTask<JsonElement> ApplyIgnoreRules(JsonElement element, string path)
         {
-            foreach (var rule in ignoreRules)
-            {
-                if (await rule.ShouldIgnoreAsync(element, path))
-                {
-                    return await rule.GetReplacementAsync(element);
-                }
-            }
+            JsonElement normalizedElement = element;
 
             if (element.ValueKind == JsonValueKind.Object)
             {
@@ -325,10 +401,9 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                         await ApplyIgnoreRules(prop.Value, $"{path}.{prop.Name}");
                 }
 
-                return await jsonElementService.CreateObjectElement(properties);
+                normalizedElement = await jsonElementService.CreateObjectElement(properties);
             }
-
-            if (element.ValueKind == JsonValueKind.Array)
+            else if (element.ValueKind == JsonValueKind.Array)
             {
                 var elements = new List<JsonElement>();
                 int index = 0;
@@ -342,10 +417,18 @@ namespace LondonFhirService.Core.Services.Orchestrations.Comparisons
                     index++;
                 }
 
-                return await jsonElementService.CreateArrayElement(elements);
+                normalizedElement = await jsonElementService.CreateArrayElement(elements);
             }
 
-            return element;
+            foreach (var rule in ignoreRules)
+            {
+                if (await rule.ShouldIgnoreAsync(normalizedElement, path))
+                {
+                    return await rule.GetReplacementAsync(normalizedElement);
+                }
+            }
+
+            return normalizedElement;
         }
 
         private void CompareElements(

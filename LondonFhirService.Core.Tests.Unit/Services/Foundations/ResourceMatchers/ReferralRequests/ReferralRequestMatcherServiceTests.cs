@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -202,6 +202,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             return ParseJsonElement(json);
         }
+
+        // The match key is the DDS identifier qualified by the practice that issued it. These
+        // fixtures build resources with no meta.tag, so the practice half is empty - which is the
+        // documented behaviour for a resource that carries no ODS code, not an accident of the
+        // fixture.
+        private static string ExpectedMatchKey(string ddsIdentifierValue, string odsCode = "") =>
+            $"{odsCode}|{ddsIdentifierValue}";
 
         private static JsonElement ParseJsonElement(string json) =>
             JsonDocument.Parse(json).RootElement.Clone();

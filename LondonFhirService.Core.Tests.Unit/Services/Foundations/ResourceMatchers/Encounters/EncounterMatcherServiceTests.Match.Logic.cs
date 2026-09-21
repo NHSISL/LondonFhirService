@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -34,7 +34,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, inputDdsIdentifierValue));
+                new MatchedResource(source1Resource, source2Resource, ExpectedMatchKey(inputDdsIdentifierValue)));
 
             // when
             ResourceMatch actualResourceMatch = await this.encounterMatcherService.MatchAsync(
@@ -66,7 +66,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Unmatched.Add(
-                new UnmatchedResource(source1Resource, "Encounter", inputDdsIdentifierValue, true));
+                new UnmatchedResource(source1Resource, "Encounter", ExpectedMatchKey(inputDdsIdentifierValue), true));
 
             // when
             ResourceMatch actualResourceMatch = await this.encounterMatcherService.MatchAsync(
@@ -98,7 +98,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Unmatched.Add(
-                new UnmatchedResource(source2Resource, "Encounter", inputDdsIdentifierValue, false));
+                new UnmatchedResource(source2Resource, "Encounter", ExpectedMatchKey(inputDdsIdentifierValue), false));
 
             // when
             ResourceMatch actualResourceMatch = await this.encounterMatcherService.MatchAsync(
@@ -134,7 +134,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, inputDdsIdentifierValue));
+                new MatchedResource(source1Resource, source2Resource, ExpectedMatchKey(inputDdsIdentifierValue)));
 
             // when
             ResourceMatch actualResourceMatch = await this.encounterMatcherService.MatchAsync(

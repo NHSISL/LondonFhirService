@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -62,7 +62,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             // then
             actualResourceMatch.Matched.Should().HaveCount(1);
-            actualResourceMatch.Matched[0].MatchKey.Should().Be(sharedDdsIdentifierValue);
+            actualResourceMatch.Matched[0].MatchKey.Should().Be(ExpectedMatchKey(sharedDdsIdentifierValue));
             actualResourceMatch.Unmatched.Should().BeEmpty();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
@@ -92,7 +92,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             // then
             actualResourceMatch.Matched.Should().BeEmpty();
             actualResourceMatch.Unmatched.Should().HaveCount(1);
-            actualResourceMatch.Unmatched[0].Identifier.Should().Be(ddsIdentifierValue);
+            actualResourceMatch.Unmatched[0].Identifier.Should().Be(ExpectedMatchKey(ddsIdentifierValue));
             actualResourceMatch.Unmatched[0].IsFromSource1.Should().BeTrue();
             actualResourceMatch.Unmatched[0].ResourceType.Should().Be("Appointment");
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -123,7 +123,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             // then
             actualResourceMatch.Matched.Should().BeEmpty();
             actualResourceMatch.Unmatched.Should().HaveCount(1);
-            actualResourceMatch.Unmatched[0].Identifier.Should().Be(ddsIdentifierValue);
+            actualResourceMatch.Unmatched[0].Identifier.Should().Be(ExpectedMatchKey(ddsIdentifierValue));
             actualResourceMatch.Unmatched[0].IsFromSource1.Should().BeFalse();
             actualResourceMatch.Unmatched[0].ResourceType.Should().Be("Appointment");
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -199,15 +199,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
 
             // then
             actualResourceMatch.Matched.Should().HaveCount(1);
-            actualResourceMatch.Matched[0].MatchKey.Should().Be(sharedDdsIdentifierValue);
+            actualResourceMatch.Matched[0].MatchKey.Should().Be(ExpectedMatchKey(sharedDdsIdentifierValue));
             actualResourceMatch.Unmatched.Should().HaveCount(2);
 
             actualResourceMatch.Unmatched.Should().Contain(unmatchedResource =>
-                unmatchedResource.Identifier == source1OnlyDdsIdentifierValue
+                unmatchedResource.Identifier == ExpectedMatchKey(source1OnlyDdsIdentifierValue)
                 && unmatchedResource.IsFromSource1 == true);
 
             actualResourceMatch.Unmatched.Should().Contain(unmatchedResource =>
-                unmatchedResource.Identifier == source2OnlyDdsIdentifierValue
+                unmatchedResource.Identifier == ExpectedMatchKey(source2OnlyDdsIdentifierValue)
                 && unmatchedResource.IsFromSource1 == false);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
@@ -235,7 +235,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ResourceMatcher
             var expectedResourceMatch = new ResourceMatch();
 
             expectedResourceMatch.Matched.Add(
-                new MatchedResource(source1Resource, source2Resource, inputDdsIdentifierValue));
+                new MatchedResource(source1Resource, source2Resource, ExpectedMatchKey(inputDdsIdentifierValue)));
 
             // when
             ResourceMatch actualResourceMatch = await this.appointmentMatcherService.MatchAsync(

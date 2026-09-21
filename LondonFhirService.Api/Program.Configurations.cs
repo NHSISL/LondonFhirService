@@ -450,6 +450,7 @@ public partial class Program
         services.AddTransient<IJsonIgnoreProcessingRule, GuidIgnoreProcessingRule>();
         services.AddTransient<IJsonIgnoreProcessingRule, IdIgnoreProcessingRule>();
         services.AddTransient<IJsonIgnoreProcessingRule, MetaIgnoreProcessingRule>();
+        services.AddTransient<IJsonIgnoreProcessingRule, ReferenceIgnoreProcessingRule>();
     }
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)

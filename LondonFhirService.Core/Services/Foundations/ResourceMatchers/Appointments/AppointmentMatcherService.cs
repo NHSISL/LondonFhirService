@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -19,7 +19,6 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
 
         public override string ResourceType => "Appointment";
 
-        private const string DdsIdentifierSystem = "https://fhir.hl7.org.uk/Id/dds";
 
         public override ValueTask<string> GetMatchKeyAsync(
             JsonElement resource, Dictionary<string, JsonElement> resourceIndex) =>
@@ -90,27 +89,7 @@ namespace LondonFhirService.Core.Services.Foundations.ResourceMatchers.Appointme
             return resourceMatch;
         });
 
-        internal virtual string InternalGetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex)
-        {
-            if (!resource.TryGetProperty("identifier", out var identifiers))
-                return null;
-
-            foreach (var identifierElement in identifiers.EnumerateArray())
-            {
-                if (!identifierElement.TryGetProperty("system", out var system))
-                    continue;
-
-                var systemValue = system.GetString();
-                if (systemValue == DdsIdentifierSystem)
-                {
-                    if (identifierElement.TryGetProperty("value", out var value))
-                    {
-                        return value.GetString();
-                    }
-                }
-            }
-
-            return null;
-        }
+        internal virtual string InternalGetMatchKey(JsonElement resource, Dictionary<string, JsonElement> resourceIndex) =>
+            PracticeQualifiedDdsMatchKey.Build(resource);
     }
 }
