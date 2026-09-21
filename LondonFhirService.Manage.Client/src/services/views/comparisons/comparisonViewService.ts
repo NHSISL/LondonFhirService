@@ -429,7 +429,7 @@ export class ComparisonViewService implements IComparisonViewService {
 
             roleClassName: side === "primary"
                 ? "badge bg-primary"
-                : "badge bg-light text-dark border",
+                : "badge bg-info text-dark",
 
             statusText: fhirRecordStatusTexts[fhirRecord.status] ?? notSetText,
 

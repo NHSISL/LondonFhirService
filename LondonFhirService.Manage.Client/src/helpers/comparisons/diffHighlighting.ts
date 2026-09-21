@@ -102,9 +102,38 @@ export function getUnhighlightedPatientDiffs(
         getFieldFromPath(diff.path) === null && appliesToSide(diff, side));
 }
 
-// The resource types the card lays out a section for. Everything else the comparison can report -
-// an Organization, a Practitioner, an Encounter - has nowhere of its own to appear.
-const sectionedResourceTypes = ["Patient", "EpisodeOfCare", "List", "MedicationStatement"];
+// The resource types the card lays out a section for. Everything else the comparison can
+// report - a RelatedPerson, which has no matcher registered server side at all - has nowhere of
+// its own to appear.
+const sectionedResourceTypes = [
+    "Patient",
+    "EpisodeOfCare",
+    "List",
+    "MedicationStatement",
+    "Observation",
+    "Condition",
+    "AllergyIntolerance",
+    "Immunization",
+    "Encounter",
+    "FamilyMemberHistory",
+    "PractitionerRole",
+    "Organization",
+    "Practitioner",
+    "Location",
+    "MedicationRequest",
+    "DiagnosticReport",
+    "Procedure",
+    "ProcedureRequest",
+    "ReferralRequest",
+    "Appointment"
+];
+
+// Resource types whose own item rows show a manual-review-required diff themselves, attached to
+// every resource that shares the key the engine could not resolve - see getAmbiguousDiffs. A
+// manual-review-required diff for one of these never needs to fall through to Other differences;
+// it already has an honest home. Extend this list if another sectioned type grows the same
+// duplicate-identifier ambiguity in its own data.
+const ambiguousDiffItemResourceTypes = ["Observation", "FamilyMemberHistory"];
 
 // Every difference the card would otherwise not show: the Patient ones no field claims, and all
 // of those against a resource type the card has no section for. Without this the card and the
@@ -114,6 +143,13 @@ export function getOtherDiffs(diffs: DiffItemView[], side: ComparisonSide): Diff
     return diffs.filter(diff => {
         if (appliesToSide(diff, side) === false) {
             return false;
+        }
+
+        // No matched resource means no item to attach the diff to, whatever its resource type -
+        // this is the only place left for it to be seen and accepted. Except the resource types
+        // that show it on their own item rows instead - see ambiguousDiffItemResourceTypes.
+        if (diff.type === "manual-review-required") {
+            return ambiguousDiffItemResourceTypes.includes(diff.resourceTypeText ?? "") === false;
         }
 
         const resourceType = diff.resourceTypeText ?? "";
@@ -127,9 +163,10 @@ export function getOtherDiffs(diffs: DiffItemView[], side: ComparisonSide): Diff
 }
 
 // A removal is something only the primary has; an addition, only the secondary. A modification is
-// on both.
+// on both. A manual-review-required diff has no matched counterpart to say which side it belongs
+// to, so it is shown on both - the alternative is hiding it everywhere.
 function appliesToSide(diff: DiffItemView, side: ComparisonSide): boolean {
-    if (diff.type === "modified") {
+    if (diff.type === "modified" || diff.type === "manual-review-required") {
         return true;
     }
 

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button, Col, Form, Row } from "react-bootstrap";
+import { DiffCountBadge, OrganizationSection, PractitionerSection } from "./resourceSections";
 import { DiffHighlight } from "./DiffHighlight";
 import { ExpandableRow } from "./ExpandableRow";
-import { OrganizationSection, PractitionerSection } from "./resourceSections";
 import { expansionKeys } from "./expansionKeys";
 import { formatPatientAddress } from "./patientFormatters";
 import type { DiffItemView } from "../../../models/views/comparisons/DiffItemView";
@@ -14,6 +14,23 @@ type PatientDetailsProps = {
     getFieldDiffs: (field: string) => DiffItemView[];
     context: ResourceTreeContext;
 };
+
+// Every field this panel lays out, excluding the ones the header renders instead (name, NHS
+// number) - added up for a badge that shows this panel has something outstanding before anyone
+// opens it, the same way a collapsed clinical list does.
+const detailsFields = [
+    "addressLine",
+    "addressCity",
+    "addressDistrict",
+    "addressPostalCode",
+    "addressCountry",
+    "birthDate",
+    "gender",
+    "telecom",
+    "communication",
+    "managingOrganizationRef",
+    "generalPractitionerRefs"
+];
 
 export function PatientDetails({
     patient,
@@ -29,6 +46,8 @@ export function PatientDetails({
     // local rather than joining the sections the two sides keep in step.
     const [showPatientJson, setShowPatientJson] = useState<boolean>(false);
 
+    const detailsDiffs = detailsFields.flatMap(fieldName => getFieldDiffs(fieldName));
+
     // Every field renders the same way: its value, outlined and tickable when the comparison found
     // a difference in it, plain when it did not.
     const field = (fieldName: string, value: string | null, className?: string) => (
@@ -38,17 +57,16 @@ export function PatientDetails({
     );
 
     return (
-        <>
-            <div className="mb-3 p-2 border rounded">
-                <ExpandableRow
-                    expanded={showPatientDetails}
-                    onToggle={() =>
-                        context.expansion.toggleExpanded(expansionKeys.patientDetails)}
-                    label={<strong>Patient details</strong>} />
-            </div>
+        <div className="mb-3 p-2 border rounded">
+            <ExpandableRow
+                expanded={showPatientDetails}
+                onToggle={() =>
+                    context.expansion.toggleExpanded(expansionKeys.patientDetails)}
+                label={<strong>Patient details</strong>}
+                badges={<DiffCountBadge diffs={detailsDiffs} />} />
 
             {showPatientDetails && (
-                <div className="p-3 border rounded mb-3 bg-light">
+                <div className="mt-2 pt-2 border-top">
                     <Form.Group className="mb-3">
                         <Form.Label className="text-muted small mb-1" as="div">
                             <ExpandableRow
@@ -117,14 +135,11 @@ export function PatientDetails({
                                 Managing organisation
                             </Form.Label>
 
-                            <DiffHighlight
+                            <OrganizationSection
+                                reference={patient.managingOrganizationRef}
+                                expansionKey={expansionKeys.managingOrganization}
                                 fieldDiffs={getFieldDiffs("managingOrganizationRef")}
-                                acceptance={context.acceptance}>
-                                <OrganizationSection
-                                    reference={patient.managingOrganizationRef}
-                                    expansionKey={expansionKeys.managingOrganization}
-                                    context={context} />
-                            </DiffHighlight>
+                                context={context} />
                         </Form.Group>
                     )}
 
@@ -134,19 +149,16 @@ export function PatientDetails({
                                 General practitioner
                             </Form.Label>
 
-                            <DiffHighlight
-                                fieldDiffs={getFieldDiffs("generalPractitionerRefs")}
-                                acceptance={context.acceptance}>
-                                {patient.generalPractitionerRefs.map(
-                                    (generalPractitionerRef, index) => (
-                                        <PractitionerSection
-                                            key={generalPractitionerRef}
-                                            reference={generalPractitionerRef}
-                                            expansionKey={
-                                                expansionKeys.generalPractitioner(index)}
-                                            context={context} />
-                                    ))}
-                            </DiffHighlight>
+                            {patient.generalPractitionerRefs.map(
+                                (generalPractitionerRef, index) => (
+                                    <PractitionerSection
+                                        key={generalPractitionerRef}
+                                        reference={generalPractitionerRef}
+                                        expansionKey={
+                                            expansionKeys.generalPractitioner(index)}
+                                        fieldDiffs={getFieldDiffs("generalPractitionerRefs")}
+                                        context={context} />
+                                ))}
                         </Form.Group>
                     )}
 
@@ -175,6 +187,6 @@ export function PatientDetails({
                     </Form.Group>
                 </div>
             )}
-        </>
+        </div>
     );
 }

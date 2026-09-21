@@ -6,4 +6,5 @@ export type ConditionData = {
     clinicalStatus: string | null;
     onsetDateTime: string | null;
     significance: string | null;
+    subjectRef: string | null;
 };

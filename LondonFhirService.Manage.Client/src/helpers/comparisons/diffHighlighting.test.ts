@@ -139,16 +139,15 @@ it("should render a box for every field a path can map to", () => {
     expect([...getMappableFields()].sort()).toEqual([...patientHighlightFields].sort());
 });
 
-// The card only lays out Patient, EpisodeOfCare, List and MedicationStatement. A difference in
-// anything else had nowhere to appear, so the card showed fewer differences than the list and
-// those it omitted could not be ticked from it.
+// RelatedPerson has no matcher registered server side, so the card cannot rebuild a key to show
+// its differences against any one row - a difference against it had nowhere to appear, so the
+// card showed fewer differences than the list and those it omitted could not be ticked from it.
 it("should surface a difference against a resource the card has no section for", () => {
     const diffs = [
-        createDiff({ key: "0", index: 0, resourceTypeText: "Organization", path: "name" }),
-        createDiff({ key: "1", index: 1, resourceTypeText: "Practitioner", path: "name" })
+        createDiff({ key: "0", index: 0, resourceTypeText: "RelatedPerson", path: "name" })
     ];
 
-    expect(getOtherDiffs(diffs, "secondary").map(diff => diff.key)).toEqual(["0", "1"]);
+    expect(getOtherDiffs(diffs, "secondary").map(diff => diff.key)).toEqual(["0"]);
 });
 
 it("should leave a difference its own section already shows out of the other list", () => {
@@ -156,8 +155,67 @@ it("should leave a difference its own section already shows out of the other lis
         createDiff({ key: "0", index: 0, resourceTypeText: "List", path: "entry" }),
         createDiff({ key: "1", index: 1, resourceTypeText: "EpisodeOfCare", path: "status" }),
         createDiff({ key: "2", index: 2, resourceTypeText: "MedicationStatement", path: "dosage" }),
-        createDiff({ key: "3", index: 3, resourceTypeText: "Patient", path: "gender" })
+        createDiff({ key: "3", index: 3, resourceTypeText: "Patient", path: "gender" }),
+        createDiff({ key: "4", index: 4, resourceTypeText: "Observation", path: "value" }),
+        createDiff({ key: "5", index: 5, resourceTypeText: "Condition", path: "clinicalStatus" }),
+        createDiff({ key: "6", index: 6, resourceTypeText: "Immunization", path: "status" }),
+        createDiff({ key: "7", index: 7, resourceTypeText: "Encounter", path: "status" }),
+        createDiff({ key: "8", index: 8, resourceTypeText: "FamilyMemberHistory", path: "name" }),
+        createDiff({ key: "9", index: 9, resourceTypeText: "AllergyIntolerance", path: "code" }),
+        createDiff({ key: "10", index: 10, resourceTypeText: "PractitionerRole", path: "code" }),
+        createDiff({ key: "11", index: 11, resourceTypeText: "Organization", path: "name" }),
+        createDiff({ key: "12", index: 12, resourceTypeText: "Practitioner", path: "name" }),
+        createDiff({ key: "13", index: 13, resourceTypeText: "Location", path: "name" }),
+        createDiff({ key: "14", index: 14, resourceTypeText: "MedicationRequest", path: "status" }),
+        createDiff({ key: "15", index: 15, resourceTypeText: "DiagnosticReport", path: "status" }),
+        createDiff({ key: "16", index: 16, resourceTypeText: "Procedure", path: "status" }),
+        createDiff({ key: "17", index: 17, resourceTypeText: "ProcedureRequest", path: "status" }),
+        createDiff({ key: "18", index: 18, resourceTypeText: "ReferralRequest", path: "status" }),
+        createDiff({ key: "19", index: 19, resourceTypeText: "Appointment", path: "status" })
     ];
 
+    expect(getOtherDiffs(diffs, "secondary")).toEqual([]);
+});
+
+// A manual-review-required diff has no matched resource to attach to, so a sectioned resource
+// type would otherwise swallow it silently - excluded from its own section (nothing to attach it
+// to) and excluded from Other differences (the type is "sectioned"). It has to surface somewhere,
+// on both sides, since there is no matched counterpart to say which side it belongs to.
+it("should surface a manual-review-required diff even for a sectioned resource type", () => {
+    const diffs = [
+        createDiff({
+            key: "0",
+            index: 0,
+            type: "manual-review-required",
+            resourceTypeText: "Condition",
+            path: "code"
+        })
+    ];
+
+    expect(getOtherDiffs(diffs, "primary").map(diff => diff.key)).toEqual(["0"]);
+    expect(getOtherDiffs(diffs, "secondary").map(diff => diff.key)).toEqual(["0"]);
+});
+
+// Observation and FamilyMemberHistory show a manual-review-required diff on their own item rows
+// instead - see getAmbiguousDiffs - so Other differences would only duplicate it.
+it("should leave a manual-review-required diff to its own item row for a resource type that shows one", () => {
+    const diffs = [
+        createDiff({
+            key: "0",
+            index: 0,
+            type: "manual-review-required",
+            resourceTypeText: "Observation",
+            path: "value"
+        }),
+        createDiff({
+            key: "1",
+            index: 1,
+            type: "manual-review-required",
+            resourceTypeText: "FamilyMemberHistory",
+            path: "name"
+        })
+    ];
+
+    expect(getOtherDiffs(diffs, "primary")).toEqual([]);
     expect(getOtherDiffs(diffs, "secondary")).toEqual([]);
 });
