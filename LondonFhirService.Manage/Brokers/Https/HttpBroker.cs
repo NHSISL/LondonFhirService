@@ -197,6 +197,16 @@ namespace LondonFhirService.Manage.Brokers.Https
                 readCancellation,
                 cancellationToken).ConfigureAwait(false);
 
+            // A bearer challenge, not content. An auth server rejecting the token this broker sent
+            // - wrong audience, expired, malformed - answers with an empty body by design: the
+            // reason lives on WWW-Authenticate instead, per RFC 6750. Falling back to it only when
+            // the body is empty means a provider that DOES explain itself in the body (an
+            // OperationOutcome, a token endpoint's JSON error) keeps taking priority - this is
+            // filling a gap, not overriding what the upstream chose to send.
+            string effectiveBody = string.IsNullOrWhiteSpace(responseBody)
+                ? ReadBearerChallenge(httpResponseMessage)
+                : responseBody;
+
             throw new HttpResponseException(
                 message:
                     $"Response status code does not indicate success: " +
@@ -204,8 +214,25 @@ namespace LondonFhirService.Manage.Brokers.Https
                         $"({httpResponseMessage.ReasonPhrase}).",
 
                 statusCode: httpResponseMessage.StatusCode,
-                responseBody: Truncate(responseBody));
+                responseBody: Truncate(effectiveBody));
         }
+
+        /// <summary>
+        /// The "Bearer ..." challenge a JwtBearer-protected upstream answers with on a 401, e.g.
+        /// error="invalid_token", error_description="The audience 'https://x' is invalid". It is
+        /// protocol text about the token, never patient data, so it is safe on the same property an
+        /// OperationOutcome body travels on and by the same route - PatientService reads it off
+        /// HttpResponseException.ResponseBody without knowing which of the two it received.
+        ///
+        /// Null when there is no Bearer challenge to read - a non-auth 4xx with an empty body, say
+        /// - so an upstream that genuinely said nothing still reports that way rather than an empty
+        /// string dressed up as a value.
+        /// </summary>
+        private static string ReadBearerChallenge(HttpResponseMessage httpResponseMessage) =>
+            httpResponseMessage.Headers.WwwAuthenticate
+                .Where(header => string.IsNullOrWhiteSpace(header.Parameter) is false)
+                .Select(header => $"{header.Scheme} {header.Parameter}")
+                .FirstOrDefault();
 
         /// <summary>
         /// HttpClient.Timeout does not cover this. It bounds the SendAsync call, and under
