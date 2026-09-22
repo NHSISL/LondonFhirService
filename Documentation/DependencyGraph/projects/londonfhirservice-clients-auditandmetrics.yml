@@ -8,7 +8,7 @@ components:
   - id: LIB.AMClient
     name: AuditAndMetricsClient
     layer: client
-    col: 11
+    col: 13
     shared: true
     description: "Follows the SecurityClient shape: owns its own ServiceCollection, registers everything it needs, builds a provider and resolves its two sub-clients from it. The host hands in the things the library cannot supply itself — somewhere to persist to, who the caller is, its configuration, a logger factory and (optionally) a dispatcher. Registered Scoped in both hosts, and it has to stay that way: SecurityAuditBroker captures the ClaimsPrincipal in its constructor, so a singleton would stamp every audit after the first with the wrong user."
     methods:
@@ -25,7 +25,7 @@ components:
   - id: LIB.AM.AuditClient
     name: AuditClient
     layer: client
-    col: 12
+    col: 14
     description: "The outward-facing surface over the audit foundation service. Service exceptions are re-thrown as client exceptions so callers depend on the client's contract rather than the service layer's. A missing audit comes out as AuditClientNotFoundException so a caller can answer 404 without naming the library's internal categorization types. Cancellation is deliberately not translated."
     methods:
       - LogAuditAsync
@@ -72,7 +72,7 @@ components:
   - id: LIB.AM.MetricClient
     name: MetricClient
     layer: client
-    col: 12
+    col: 14
     description: "The metric counterpart to AuditClient. Its TryCatch is written once rather than repeated per method. A missing span comes out as MetricClientNotFoundException — before that existed it was folded into MetricClientValidationException, whose inner NotFoundMetricException is internal to this library, so every miss reached callers as a 400."
     methods:
       - AddMetricAsync
@@ -111,7 +111,7 @@ components:
   - id: LIB.AM.AuditService
     name: AuditService
     layer: foundation
-    col: 12
+    col: 14
     description: "Validates and stamps the entry, then persists through the storage port. The Log* verbs defer only the write — everything above it runs on the caller's thread, so an entry is stamped with the time the event happened rather than the time the queue drained. Record* and Add* are awaited, for entries that must not be lost."
     methods:
       - LogAuditAsync
@@ -176,8 +176,8 @@ components:
   - id: LIB.AM.MetricService
     name: MetricService
     layer: foundation
-    col: 12
-    description: "The fan-out point: one span, two destinations. Every write persists through the storage port and then publishes the same span to the telemetry sink. Recording is governed by IsMetricsEnabled, and the retention sweep by IsMetricsPurgingAllowed / MetricsRetentionPeriodInDays / PurgeBatchSize. It holds both a metricStorageBroker and a metricBroker — the port it persists through and this library's own ActivitySource sink."
+    col: 14
+    description: "The fan-out point: one span, two destinations. Every write persists through the storage port and then publishes the same span to the telemetry sink. Recording is governed by IsMetricsEnabled, and the retention sweep by IsMetricsPurgingAllowed / MetricsRetentionPeriodInDays / PurgeBatchSize. It holds both a metricStorageBroker and a metricBroker — the port it persists through and this library's own ActivitySource sink. Each span is also stamped with the request's own span id, asked for through IRequestTraceBroker while the request is still alive and carried into the deferred write, because the replay runs later on a background worker with no request left to ask. The Log* pair defer through the dispatcher; the Add* pair write inline."
     methods:
       - AddMetricAsync
       - AddMetricsAsync
@@ -227,13 +227,28 @@ components:
       - from: LogMetricsAsync
         to: LIB.AM.MetricBroker
         method: RecordAsync
+      - from: LogMetricAsync
+        to: API.Dispatcher
+        method: TryDispatch
       - from: LogMetricsAsync
         to: API.Dispatcher
         method: TryDispatch
+      - from: AddMetricAsync
+        to: RequestTraceBroker
+        method: GetRequestSpanIdAsync
+      - from: AddMetricsAsync
+        to: RequestTraceBroker
+        method: GetRequestSpanIdAsync
+      - from: LogMetricAsync
+        to: RequestTraceBroker
+        method: GetRequestSpanIdAsync
+      - from: LogMetricsAsync
+        to: RequestTraceBroker
+        method: GetRequestSpanIdAsync
   - id: LIB.AM.MetricBroker
     name: MetricBroker (telemetry)
     layer: broker
-    col: 12
+    col: 14
     description: "Emits completed spans to the telemetry pipeline — the second sink for the same spans the storage port persists. The ActivitySource is cached by name and shared across instances, because a source registers itself with the diagnostics subsystem for its lifetime and this broker is transient inside a scoped client. Recording is best effort and never affects the measured request. Named IMetricBroker in its own namespace; not to be confused with Core.Abstractions' IMetricStorageBroker-era naming."
     methods:
       - RecordAsync

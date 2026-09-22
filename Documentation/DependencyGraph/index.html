@@ -188,6 +188,7 @@
   </div>
 </div>
 
+<script src="./graph-data.js"></script>
 <script>
 /* =====================================================================
    Graph data loader.
@@ -349,22 +350,34 @@ function assembleGraph(manifest, docs) {
       'line-height:1.7;color:var(--text-dim)">' +
       '<div style="color:var(--edge-circular);font-weight:700;margin-bottom:10px">' +
       'graph data did not load</div>' +
-      'This page fetches <code>graph.yml</code> and the per-project files it ' +
-      'lists from <code>projects/</code>, next to index.html. Browsers block ' +
-      'those fetches for pages opened straight from disk — serve the folder ' +
-      'instead:' +
-      '<pre style="margin:14px 0 0;color:var(--text)">python -m http.server 8731 ' +
-      '--bind 127.0.0.1</pre>' +
-      '<div style="margin-top:6px">then open <code>http://127.0.0.1:8731/</code> ' +
+      'This page reads <code>graph.yml</code> and the per-project files it ' +
+      'lists from <code>projects/</code>, next to index.html. When opened ' +
+      'straight from disk it falls back to the bundled copy in ' +
+      '<code>graph-data.js</code>, which must sit next to index.html — ' +
+      'regenerate it with:' +
+      '<pre style="margin:14px 0 0;color:var(--text)">powershell -File ' +
+      'Build-GraphData.ps1</pre>' +
+      '<div style="margin-top:6px">or serve the folder ' +
+      '(<code>python -m http.server 8731 --bind 127.0.0.1</code>) ' +
       '— or use the published GitHub Pages copy.</div>' +
       '<div style="margin-top:10px;color:var(--text-faint)">' + String(err && err.message || err)
         .replace(/&/g, "&amp;").replace(/</g, "&lt;") + '</div></div>';
   }
 
+  // Served over HTTP the YAML is fetched fresh. Opened from disk (file://)
+  // browsers block fetch, so fall back to the bundled copy in graph-data.js
+  // (regenerate it with Build-GraphData.ps1 after editing the YAML).
+  const bundled = window.LFS_YAML || {};
   async function fetchText(url) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(url + ": HTTP " + res.status);
-    return res.text();
+    const key = url.replace(/^\.\//, "");
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(url + ": HTTP " + res.status);
+      return await res.text();
+    } catch (err) {
+      if (typeof bundled[key] === "string") return bundled[key];
+      throw err;
+    }
   }
 
   async function load() {

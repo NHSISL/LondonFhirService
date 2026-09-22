@@ -8,7 +8,7 @@ components:
   - id: LIB.SecurityClient
     name: SecurityClient
     layer: client
-    col: 11
+    col: 13
     shared: true
     description: "ISL.Security.Client 6.0.0. Core's SecurityBroker and SecurityAuditBroker each `new SecurityClient()` directly (it is not DI-registered) and pass the ClaimsPrincipal taken from IHttpContextAccessor — or parsed from a JWT / supplied directly by the two non-REST constructors."
     methods:

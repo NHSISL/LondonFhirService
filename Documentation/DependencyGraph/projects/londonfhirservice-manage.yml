@@ -86,7 +86,7 @@ components:
     name: FhirRecordsController
     layer: exposer
     col: 4
-    description: "RESTFulController over FhirRecord, [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
+    description: "RESTFulController over FhirRecord. Every verb carries its own [Authorize], each one ManageRoles.AdministratorsAndUsers widened with a granular app role (FhirRecords.Read / Create / Update / Delete) — so the two portal roles still pass and a caller holding only the granular role passes too. The [InvisibleApi] attributes are commented out rather than absent: the comparison screens read these rows, so the verbs have to be routable. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
     methods:
       - POST /api/FhirRecords
       - GET /api/FhirRecords
@@ -113,7 +113,7 @@ components:
     name: FhirRecordDifferencesController
     layer: exposer
     col: 4
-    description: "RESTFulController over FhirRecordDifference, [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
+    description: "RESTFulController over FhirRecordDifference, [Authorize(Roles = ManageRoles.AdministratorsAndUsers)] at class level with each verb widening that to a granular app role as well (FhirRecordDifferences.Read / Create / Update / Delete). Nothing here is [InvisibleApi] — the comparison screens read these rows and annotate them. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses."
     methods:
       - POST /api/FhirRecordDifferences
       - GET /api/FhirRecordDifferences
@@ -136,6 +136,46 @@ components:
       - from: "DELETE /api/FhirRecordDifferences/{fhirRecordDifferenceId}"
         to: FS.FhirRecordDifference
         method: RemoveFhirRecordDifferenceByIdAsync
+  - id: MG.Patients
+    name: PatientsController
+    layer: exposer
+    col: 4
+    description: "The operator-facing side of $getstructuredrecord — it exists so someone holding a consumer's credentials can see exactly what that consumer would receive without standing up a client. [Authorize(Roles = ManageRoles.AdministratorsAndUsers)] and deliberately not [InvisibleApi]: unlike the seed-and-tear-down verbs on the telemetry controllers, this endpoint is the feature. A POST although it reads, because an NHS number, a date of birth and client credentials do not belong in a query string that server logs and browser history keep. It answers Content(payload, \"text/plain\") rather than Ok(string) so a caller sending a strict Accept header is not handed the provider's payload serialised AS a JSON string, and returns the Api's own X-Correlation-Id on a header rather than in the body, so the page can send an operator on to the comparisons and metrics that same call produced."
+    methods:
+      - POST /api/Patients/getstructuredrecord
+    calls:
+      - from: POST /api/Patients/getstructuredrecord
+        to: MG.PatientService
+        method: GetStructuredRecordAsync
+  - id: MG.PatientService
+    name: PatientService
+    layer: foundation
+    col: 5
+    description: "Two round trips through one broker: a client credentials token exchange against PatientConfiguration.AuthUrl, then the CareConnect $getstructuredrecord operation carrying that token. Credentials are resolved per request — each of the four fields falls back to its PatientConfiguration counterpart only when the caller leaves it blank, which is what lets the page prove one consumer's credentials without disturbing the configured ones. It builds the STU3 Parameters body itself and sends it as application/fhir+json; includeInactivePatients is always false because this is a diagnostic view of what a consumer would get. ILoggingBroker is its only other dependency and is used on the exception path only, so no edge is drawn for it."
+    methods:
+      - GetStructuredRecordAsync
+    calls:
+      - from: GetStructuredRecordAsync
+        to: MG.HttpBroker
+        method: PostFormUrlEncodedContentAsync
+      - from: GetStructuredRecordAsync
+        to: MG.HttpBroker
+        method: PostJsonContentAsync
+  - id: MG.HttpBroker
+    name: HttpBroker
+    layer: broker
+    col: 6
+    description: "A thin wrapper over HTTP, named for the transport rather than for either endpoint it is pointed at, so the same broker serves the token call and the structured record call — the urls are the caller's. Neither method parses the body: the token response and the FHIR bundle are the service's to read. A non-2xx throws HttpResponseException carrying the status code and the response body on a property rather than in the message or Exception.Data, because what an upstream says when it refuses is the most useful thing it says and can also name a patient. Registered as a typed client (AddHttpClient) with a 150 second timeout — longer than the Api endpoint's own 130 — and sends with HttpCompletionOption.ResponseHeadersRead so a large bundle is never buffered. Neither destination is drawn as a node, the way ConsumerAccessBroker's remote endpoint is not: both are urls from PatientConfiguration. GetStructuredRecordUrl is pointed at this solution's own Api host in every environment — the same POST /api/STU3/Patient/$getstructuredrecord a consumer would call — and AuthUrl at the Entra token endpoint that issues the bearer for it."
+    methods:
+      - PostFormUrlEncodedContentAsync
+      - PostJsonContentAsync
+    calls:
+      - from: PostFormUrlEncodedContentAsync
+        to: EXT.HttpClient
+        method: SendAsync
+      - from: PostJsonContentAsync
+        to: EXT.HttpClient
+        method: SendAsync
   - id: MG.Features
     name: FeaturesController
     layer: exposer

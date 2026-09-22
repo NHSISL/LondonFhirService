@@ -8,7 +8,7 @@ components:
   - id: LIB.FhirAbstractionProvider
     name: FhirAbstractionProvider
     layer: client
-    col: 11
+    col: 13
     shared: true
     deriveMethods: true
     description: "LondonFhirService.Providers.FHIR.STU3.Abstractions. Registered as a singleton wrapping the DDS and LDS providers; Stu3FhirBroker forwards its whole typed-resource surface. Method rows are derived from the declared edges."
@@ -20,7 +20,7 @@ components:
   - id: LIB.FhirProvider
     name: IFhirProvider
     layer: client
-    col: 12
+    col: 14
     shared: true
     description: "The per-provider surface Stu3PatientService actually calls, resolved out of the FhirProviders collection by matching Provider.FullyQualifiedName. Two implementations are registered: DdsStu3Provider and LdsStu3Provider."
     methods:

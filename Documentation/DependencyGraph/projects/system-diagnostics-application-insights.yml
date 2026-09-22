@@ -8,7 +8,7 @@ components:
   - id: EXT.ActivitySource
     name: "ActivitySource → Application Insights"
     layer: external
-    col: 13
+    col: 15
     shared: true
     deriveMethods: true
     description: "System.Diagnostics.ActivitySource. The audit and metrics library publishes every completed span here as a second sink alongside the database. Nothing was subscribed until MetricTelemetryPublisher was added; it lives in Core and both hosts register it — every span published before that was dropped before it reached Application Insights."
