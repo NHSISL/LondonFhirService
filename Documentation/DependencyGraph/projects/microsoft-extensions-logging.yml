@@ -8,7 +8,7 @@ components:
   - id: EXT.ILogger
     name: "ILogger<LoggingBroker>"
     layer: external
-    col: 13
+    col: 15
     shared: true
     deriveMethods: true
     description: "Microsoft.Extensions.Logging. The only sink LoggingBroker writes to; Application Insights is wired at host level."

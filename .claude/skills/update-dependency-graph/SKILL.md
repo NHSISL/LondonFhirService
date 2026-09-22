@@ -103,10 +103,22 @@ outbound `calls` (`from: null` = header-level link); manifest-level lists
   script that mirrors index.html's `parseYaml`, or just load the page and
   watch for its "graph data did not load" panel, which prints the error.
 
-## 4/ Verify in the browser
+## 4/ Rebuild the from-disk bundle
 
-Both views read the same data. Serve the folder over HTTP — the page fetches graph.yml and the project
-files, and browsers block those fetches from file:// pages:
+`index.html` falls back to `graph-data.js` (a generated bundle of the same
+YAML text) when opened from `file://`, because browsers block fetch there.
+After every data edit regenerate it and commit the result:
+
+```bash
+powershell -File Documentation/DependencyGraph/Build-GraphData.ps1
+```
+
+Never edit `graph-data.js` by hand.
+
+## 5/ Verify in the browser
+
+Both views read the same data. Serve the folder over HTTP so the freshly
+edited YAML is fetched rather than the bundle:
 
 ```bash
 python -m http.server 8731 --bind 127.0.0.1
@@ -136,7 +148,7 @@ clearSelection, rebuild, fit, tracePath }). Confirm:
 - Red edges appear ONLY if a real publish/subscribe cycle now exists — if one
   shows up, verify it against the source before accepting it.
 
-## 5/ Finish
+## 6/ Finish
 
 Update the "Current truths" section and scan date in
 `Documentation/DependencyGraph/README.md` (and the node/flow counts if they

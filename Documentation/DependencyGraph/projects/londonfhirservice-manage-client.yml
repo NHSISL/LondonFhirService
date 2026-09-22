@@ -90,13 +90,16 @@ components:
     name: ComparisonsPage
     layer: exposer
     col: 0
-    description: "Route admin/comparisons. The paged list of FHIR record differences, with an unresolved-only filter."
+    description: "Route admin/comparisons. The paged list of FHIR record differences, with an unresolved-only filter, above a second list of pending comparisons — records that have landed but have not been compared yet. The two come from different entities: a difference row is the result, a pending FhirRecord is the queue, so the page asks the view service for each separately."
     methods:
       - admin/comparisons
     calls:
       - from: admin/comparisons
         to: MC.ComparisonViewService
         method: retrieveComparisonPageViewAsync
+      - from: admin/comparisons
+        to: MC.ComparisonViewService
+        method: retrievePendingComparisonViewsAsync
   - id: MC.ComparisonDetailPage
     name: ComparisonDetailPage
     layer: exposer
@@ -165,6 +168,20 @@ components:
       - from: "admin/providers/:providerId"
         to: MC.ProviderViewService
         method: removeProviderAsync
+  - id: MC.StructuredRecordPage
+    name: StructuredRecordPage
+    layer: exposer
+    col: 0
+    description: "Route admin/structured-record. Calls $getstructuredrecord live with credentials the operator types, and renders the payload that comes back. Its useStructuredRecordPage hook owns the form values, the AbortController that abandons an in-flight lookup, and the split of a failure into per-field messages and a banner — the view service says which errors belong under an input by reporting only the form-backed fields as fieldErrors."
+    methods:
+      - admin/structured-record
+    calls:
+      - from: admin/structured-record
+        to: MC.StructuredRecordViewService
+        method: createStructuredRecordFormValues
+      - from: admin/structured-record
+        to: MC.StructuredRecordViewService
+        method: retrieveStructuredRecordViewAsync
   - id: MC.AuditViewService
     name: auditViewService
     layer: view
@@ -208,9 +225,10 @@ components:
     name: comparisonViewService
     layer: view
     col: 1
-    description: "Assembles a comparison from a difference row and, for the detail view, the FHIR record behind it. Marking diffs acceptable and saving the form are both read-modify-write: the row is re-read first so a save cannot clobber a field the page never showed."
+    description: "Assembles a comparison from a difference row and, for the detail view, both FHIR records behind it — fetched together with Promise.allSettled, so a comparison whose secondary record has since been removed is still worth seeing. Marking diffs acceptable and saving the form are both read-modify-write: the row is re-read first so a save cannot clobber a field the page never showed. retrievePendingComparisonViewsAsync reads the other side of the same screen — records that have landed but have not been compared yet — from the FHIR record queue rather than from difference rows."
     methods:
       - retrieveComparisonPageViewAsync
+      - retrievePendingComparisonViewsAsync
       - retrieveComparisonDetailViewAsync
       - createComparisonFormValues
       - setDiffAcceptanceAsync
@@ -219,24 +237,39 @@ components:
       - from: retrieveComparisonPageViewAsync
         to: MC.FhirRecordDifferenceService
         method: retrieveFhirRecordDifferencesAsync
+      - from: retrievePendingComparisonViewsAsync
+        to: MC.FhirRecordService
+        method: retrievePendingFhirRecordsAsync
       - from: retrieveComparisonDetailViewAsync
         to: MC.FhirRecordDifferenceService
         method: retrieveFhirRecordDifferenceByIdAsync
-      - from: setDiffAcceptanceAsync
-        to: MC.FhirRecordDifferenceService
-        method: retrieveFhirRecordDifferenceByIdAsync
-      - from: setDiffAcceptanceAsync
-        to: MC.FhirRecordDifferenceService
-        method: modifyFhirRecordDifferenceAsync
-      - from: updateComparisonAsync
-        to: MC.FhirRecordDifferenceService
-        method: retrieveFhirRecordDifferenceByIdAsync
-      - from: updateComparisonAsync
-        to: MC.FhirRecordDifferenceService
-        method: modifyFhirRecordDifferenceAsync
-      - from: updateComparisonAsync
+      - from: retrieveComparisonDetailViewAsync
         to: MC.FhirRecordService
         method: retrieveFhirRecordByIdAsync
+      - from: setDiffAcceptanceAsync
+        to: MC.FhirRecordDifferenceService
+        method: retrieveFhirRecordDifferenceByIdAsync
+      - from: setDiffAcceptanceAsync
+        to: MC.FhirRecordDifferenceService
+        method: modifyFhirRecordDifferenceAsync
+      - from: updateComparisonAsync
+        to: MC.FhirRecordDifferenceService
+        method: retrieveFhirRecordDifferenceByIdAsync
+      - from: updateComparisonAsync
+        to: MC.FhirRecordDifferenceService
+        method: modifyFhirRecordDifferenceAsync
+  - id: MC.StructuredRecordViewService
+    name: structuredRecordViewService
+    layer: view
+    col: 1
+    description: "Owns the form's empty values (grant type pre-filled with client_credentials, because that is what every consumer of this endpoint uses) and turns one lookup into the view the page renders. It is also where a failure is sorted: the API names the field it rejected, and only the six fields the form actually shows are returned as fieldErrors — AuthUrl and GetStructuredRecordUrl are configuration, so a message about them has no input to sit under and goes to the banner instead. A PatientValidationException is rethrown untouched rather than wrapped, so someone who mistyped a date is not told to contact support."
+    methods:
+      - createStructuredRecordFormValues
+      - retrieveStructuredRecordViewAsync
+    calls:
+      - from: retrieveStructuredRecordViewAsync
+        to: MC.PatientService
+        method: retrieveStructuredRecordAsync
   - id: MC.ProviderViewService
     name: providerViewService
     layer: view
@@ -365,13 +398,28 @@ components:
     name: fhirRecordService
     layer: foundation
     col: 2
-    description: "One verb. The comparison detail view needs the record behind a difference row; nothing else in the SPA reads FHIR records."
+    description: "Read only, two verbs. The comparison detail view needs the records behind a difference row, and the comparisons list needs the records still waiting to be compared. Nothing in the SPA writes a FHIR record — they are written by the patient fan-out and settled by the comparison worker."
     methods:
       - retrieveFhirRecordByIdAsync
+      - retrievePendingFhirRecordsAsync
     calls:
       - from: retrieveFhirRecordByIdAsync
         to: MC.FhirRecordApiBroker
         method: getFhirRecordByIdAsync
+      - from: retrievePendingFhirRecordsAsync
+        to: MC.FhirRecordApiBroker
+        method: getPendingFhirRecordsAsync
+  - id: MC.PatientService
+    name: patientService
+    layer: foundation
+    col: 2
+    description: "One verb, and the SPA's only call that is not CRUD over a stored entity — it asks the host to go and fetch a patient record live. Validates the request before it leaves and localises the broker's exceptions, the way every other foundation service here does."
+    methods:
+      - retrieveStructuredRecordAsync
+    calls:
+      - from: retrieveStructuredRecordAsync
+        to: MC.PatientApiBroker
+        method: postStructuredRecordAsync
   - id: MC.AuditApiBroker
     name: auditApiBroker
     layer: broker
@@ -456,13 +504,28 @@ components:
     name: fhirRecordApiBroker
     layer: broker
     col: 3
-    description: "/api/fhirrecords, read by id only."
+    description: "/api/fhirrecords. The by-id call appends the encoded id; the pending call is an OData query over the list endpoint built by fhirRecordApiBroker.queries. A response that is not an array is thrown rather than coerced to an empty list — \"the queue is empty\" and \"I cannot read this\" look identical on screen and mean opposite things."
     methods:
       - getFhirRecordByIdAsync
+      - getPendingFhirRecordsAsync
     calls:
       - from: getFhirRecordByIdAsync
         to: MC.ApiBroker
         method: GetAsync
+      - from: getPendingFhirRecordsAsync
+        to: MC.ApiBroker
+        method: GetAsync
+  - id: MC.PatientApiBroker
+    name: patientApiBroker
+    layer: broker
+    col: 3
+    description: "/api/patients/getstructuredrecord — the SPA's one POST that is not a create. It reads the payload as text and the correlation id off the X-Correlation-Id response header (lowercased by axios, absent on an older host, so empty rather than undefined), and keeps whatever the API said about a failure — the status, the problem detail and the per-field errors — so the view service can put a message under the input that caused it."
+    methods:
+      - postStructuredRecordAsync
+    calls:
+      - from: postStructuredRecordAsync
+        to: MC.ApiBroker
+        method: PostAsync
   - id: MC.FeatureBroker
     name: apiBroker.features
     layer: broker
@@ -536,3 +599,9 @@ components:
       - from: GetAsync
         to: MG.FhirRecords
         method: "GET /api/FhirRecords/{fhirRecordId}"
+      - from: GetAsync
+        to: MG.FhirRecords
+        method: GET /api/FhirRecords
+      - from: PostAsync
+        to: MG.Patients
+        method: POST /api/Patients/getstructuredrecord

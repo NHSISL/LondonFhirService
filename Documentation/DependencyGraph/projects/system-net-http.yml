@@ -8,8 +8,8 @@ components:
   - id: EXT.HttpClient
     name: HttpClient
     layer: external
-    col: 13
+    col: 15
     shared: true
     deriveMethods: true
-    description: "Typed HttpClient registered via AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>()."
+    description: "Typed HttpClient. Registered in the API host via AddHttpClient<IConsumerAccessBroker, ConsumerAccessBroker>(), and in the Manage host via AddHttpClient<IHttpBroker, HttpBroker>() with a 150 second timeout — longer than the Api endpoint it is pointed at is allowed to take. Both brokers send with HttpCompletionOption.ResponseHeadersRead."
     methods: []
