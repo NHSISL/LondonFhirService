@@ -129,9 +129,13 @@ Verify BOTH views — the header toggle, or `window.__graph.setView("single")` /
 exposes `window.__graph` = { state, setView, select, selectRow,
 clearSelection, rebuild, fit, tracePath }). Confirm:
 
-- No console errors; the header count is in the expected range (last scan:
-  81 components · 388 flows single-copy; 334 nodes · 995 flows per consumer,
-  420 · 1110 with utility brokers on).
+- No console errors; the header count matches the previous scan's figures,
+  moved only by what this scan added or removed. The README's scan section
+  is the record of those figures (as of 2026-09-25: 134 components · 557
+  flows single-copy, 137 · 588 with utility brokers on; 603 nodes · 1771
+  flows per consumer, 654 · 1851 with utility brokers on). Read them from
+  the README rather than from this line, and update the README - not this
+  file - when they move.
 - No node-rect overlaps and no project-box overlaps — query `window.__graph.state.instances`
   and `.projBoxes` with `javascript_tool` and intersect pairwise, in each
   view, with the utility toggle both off and on.
