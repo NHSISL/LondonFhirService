@@ -369,12 +369,27 @@ Actions).
   ask. `Log*` defer through the dispatcher, `Add*` write inline.
 - **The metrics screens never fetch a metric by id.** Four of the five metric
   broker verbs are GETs against the OData list endpoint with different
-  filters: a span is only meaningful alongside the other spans of its request,
+  queries: a span is only meaningful alongside the other spans of its request,
   so even the detail page queries by correlation id rather than by metric id.
   The list page now makes two of those calls per page — the request spans,
   then the `ProviderRequests` spans for just those rows' correlation ids in one
   `in` query — so each row can show its proxy overhead without a round trip
   per request. The fifth verb, `getMetricExportAsync`, is the export below.
+- **The averages panel is two tiles, and only one of them is a request.**
+  *All requests* is `metricViewService.retrieveAllMetricAveragesViewAsync` →
+  `metricService.retrieveMetricAveragesAsync` →
+  `metricApiBroker.getMetricAveragesAsync`, one OData `$apply` groupby over
+  `Type` with a count and an average of `DurationMs` against the same
+  `GET /api/Metrics` route — so the figure is the database's average over the
+  whole table rather than the SPA's average of a sample, and it ignores the
+  search. *Matching the search* is `buildLoadedMetricAveragesView`, computed
+  from the list rows already loaded, so its count is always the
+  requests-loaded count beside the list; it calls no service, and in the
+  graph it is a method row with a flow in from `MetricsPage` and none out.
+  The latest-50 `ProviderRequests` query the old single tile read
+  (`getProviderRequestsMetricsAsync` / `retrieveProviderRequestsMetricsAsync`)
+  had no other consumer and is gone. No server change: the Manage host's list
+  endpoint was already OData-enabled.
 - **The metric CSV export is a Manage-only stack, and the first Core
   processing and orchestration services only one host registers.**
   `MetricsController` `GET /api/Metrics/exports` →

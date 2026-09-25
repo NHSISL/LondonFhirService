@@ -70,7 +70,7 @@ components:
     name: MetricsPage
     layer: exposer
     col: 0
-    description: "Route admin/metrics. The span list plus the averages panel above it, both driven by one MetricFilter the view service creates — correlation id, user id and a date range, debounced before it is applied. A part-typed correlation id is held back rather than sent, because the API would reject it, which is why isSearchableCorrelationId is asked here. The Export to CSV button hands the applied filter to exportMetricsAsync, so the file holds every request the search found rather than the pages scrolled so far; it is disabled while a search is settling or a correlation id is incomplete."
+    description: "Route admin/metrics. The span list plus the averages panel above it. The list is driven by one MetricFilter the view service creates — correlation id, user id and a date range, debounced before it is applied. The panel has two tiles: All requests, a separate query the database averages over the whole table and which ignores the search, and Matching the search, which buildLoadedMetricAveragesView works out from the rows already loaded — so its count is always the requests-loaded count beside the list, and it costs no request of its own. A part-typed correlation id is held back rather than sent, because the API would reject it, which is why isSearchableCorrelationId is asked here. The Export to CSV button hands the applied filter to exportMetricsAsync, so the file holds every request the search found rather than the pages scrolled so far; it is disabled while a search is settling or a correlation id is incomplete."
     methods:
       - admin/metrics
     calls:
@@ -85,7 +85,10 @@ components:
         method: retrieveMetricPageViewAsync
       - from: admin/metrics
         to: MC.MetricViewService
-        method: retrieveMetricAveragesViewAsync
+        method: retrieveAllMetricAveragesViewAsync
+      - from: admin/metrics
+        to: MC.MetricViewService
+        method: buildLoadedMetricAveragesView
       - from: admin/metrics
         to: MC.MetricViewService
         method: isSearchableCorrelationId
@@ -215,12 +218,13 @@ components:
     name: metricViewService
     layer: view
     col: 1
-    description: "The busiest view service, and the only one with two foundation dependencies. Builds the MetricFilter the metrics screens share, derives the averages panel from two different span queries, decides whether a search term is a complete correlation id, and assembles the correlation view's span tree. The page view fetches the ProviderRequests spans for just the rows on that page in one call, so each row can show its proxy overhead without a round trip per request. exportMetricsAsync fetches the server-built CSV and hands it to the file download service under a timestamped name, so two exports never collide in a downloads folder."
+    description: "The busiest view service, and the only one with two foundation dependencies. Builds the MetricFilter the metrics screens share, builds the averages panel's two tiles — All requests from the one aggregate query the database answers, Matching the search computed in the browser from the list rows already loaded, calling no service at all — decides whether a search term is a complete correlation id, and assembles the correlation view's span tree. The page view fetches the ProviderRequests spans for just the rows on that page in one call, so each row can show its proxy overhead without a round trip per request. exportMetricsAsync fetches the server-built CSV and hands it to the file download service under a timestamped name, so two exports never collide in a downloads folder."
     methods:
       - createMetricFilter
       - isSearchableCorrelationId
       - retrieveMetricPageViewAsync
-      - retrieveMetricAveragesViewAsync
+      - retrieveAllMetricAveragesViewAsync
+      - buildLoadedMetricAveragesView
       - retrieveMetricCorrelationViewAsync
       - exportMetricsAsync
     calls:
@@ -236,12 +240,9 @@ components:
       - from: exportMetricsAsync
         to: MC.FileDownloadService
         method: downloadFileAsync
-      - from: retrieveMetricAveragesViewAsync
+      - from: retrieveAllMetricAveragesViewAsync
         to: MC.MetricService
-        method: retrieveRequestMetricsAsync
-      - from: retrieveMetricAveragesViewAsync
-        to: MC.MetricService
-        method: retrieveProviderRequestsMetricsAsync
+        method: retrieveMetricAveragesAsync
       - from: retrieveMetricCorrelationViewAsync
         to: MC.MetricService
         method: retrieveMetricsByCorrelationIdAsync
@@ -367,10 +368,10 @@ components:
     name: metricService
     layer: foundation
     col: 2
-    description: "Read-only, like the audit service and for the same reason. Four of the five verbs are different span queries rather than different entities: the request spans, the provider-request spans, the provider-request spans for a given set of correlation ids, and every span under one correlation id. An empty correlation id list returns nothing without a request, because an empty in list is not valid OData. The fifth, retrieveMetricExportAsync, validates the filter and returns the export as a Blob."
+    description: "Read-only, like the audit service and for the same reason. Three of the five verbs are different span queries rather than different entities: the request spans, the provider-request spans for a given set of correlation ids, and every span under one correlation id. An empty correlation id list returns nothing without a request, because an empty in list is not valid OData. retrieveMetricAveragesAsync returns the database's own per-type averages over the whole table and takes no input, so it has nothing to validate. The fifth, retrieveMetricExportAsync, validates the filter and returns the export as a Blob."
     methods:
       - retrieveRequestMetricsAsync
-      - retrieveProviderRequestsMetricsAsync
+      - retrieveMetricAveragesAsync
       - retrieveProviderRequestsMetricsByCorrelationIdsAsync
       - retrieveMetricExportAsync
       - retrieveMetricsByCorrelationIdAsync
@@ -378,9 +379,9 @@ components:
       - from: retrieveRequestMetricsAsync
         to: MC.MetricApiBroker
         method: getRequestMetricsAsync
-      - from: retrieveProviderRequestsMetricsAsync
+      - from: retrieveMetricAveragesAsync
         to: MC.MetricApiBroker
-        method: getProviderRequestsMetricsAsync
+        method: getMetricAveragesAsync
       - from: retrieveProviderRequestsMetricsByCorrelationIdsAsync
         to: MC.MetricApiBroker
         method: getProviderRequestsMetricsByCorrelationIdsAsync
@@ -504,10 +505,10 @@ components:
     name: metricApiBroker
     layer: broker
     col: 3
-    description: "/api/metrics. Four of the five verbs are GETs against the list endpoint with different OData filters — there is no by-id call, because a metric is only ever interesting alongside the other spans of its request. getProviderRequestsMetricsByCorrelationIdsAsync is one of them: the ProviderRequests spans for a page's correlation ids in a single in-list query. getMetricExportAsync is the exception: a GET to /api/metrics/exports with the filter as plain query parameters, read through GetBlobAsync because the response is a CSV file rather than JSON."
+    description: "/api/metrics. Four of the five verbs are GETs against the list endpoint with different OData queries — there is no by-id call, because a metric is only ever interesting alongside the other spans of its request. getProviderRequestsMetricsByCorrelationIdsAsync is one of them: the ProviderRequests spans for a page's correlation ids in a single in-list query. getMetricAveragesAsync is another, and the only one that returns no spans: an OData $apply groupby over Type with a count and an average of DurationMs, so the database averages the whole table rather than the SPA averaging a sample. A span type with no rows is absent from the answer and reads as no average rather than zero. getMetricExportAsync is the exception: a GET to /api/metrics/exports with the filter as plain query parameters, read through GetBlobAsync because the response is a CSV file rather than JSON."
     methods:
       - getRequestMetricsAsync
-      - getProviderRequestsMetricsAsync
+      - getMetricAveragesAsync
       - getProviderRequestsMetricsByCorrelationIdsAsync
       - getMetricExportAsync
       - getMetricsByCorrelationIdAsync
@@ -515,7 +516,7 @@ components:
       - from: getRequestMetricsAsync
         to: MC.ApiBroker
         method: GetAsync
-      - from: getProviderRequestsMetricsAsync
+      - from: getMetricAveragesAsync
         to: MC.ApiBroker
         method: GetAsync
       - from: getProviderRequestsMetricsByCorrelationIdsAsync
