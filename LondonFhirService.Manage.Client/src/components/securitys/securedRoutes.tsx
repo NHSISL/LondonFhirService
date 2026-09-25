@@ -9,6 +9,25 @@ type SecuredRouteParameters = {
     deniedRoles?: Array<string>
 }
 
+// Declared once, at module level. It used to be defined inside SecuredRoute, which made it a new
+// component type on every render - so React unmounted and remounted it each time rather than
+// updating it.
+const NoAccess = ({ isAuthenticated, onLogin }: { isAuthenticated: boolean, onLogin: () => void }) => {
+    return <Container fluid className="mt-3">
+        <Alert variant="danger">
+            <Alert.Heading>Invalid Access</Alert.Heading>
+            <p>
+                You do not have access to this area of the application, please contact support.
+            </p>
+            {!isAuthenticated && (
+                <Button className="inlineLogin" onClick={onLogin}>
+                    Login
+                </Button>
+            )}
+        </Alert>
+    </Container>
+}
+
 export const SecuredRoute = ({ children, allowedRoles = [], deniedRoles = [] }: SecuredRouteParameters): ReactElement => {
     const isAuthenticated = useIsAuthenticated();
     const { accounts, instance } = useMsal();
@@ -32,24 +51,10 @@ export const SecuredRoute = ({ children, allowedRoles = [], deniedRoles = [] }: 
         return found;
     }
 
-    const NoAccess = () => {
-        return <Container fluid className="mt-3">
-            <Alert variant="danger">
-                <Alert.Heading>Invalid Access</Alert.Heading>
-                <p>
-                    You do not have access to this area of the application, please contact support.
-                </p>
-                {!isAuthenticated && (
-                    <Button className="inlineLogin" onClick={() => instance.loginRedirect(MsalConfig.loginRequest)}>
-                        Login
-                    </Button>
-                )}
-            </Alert>
-        </Container>
-    }
+    const login = () => instance.loginRedirect(MsalConfig.loginRequest);
 
     if (isAuthenticated && userIsInRole(deniedRoles)) {
-        return <NoAccess />;
+        return <NoAccess isAuthenticated={isAuthenticated} onLogin={login} />;
     }
 
     if (isAuthenticated && (allowedRoles.length === 0 || userIsInRole(allowedRoles))) {
@@ -59,7 +64,7 @@ export const SecuredRoute = ({ children, allowedRoles = [], deniedRoles = [] }: 
     }
 
     if (isAuthenticated) {
-        return <NoAccess />
+        return <NoAccess isAuthenticated={isAuthenticated} onLogin={login} />
     }
 
     return <Container className="mt-3">

@@ -18,12 +18,9 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      // The two rules react-hooks 5 recommended. From 7 its recommended set also carries the
-      // React Compiler rules (set-state-in-effect, purity, refs, static-components and more),
-      // which flag existing hooks that need refactoring rather than a version bump - adopt them
-      // together with those fixes, not silently as part of an upgrade.
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
+      // The full react-hooks 7 recommended set, including the React Compiler rules
+      // (set-state-in-effect, purity, refs, static-components and more).
+      ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

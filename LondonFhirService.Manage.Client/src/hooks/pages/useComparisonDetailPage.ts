@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ComparisonViewService } from "../../services/views/comparisons/comparisonViewService";
@@ -86,13 +86,10 @@ export function useComparisonDetailPage(
         enabled: hasFhirRecordDifferenceId
     });
 
-    // Seed the form from whatever the page is currently showing, so a background refetch while the
-    // operator is not editing does not leave stale values behind the Edit button.
-    useEffect(() => {
-        if (data && editing === false) {
-            setValues(data.editValues);
-        }
-    }, [data, editing]);
+    // While viewing, the form shows exactly what was fetched, so a background refetch never leaves
+    // stale values behind the Edit button. The draft only exists while editing: Edit seeds it from
+    // the fetched values. This used to copy data into state from an effect after every refetch.
+    const shownValues = editing ? values : (data?.editValues ?? values);
 
     const handleShowDifferences = useCallback(() => setShowDifferences(true), []);
     const handleHideDifferences = useCallback(() => setShowDifferences(false), []);
@@ -148,8 +145,13 @@ export function useComparisonDetailPage(
 
     const handleEdit = useCallback(() => {
         setSaveError(null);
+
+        if (data) {
+            setValues(data.editValues);
+        }
+
         setEditing(true);
-    }, []);
+    }, [data]);
 
     const handleFieldChange = useCallback(
         (fieldName: keyof ComparisonFormValues, value: string | boolean) =>
@@ -228,7 +230,7 @@ export function useComparisonDetailPage(
         editing: editing,
         saving: saving,
         saveError: saveError,
-        values: values,
+        values: shownValues,
         handleEdit: handleEdit,
         handleFieldChange: handleFieldChange,
         handleSave: handleSave,

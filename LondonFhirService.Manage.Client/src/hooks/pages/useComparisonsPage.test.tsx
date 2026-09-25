@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, renderHook, waitFor } from "@testing-library/react";
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { useComparisonsPage } from "./useComparisonsPage";
@@ -129,4 +129,50 @@ it("should seed the search box from a correlation id in the query string", async
     await waitFor(() =>
         expect(retrievePendingComparisonViewsAsync)
             .toHaveBeenCalledWith("abc-123", expect.anything()));
+});
+
+// Advances the faked clock and lets react-query and React settle what it set off.
+const advance = async (milliseconds: number) =>
+    await act(async () => { await vi.advanceTimersByTimeAsync(milliseconds); });
+
+/**
+ * The arrival window is state a timer closes, not a Date.now() comparison made while rendering.
+ * These pin what that window is for: records land after the request that produced them was
+ * answered, so an empty first answer keeps the pending list polling for a while.
+ */
+it("should keep polling the pending list through the arrival window", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval"] });
+
+    try {
+        renderHook(() => useComparisonsPage(), { wrapper });
+        await advance(0);
+        const firstCalls = retrievePendingComparisonViewsAsync.mock.calls.length;
+
+        await advance(5000);
+        await advance(5000);
+
+        expect(retrievePendingComparisonViewsAsync.mock.calls.length).toBeGreaterThanOrEqual(firstCalls + 2);
+    } finally {
+        vi.useRealTimers();
+    }
+});
+
+it("should stop polling once the arrival window closes and nothing is queued", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval"] });
+
+    try {
+        renderHook(() => useComparisonsPage(), { wrapper });
+        await advance(0);
+
+        // Past the 30 second window, plus one more poll for the closed window to be read.
+        await advance(31000);
+        await advance(5000);
+        const callsOnceClosed = retrievePendingComparisonViewsAsync.mock.calls.length;
+
+        await advance(20000);
+
+        expect(retrievePendingComparisonViewsAsync.mock.calls.length).toBe(callsOnceClosed);
+    } finally {
+        vi.useRealTimers();
+    }
 });
