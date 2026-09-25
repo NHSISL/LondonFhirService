@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Attrify.Attributes;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
@@ -115,8 +116,9 @@ namespace LondonFhirService.Manage.Controllers.Metrics
         /// <summary>
         /// Every request matching the filter as a CSV file, unpaged - the export behind the
         /// portal's master list, which otherwise only ever holds the pages scrolled so far. The
-        /// filter matches the list's: an optional correlation id and user id, and CreatedDate
-        /// bounds that are inclusive at both ends.
+        /// filter matches the list's: an optional correlation id, user id and status, and
+        /// CreatedDate bounds that are inclusive at both ends. The status binds by name
+        /// (status=Failed) or by ordinal.
         ///
         /// A literal segment, so it is matched ahead of the {metricId} route below.
         /// </summary>
@@ -124,6 +126,7 @@ namespace LondonFhirService.Manage.Controllers.Metrics
         public async ValueTask<ActionResult> GetMetricExportAsync(
             [FromQuery] Guid? correlationId,
             [FromQuery] string? userId,
+            [FromQuery] MetricStatus? status,
             [FromQuery] DateTimeOffset? fromDate,
             [FromQuery] DateTimeOffset? toDate)
         {
@@ -133,6 +136,7 @@ namespace LondonFhirService.Manage.Controllers.Metrics
                     await this.metricOrchestrationService.ExportRequestMetricsToCsvAsync(
                         correlationId,
                         userId,
+                        status,
                         fromDate,
                         toDate,
                         HttpContext?.RequestAborted ?? default);

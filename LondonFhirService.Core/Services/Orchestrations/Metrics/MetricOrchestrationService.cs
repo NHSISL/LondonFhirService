@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Brokers.CsvHelpers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Processings.Metrics;
@@ -56,6 +57,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Metrics
         public ValueTask<Stream> ExportRequestMetricsToCsvAsync(
             Guid? correlationId,
             string? userId,
+            MetricStatus? status,
             DateTimeOffset? fromDate,
             DateTimeOffset? toDate,
             CancellationToken cancellationToken = default) =>
@@ -65,6 +67,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Metrics
                 await this.metricProcessingService.RetrieveRequestMetricExportsAsync(
                     correlationId,
                     userId,
+                    status,
                     fromDate,
                     toDate,
                     cancellationToken);

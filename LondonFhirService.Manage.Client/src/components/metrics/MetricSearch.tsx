@@ -1,4 +1,5 @@
-import { Button, Col, Row } from "react-bootstrap";
+import { Button, Col, Form, Row } from "react-bootstrap";
+import { metricStatusFilterOptions } from "../../models/views/metrics/MetricStatusFilterOptions";
 import SearchBase from "../bases/search/SearchBase";
 import TextInputBase from "../bases/inputs/TextInputBase";
 import type { MetricSearchProps } from "../../models/components/metrics/MetricSearchProps";
@@ -15,6 +16,7 @@ export function MetricSearch({
 }: MetricSearchProps) {
     const hasFilter = filter.correlationId.length > 0
         || filter.userId.length > 0
+        || filter.status.length > 0
         || filter.fromDate.length > 0
         || filter.toDate.length > 0;
 
@@ -49,6 +51,19 @@ export function MetricSearch({
                     value={filter.userId}
                     placeholder="Paste a user id"
                     onChange={event => onFilterChange("userId", event.currentTarget.value)} />
+            </Col>
+
+            <Col xs={6} md={3} lg="auto">
+                <Form.Label htmlFor="metricStatus">Status</Form.Label>
+
+                <Form.Select
+                    id="metricStatus"
+                    value={filter.status}
+                    onChange={event => onFilterChange("status", event.target.value)}>
+                    {metricStatusFilterOptions.map(option => (
+                        <option key={option.label} value={option.value}>{option.label}</option>
+                    ))}
+                </Form.Select>
             </Col>
 
             <Col xs={6} md={3} lg={2}>

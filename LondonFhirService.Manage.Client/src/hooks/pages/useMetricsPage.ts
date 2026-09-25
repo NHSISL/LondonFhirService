@@ -42,6 +42,7 @@ export function useMetricsPage(): MetricsPageState {
     const appliedFilterSource = useMemo<MetricFilter>(() => ({
         correlationId: correlationIdIsIncomplete ? "" : filter.correlationId.trim(),
         userId: filter.userId.trim(),
+        status: filter.status,
         fromDate: filter.fromDate,
         toDate: filter.toDate
     }), [filter, correlationIdIsIncomplete]);
@@ -53,6 +54,7 @@ export function useMetricsPage(): MetricsPageState {
     useEffect(() => {
         const isSame = appliedFilter.correlationId === appliedFilterSource.correlationId
             && appliedFilter.userId === appliedFilterSource.userId
+            && appliedFilter.status === appliedFilterSource.status
             && appliedFilter.fromDate === appliedFilterSource.fromDate
             && appliedFilter.toDate === appliedFilterSource.toDate;
 
@@ -146,6 +148,7 @@ export function useMetricsPage(): MetricsPageState {
         searching: appliedFilter !== appliedFilterSource
             && (appliedFilter.correlationId !== appliedFilterSource.correlationId
                 || appliedFilter.userId !== appliedFilterSource.userId
+                || appliedFilter.status !== appliedFilterSource.status
                 || appliedFilter.fromDate !== appliedFilterSource.fromDate
                 || appliedFilter.toDate !== appliedFilterSource.toDate),
         handleFilterChange: handleFilterChange,

@@ -6,6 +6,9 @@ export type MetricFilter = {
 
     // The caller's user id (oid), as the User column shows it. Matched exactly.
     userId: string;
+
+    // How the request ended, by MetricStatus name - "Succeeded" or "Failed" - or empty for any.
+    status: string;
     fromDate: string;
     toDate: string;
 };

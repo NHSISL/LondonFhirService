@@ -30,7 +30,7 @@ const createMetric = (overrides: Partial<Metric>): Metric => ({
     ...overrides
 });
 
-const noFilter = { correlationId: "", userId: "", fromDate: "", toDate: "" };
+const noFilter = { correlationId: "", userId: "", status: "", fromDate: "", toDate: "" };
 
 const createMetricService = (overrides: Partial<IMetricService> = {}): IMetricService => ({
     retrieveRequestMetricsAsync: async () => [],

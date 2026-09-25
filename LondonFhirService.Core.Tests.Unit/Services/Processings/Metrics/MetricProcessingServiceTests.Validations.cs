@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Processings.Metrics;
 using LondonFhirService.Core.Models.Processings.Metrics.Exceptions;
 using Moq;
@@ -38,6 +39,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 values: "Text is invalid.");
 
             invalidArgumentMetricProcessingException.AddData(
+                key: "status",
+                values: "Value is invalid.");
+
+            invalidArgumentMetricProcessingException.AddData(
                 key: "toDate",
                 values: "Date must be the same as or after fromDate.");
 
@@ -51,6 +56,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 this.metricProcessingService.RetrieveRequestMetricExportsAsync(
                     correlationId: Guid.Empty,
                     userId: invalidUserId,
+                    status: (MetricStatus)99,
                     fromDate: randomDateTimeOffset,
                     toDate: randomDateTimeOffset.AddTicks(-1),
                     TestContext.Current.CancellationToken);

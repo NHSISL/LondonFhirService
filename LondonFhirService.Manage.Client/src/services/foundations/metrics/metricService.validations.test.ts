@@ -5,9 +5,10 @@ import {
     validateMetricFilter
 } from "./metricService.validations";
 
-const filter = (overrides: Partial<{ correlationId: string; fromDate: string; toDate: string }>) => ({
+const filter = (overrides: Partial<{ correlationId: string; status: string; fromDate: string; toDate: string }>) => ({
     correlationId: "",
     userId: "",
+    status: "",
     fromDate: "",
     toDate: "",
     ...overrides
@@ -55,4 +56,13 @@ it("should accept a list of whole correlation ids, including an empty one", () =
 it("should reject a correlation id list holding anything that is not an identifier", () => {
     expect(() => validateCorrelationIds(["0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f", "0f1c4d6b"]))
         .toThrow();
+});
+
+it("should accept the statuses the filter offers", () => {
+    expect(() => validateMetricFilter(filter({ status: "Succeeded" }))).not.toThrow();
+    expect(() => validateMetricFilter(filter({ status: "Failed" }))).not.toThrow();
+});
+
+it("should reject a status the API would not recognise", () => {
+    expect(() => validateMetricFilter(filter({ status: "Broken" }))).toThrow();
 });

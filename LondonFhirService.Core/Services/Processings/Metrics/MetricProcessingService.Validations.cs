@@ -5,6 +5,7 @@
 #nullable enable annotations
 
 using System;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Processings.Metrics.Exceptions;
 using Xeptions;
 
@@ -15,6 +16,7 @@ namespace LondonFhirService.Core.Services.Processings.Metrics
         private static void ValidateOnRetrieveRequestMetricExports(
             Guid? correlationId,
             string? userId,
+            MetricStatus? status,
             DateTimeOffset? fromDate,
             DateTimeOffset? toDate)
         {
@@ -25,6 +27,7 @@ namespace LondonFhirService.Core.Services.Processings.Metrics
 
                 (Rule: IsInvalid(correlationId), Parameter: nameof(correlationId)),
                 (Rule: IsInvalid(userId), Parameter: nameof(userId)),
+                (Rule: IsInvalid(status), Parameter: nameof(status)),
                 (Rule: IsBefore(toDate, fromDate), Parameter: nameof(toDate)));
         }
 
@@ -40,6 +43,14 @@ namespace LondonFhirService.Core.Services.Processings.Metrics
         {
             Condition = text is not null && String.IsNullOrWhiteSpace(text),
             Message = "Text is invalid."
+        };
+
+        // A status the enum does not name - an ordinal past its end - would match nothing and read as
+        // an empty export rather than as the mistake it is.
+        private static dynamic IsInvalid(MetricStatus? status) => new
+        {
+            Condition = status.HasValue && Enum.IsDefined(status.Value) is false,
+            Message = "Value is invalid."
         };
 
         private static dynamic IsBefore(DateTimeOffset? date, DateTimeOffset? otherDate) => new

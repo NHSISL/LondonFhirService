@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Processings.Metrics;
 using Moq;
 
@@ -23,6 +24,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
             // given
             Guid randomCorrelationId = Guid.NewGuid();
             string randomUserId = GetRandomString();
+            MetricStatus? randomStatus = MetricStatus.Failed;
             DateTimeOffset randomFromDate = DateTimeOffset.UtcNow.AddDays(-1);
             DateTimeOffset randomToDate = DateTimeOffset.UtcNow;
             IQueryable<MetricExport> randomMetricExports = CreateRandomMetricExports();
@@ -34,6 +36,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 service.RetrieveRequestMetricExportsAsync(
                     randomCorrelationId,
                     randomUserId,
+                    randomStatus,
                     randomFromDate,
                     randomToDate,
                     It.IsAny<CancellationToken>()))
@@ -65,6 +68,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 await this.metricOrchestrationService.ExportRequestMetricsToCsvAsync(
                     randomCorrelationId,
                     randomUserId,
+                    randomStatus,
                     randomFromDate,
                     randomToDate,
                     TestContext.Current.CancellationToken);
@@ -83,6 +87,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 service.RetrieveRequestMetricExportsAsync(
                     randomCorrelationId,
                     randomUserId,
+                    randomStatus,
                     randomFromDate,
                     randomToDate,
                     It.IsAny<CancellationToken>()),
