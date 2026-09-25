@@ -183,7 +183,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
             string inputFhirProviderName = "DDS Test Provider";
             Guid correlationId = Guid.NewGuid();
             var fhirProvider = this.ddsFhirProviderMock.Object;
-            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             this.identifierBrokerMock.Setup(broker =>
                 broker.GetIdentifierAsync())

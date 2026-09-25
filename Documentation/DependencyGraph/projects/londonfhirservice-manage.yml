@@ -187,6 +187,13 @@ components:
     description: "[Authorize]'d read of the Features array from IConfiguration."
     methods:
       - GET /api/Features
+  - id: MG.Versions
+    name: VersionsController
+    layer: exposer
+    col: 4
+    description: "The release this portal is running, for the SPA's header: answers ApplicationVersion { CoreVersion } from LondonFhirService.Core's static CoreVersion.Value — the Core assembly version, which is the Version a release bumps in LondonFhirService.Core.csproj, so neither host carries a copy of its own that could fall behind. The Api host reports the same value on its root route. [Authorize(Roles = ManageRoles.AdministratorsAndUsers)] like the rest of this host, because the header only renders for a signed-in user. No injected dependencies, and CoreVersion is a static helper rather than a DI component, so nothing is drawn beneath it."
+    methods:
+      - GET /api/Versions
   - id: MG.FrontendConfigurations
     name: FrontendConfigurationsController
     layer: exposer

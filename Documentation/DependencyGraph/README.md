@@ -82,9 +82,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 132 declared components and 583 declared edges draw as
-**129 components · 552 flows** in the single-copy view and **570 nodes ·
-1718 flows** per consumer (132 · 583 and 621 · 1798 with utility brokers on).
+At the last scan, 137 declared components and 588 declared edges draw as
+**134 components · 557 flows** in the single-copy view and **603 nodes ·
+1771 flows** per consumer (137 · 588 and 654 · 1851 with utility brokers on).
 
 > When re-verifying locally, serve on a **fresh port**. The page fetches the data
 > files, and a browser that has already loaded them on that port will keep
@@ -288,8 +288,9 @@ Actions).
 - **`LondonFhirService.Manage.Client` is no longer a thin SPA.** It was two
   endpoints at the previous scan; it now carries a full page → view service →
   foundation service → API broker stack over audits, metrics, providers and
-  comparisons — 10 routed admin pages, 5 view services, 8 foundation services
-  and 10 brokers. Every API broker goes through `apiBroker`, which is the
+  comparisons — 10 routed admin pages, 6 view services, 9 foundation services
+  and 11 brokers, plus two non-page components with a service beneath them
+  (`FeatureSwitch` and the layout's `NavbarComponent`). Every API broker goes through `apiBroker`, which is the
   single place an MSAL token is attached, except `frontendConfiguration`,
   which runs before MSAL exists and calls axios directly. `fileDownloadBroker`
   is the one broker that does not talk to the host at all: it wraps the
@@ -410,6 +411,40 @@ Actions).
   consumer was overwritten by this stamping anyway and has been removed; its
   dependencies are unchanged. These edges were already true at the previous
   scan and were missing from it.
+- **Both hosts report one release, and it is Core's.** `CoreVersion.Value` in
+  `LondonFhirService.Core` reads the Core assembly version, so the Version a
+  release bumps in `LondonFhirService.Core.csproj` is the only copy and neither
+  host can fall behind. Manage exposes it on the new `VersionsController`
+  (`GET /api/Versions`, `AdministratorsAndUsers`, no injected dependencies);
+  the Api host returns it from its minimal-API root route `GET /` in place of
+  the hard-coded `1.0`. `CoreVersion` is a static helper, not a DI component,
+  so it is not a node and `MG.Versions` has nothing beneath it; the Api's
+  `GET /` is a `MapGet`, not a controller, and — like the health checks — has
+  never been drawn.
+- **The portal header shows that release through the full SPA stack.**
+  `NavbarComponent` → `versionViewService` → `versionService` →
+  `versionApiBroker` → `apiBroker.GetAsync` → `GET /api/Versions`. The navbar
+  is drawn now because it has a service dependency, the way `FeatureSwitch`
+  is; its `useApplicationVersion` hook (TanStack Query, `staleTime: Infinity`,
+  `retry: false`) is attributed to it the way page hooks are attributed to
+  their pages. A failure renders nothing rather than an error. Because every
+  `apiBroker` copy with a `GetAsync` row fans out to every GET route in the
+  per-consumer view, `VersionsController` appears once under each of those
+  copies, as `FeaturesController` already did.
+- **Both hosts now fail to start loudly, and none of it is drawn.**
+  `Program.cs` in each host wraps startup in a try whose catch runs
+  `LogStartupFailureAsync` (critical, through the host's logger or the console)
+  and `TrackStartupFailureInApplicationInsights` (a `TelemetryClient` built from
+  the connection string alone, because the host's own pipeline never started)
+  and rethrows. After `Build`, `VerifyStartupDependencies` logs configuration
+  warnings — `FindProviderConfigurationWarnings` on the Api,
+  `FindPatientConfigurationWarnings` on Manage — and on the Api resolves
+  `IFhirAbstractionProvider` once so a provider that cannot be built stops the
+  host instead of failing every patient request. The Api's
+  `ValidateProviderConfigurations` now reports every fatal provider-config
+  problem together instead of one throw at a time. These are startup code and
+  DI resolution, not component method calls, and no `Add*` registration
+  changed in either host, so the graph is unchanged by them.
 
 ## Modelling decisions
 
@@ -441,6 +476,11 @@ successive scans stay comparable.
   Drawing Manage's `HttpBroker` onto `API.Patient` instead was tried and
   rejected: it duplicated the whole Api subtree under the Manage tree for one
   configured url.
+- **Static helpers, host startup code and minimal-API routes are not drawn.**
+  `CoreVersion`, the `Program` startup validation and failure logging, and
+  the Api's `MapGet("/")` are not DI components or controller routes. A
+  controller or SPA component that reads a static helper is drawn, with the
+  helper named in its text.
 - **The SPA's browser and HTTP plumbing is not drawn as external nodes.**
   axios and MSAL behind `apiBroker`, and the object-URL / DOM APIs behind
   `fileDownloadBroker`, are named in the components' own text. A far-external

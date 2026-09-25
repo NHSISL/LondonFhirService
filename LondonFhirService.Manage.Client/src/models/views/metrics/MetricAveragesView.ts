@@ -1,12 +1,10 @@
 ﻿import type { MetricDurationBars } from "./MetricDurationBars";
 
-// Headline averages for the metrics master page.
-//
-// The two samples are fetched separately - the master list holds only root Request spans, so a
-// ProviderRequests figure cannot be read off the rows on screen - and each covers the most recent
-// N spans of its kind. sampleText says what "recent" means so the numbers are not mistaken for an
-// all-time average.
+// One averages tile on the metrics master page. There are two: every request in the table, and
+// the requests the search has loaded. sampleText says which rows a tile covers, so the two are
+// never mistaken for each other.
 export type MetricAveragesView = {
+    titleText: string;
     averageRequestText: string;
     averageProviderRequestsText: string;
     averageProxyOverheadText: string;

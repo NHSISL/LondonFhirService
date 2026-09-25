@@ -92,6 +92,7 @@ projects:
 roots:
   - MC.Bootstrap
   - MC.FeatureSwitch
+  - MC.Navbar
   - MC.AuditsPage
   - MC.AuditDetailPage
   - MC.MetricsPage

@@ -34,7 +34,12 @@ const noFilter = { correlationId: "", userId: "", fromDate: "", toDate: "" };
 
 const createMetricService = (overrides: Partial<IMetricService> = {}): IMetricService => ({
     retrieveRequestMetricsAsync: async () => [],
-    retrieveProviderRequestsMetricsAsync: async () => [],
+    retrieveMetricAveragesAsync: async () => ({
+        requestCount: 0,
+        averageRequestMs: null,
+        providerRequestsCount: 0,
+        averageProviderRequestsMs: null
+    }),
     retrieveProviderRequestsMetricsByCorrelationIdsAsync: async () => [],
     retrieveMetricExportAsync: async () => new Blob(),
     retrieveMetricsByCorrelationIdAsync: async () => [],
@@ -409,79 +414,95 @@ it("should never show a negative proxy overhead", async () => {
     expect(correlationView.proxyOverheadText).toBe("0.00 ms");
 });
 
-it("should average both samples and derive the proxy overhead from them", async () => {
+it("should show the database's averages across every request, ignoring the search", async () => {
     const metricViewService = new MetricViewService(createMetricService({
-        retrieveRequestMetricsAsync: async () => [
-            createMetric({ id: "r1", durationMs: 183 }),
-            createMetric({ id: "r2", durationMs: 230 }),
-            createMetric({ id: "r3", durationMs: 100 })
-        ],
-        retrieveProviderRequestsMetricsAsync: async () => [
-            createMetric({ id: "p1", type: 3, durationMs: 141 }),
-            createMetric({ id: "p2", type: 3, durationMs: 200 }),
-            createMetric({ id: "p3", type: 3, durationMs: 61 })
-        ]
+        retrieveMetricAveragesAsync: async () => ({
+            requestCount: 1234,
+            averageRequestMs: 171,
+            providerRequestsCount: 1200,
+            averageProviderRequestsMs: 134
+        })
     }));
 
-    const averagesView = await metricViewService.retrieveMetricAveragesViewAsync(noFilter);
+    const averagesView = await metricViewService.retrieveAllMetricAveragesViewAsync();
 
-    // (183 + 230 + 100) / 3 = 171, (141 + 200 + 61) / 3 = 134, leaving 37.
+    expect(averagesView.titleText).toBe("All requests");
     expect(averagesView.averageRequestText).toBe("171 ms");
     expect(averagesView.averageProviderRequestsText).toBe("134 ms");
     expect(averagesView.averageProxyOverheadText).toBe("37 ms");
-    expect(averagesView.sampleText).toBe("Across the latest 3 requests");
+    expect(averagesView.sampleText).toBe("Across all 1,234 requests");
 });
 
-it("should ask for both samples with one page each", async () => {
-    const requestedTakes: number[] = [];
-
-    const metricViewService = new MetricViewService(createMetricService({
-        retrieveRequestMetricsAsync: async metricQuery => {
-            requestedTakes.push(metricQuery.take);
-
-            return [createMetric({ durationMs: 10 })];
-        },
-        retrieveProviderRequestsMetricsAsync: async metricQuery => {
-            requestedTakes.push(metricQuery.take);
-
-            return [createMetric({ type: 3, durationMs: 4 })];
-        }
-    }));
-
-    await metricViewService.retrieveMetricAveragesViewAsync(noFilter);
-
-    expect(requestedTakes).toEqual([metricPageSize, metricPageSize]);
-});
-
-it("should say nothing is recorded yet rather than averaging an empty sample", async () => {
+it("should say nothing is recorded yet rather than averaging an empty table", async () => {
     const metricViewService = new MetricViewService(createMetricService());
 
-    const averagesView = await metricViewService.retrieveMetricAveragesViewAsync(noFilter);
+    const averagesView = await metricViewService.retrieveAllMetricAveragesViewAsync();
 
     expect(averagesView.averageRequestText).toBe("—");
     expect(averagesView.averageProviderRequestsText).toBe("—");
     expect(averagesView.averageProxyOverheadText).toBe("—");
     expect(averagesView.sampleText).toBe("No requests recorded yet");
+    expect(averagesView.bars.hasBars).toBe(false);
+    expect(Number.isNaN(averagesView.bars.providerRequestsPercent)).toBe(false);
 });
 
 it("should wrap an averages failure in a view service exception", async () => {
     const metricViewService = new MetricViewService(createMetricService({
-        retrieveProviderRequestsMetricsAsync: async () => { throw new Error("dependency down"); }
+        retrieveMetricAveragesAsync: async () => { throw new Error("dependency down"); }
     }));
 
-    await expect(metricViewService.retrieveMetricAveragesViewAsync(noFilter))
+    await expect(metricViewService.retrieveAllMetricAveragesViewAsync())
         .rejects.toThrowError(
             "We could not load the metric averages, please try again or contact support.");
 });
 
-it("should split the averages bar into the two parts that fill it exactly", async () => {
+it("should average exactly the loaded rows, so its count is the requests loaded count", async () => {
     const metricViewService = new MetricViewService(createMetricService({
-        retrieveRequestMetricsAsync: async () => [createMetric({ durationMs: 319 })],
-        retrieveProviderRequestsMetricsAsync: async () =>
-            [createMetric({ type: 3, durationMs: 302 })]
+        retrieveRequestMetricsAsync: async () => [
+            createMetric({ id: "a", correlationId: "0f1c4d6b-9a2e-4f31-8c77-000000000001", durationMs: 183 }),
+            createMetric({ id: "b", correlationId: "0f1c4d6b-9a2e-4f31-8c77-000000000002", durationMs: 230 }),
+
+            // A failed access check: in the request average, but with no provider requests.
+            createMetric({ id: "c", correlationId: "0f1c4d6b-9a2e-4f31-8c77-000000000003", durationMs: 100 })
+        ],
+        retrieveProviderRequestsMetricsByCorrelationIdsAsync: async () => [
+            createMetric({ id: "p1", correlationId: "0f1c4d6b-9a2e-4f31-8c77-000000000001", type: 3, durationMs: 141 }),
+            createMetric({ id: "p2", correlationId: "0f1c4d6b-9a2e-4f31-8c77-000000000002", type: 3, durationMs: 200 })
+        ]
     }));
 
-    const averagesView = await metricViewService.retrieveMetricAveragesViewAsync(noFilter);
+    const pageView = await metricViewService.retrieveMetricPageViewAsync(0, noFilter);
+    const averagesView = metricViewService.buildLoadedMetricAveragesView(pageView.metrics);
+
+    // (183 + 230 + 100) / 3 = 171, (141 + 200) / 2 = 170.5, leaving 0.5.
+    expect(averagesView.titleText).toBe("Matching the search");
+    expect(averagesView.averageRequestText).toBe("171 ms");
+    expect(averagesView.averageProviderRequestsText).toBe("171 ms");
+    expect(averagesView.averageProxyOverheadText).toBe("0.50 ms");
+    expect(averagesView.sampleText).toBe(`Across the ${pageView.metrics.length} loaded requests`);
+});
+
+it("should say nothing is loaded rather than averaging an empty list", () => {
+    const metricViewService = new MetricViewService(createMetricService());
+
+    const averagesView = metricViewService.buildLoadedMetricAveragesView([]);
+
+    expect(averagesView.averageRequestText).toBe("—");
+    expect(averagesView.sampleText).toBe("No requests loaded");
+    expect(averagesView.bars.hasBars).toBe(false);
+});
+
+it("should split the averages bar into the two parts that fill it exactly", async () => {
+    const metricViewService = new MetricViewService(createMetricService({
+        retrieveMetricAveragesAsync: async () => ({
+            requestCount: 1,
+            averageRequestMs: 319,
+            providerRequestsCount: 1,
+            averageProviderRequestsMs: 302
+        })
+    }));
+
+    const averagesView = await metricViewService.retrieveAllMetricAveragesViewAsync();
 
     expect(averagesView.bars.hasBars).toBe(true);
     expect(averagesView.bars.providerRequestsPercent).toBeCloseTo((302 / 319) * 100, 5);
@@ -493,25 +514,20 @@ it("should split the averages bar into the two parts that fill it exactly", asyn
     expect(averagesView.bars.providerRequestsTooltip)
         .toBe("Avg provider requests 302 ms of 319 ms");
     expect(averagesView.bars.proxyOverheadTooltip).toBe("Avg proxy overhead 17 ms of 319 ms");
+    expect(averagesView.sampleText).toBe("Across the only request recorded");
 });
 
-it("should draw no bars when there is nothing to divide", async () => {
-    const metricViewService = new MetricViewService(createMetricService());
-
-    const averagesView = await metricViewService.retrieveMetricAveragesViewAsync(noFilter);
-
-    expect(averagesView.bars.hasBars).toBe(false);
-    expect(Number.isNaN(averagesView.bars.providerRequestsPercent)).toBe(false);
-});
-
-it("should fill the bar with provider time when a request was entirely provider bound", async () => {
+it("should fill the bar with provider time when requests were entirely provider bound", async () => {
     const metricViewService = new MetricViewService(createMetricService({
-        retrieveRequestMetricsAsync: async () => [createMetric({ durationMs: 100 })],
-        retrieveProviderRequestsMetricsAsync: async () =>
-            [createMetric({ type: 3, durationMs: 120 })]
+        retrieveMetricAveragesAsync: async () => ({
+            requestCount: 1,
+            averageRequestMs: 100,
+            providerRequestsCount: 1,
+            averageProviderRequestsMs: 120
+        })
     }));
 
-    const averagesView = await metricViewService.retrieveMetricAveragesViewAsync(noFilter);
+    const averagesView = await metricViewService.retrieveAllMetricAveragesViewAsync();
 
     // Separate stopwatches can leave the child longer than its parent; the bar must not overflow.
     expect(averagesView.bars.providerRequestsPercent).toBe(100);

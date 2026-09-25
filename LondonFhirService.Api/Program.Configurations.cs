@@ -210,7 +210,9 @@ public partial class Program
         app.MapGet("/", () => Results.Ok(new
         {
             Name = "London FHIR Service API",
-            Version = "1.0",
+            // The release, from LondonFhirService.Core's assembly version, so it moves with each
+            // release rather than reading 1.0 forever.
+            Version = LondonFhirService.Core.CoreVersion.Value,
             Status = "Running"
         }));
 

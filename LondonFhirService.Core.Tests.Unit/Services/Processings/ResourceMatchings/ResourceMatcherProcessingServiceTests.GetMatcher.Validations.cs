@@ -19,7 +19,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.ResourceMatchin
         [InlineData("")]
         [InlineData(" ")]
         public async Task ShouldThrowValidationExceptionOnGetMatcherIfResourceTypeIsInvalidAndLogItAsync(
-            string invalidResourceType)
+            string? invalidResourceType)
         {
             // given
             var invalidArgumentResourceMatcherProcessingException =

@@ -40,6 +40,17 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
             await this.keylessHttpClient.GetAsync($"{metricsRelativeUrl}/");
 
         /// <summary>
+        /// The all requests tile's query, sent exactly as the client builds it and read as text,
+        /// because an aggregate is not a Metric and the typed client cannot bind it to one.
+        /// </summary>
+        public async ValueTask<string> GetMetricAveragesAsync() =>
+            await this.httpClient.GetStringAsync(
+                $"{metricsRelativeUrl}?$apply="
+                    + Uri.EscapeDataString(
+                        "filter(Type eq 'Request' or Type eq 'ProviderRequests')"
+                            + "/groupby((Type),aggregate($count as SpanCount,DurationMs with average as AverageDurationMs))"));
+
+        /// <summary>
         /// The CSV export, read as text: what is asserted is the file a person would open.
         /// </summary>
         public async ValueTask<string> GetMetricExportAsync(string queryString) =>

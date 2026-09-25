@@ -3,7 +3,7 @@ import {
     buildCorrelationMetricQueryUrl,
     buildMetricExportUrl,
     buildProviderRequestsByCorrelationIdsQueryUrl,
-    buildProviderRequestsMetricQueryUrl,
+    buildMetricAveragesQueryUrl,
     buildRequestMetricQueryUrl
 } from "./metricApiBroker.queries";
 
@@ -37,11 +37,16 @@ it("should encode a correlation id so it cannot smuggle in query options", () =>
     expect(url.split("$top=").length).toBe(2);
 });
 
-it("should ask only for provider request spans, newest first", () => {
-    const url = buildProviderRequestsMetricQueryUrl("/api/metrics", { skip: 0, take: 50 });
+it("should ask the database to average every request and provider requests span by type", () => {
+    const url = buildMetricAveragesQueryUrl("/api/metrics");
 
     expect(decode(url)).toBe(
-        "/api/metrics?$filter=Type eq 'ProviderRequests'&$orderby=Started desc&$skip=0&$top=50");
+        "/api/metrics?$apply=filter(Type eq 'Request' or Type eq 'ProviderRequests')"
+        + "/groupby((Type),aggregate($count as SpanCount,DurationMs with average as AverageDurationMs))");
+
+    // Unpaged and unfiltered: the all-requests tile is the whole table, not a sample of it.
+    expect(url).not.toContain("$top");
+    expect(url).not.toContain("CreatedDate");
 });
 
 it("should add no filter clauses when nothing is searched for", () => {
@@ -81,17 +86,6 @@ it("should widen a date range to whole days, with an inclusive upper bound", () 
     expect(filter).toContain("CreatedDate le ");
     expect(filter).toMatch(/CreatedDate ge 2026-08-2[34]T\d{2}:00:00\.000Z/);
     expect(filter).toMatch(/CreatedDate le 2026-08-2[56]T\d{2}:\d{2}:59\.999Z/);
-});
-
-it("should apply the same filter to the provider requests sample", () => {
-    const url = buildProviderRequestsMetricQueryUrl(
-        "/api/metrics",
-        { skip: 0, take: 50 },
-        { correlationId: "", userId: "", fromDate: "2026-08-25", toDate: "" });
-
-    const filter = decode(url);
-    expect(filter).toContain("Type eq 'ProviderRequests'");
-    expect(filter).toContain("CreatedDate ge ");
 });
 
 it("should ignore a part typed date rather than sending a broken literal", () => {
