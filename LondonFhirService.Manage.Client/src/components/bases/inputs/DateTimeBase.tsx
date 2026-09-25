@@ -1,5 +1,5 @@
-import { FunctionComponent, ChangeEvent } from "react";
-import { DateInput } from 'nhsuk-react-components'
+import { FunctionComponent } from "react";
+import { DateInput, type DateInputChangeEvent } from 'nhsuk-react-components'
 
 interface DateTimeBaseProps {
     id: string;
@@ -7,8 +7,7 @@ interface DateTimeBaseProps {
     label?: string;
     hint?: string;
     value: string;
-    type: string;
-    onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+    onChange: (event: DateInputChangeEvent) => void;
     error?: string;
 }
 
@@ -23,31 +22,21 @@ const DateTimeBase: FunctionComponent<DateTimeBaseProps> = (props) => {
         day = ('0' + new Date(props.value).getDate()).slice(-2)
     }
 
-    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-        event.target.name = props.name;
-        props.onChange(event);
-    }
-
     return (
         <div>
             <DateInput
                 id={props.id}
                 name={props.name}
-                onChange={handleChange}
+                onChange={props.onChange}
                 error={props.error}
                 hint={props.hint}
-                type={props.type}
-                label={props.label}>
+                legend={props.label}>
                 <DateInput.Day defaultValue={day} />
                 <DateInput.Month defaultValue={month} />
                 <DateInput.Year defaultValue={year} />
             </DateInput>
         </div>
     );
-};
-
-DateTimeBase.defaultProps = {
-    error: "",
 };
 
 export default DateTimeBase;
