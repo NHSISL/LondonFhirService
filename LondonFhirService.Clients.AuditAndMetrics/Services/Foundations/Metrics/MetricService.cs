@@ -61,8 +61,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 
             ValidateMetricIsNotNull(metric);
             metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-            metric.UserId = await this.auditUserBroker.GetCurrentUserIdAsync();
-            metric.Consumer = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
+            string userId = await this.auditUserBroker.GetCurrentUserIdAsync();
+            string userDisplayName = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
+            metric.UserId = userId;
+            metric.Consumer = ResolveConsumer(userDisplayName, userId);
             ValidateMetricOnAdd(metric);
 
             // After validation, so a metric that is about to be rejected does no telemetry work.
@@ -93,19 +95,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             // All read once, up front. A flush can hold every span of a request, so asking per
             // metric would repeat the same lookups for the same answers dozens of times.
             DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-            string currentUserId = await this.auditUserBroker.GetCurrentUserIdAsync();
-
-            string currentUserDisplayName =
-                await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
-
+            string userId = await this.auditUserBroker.GetCurrentUserIdAsync();
+            string userDisplayName = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
+            string consumer = ResolveConsumer(userDisplayName, userId);
             string requestSpanId = await this.requestTraceBroker.GetRequestSpanIdAsync();
 
             foreach (IMetric metric in metrics)
             {
                 ValidateMetricIsNotNull(metric);
                 metric.CreatedDate = currentDateTime;
-                metric.UserId = currentUserId;
-                metric.Consumer = currentUserDisplayName;
+                metric.UserId = userId;
+                metric.Consumer = consumer;
                 metric.RequestSpanId ??= requestSpanId;
                 ValidateMetricOnAdd(metric);
             }
@@ -126,8 +126,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
 
             ValidateMetricIsNotNull(metric);
             metric.CreatedDate = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-            metric.UserId = await this.auditUserBroker.GetCurrentUserIdAsync();
-            metric.Consumer = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
+            string userId = await this.auditUserBroker.GetCurrentUserIdAsync();
+            string userDisplayName = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
+            metric.UserId = userId;
+            metric.Consumer = ResolveConsumer(userDisplayName, userId);
 
             // Stamped here rather than inside Dispatch. The closure runs on a background worker
             // with no request behind it, and asking then would get null for every span. Coalesced
@@ -166,19 +168,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             // All read once, up front. A flush can hold every span of a request, so asking per
             // metric would repeat the same lookups for the same answers dozens of times.
             DateTimeOffset currentDateTime = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
-            string currentUserId = await this.auditUserBroker.GetCurrentUserIdAsync();
-
-            string currentUserDisplayName =
-                await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
-
+            string userId = await this.auditUserBroker.GetCurrentUserIdAsync();
+            string userDisplayName = await this.auditUserBroker.GetCurrentUserDisplayNameAsync();
+            string consumer = ResolveConsumer(userDisplayName, userId);
             string requestSpanId = await this.requestTraceBroker.GetRequestSpanIdAsync();
 
             foreach (IMetric metric in metrics)
             {
                 ValidateMetricIsNotNull(metric);
                 metric.CreatedDate = currentDateTime;
-                metric.UserId = currentUserId;
-                metric.Consumer = currentUserDisplayName;
+                metric.UserId = userId;
+                metric.Consumer = consumer;
                 metric.RequestSpanId ??= requestSpanId;
                 ValidateMetricOnAdd(metric);
             }
@@ -193,6 +193,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
                 await this.metricBroker.RecordAsync(snapshot, token);
             });
         }));
+
+        /// <summary>
+        /// Who the span is attributed to on a dashboard. A person calling through the portal has
+        /// a display name and is shown by it. An application calling the API has none - an app
+        /// registration carries no given name or surname - so it falls back to the caller's user
+        /// id (oid), which is what identifies a consumer everywhere else in this service. Checked
+        /// for whitespace rather than null, because the broker returns an empty string when no
+        /// name resolves.
+        /// </summary>
+        private static string ResolveConsumer(string userDisplayName, string userId) =>
+            string.IsNullOrWhiteSpace(userDisplayName) ? userId : userDisplayName;
 
         /// <summary>
         /// A dispatched write must never fail the work it is measuring. These spans and entries

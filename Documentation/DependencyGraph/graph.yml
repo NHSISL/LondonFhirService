@@ -61,6 +61,10 @@ projects:
     name: LondonFhirService.Providers.FHIR.STU3
     kind: library
     file: projects/londonfhirservice-providers-fhir-stu3.yml
+  - id: pkg-csvhelper
+    name: NHSISL.CsvHelperClient
+    kind: library
+    file: projects/nhsisl-csvhelperclient.yml
   - id: ext-efcore
     name: EF Core / SQL Server
     kind: external
@@ -121,6 +125,7 @@ roots:
   - OR.Stu3FhirReconciliation
   - OR.CompareQueue
   - OR.Comparison
+  - OR.Metric
   - PR.ResourceMatcher
   - PR.ListEntryComparison
   - PR.Rule.ArrayOrder
@@ -128,6 +133,7 @@ roots:
   - PR.Rule.Id
   - PR.Rule.Meta
   - PR.Rule.Reference
+  - PR.Metric
   - FS.Audit
   - FS.Metric
   - FS.ConsumerAccess
@@ -166,6 +172,7 @@ roots:
   - StorageBrokerFactory
   - Stu3FhirBroker
   - ConsumerAccessBroker
+  - CsvHelperBroker
   - CorrelationBroker
   - RequestTraceBroker
   - DateTimeBroker
@@ -182,6 +189,7 @@ roots:
   - LIB.EFCoreClient
   - LIB.FhirAbstractionProvider
   - LIB.FhirProvider
+  - LIB.CsvHelperClient
   - EXT.EFCore
   - EXT.ILogger
   - EXT.ActivitySource

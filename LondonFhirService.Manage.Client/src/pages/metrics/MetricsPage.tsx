@@ -16,6 +16,9 @@ export function MetricsPage() {
         searching,
         handleFilterChange,
         handleFilterClear,
+        exporting,
+        exportError,
+        handleExport,
         loading,
         loadingMore,
         hasNextPage,
@@ -67,8 +70,16 @@ export function MetricsPage() {
                         correlationIdIsIncomplete={correlationIdIsIncomplete}
                         searching={searching}
                         loadedCount={metrics.length}
+                        exporting={exporting}
                         onFilterChange={handleFilterChange}
-                        onFilterClear={handleFilterClear} />
+                        onFilterClear={handleFilterClear}
+                        onExport={handleExport} />
+
+                    {exportError && (
+                        <ErrorSummary
+                            title="Metrics could not be exported"
+                            message={exportError.message} />
+                    )}
                 </Col>
             </Row>
 

@@ -1,0 +1,15 @@
+# NHSISL.CsvHelperClient — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: pkg-csvhelper
+components:
+  - id: LIB.CsvHelperClient
+    name: CsvClient
+    layer: client
+    col: 13
+    shared: true
+    description: "NHSISL.CsvHelperClient 3.1.0. Core's CsvHelperBroker does `new CsvClient()` directly (it is not DI-registered) and forwards to its one generic writer, which streams an IAsyncEnumerable<T> of rows onto a caller-supplied Stream with an optional header record and an explicit property-to-column map. Only the Manage host reaches it, through the metric CSV export."
+    methods:
+      - MapObjectToCsvAsync

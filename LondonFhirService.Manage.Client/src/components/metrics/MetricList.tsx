@@ -26,6 +26,7 @@ export function MetricList({ metrics }: MetricListProps) {
                     <th scope="col">Name</th>
                     <th scope="col">Status</th>
                     <th scope="col" className="text-end">Duration</th>
+                    <th scope="col" className="text-end">Proxy overhead</th>
                     <th scope="col">Consumer</th>
                     <th scope="col">User</th>
                     <th scope="col" className="text-end">Actions</th>
@@ -49,6 +50,7 @@ export function MetricList({ metrics }: MetricListProps) {
                             <span className={metric.statusClassName}>{metric.statusText}</span>
                         </td>
                         <td className="text-end text-nowrap">{metric.durationText}</td>
+                        <td className="text-end text-nowrap">{metric.proxyOverheadText}</td>
                         <td className="text-break">{metric.consumerText}</td>
                         <td className="text-break">{metric.userIdText}</td>
                         <td className="text-end">

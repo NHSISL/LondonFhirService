@@ -8,16 +8,19 @@ export function MetricSearch({
     correlationIdIsIncomplete,
     searching,
     loadedCount,
+    exporting,
     onFilterChange,
-    onFilterClear
+    onFilterClear,
+    onExport
 }: MetricSearchProps) {
     const hasFilter = filter.correlationId.length > 0
+        || filter.userId.length > 0
         || filter.fromDate.length > 0
         || filter.toDate.length > 0;
 
     return (
         <Row className="align-items-end g-2">
-            <Col xs={12} md={5} lg={4}>
+            <Col xs={12} md={6} lg={3}>
                 <label htmlFor="metricCorrelationId" className="form-label">
                     Correlation id
                 </label>
@@ -34,6 +37,18 @@ export function MetricSearch({
                         Enter the whole correlation id to search for it.
                     </small>
                 )}
+            </Col>
+
+            <Col xs={12} md={6} lg={3}>
+                <label htmlFor="metricUserId" className="form-label">
+                    User id
+                </label>
+
+                <SearchBase
+                    id="metricUserId"
+                    value={filter.userId}
+                    placeholder="Paste a user id"
+                    onChange={event => onFilterChange("userId", event.currentTarget.value)} />
             </Col>
 
             <Col xs={6} md={3} lg={2}>
@@ -62,8 +77,17 @@ export function MetricSearch({
                 </Button>
             </Col>
 
-            <Col xs={12} md="auto" className="ms-md-auto">
-                <p className="text-muted mb-2" aria-live="polite">
+            <Col xs={12} md="auto" className="ms-md-auto d-flex align-items-center gap-3">
+                {/* Every matching request, not just the rows loaded so far. Held back while a
+                    correlation id is half typed, since the file would not match what was asked. */}
+                <Button
+                    variant="outline-primary"
+                    onClick={onExport}
+                    disabled={exporting || searching || correlationIdIsIncomplete}>
+                    {exporting ? "Exporting..." : "Export to CSV"}
+                </Button>
+
+                <p className="text-muted mb-0" aria-live="polite">
                     {searching ? "Searching..." : `${loadedCount} requests loaded`}
                 </p>
             </Col>

@@ -1,4 +1,4 @@
-# Telemetry and Metrics
+﻿# Telemetry and Metrics
 
 How a request is identified, what is measured, and where each thing is written.
 
@@ -304,7 +304,7 @@ The authoritative store, and the only place the true span tree exists.
 | `ParentId` | The enclosing span, `null` for the root. |
 | `CorrelationId` | The W3C trace id as a `Guid`. Ties every span of one request together. |
 | `UserId` | Opaque account id, or null for background work. Stamped by `MetricService`. |
-| `Consumer` | The calling consumer's display name, where one resolved. |
+| `Consumer` | The calling consumer's display name, or its user id (oid) when it has none — an application calling the API has no display name. Stamped by `MetricService`. |
 | `Method` | The operation, matching the audit type string — e.g. `STU3-Patient-GetStructuredRecordSerialised`. The FHIR version is part of it, so STU3 and R4 timings never merge. |
 | `Type` | `MetricType`, persisted **as text**. |
 | `Name` | What was measured, e.g. a provider friendly name. |
@@ -330,6 +330,28 @@ composites `(Method, Type, Started)`, `(Name, Started)`, `(Consumer, Started)`.
 > back to the audit trail when that detail is needed. Keeping the table free of
 > PII is what allows it to be retained, aggregated and reported on independently
 > of the audit retention rules. That applies to `Description` too.
+
+### Exporting requests to CSV
+
+The management portal's metrics page (`/admin/metrics`) pages its request list
+50 at a time as you scroll. **Export to CSV** instead downloads every request
+matching the page's filter — correlation id, user id and date range — in one
+file, whether or not those rows have been scrolled into view.
+
+It is served by `GET api/metrics/exports?correlationId=&userId=&fromDate=&toDate=`
+on the Manage host (every parameter optional, dates inclusive and matched against
+`CreatedDate`). `MetricProcessingService` left-joins each root `Request` span to
+its `ProviderRequests` span in one query, and `MetricOrchestrationService` writes
+the rows through `NHSISL.CsvHelperClient`. One row per request, newest first:
+
+| Column | Notes |
+|---|---|
+| `StartedUtc` | `yyyy-MM-dd HH:mm:ss.fff`, UTC. |
+| `CorrelationId`, `Method`, `Name`, `Status`, `ErrorCode` | From the `Request` span. |
+| `DurationMs` | The whole request. |
+| `ProviderRequestsMs` | Empty when the request never reached its providers — a failed access check, say. |
+| `ProxyOverheadMs` | `DurationMs − ProviderRequestsMs`, clamped at zero and rounded to four places; empty when provider requests are. The same figure as the portal's Proxy overhead column. |
+| `Consumer`, `UserId` | As stamped on the span. |
 
 ### `Audits`
 

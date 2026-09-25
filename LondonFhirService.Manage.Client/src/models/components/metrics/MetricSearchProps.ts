@@ -5,6 +5,8 @@ export type MetricSearchProps = {
     correlationIdIsIncomplete: boolean;
     searching: boolean;
     loadedCount: number;
+    exporting: boolean;
     onFilterChange: (fieldName: keyof MetricFilter, value: string) => void;
     onFilterClear: () => void;
+    onExport: () => void;
 };

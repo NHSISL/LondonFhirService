@@ -40,6 +40,15 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Brokers
             await this.keylessHttpClient.GetAsync($"{metricsRelativeUrl}/");
 
         /// <summary>
+        /// The CSV export, read as text: what is asserted is the file a person would open.
+        /// </summary>
+        public async ValueTask<string> GetMetricExportAsync(string queryString) =>
+            await this.httpClient.GetStringAsync($"{metricsRelativeUrl}/exports{queryString}");
+
+        public async ValueTask<HttpResponseMessage> GetMetricExportResponseAsync(string queryString) =>
+            await this.httpClient.GetAsync($"{metricsRelativeUrl}/exports{queryString}");
+
+        /// <summary>
         /// The raw EDM document. Read as text rather than parsed, because what is being asserted
         /// is which properties the host advertises at all.
         /// </summary>

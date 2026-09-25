@@ -81,6 +81,17 @@ class ApiBroker {
         return axios.get(url, { ...await this.config(), signal: abortSignal });
     }
 
+    // For a response that is a file rather than JSON, such as a CSV export.
+    public async GetBlobAsync(queryFragment: string, abortSignal?: AbortSignal) {
+        const url = queryFragment;
+
+        return axios.get<Blob>(url, {
+            ...await this.config(),
+            responseType: "blob",
+            signal: abortSignal
+        });
+    }
+
     public async GetAsyncAbsolute(absoluteUri: string) {
         return axios.get(absoluteUri, await this.config());
     }

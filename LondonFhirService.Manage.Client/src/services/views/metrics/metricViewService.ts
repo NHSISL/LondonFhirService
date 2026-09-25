@@ -1,7 +1,9 @@
 ﻿import moment from "moment";
+import { FileDownloadService } from "../../foundations/fileDownloads/fileDownloadService";
 import { MetricService } from "../../foundations/metrics/metricService";
 import { MetricViewServiceException } from "../../../models/views/metrics/exceptions/MetricViewServiceException";
 import { isSearchableCorrelationId } from "../../foundations/metrics/metricService.validations";
+import type { IFileDownloadService } from "../../foundations/fileDownloads/iFileDownloadService";
 import type { IMetricService } from "../../foundations/metrics/iMetricService";
 import type { IMetricViewService } from "./iMetricViewService";
 import type { Metric } from "../../../models/foundations/metrics/Metric";
@@ -15,6 +17,7 @@ import type { MetricSpanView } from "../../../models/views/metrics/MetricSpanVie
 
 const notSetText = "—";
 const dateDisplayFormat = "DD MMM YYYY HH:mm:ss";
+const exportFileNameFormat = "YYYYMMDD-HHmmss";
 
 export const metricPageSize = 50;
 
@@ -51,9 +54,13 @@ const providerRequestsType = metricTypeNames.indexOf("ProviderRequests");
 
 export class MetricViewService implements IMetricViewService {
     private readonly metricService: IMetricService;
+    private readonly fileDownloadService: IFileDownloadService;
 
-    constructor(metricService: IMetricService = new MetricService()) {
+    constructor(
+        metricService: IMetricService = new MetricService(),
+        fileDownloadService: IFileDownloadService = new FileDownloadService()) {
         this.metricService = metricService;
+        this.fileDownloadService = fileDownloadService;
     }
 
     public async retrieveMetricPageViewAsync(
@@ -70,8 +77,21 @@ export class MetricViewService implements IMetricViewService {
                 metricFilter,
                 abortSignal);
 
+            // Fetched for the rows on this page only, in one call, so each row can show its proxy
+            // overhead without a round trip per request.
+            const providerRequestsMetrics =
+                await this.metricService.retrieveProviderRequestsMetricsByCorrelationIdsAsync(
+                    metrics.map(metric => metric.correlationId),
+                    abortSignal);
+
+            const providerRequestsMsByCorrelationId = new Map<string, number>(
+                providerRequestsMetrics.map(metric =>
+                    [metric.correlationId.toLowerCase(), metric.durationMs]));
+
             return {
-                metrics: metrics.map(metric => this.toMetricListItemView(metric)),
+                metrics: metrics.map(metric => this.toMetricListItemView(
+                    metric,
+                    providerRequestsMsByCorrelationId.get(metric.correlationId.toLowerCase()))),
 
                 // The endpoint reports no total, so a full page is taken as a signal that there
                 // may be another one. A short page is the end.
@@ -132,7 +152,27 @@ export class MetricViewService implements IMetricViewService {
     }
 
     public createMetricFilter(): MetricFilter {
-        return { correlationId: "", fromDate: "", toDate: "" };
+        return { correlationId: "", userId: "", fromDate: "", toDate: "" };
+    }
+
+    // Every request matching the filter, not just the pages scrolled so far: the server builds
+    // the whole file in one call. Stamped with when it was taken, so two exports never collide in
+    // a downloads folder.
+    public async exportMetricsAsync(
+        metricFilter: MetricFilter,
+        abortSignal?: AbortSignal)
+        : Promise<void> {
+        try {
+            const content =
+                await this.metricService.retrieveMetricExportAsync(metricFilter, abortSignal);
+
+            const fileName = `metrics-${moment().format(exportFileNameFormat)}.csv`;
+            await this.fileDownloadService.downloadFileAsync(fileName, content);
+        } catch (exception) {
+            throw new MetricViewServiceException(
+                "We could not export the request metrics, please try again or contact support.",
+                exception);
+        }
     }
 
     // A half typed correlation id is not an empty one: querying with it would be rejected by the
@@ -234,7 +274,10 @@ export class MetricViewService implements IMetricViewService {
         return metrics;
     }
 
-    private toMetricListItemView(metric: Metric): MetricListItemView {
+    private toMetricListItemView(
+        metric: Metric,
+        providerRequestsMs: number | undefined)
+        : MetricListItemView {
         return {
             id: metric.id,
             correlationId: metric.correlationId,
@@ -244,6 +287,8 @@ export class MetricViewService implements IMetricViewService {
             statusText: this.mapStatusToDisplayText(metric.status),
             statusClassName: this.mapStatusToClassName(metric.status),
             durationText: this.formatDuration(metric.durationMs),
+            proxyOverheadText: this.formatOptionalDuration(
+                this.measureProxyOverhead(metric.durationMs, providerRequestsMs)),
             consumerText: metric.consumer ?? notSetText,
             userIdText: metric.userId ?? notSetText,
             detailUrl: this.buildDetailUrl(metric.correlationId)

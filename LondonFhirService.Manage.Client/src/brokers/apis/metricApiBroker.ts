@@ -2,6 +2,8 @@
 import { MetricApiBrokerException } from "../../models/foundations/metrics/exceptions/MetricApiBrokerException";
 import {
     buildCorrelationMetricQueryUrl,
+    buildMetricExportUrl,
+    buildProviderRequestsByCorrelationIdsQueryUrl,
     buildProviderRequestsMetricQueryUrl,
     buildRequestMetricQueryUrl
 } from "./metricApiBroker.queries";
@@ -54,6 +56,42 @@ export class MetricApiBroker implements IMetricApiBroker {
         } catch (exception) {
             throw new MetricApiBrokerException(
                 "Failed to retrieve provider request metrics from the API.",
+                exception);
+        }
+    }
+
+    public async getProviderRequestsMetricsByCorrelationIdsAsync(
+        correlationIds: string[],
+        abortSignal?: AbortSignal)
+        : Promise<Metric[]> {
+        try {
+            const response = await this.apiBroker.GetAsync(
+                buildProviderRequestsByCorrelationIdsQueryUrl(
+                    this.relativeMetricsUrl,
+                    correlationIds),
+                abortSignal);
+
+            return this.toMetrics(response.data);
+        } catch (exception) {
+            throw new MetricApiBrokerException(
+                "Failed to retrieve provider request metrics for the listed requests from the API.",
+                exception);
+        }
+    }
+
+    public async getMetricExportAsync(
+        metricFilter: MetricFilter,
+        abortSignal?: AbortSignal)
+        : Promise<Blob> {
+        try {
+            const response = await this.apiBroker.GetBlobAsync(
+                buildMetricExportUrl(this.relativeMetricsUrl, metricFilter),
+                abortSignal);
+
+            return response.data;
+        } catch (exception) {
+            throw new MetricApiBrokerException(
+                "Failed to retrieve the metrics export from the API.",
                 exception);
         }
     }

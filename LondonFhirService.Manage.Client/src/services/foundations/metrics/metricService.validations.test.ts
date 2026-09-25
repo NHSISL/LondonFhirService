@@ -1,8 +1,13 @@
 import { expect, it } from "vitest";
-import { isSearchableCorrelationId, validateMetricFilter } from "./metricService.validations";
+import {
+    isSearchableCorrelationId,
+    validateCorrelationIds,
+    validateMetricFilter
+} from "./metricService.validations";
 
 const filter = (overrides: Partial<{ correlationId: string; fromDate: string; toDate: string }>) => ({
     correlationId: "",
+    userId: "",
     fromDate: "",
     toDate: "",
     ...overrides
@@ -40,4 +45,14 @@ it("should reject a range that runs backwards", () => {
 it("should accept a single day range", () => {
     expect(() => validateMetricFilter(
         filter({ fromDate: "2026-08-25", toDate: "2026-08-25" }))).not.toThrow();
+});
+
+it("should accept a list of whole correlation ids, including an empty one", () => {
+    expect(() => validateCorrelationIds([])).not.toThrow();
+    expect(() => validateCorrelationIds(["0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f"])).not.toThrow();
+});
+
+it("should reject a correlation id list holding anything that is not an identifier", () => {
+    expect(() => validateCorrelationIds(["0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f", "0f1c4d6b"]))
+        .toThrow();
 });

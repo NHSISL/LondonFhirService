@@ -101,8 +101,10 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
         public long? PayloadBytes { get; set; }
 
         /// <summary>
-        /// The calling consumer, where one was resolved. Lets a slow provider be attributed to a
-        /// particular consumer's request pattern rather than the provider itself.
+        /// The calling consumer: a person's display name, or - for an application, whose app
+        /// registration has no display name - its user id (oid), the same value as
+        /// <see cref="UserId"/>. Lets a slow provider be attributed to a particular consumer's
+        /// request pattern rather than the provider itself.
         /// </summary>
         public string Consumer { get; set; }
         public string Description { get; set; }

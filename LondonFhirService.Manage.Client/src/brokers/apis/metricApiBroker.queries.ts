@@ -1,6 +1,7 @@
 ﻿import type { MetricFilter } from "../../models/foundations/metrics/MetricFilter";
 import type { MetricQuery } from "../../models/foundations/metrics/MetricQuery";
 import moment from "moment";
+import { toStringLiteral } from "./odataLiterals";
 
 // OData query options on this endpoint are bound against the CLR type, so property names are
 // PascalCase here even though the payload comes back camelCased. Kept apart from the broker so
@@ -38,6 +39,25 @@ export function buildProviderRequestsMetricQueryUrl(
         metricFilter);
 }
 
+// The master list shows each request's proxy overhead, which needs the ProviderRequests span of
+// every request on the page. One in list rather than a call per row: a request has exactly one
+// ProviderRequests span, so the page size of the list bounds the size of this answer too.
+export function buildProviderRequestsByCorrelationIdsQueryUrl(
+    relativeMetricsUrl: string,
+    correlationIds: string[])
+    : string {
+    // Guids are unquoted literals in OData. Encoded as a whole, like every other filter here, so
+    // a malformed value cannot add query options of its own.
+    const filter = `Type eq 'ProviderRequests' and CorrelationId in (${correlationIds.join(",")})`;
+
+    const queryOptions = [
+        `$filter=${encodeURIComponent(filter)}`,
+        `$top=${correlationIds.length}`
+    ];
+
+    return `${relativeMetricsUrl}?${queryOptions.join("&")}`;
+}
+
 function buildTypedMetricQueryUrl(
     relativeMetricsUrl: string,
     typeName: string,
@@ -70,19 +90,73 @@ function buildFilterClauses(metricFilter?: MetricFilter): string[] {
         clauses.push(`CorrelationId eq ${correlationId}`);
     }
 
-    const fromDate = moment(metricFilter.fromDate, "YYYY-MM-DD", true);
+    const userId = metricFilter.userId.trim();
 
-    if (fromDate.isValid()) {
-        clauses.push(`CreatedDate ge ${fromDate.startOf("day").toISOString()}`);
+    if (userId.length > 0) {
+        clauses.push(`UserId eq ${toStringLiteral(userId)}`);
     }
 
-    const toDate = moment(metricFilter.toDate, "YYYY-MM-DD", true);
+    const fromDate = toStartOfDay(metricFilter.fromDate);
 
-    if (toDate.isValid()) {
-        clauses.push(`CreatedDate le ${toDate.endOf("day").toISOString()}`);
+    if (fromDate !== undefined) {
+        clauses.push(`CreatedDate ge ${fromDate}`);
+    }
+
+    const toDate = toEndOfDay(metricFilter.toDate);
+
+    if (toDate !== undefined) {
+        clauses.push(`CreatedDate le ${toDate}`);
     }
 
     return clauses;
+}
+
+function toStartOfDay(value: string): string | undefined {
+    const date = moment(value, "YYYY-MM-DD", true);
+
+    return date.isValid() ? date.startOf("day").toISOString() : undefined;
+}
+
+function toEndOfDay(value: string): string | undefined {
+    const date = moment(value, "YYYY-MM-DD", true);
+
+    return date.isValid() ? date.endOf("day").toISOString() : undefined;
+}
+
+// The CSV export takes the same filter as the list, as plain query parameters rather than OData:
+// it is a single unpaged file, not a queryable collection. The dates are widened to whole local
+// days exactly as the list's are, so the file holds the same rows the list would.
+export function buildMetricExportUrl(
+    relativeMetricsUrl: string,
+    metricFilter: MetricFilter)
+    : string {
+    const parameters = new URLSearchParams();
+    const correlationId = metricFilter.correlationId.trim();
+    const userId = metricFilter.userId.trim();
+    const fromDate = toStartOfDay(metricFilter.fromDate);
+    const toDate = toEndOfDay(metricFilter.toDate);
+
+    if (correlationId.length > 0) {
+        parameters.append("correlationId", correlationId);
+    }
+
+    if (userId.length > 0) {
+        parameters.append("userId", userId);
+    }
+
+    if (fromDate !== undefined) {
+        parameters.append("fromDate", fromDate);
+    }
+
+    if (toDate !== undefined) {
+        parameters.append("toDate", toDate);
+    }
+
+    const queryString = parameters.toString();
+
+    return queryString.length > 0
+        ? `${relativeMetricsUrl}/exports?${queryString}`
+        : `${relativeMetricsUrl}/exports`;
 }
 
 export function buildCorrelationMetricQueryUrl(

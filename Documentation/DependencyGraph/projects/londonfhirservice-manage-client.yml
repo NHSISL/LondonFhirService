@@ -59,10 +59,13 @@ components:
     name: MetricsPage
     layer: exposer
     col: 0
-    description: "Route admin/metrics. The span list plus the averages panel above it, both driven by one MetricFilter the view service creates. A search term that looks like a correlation id navigates to the detail page instead of filtering, which is why isSearchableCorrelationId is asked here."
+    description: "Route admin/metrics. The span list plus the averages panel above it, both driven by one MetricFilter the view service creates — correlation id, user id and a date range, debounced before it is applied. A part-typed correlation id is held back rather than sent, because the API would reject it, which is why isSearchableCorrelationId is asked here. The Export to CSV button hands the applied filter to exportMetricsAsync, so the file holds every request the search found rather than the pages scrolled so far; it is disabled while a search is settling or a correlation id is incomplete."
     methods:
       - admin/metrics
     calls:
+      - from: admin/metrics
+        to: MC.MetricViewService
+        method: exportMetricsAsync
       - from: admin/metrics
         to: MC.MetricViewService
         method: createMetricFilter
@@ -201,17 +204,27 @@ components:
     name: metricViewService
     layer: view
     col: 1
-    description: "The busiest view service. Builds the MetricFilter the metrics screens share, derives the averages panel from two different span queries, decides whether a search term is a correlation id worth navigating to, and assembles the correlation view's span tree."
+    description: "The busiest view service, and the only one with two foundation dependencies. Builds the MetricFilter the metrics screens share, derives the averages panel from two different span queries, decides whether a search term is a complete correlation id, and assembles the correlation view's span tree. The page view fetches the ProviderRequests spans for just the rows on that page in one call, so each row can show its proxy overhead without a round trip per request. exportMetricsAsync fetches the server-built CSV and hands it to the file download service under a timestamped name, so two exports never collide in a downloads folder."
     methods:
       - createMetricFilter
       - isSearchableCorrelationId
       - retrieveMetricPageViewAsync
       - retrieveMetricAveragesViewAsync
       - retrieveMetricCorrelationViewAsync
+      - exportMetricsAsync
     calls:
       - from: retrieveMetricPageViewAsync
         to: MC.MetricService
         method: retrieveRequestMetricsAsync
+      - from: retrieveMetricPageViewAsync
+        to: MC.MetricService
+        method: retrieveProviderRequestsMetricsByCorrelationIdsAsync
+      - from: exportMetricsAsync
+        to: MC.MetricService
+        method: retrieveMetricExportAsync
+      - from: exportMetricsAsync
+        to: MC.FileDownloadService
+        method: downloadFileAsync
       - from: retrieveMetricAveragesViewAsync
         to: MC.MetricService
         method: retrieveRequestMetricsAsync
@@ -332,10 +345,12 @@ components:
     name: metricService
     layer: foundation
     col: 2
-    description: "Read-only, like the audit service and for the same reason. The three verbs are three different span queries rather than three entities: the request spans, the provider-request spans, and every span under one correlation id."
+    description: "Read-only, like the audit service and for the same reason. Four of the five verbs are different span queries rather than different entities: the request spans, the provider-request spans, the provider-request spans for a given set of correlation ids, and every span under one correlation id. An empty correlation id list returns nothing without a request, because an empty in list is not valid OData. The fifth, retrieveMetricExportAsync, validates the filter and returns the export as a Blob."
     methods:
       - retrieveRequestMetricsAsync
       - retrieveProviderRequestsMetricsAsync
+      - retrieveProviderRequestsMetricsByCorrelationIdsAsync
+      - retrieveMetricExportAsync
       - retrieveMetricsByCorrelationIdAsync
     calls:
       - from: retrieveRequestMetricsAsync
@@ -344,6 +359,12 @@ components:
       - from: retrieveProviderRequestsMetricsAsync
         to: MC.MetricApiBroker
         method: getProviderRequestsMetricsAsync
+      - from: retrieveProviderRequestsMetricsByCorrelationIdsAsync
+        to: MC.MetricApiBroker
+        method: getProviderRequestsMetricsByCorrelationIdsAsync
+      - from: retrieveMetricExportAsync
+        to: MC.MetricApiBroker
+        method: getMetricExportAsync
       - from: retrieveMetricsByCorrelationIdAsync
         to: MC.MetricApiBroker
         method: getMetricsByCorrelationIdAsync
@@ -420,6 +441,17 @@ components:
       - from: retrieveStructuredRecordAsync
         to: MC.PatientApiBroker
         method: postStructuredRecordAsync
+  - id: MC.FileDownloadService
+    name: fileDownloadService
+    layer: foundation
+    col: 2
+    description: "Validates a file name and content, then hands them to the file download broker, localising its exceptions the way every other foundation service here does. The SPA's only foundation service that does not sit over an API broker."
+    methods:
+      - downloadFileAsync
+    calls:
+      - from: downloadFileAsync
+        to: MC.FileDownloadBroker
+        method: downloadFileAsync
   - id: MC.AuditApiBroker
     name: auditApiBroker
     layer: broker
@@ -439,10 +471,12 @@ components:
     name: metricApiBroker
     layer: broker
     col: 3
-    description: "/api/metrics. All three verbs are GETs against the list endpoint with different OData filters — there is no by-id call, because a metric is only ever interesting alongside the other spans of its request."
+    description: "/api/metrics. Four of the five verbs are GETs against the list endpoint with different OData filters — there is no by-id call, because a metric is only ever interesting alongside the other spans of its request. getProviderRequestsMetricsByCorrelationIdsAsync is one of them: the ProviderRequests spans for a page's correlation ids in a single in-list query. getMetricExportAsync is the exception: a GET to /api/metrics/exports with the filter as plain query parameters, read through GetBlobAsync because the response is a CSV file rather than JSON."
     methods:
       - getRequestMetricsAsync
       - getProviderRequestsMetricsAsync
+      - getProviderRequestsMetricsByCorrelationIdsAsync
+      - getMetricExportAsync
       - getMetricsByCorrelationIdAsync
     calls:
       - from: getRequestMetricsAsync
@@ -451,6 +485,12 @@ components:
       - from: getProviderRequestsMetricsAsync
         to: MC.ApiBroker
         method: GetAsync
+      - from: getProviderRequestsMetricsByCorrelationIdsAsync
+        to: MC.ApiBroker
+        method: GetAsync
+      - from: getMetricExportAsync
+        to: MC.ApiBroker
+        method: GetBlobAsync
       - from: getMetricsByCorrelationIdAsync
         to: MC.ApiBroker
         method: GetAsync
@@ -526,6 +566,13 @@ components:
       - from: postStructuredRecordAsync
         to: MC.ApiBroker
         method: PostAsync
+  - id: MC.FileDownloadBroker
+    name: fileDownloadBroker
+    layer: broker
+    col: 3
+    description: "The browser is an external dependency like any other, and this is the one place that reaches for it to hand a file to the person using the page: an object URL over the Blob, a temporary anchor with download set, a click, and the URL revoked in a finally so the whole export is not held in memory for the life of the page. The browser APIs are not drawn as a node, the same way axios and MSAL behind apiBroker are not. The SPA's only broker that is not an API broker."
+    methods:
+      - downloadFileAsync
   - id: MC.FeatureBroker
     name: apiBroker.features
     layer: broker
@@ -551,9 +598,10 @@ components:
     name: apiBroker
     layer: broker
     col: 3
-    description: "axios wrapper that acquires an MSAL token silently (falling back to a redirect on InteractionRequiredAuthError) and attaches it as a bearer header. Every other API broker goes through it, so it is the one place a token or a base URL is decided."
+    description: "axios wrapper that acquires an MSAL token silently (falling back to a redirect on InteractionRequiredAuthError) and attaches it as a bearer header. Every other API broker goes through it, so it is the one place a token or a base URL is decided. GetBlobAsync is GetAsync with responseType blob, for a response that is a file rather than JSON — today only the metric CSV export."
     methods:
       - GetAsync
+      - GetBlobAsync
       - GetAsyncAbsolute
       - PostAsync
       - PostFormAsync
@@ -572,6 +620,9 @@ components:
       - from: GetAsync
         to: MG.Metrics
         method: GET /api/Metrics
+      - from: GetBlobAsync
+        to: MG.Metrics
+        method: GET /api/Metrics/exports
       - from: GetAsync
         to: MG.Providers
         method: GET /api/Providers
