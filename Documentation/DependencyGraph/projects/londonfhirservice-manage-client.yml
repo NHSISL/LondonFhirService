@@ -33,6 +33,17 @@ components:
       - from: FeatureSwitch
         to: MC.FeatureService
         method: useGetAllFeatures
+  - id: MC.Navbar
+    name: NavbarComponent
+    layer: exposer
+    col: 0
+    description: "The layout's top bar, rendered by root.tsx around every page. Modelled because it now has a service dependency, the way FeatureSwitch is; the rest of the layout (sidebar, footer) still has none. It shows the portal's release next to the title through its useApplicationVersion hook, whose call is attributed here as the page hooks' calls are attributed to their pages. The hook is a TanStack Query read with staleTime Infinity and retry false: the version only changes on a deployment, and a deployment reloads the page. A failure renders nothing rather than an error, because the header is not the place to report that a version could not be read."
+    methods:
+      - NavbarComponent
+    calls:
+      - from: NavbarComponent
+        to: MC.VersionViewService
+        method: retrieveVersionViewAsync
   - id: MC.AuditsPage
     name: AuditsPage
     layer: exposer
@@ -315,6 +326,17 @@ components:
       - from: removeProviderAsync
         to: MC.ProviderService
         method: removeProviderByIdAsync
+  - id: MC.VersionViewService
+    name: versionViewService
+    layer: view
+    col: 1
+    description: "Turns the reported version into the text the header shows — the trimmed Core version prefixed with v — and wraps any failure beneath it in a VersionViewServiceException."
+    methods:
+      - retrieveVersionViewAsync
+    calls:
+      - from: retrieveVersionViewAsync
+        to: MC.VersionService
+        method: retrieveVersionAsync
   - id: MC.FeatureService
     name: featureService
     layer: foundation
@@ -452,6 +474,17 @@ components:
       - from: downloadFileAsync
         to: MC.FileDownloadBroker
         method: downloadFileAsync
+  - id: MC.VersionService
+    name: versionService
+    layer: foundation
+    col: 2
+    description: "One read-only verb. Rejects a blank version with a VersionValidationException — it would render as a bare v in the header, which reads as a bug — and localises the broker's exceptions the way every other foundation service here does."
+    methods:
+      - retrieveVersionAsync
+    calls:
+      - from: retrieveVersionAsync
+        to: MC.VersionApiBroker
+        method: getVersionAsync
   - id: MC.AuditApiBroker
     name: auditApiBroker
     layer: broker
@@ -566,6 +599,17 @@ components:
       - from: postStructuredRecordAsync
         to: MC.ApiBroker
         method: PostAsync
+  - id: MC.VersionApiBroker
+    name: versionApiBroker
+    layer: broker
+    col: 3
+    description: "/api/versions. Reads the response defensively, as every broker here treats the API as an untyped boundary: a missing or non-string coreVersion becomes an empty string for the foundation service to reject."
+    methods:
+      - getVersionAsync
+    calls:
+      - from: getVersionAsync
+        to: MC.ApiBroker
+        method: GetAsync
   - id: MC.FileDownloadBroker
     name: fileDownloadBroker
     layer: broker
@@ -611,6 +655,9 @@ components:
       - from: GetAsync
         to: MG.Features
         method: GET /api/Features
+      - from: GetAsync
+        to: MG.Versions
+        method: GET /api/Versions
       - from: GetAsync
         to: MG.Audits
         method: GET /api/Audits
