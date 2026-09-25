@@ -1,6 +1,7 @@
 ﻿import { expect, it } from "vitest";
 import {
     buildCorrelationMetricQueryUrl,
+    buildProviderRequestsByCorrelationIdsQueryUrl,
     buildProviderRequestsMetricQueryUrl,
     buildRequestMetricQueryUrl
 } from "./metricApiBroker.queries";
@@ -98,4 +99,23 @@ it("should ignore a part typed date rather than sending a broken literal", () =>
         { correlationId: "", fromDate: "2026-08", toDate: "not-a-date" });
 
     expect(decode(url)).toContain("$filter=Type eq 'Request'&");
+});
+
+it("should ask for the provider request spans of several correlations in one call", () => {
+    const url = buildProviderRequestsByCorrelationIdsQueryUrl(
+        "/api/metrics",
+        ["0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f", "7b9fc741-1bc7-3d31-61c8-09bf7e820df4"]);
+
+    expect(decode(url)).toBe(
+        "/api/metrics?$filter=Type eq 'ProviderRequests' and CorrelationId in "
+        + "(0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f,7b9fc741-1bc7-3d31-61c8-09bf7e820df4)"
+        + "&$top=2");
+});
+
+it("should encode the correlation ids so they cannot smuggle in query options", () => {
+    const url = buildProviderRequestsByCorrelationIdsQueryUrl(
+        "/api/metrics",
+        ["abc)&$top=9999"]);
+
+    expect(url.split("$top=").length).toBe(2);
 });

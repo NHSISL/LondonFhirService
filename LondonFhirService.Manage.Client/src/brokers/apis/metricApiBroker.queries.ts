@@ -38,6 +38,25 @@ export function buildProviderRequestsMetricQueryUrl(
         metricFilter);
 }
 
+// The master list shows each request's proxy overhead, which needs the ProviderRequests span of
+// every request on the page. One in list rather than a call per row: a request has exactly one
+// ProviderRequests span, so the page size of the list bounds the size of this answer too.
+export function buildProviderRequestsByCorrelationIdsQueryUrl(
+    relativeMetricsUrl: string,
+    correlationIds: string[])
+    : string {
+    // Guids are unquoted literals in OData. Encoded as a whole, like every other filter here, so
+    // a malformed value cannot add query options of its own.
+    const filter = `Type eq 'ProviderRequests' and CorrelationId in (${correlationIds.join(",")})`;
+
+    const queryOptions = [
+        `$filter=${encodeURIComponent(filter)}`,
+        `$top=${correlationIds.length}`
+    ];
+
+    return `${relativeMetricsUrl}?${queryOptions.join("&")}`;
+}
+
 function buildTypedMetricQueryUrl(
     relativeMetricsUrl: string,
     typeName: string,

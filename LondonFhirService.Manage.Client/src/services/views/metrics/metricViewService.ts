@@ -70,8 +70,21 @@ export class MetricViewService implements IMetricViewService {
                 metricFilter,
                 abortSignal);
 
+            // Fetched for the rows on this page only, in one call, so each row can show its proxy
+            // overhead without a round trip per request.
+            const providerRequestsMetrics =
+                await this.metricService.retrieveProviderRequestsMetricsByCorrelationIdsAsync(
+                    metrics.map(metric => metric.correlationId),
+                    abortSignal);
+
+            const providerRequestsMsByCorrelationId = new Map<string, number>(
+                providerRequestsMetrics.map(metric =>
+                    [metric.correlationId.toLowerCase(), metric.durationMs]));
+
             return {
-                metrics: metrics.map(metric => this.toMetricListItemView(metric)),
+                metrics: metrics.map(metric => this.toMetricListItemView(
+                    metric,
+                    providerRequestsMsByCorrelationId.get(metric.correlationId.toLowerCase()))),
 
                 // The endpoint reports no total, so a full page is taken as a signal that there
                 // may be another one. A short page is the end.
@@ -234,7 +247,10 @@ export class MetricViewService implements IMetricViewService {
         return metrics;
     }
 
-    private toMetricListItemView(metric: Metric): MetricListItemView {
+    private toMetricListItemView(
+        metric: Metric,
+        providerRequestsMs: number | undefined)
+        : MetricListItemView {
         return {
             id: metric.id,
             correlationId: metric.correlationId,
@@ -244,6 +260,8 @@ export class MetricViewService implements IMetricViewService {
             statusText: this.mapStatusToDisplayText(metric.status),
             statusClassName: this.mapStatusToClassName(metric.status),
             durationText: this.formatDuration(metric.durationMs),
+            proxyOverheadText: this.formatOptionalDuration(
+                this.measureProxyOverhead(metric.durationMs, providerRequestsMs)),
             consumerText: metric.consumer ?? notSetText,
             userIdText: metric.userId ?? notSetText,
             detailUrl: this.buildDetailUrl(metric.correlationId)

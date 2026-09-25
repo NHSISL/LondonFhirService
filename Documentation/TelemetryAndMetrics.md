@@ -1,4 +1,4 @@
-# Telemetry and Metrics
+﻿# Telemetry and Metrics
 
 How a request is identified, what is measured, and where each thing is written.
 
@@ -304,7 +304,7 @@ The authoritative store, and the only place the true span tree exists.
 | `ParentId` | The enclosing span, `null` for the root. |
 | `CorrelationId` | The W3C trace id as a `Guid`. Ties every span of one request together. |
 | `UserId` | Opaque account id, or null for background work. Stamped by `MetricService`. |
-| `Consumer` | The calling consumer's display name, where one resolved. |
+| `Consumer` | The calling consumer's display name, or its user id (oid) when it has none — an application calling the API has no display name. Stamped by `MetricService`. |
 | `Method` | The operation, matching the audit type string — e.g. `STU3-Patient-GetStructuredRecordSerialised`. The FHIR version is part of it, so STU3 and R4 timings never merge. |
 | `Type` | `MetricType`, persisted **as text**. |
 | `Name` | What was measured, e.g. a provider friendly name. |

@@ -8,6 +8,10 @@ export type MetricListItemView = {
     statusText: string;
     statusClassName: string;
     durationText: string;
+
+    // The request duration less its provider requests - the same figure as the detail page. Not
+    // set when the request never reached its providers, such as a failed access check.
+    proxyOverheadText: string;
     consumerText: string;
     userIdText: string;
     detailUrl: string;

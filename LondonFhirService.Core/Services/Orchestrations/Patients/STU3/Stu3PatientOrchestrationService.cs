@@ -246,7 +246,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 async ValueTask RecordAccessCheckSpanAsync(
                     MetricStatus status,
                     string errorCode,
-                    string consumer,
                     string description)
                 {
                     stopwatch.Stop();
@@ -264,7 +263,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         DurationMs = stopwatch.Elapsed.TotalMilliseconds,
                         Status = status,
                         ErrorCode = errorCode,
-                        Consumer = consumer,
                         Description = description
                     });
                 }
@@ -340,7 +338,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         await RecordAccessCheckSpanAsync(
                             MetricStatus.Failed,
                             errorCode: "AccessForbidden",
-                            consumer: currentUser.UserId,
                             description: "Access denied.");
 
                         throw new ForbiddenPatientOrchestrationException(
@@ -365,7 +362,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     await RecordAccessCheckSpanAsync(
                         MetricStatus.Succeeded,
                         errorCode: null,
-                        consumer: currentUser.UserId,
 
                         description:
                             $"Allowed via {consumerAccess.AllowedViaOrganisations.Count} organisation(s).");
@@ -380,7 +376,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     await RecordAccessCheckSpanAsync(
                         MetricStatus.Failed,
                         errorCode: exception.GetType().Name,
-                        consumer: null,
                         description: "Access check did not complete.");
 
                     throw;

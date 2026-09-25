@@ -2,6 +2,7 @@
 import { tryCatchMetricServiceAsync } from "./metricService.exceptions";
 import {
     validateCorrelationId,
+    validateCorrelationIds,
     validateMetricFilter,
     validateMetricQuery
 } from "./metricService.validations";
@@ -46,6 +47,24 @@ export class MetricService implements IMetricService {
             return await this.metricApiBroker.getProviderRequestsMetricsAsync(
                 metricQuery,
                 metricFilter,
+                abortSignal);
+        });
+    }
+
+    public async retrieveProviderRequestsMetricsByCorrelationIdsAsync(
+        correlationIds: string[],
+        abortSignal?: AbortSignal)
+        : Promise<Metric[]> {
+        return await tryCatchMetricServiceAsync(async () => {
+            validateCorrelationIds(correlationIds);
+
+            // An empty page has nothing to look up, and an empty in list is not valid OData.
+            if (correlationIds.length === 0) {
+                return [];
+            }
+
+            return await this.metricApiBroker.getProviderRequestsMetricsByCorrelationIdsAsync(
+                correlationIds,
                 abortSignal);
         });
     }

@@ -153,6 +153,35 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
             actualMetrics.Should().OnlyContain(metric => metric.CorrelationId == correlationId);
         }
         /// <summary>
+        /// The master list shows each request's proxy overhead, which needs the ProviderRequests
+        /// span of every request on the page. The client asks for all of them in one call with an
+        /// in list of bare guid literals, rather than one call per row.
+        /// </summary>
+        [Fact]
+        public void ShouldFilterSpansOfOneTypeAcrossSeveralCorrelations()
+        {
+            // given
+            List<Metric> metrics = CreateSpanTree();
+            Guid firstCorrelationId = metrics[0].CorrelationId;
+            Guid secondCorrelationId = metrics[3].CorrelationId;
+            metrics.Add(CreateMetric(Guid.NewGuid(), MetricType.Request, null, minutesAgo: 1));
+
+            // when
+            List<Metric> actualMetrics = ApplyQuery(
+                "?$filter=Type eq 'Request' and CorrelationId in "
+                    + $"({firstCorrelationId},{secondCorrelationId})",
+                metrics)
+                    .ToList();
+
+            // then
+            actualMetrics.Should().HaveCount(2);
+            actualMetrics.Should().OnlyContain(metric => metric.Type == MetricType.Request);
+
+            actualMetrics.Select(metric => metric.CorrelationId).Should()
+                .BeEquivalentTo(new[] { firstCorrelationId, secondCorrelationId });
+        }
+
+        /// <summary>
         /// Why the client dashes a correlation id before it puts one in a metrics link.
         ///
         /// A FhirRecord stores its correlation as a 32 character string with no dashes, and that

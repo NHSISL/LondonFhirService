@@ -13,6 +13,10 @@ export interface IMetricApiBroker {
         metricFilter: MetricFilter,
         abortSignal?: AbortSignal): Promise<Metric[]>;
 
+    getProviderRequestsMetricsByCorrelationIdsAsync(
+        correlationIds: string[],
+        abortSignal?: AbortSignal): Promise<Metric[]>;
+
     getMetricsByCorrelationIdAsync(
         correlationId: string,
         metricQuery: MetricQuery,

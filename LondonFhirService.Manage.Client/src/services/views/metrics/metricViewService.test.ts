@@ -32,6 +32,7 @@ const noFilter = { correlationId: "", fromDate: "", toDate: "" };
 const createMetricService = (overrides: Partial<IMetricService> = {}): IMetricService => ({
     retrieveRequestMetricsAsync: async () => [],
     retrieveProviderRequestsMetricsAsync: async () => [],
+    retrieveProviderRequestsMetricsByCorrelationIdsAsync: async () => [],
     retrieveMetricsByCorrelationIdAsync: async () => [],
     ...overrides
 });
@@ -57,6 +58,42 @@ it("should page the request list and map a row for display", async () => {
     expect(metricPageView.metrics[0].statusClassName).toBe("badge bg-danger");
     expect(metricPageView.metrics[0].durationText).toBe("1.50 s");
     expect(metricPageView.metrics[0].detailUrl).toBe(`/admin/metrics/${correlationId}`);
+});
+
+it("should show each row's proxy overhead from its provider requests span", async () => {
+    const reachedProviders = "7b9fc741-1bc7-3d31-61c8-09bf7e820df4";
+    const failedAccessCheck = "3e15e8c6-c202-ca4f-20fd-4ee624257bfd";
+    let requestedCorrelationIds: string[] = [];
+
+    const metricViewService = new MetricViewService(createMetricService({
+        retrieveRequestMetricsAsync: async () => [
+            createMetric({ id: "a", correlationId: reachedProviders, durationMs: 8300 }),
+            createMetric({ id: "b", correlationId: failedAccessCheck, durationMs: 40 })
+        ],
+
+        retrieveProviderRequestsMetricsByCorrelationIdsAsync: async correlationIds => {
+            requestedCorrelationIds = correlationIds;
+
+            // Upper cased, to pin that the pairing does not depend on how the API cases a guid.
+            return [
+                createMetric({
+                    id: "c",
+                    parentId: "a",
+                    correlationId: reachedProviders.toUpperCase(),
+                    type: 3,
+                    durationMs: 8167
+                })
+            ];
+        }
+    }));
+
+    const metricPageView = await metricViewService.retrieveMetricPageViewAsync(0, noFilter);
+
+    expect(requestedCorrelationIds).toEqual([reachedProviders, failedAccessCheck]);
+    expect(metricPageView.metrics[0].proxyOverheadText).toBe("133 ms");
+
+    // No provider requests span: the overhead is unknown, not zero.
+    expect(metricPageView.metrics[1].proxyOverheadText).toBe("—");
 });
 
 it("should report more pages only when the page came back full", async () => {

@@ -23,6 +23,23 @@ export function validateCorrelationId(correlationId: string): void {
     }
 }
 
+// Each id goes into an OData in list as a bare guid literal, so one malformed value would have the
+// API reject the whole list rather than just miss that row.
+export function validateCorrelationIds(correlationIds: string[]): void {
+    if (Array.isArray(correlationIds) === false) {
+        throw new MetricValidationException(
+            "correlationIds",
+            "A list of correlation ids is required.");
+    }
+
+    if (correlationIds.some(correlationId =>
+        typeof correlationId !== "string" || isSearchableCorrelationId(correlationId) === false)) {
+        throw new MetricValidationException(
+            "correlationIds",
+            "Every correlation id must be a valid identifier.");
+    }
+}
+
 export function validateMetricQuery(metricQuery: MetricQuery): void {
     if (metricQuery === null || metricQuery === undefined) {
         throw new MetricValidationException("metricQuery", "A metric query is required.");

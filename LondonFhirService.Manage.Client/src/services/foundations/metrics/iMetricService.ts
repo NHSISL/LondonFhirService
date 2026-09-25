@@ -13,6 +13,10 @@ export interface IMetricService {
         metricFilter: MetricFilter,
         abortSignal?: AbortSignal): Promise<Metric[]>;
 
+    retrieveProviderRequestsMetricsByCorrelationIdsAsync(
+        correlationIds: string[],
+        abortSignal?: AbortSignal): Promise<Metric[]>;
+
     retrieveMetricsByCorrelationIdAsync(
         correlationId: string,
         metricQuery: MetricQuery,

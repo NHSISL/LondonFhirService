@@ -85,7 +85,6 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             inputMetrics.Should().OnlyContain(metric => metric.UserId == randomUserId);
             inputMetrics.Should().OnlyContain(metric => metric.Consumer == randomDisplayName);
-    inputMetrics.Should().OnlyContain(metric => metric.Consumer == randomDisplayName);
 
             // The point of the exercise: one lookup for the batch, however many spans it holds.
             VerifyCurrentUserResolvedOnce();
@@ -124,6 +123,77 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             // then
             inputMetric.UserId.Should().Be(randomUserId);
             inputMetric.Consumer.Should().Be(randomDisplayName);
+
+            VerifyCurrentUserResolvedOnce();
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(" ")]
+        [InlineData(null)]
+        public async Task ShouldStampUserIdAsConsumerWhenCallerHasNoDisplayNameOnAddMetricAsync(
+            string noDisplayName)
+        {
+            // given
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            IMetric randomMetric = CreateRandomMetric(randomDateTimeOffset);
+            IMetric inputMetric = randomMetric;
+            string randomUserId = GetRandomString();
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
+
+            this.auditUserBrokerMock.Setup(broker =>
+                broker.GetCurrentUserIdAsync())
+                    .ReturnsAsync(randomUserId);
+
+            // An application calling the API: an app registration has no display name.
+            this.auditUserBrokerMock.Setup(broker =>
+                broker.GetCurrentUserDisplayNameAsync())
+                    .ReturnsAsync(noDisplayName);
+
+            this.storageBrokerMock.Setup(broker =>
+                broker.InsertMetricAsync(inputMetric, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(inputMetric);
+
+            // when
+            await this.metricService.AddMetricAsync(inputMetric, TestContext.Current.CancellationToken);
+
+            // then
+            inputMetric.UserId.Should().Be(randomUserId);
+            inputMetric.Consumer.Should().Be(randomUserId);
+
+            VerifyCurrentUserResolvedOnce();
+        }
+
+        [Fact]
+        public async Task ShouldStampUserIdAsConsumerForTheWholeBatchWhenCallerHasNoDisplayNameOnLogMetricsAsync()
+        {
+            // given
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            List<IMetric> randomMetrics = CreateRandomMetrics(randomDateTimeOffset);
+            List<IMetric> inputMetrics = randomMetrics;
+            string randomUserId = GetRandomString();
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffsetAsync())
+                    .ReturnsAsync(randomDateTimeOffset);
+
+            this.auditUserBrokerMock.Setup(broker =>
+                broker.GetCurrentUserIdAsync())
+                    .ReturnsAsync(randomUserId);
+
+            this.auditUserBrokerMock.Setup(broker =>
+                broker.GetCurrentUserDisplayNameAsync())
+                    .ReturnsAsync(string.Empty);
+
+            // when
+            await this.metricService.LogMetricsAsync(inputMetrics, TestContext.Current.CancellationToken);
+
+            // then
+            inputMetrics.Should().OnlyContain(metric => metric.UserId == randomUserId);
+            inputMetrics.Should().OnlyContain(metric => metric.Consumer == randomUserId);
 
             VerifyCurrentUserResolvedOnce();
         }
