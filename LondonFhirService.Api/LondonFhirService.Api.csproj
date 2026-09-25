@@ -23,7 +23,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.OData" Version="9.5.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.12" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
-		<PackageReference Include="Microsoft.Identity.Web" Version="4.14.2" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="4.15.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.12" />
 	</ItemGroup>
@@ -50,7 +50,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Update="OpenTelemetry.Api" Version="1.18.0" />
+	  <PackageReference Update="OpenTelemetry.Api" Version="1.19.1" />
 	</ItemGroup>
 
 </Project>
