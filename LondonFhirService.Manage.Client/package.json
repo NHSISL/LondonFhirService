@@ -31,7 +31,7 @@
     "react-bootstrap": "^2.10.10",
     "react-dom": "^18.3.1",
     "react-infinite-scroll-hook": "^4.1.1",
-    "react-router-dom": "^6.30.6",
+    "react-router-dom": "^7.18.4",
     "react-toastify": "11.1.0"
   },
   "devDependencies": {
