@@ -10,7 +10,8 @@ import { useMetricsPage } from "../../hooks/pages/useMetricsPage";
 export function MetricsPage() {
     const {
         metrics,
-        averages,
+        allAverages,
+        loadedAverages,
         filter,
         correlationIdIsIncomplete,
         searching,
@@ -55,13 +56,12 @@ export function MetricsPage() {
                 </Col>
             </Row>
 
-            {averages && (
-                <Row className="mb-3 p-2">
-                    <Col>
-                        <MetricAverages averages={averages} />
-                    </Col>
-                </Row>
-            )}
+            <Row className="mb-3 p-2">
+                <Col className="d-flex flex-wrap gap-3 align-items-start">
+                    {allAverages && <MetricAverages averages={allAverages} />}
+                    <MetricAverages averages={loadedAverages} />
+                </Col>
+            </Row>
 
             <Row className="mb-3 p-2">
                 <Col>

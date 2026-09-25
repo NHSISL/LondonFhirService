@@ -104,51 +104,63 @@ export class MetricViewService implements IMetricViewService {
         }
     }
 
-    public async retrieveMetricAveragesViewAsync(
-        metricFilter: MetricFilter,
-        abortSignal?: AbortSignal)
-        : Promise<MetricAveragesView> {
+    // Every request in the table, averaged by the database - an all-time figure that ignores the
+    // search, for the tile that says what normal looks like.
+    public async retrieveAllMetricAveragesViewAsync(abortSignal?: AbortSignal): Promise<MetricAveragesView> {
         try {
-            const query = { skip: 0, take: metricPageSize };
+            const averages = await this.metricService.retrieveMetricAveragesAsync(abortSignal);
 
-            // Issued together rather than in sequence: neither depends on the other, and this is
-            // work the page waits on before it can show a headline figure.
-            const [requestMetrics, providerRequestsMetrics] = await Promise.all([
-                this.metricService.retrieveRequestMetricsAsync(query, metricFilter, abortSignal),
-
-                this.metricService.retrieveProviderRequestsMetricsAsync(
-                    query,
-                    metricFilter,
-                    abortSignal)
-            ]);
-
-            const averageRequestMs = this.average(requestMetrics);
-            const averageProviderRequestsMs = this.average(providerRequestsMetrics);
-
-            const averageOverheadMs =
-                this.measureProxyOverhead(averageRequestMs, averageProviderRequestsMs);
-
-            return {
-                averageRequestText: this.formatOptionalDuration(averageRequestMs),
-
-                averageProviderRequestsText:
-                    this.formatOptionalDuration(averageProviderRequestsMs),
-
-                averageProxyOverheadText: this.formatOptionalDuration(averageOverheadMs),
-                sampleText: this.buildSampleText(requestMetrics.length),
-
-                bars: this.buildDurationBars(
-                    averageRequestMs,
-                    averageProviderRequestsMs,
-                    "Avg request time",
-                    "Avg provider requests",
-                    "Avg proxy overhead")
-            };
+            return this.toMetricAveragesView(
+                "All requests",
+                averages.averageRequestMs ?? undefined,
+                averages.averageProviderRequestsMs ?? undefined,
+                this.buildAllSampleText(averages.requestCount));
         } catch (exception) {
             throw new MetricViewServiceException(
                 "We could not load the metric averages, please try again or contact support.",
                 exception);
         }
+    }
+
+    // Exactly the rows the search has loaded, so this tile's count is always the one beside the
+    // list - it grows as the list is scrolled and follows the search as it changes. The provider
+    // figures come from the same per-page lookup that fills the Proxy overhead column, so it costs
+    // no request of its own.
+    public buildLoadedMetricAveragesView(metrics: MetricListItemView[]): MetricAveragesView {
+        const providerRequestsMs = metrics
+            .map(metric => metric.providerRequestsMs)
+            .filter((durationMs): durationMs is number => durationMs !== null);
+
+        return this.toMetricAveragesView(
+            "Matching the search",
+            this.average(metrics.map(metric => metric.durationMs)),
+            this.average(providerRequestsMs),
+            this.buildLoadedSampleText(metrics.length));
+    }
+
+    private toMetricAveragesView(
+        titleText: string,
+        averageRequestMs: number | undefined,
+        averageProviderRequestsMs: number | undefined,
+        sampleText: string)
+        : MetricAveragesView {
+        const averageOverheadMs =
+            this.measureProxyOverhead(averageRequestMs, averageProviderRequestsMs);
+
+        return {
+            titleText: titleText,
+            averageRequestText: this.formatOptionalDuration(averageRequestMs),
+            averageProviderRequestsText: this.formatOptionalDuration(averageProviderRequestsMs),
+            averageProxyOverheadText: this.formatOptionalDuration(averageOverheadMs),
+            sampleText: sampleText,
+
+            bars: this.buildDurationBars(
+                averageRequestMs,
+                averageProviderRequestsMs,
+                "Avg request time",
+                "Avg provider requests",
+                "Avg proxy overhead")
+        };
     }
 
     public createMetricFilter(): MetricFilter {
@@ -214,22 +226,32 @@ export class MetricViewService implements IMetricViewService {
         };
     }
 
-    private average(metrics: Metric[]): number | undefined {
-        if (metrics.length === 0) {
+    private average(durationsMs: number[]): number | undefined {
+        if (durationsMs.length === 0) {
             return undefined;
         }
 
-        return metrics.reduce((total, metric) => total + metric.durationMs, 0) / metrics.length;
+        return durationsMs.reduce((total, durationMs) => total + durationMs, 0) / durationsMs.length;
     }
 
-    private buildSampleText(requestCount: number): string {
+    private buildAllSampleText(requestCount: number): string {
         if (requestCount === 0) {
             return "No requests recorded yet";
         }
 
         return requestCount === 1
-            ? "Across the latest request"
-            : `Across the latest ${requestCount} requests`;
+            ? "Across the only request recorded"
+            : `Across all ${requestCount.toLocaleString("en-GB")} requests`;
+    }
+
+    private buildLoadedSampleText(requestCount: number): string {
+        if (requestCount === 0) {
+            return "No requests loaded";
+        }
+
+        return requestCount === 1
+            ? "Across the 1 loaded request"
+            : `Across the ${requestCount.toLocaleString("en-GB")} loaded requests`;
     }
 
     public async retrieveMetricCorrelationViewAsync(
@@ -289,6 +311,8 @@ export class MetricViewService implements IMetricViewService {
             durationText: this.formatDuration(metric.durationMs),
             proxyOverheadText: this.formatOptionalDuration(
                 this.measureProxyOverhead(metric.durationMs, providerRequestsMs)),
+            durationMs: metric.durationMs,
+            providerRequestsMs: providerRequestsMs ?? null,
             consumerText: metric.consumer ?? notSetText,
             userIdText: metric.userId ?? notSetText,
             detailUrl: this.buildDetailUrl(metric.correlationId)

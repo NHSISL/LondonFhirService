@@ -9,6 +9,7 @@ import {
 import type { IMetricApiBroker } from "../../../brokers/apis/iMetricApiBroker";
 import type { IMetricService } from "./iMetricService";
 import type { Metric } from "../../../models/foundations/metrics/Metric";
+import type { MetricAverages } from "../../../models/foundations/metrics/MetricAverages";
 import type { MetricFilter } from "../../../models/foundations/metrics/MetricFilter";
 import type { MetricQuery } from "../../../models/foundations/metrics/MetricQuery";
 
@@ -35,20 +36,9 @@ export class MetricService implements IMetricService {
         });
     }
 
-    public async retrieveProviderRequestsMetricsAsync(
-        metricQuery: MetricQuery,
-        metricFilter: MetricFilter,
-        abortSignal?: AbortSignal)
-        : Promise<Metric[]> {
-        return await tryCatchMetricServiceAsync(async () => {
-            validateMetricQuery(metricQuery);
-            validateMetricFilter(metricFilter);
-
-            return await this.metricApiBroker.getProviderRequestsMetricsAsync(
-                metricQuery,
-                metricFilter,
-                abortSignal);
-        });
+    public async retrieveMetricAveragesAsync(abortSignal?: AbortSignal): Promise<MetricAverages> {
+        return await tryCatchMetricServiceAsync(async () =>
+            await this.metricApiBroker.getMetricAveragesAsync(abortSignal));
     }
 
     public async retrieveProviderRequestsMetricsByCorrelationIdsAsync(

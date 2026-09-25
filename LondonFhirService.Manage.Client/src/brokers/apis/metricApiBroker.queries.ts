@@ -25,18 +25,16 @@ export function buildRequestMetricQueryUrl(
         metricFilter);
 }
 
-// The master list never fetches these - it filters to root spans - so the averages need their own
-// query rather than a figure that could be read off the rows already on screen.
-export function buildProviderRequestsMetricQueryUrl(
-    relativeMetricsUrl: string,
-    metricQuery: MetricQuery,
-    metricFilter?: MetricFilter)
-    : string {
-    return buildTypedMetricQueryUrl(
-        relativeMetricsUrl,
-        "ProviderRequests",
-        metricQuery,
-        metricFilter);
+// The averages across the whole table, worked out by the database in one call: $apply groups the
+// Request and ProviderRequests spans by type and averages each group. No filter and no paging -
+// this is the all-time figure, not a sample - and MetricsControllerTests.ODataFilters runs the
+// same expression through the pipeline [EnableQuery] uses.
+export function buildMetricAveragesQueryUrl(relativeMetricsUrl: string): string {
+    const apply =
+        "filter(Type eq 'Request' or Type eq 'ProviderRequests')"
+        + "/groupby((Type),aggregate($count as SpanCount,DurationMs with average as AverageDurationMs))";
+
+    return `${relativeMetricsUrl}?$apply=${encodeURIComponent(apply)}`;
 }
 
 // The master list shows each request's proxy overhead, which needs the ProviderRequests span of

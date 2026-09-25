@@ -4,12 +4,13 @@ import {
     buildCorrelationMetricQueryUrl,
     buildMetricExportUrl,
     buildProviderRequestsByCorrelationIdsQueryUrl,
-    buildProviderRequestsMetricQueryUrl,
+    buildMetricAveragesQueryUrl,
     buildRequestMetricQueryUrl
 } from "./metricApiBroker.queries";
 
 import type { IMetricApiBroker } from "./iMetricApiBroker";
 import type { Metric } from "../../models/foundations/metrics/Metric";
+import type { MetricAverages } from "../../models/foundations/metrics/MetricAverages";
 import type { MetricFilter } from "../../models/foundations/metrics/MetricFilter";
 import type { MetricQuery } from "../../models/foundations/metrics/MetricQuery";
 
@@ -39,23 +40,16 @@ export class MetricApiBroker implements IMetricApiBroker {
         }
     }
 
-    public async getProviderRequestsMetricsAsync(
-        metricQuery: MetricQuery,
-        metricFilter: MetricFilter,
-        abortSignal?: AbortSignal)
-        : Promise<Metric[]> {
+    public async getMetricAveragesAsync(abortSignal?: AbortSignal): Promise<MetricAverages> {
         try {
             const response = await this.apiBroker.GetAsync(
-                buildProviderRequestsMetricQueryUrl(
-                    this.relativeMetricsUrl,
-                    metricQuery,
-                    metricFilter),
+                buildMetricAveragesQueryUrl(this.relativeMetricsUrl),
                 abortSignal);
 
-            return this.toMetrics(response.data);
+            return this.toMetricAverages(response.data);
         } catch (exception) {
             throw new MetricApiBrokerException(
-                "Failed to retrieve provider request metrics from the API.",
+                "Failed to retrieve the metric averages from the API.",
                 exception);
         }
     }
@@ -153,6 +147,43 @@ export class MetricApiBroker implements IMetricApiBroker {
             description: this.readNullableString(source.description),
             createdDate: this.readString(source.createdDate)
         };
+    }
+
+    // One row per span type that has any spans. A type with none is simply absent - the database has
+    // nothing to average - so it reads as no average rather than as zero.
+    private toMetricAverages(rawRows: unknown): MetricAverages {
+        if (Array.isArray(rawRows) === false) {
+            throw new Error("The metrics endpoint did not return a collection of averages.");
+        }
+
+        const averages: MetricAverages = {
+            requestCount: 0,
+            averageRequestMs: null,
+            providerRequestsCount: 0,
+            averageProviderRequestsMs: null
+        };
+
+        for (const rawRow of rawRows as unknown[]) {
+            if (typeof rawRow !== "object" || rawRow === null) {
+                continue;
+            }
+
+            const source = rawRow as Record<string, unknown>;
+            const spanCount = this.readNumber(source.spanCount);
+            const averageDurationMs = this.readNullableNumber(source.averageDurationMs);
+
+            // An ordinal, because the Manage host registers no JsonStringEnumConverter - but the
+            // name is accepted too, so adding one later does not quietly blank the tiles.
+            if (source.type === 0 || source.type === "Request") {
+                averages.requestCount = spanCount;
+                averages.averageRequestMs = averageDurationMs;
+            } else if (source.type === 3 || source.type === "ProviderRequests") {
+                averages.providerRequestsCount = spanCount;
+                averages.averageProviderRequestsMs = averageDurationMs;
+            }
+        }
+
+        return averages;
     }
 
     private readString(rawValue: unknown): string {

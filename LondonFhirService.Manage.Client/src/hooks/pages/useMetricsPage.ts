@@ -8,7 +8,8 @@ import type { MetricPageView } from "../../models/views/metrics/MetricPageView";
 
 export type MetricsPageState = {
     metrics: MetricListItemView[];
-    averages: MetricAveragesView | null;
+    allAverages: MetricAveragesView | null;
+    loadedAverages: MetricAveragesView;
     filter: MetricFilter;
     correlationIdIsIncomplete: boolean;
     searching: boolean;
@@ -85,17 +86,22 @@ export function useMetricsPage(): MetricsPageState {
             lastPage.hasMore ? allPages.length : undefined
     });
 
-    // Deliberately a fixed sample rather than an average of whatever is on screen: scrolling the
-    // list would otherwise quietly change the headline figures.
-    const { data: averages } = useQuery<MetricAveragesView>({
-        queryKey: ["MetricAveragesView", appliedFilter],
+    // Every request in the table, so it does not depend on the search.
+    const { data: allAverages } = useQuery<MetricAveragesView>({
+        queryKey: ["MetricAllAveragesView"],
         queryFn: async ({ signal }) =>
-            await metricViewService.retrieveMetricAveragesViewAsync(appliedFilter, signal)
+            await metricViewService.retrieveAllMetricAveragesViewAsync(signal)
     });
 
     const metrics = useMemo(
         () => (data?.pages ?? []).flatMap(page => page.metrics),
         [data]);
+
+    // Worked out from the rows already loaded, so its count is always the "requests loaded" count
+    // beside the list, and it moves with the search and the scroll.
+    const loadedAverages = useMemo(
+        () => metricViewService.buildLoadedMetricAveragesView(metrics),
+        [metricViewService, metrics]);
 
     const handleFilterChange = useCallback(
         (fieldName: keyof MetricFilter, value: string) =>
@@ -133,7 +139,8 @@ export function useMetricsPage(): MetricsPageState {
 
     return {
         metrics: metrics,
-        averages: averages ?? null,
+        allAverages: allAverages ?? null,
+        loadedAverages: loadedAverages,
         filter: filter,
         correlationIdIsIncomplete: correlationIdIsIncomplete,
         searching: appliedFilter !== appliedFilterSource

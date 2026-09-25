@@ -5,9 +5,11 @@ import type { MetricAveragesProps } from "../../models/components/metrics/Metric
 export function MetricAverages({ averages }: MetricAveragesProps) {
     return (
         <div className="d-inline-block border rounded">
+            <p className="fw-semibold small mb-0 px-2 pt-1">{averages.titleText}</p>
+
             <Table size="sm" borderless className="mb-0">
                 <caption className="visually-hidden">
-                    Average request timings. {averages.sampleText}.
+                    Average request timings, {averages.titleText.toLowerCase()}. {averages.sampleText}.
                 </caption>
 
                 <tbody>
