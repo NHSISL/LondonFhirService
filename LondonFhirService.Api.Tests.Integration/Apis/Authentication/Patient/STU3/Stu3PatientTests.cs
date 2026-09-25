@@ -23,11 +23,9 @@ namespace LondonFhirService.Api.Tests.Integration.Apis.Authentication.Patient.ST
     {
         private readonly AuthApiBroker authApiBroker;
         private readonly ITestOutputHelper output;
-        private readonly IConfiguration configuration;
 
         public Stu3PatientTests(AuthApiBroker authApiBroker, ITestOutputHelper output)
         {
-            var testProjectPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
             this.authApiBroker = authApiBroker;
             this.output = output;
         }

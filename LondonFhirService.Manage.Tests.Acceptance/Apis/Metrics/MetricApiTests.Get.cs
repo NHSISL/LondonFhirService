@@ -33,7 +33,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Metrics
             HttpResponseMessage response =
                 await this.apiBroker.PostRawMetricAsync(metricJsonWithSpanId);
 
-            string responseBody = await response.Content.ReadAsStringAsync();
+            string responseBody = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
             // then
             // The field is transport only: it rides in-process from the request that produced a

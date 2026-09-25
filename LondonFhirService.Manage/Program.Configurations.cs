@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Text.Json;
 using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
@@ -200,6 +201,212 @@ public partial class Program
         builder.EntitySet<FhirRecordDifference>("FhirRecordDifferences");
         builder.EnableLowerCamelCase();
         return builder.GetEdmModel();
+    }
+
+    private const string StartupLoggerCategory = "LondonFhirService.Manage.Startup";
+
+    private const string ConfigurationHint =
+        "Please check appsettings.json or the corresponding environment variables/secrets.";
+
+    /// <summary>
+    /// Absolute on its own is not enough: Uri.TryCreate reads "localhost:7284/x" as an absolute
+    /// uri whose scheme is localhost, so dropping the https from a setting would pass. Naming the
+    /// two schemes HttpClient can dial is what makes the check true.
+    /// </summary>
+    private static bool IsDialableUrl(string? url) =>
+        string.IsNullOrWhiteSpace(url) is false
+        && Uri.TryCreate(url.Trim(), UriKind.Absolute, out Uri? parsedUrl)
+        && (parsedUrl.Scheme == Uri.UriSchemeHttp || parsedUrl.Scheme == Uri.UriSchemeHttps);
+
+    private static bool IsPlaceholder(string? value) =>
+        value is not null && value.Contains("override_this", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsUnset(string? value) =>
+        string.IsNullOrWhiteSpace(value) || IsPlaceholder(value);
+
+    /// <summary>
+    /// What stops the structured record page working, found at startup rather than by the first
+    /// operator to use it. Warnings, not failures: PatientConfiguration is allowed to be absent -
+    /// the host must start without it, and PatientService answers that one screen with a 400
+    /// naming the missing settings - so these only make the gap visible in the log.
+    ///
+    /// ClientId and ClientSecret ship blank on purpose. They are the fallback for what an operator
+    /// types into the page, so only the shipped placeholder is a mistake there.
+    /// </summary>
+    internal static List<string> FindPatientConfigurationWarnings(PatientConfiguration patientConfiguration)
+    {
+        var warnings = new List<string>();
+
+        if (IsDialableUrl(patientConfiguration.AuthUrl) is false)
+        {
+            warnings.Add("PatientConfiguration:AuthUrl is missing or is not an absolute http or https URI.");
+        }
+
+        if (IsDialableUrl(patientConfiguration.GetStructuredRecordUrl) is false)
+        {
+            warnings.Add(
+                "PatientConfiguration:GetStructuredRecordUrl is missing or is not an absolute http or https URI.");
+        }
+
+        if (IsUnset(patientConfiguration.Scope))
+        {
+            warnings.Add("PatientConfiguration:Scope is not set.");
+        }
+
+        if (IsUnset(patientConfiguration.GrantType))
+        {
+            warnings.Add("PatientConfiguration:GrantType is not set.");
+        }
+
+        if (IsPlaceholder(patientConfiguration.ClientId))
+        {
+            warnings.Add("PatientConfiguration:ClientId still holds the shipped placeholder.");
+        }
+
+        if (IsPlaceholder(patientConfiguration.ClientSecret))
+        {
+            warnings.Add("PatientConfiguration:ClientSecret still holds the shipped placeholder.");
+        }
+
+        return warnings;
+    }
+
+    /// <summary>
+    /// Run once the host is built, so its own logger - and every sink behind it - carries the
+    /// result.
+    /// </summary>
+    internal static void VerifyStartupDependencies(WebApplication app)
+    {
+        ILogger logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(StartupLoggerCategory);
+
+        List<string> warnings =
+            FindPatientConfigurationWarnings(app.Services.GetRequiredService<PatientConfiguration>());
+
+        foreach (string warning in warnings)
+        {
+            logger.LogWarning(
+                "Structured record configuration: {ConfigurationWarning} The Get Structured Record "
+                    + "page will not work until it is fixed. {ConfigurationHint}",
+                warning,
+                ConfigurationHint);
+        }
+    }
+
+    /// <summary>
+    /// A host that fails to start used to leave nothing behind but a process exit: the AzureAd
+    /// guard and everything else in ConfigureServices throw before logging or Application Insights
+    /// exist, so in Azure the only symptom was a generic "failed to start" page. This makes sure
+    /// the reason is logged as critical wherever it can be seen.
+    ///
+    /// Locally it goes through the host's own logger when there is a host, and straight to the
+    /// console when there is not. Application Insights is always given it through a client built
+    /// from the connection string alone - even when the host exists, because its telemetry pipeline
+    /// only starts with the host, and a host that failed before app.Run never started it.
+    ///
+    /// Nothing here may throw: it runs on the way out of a failure, and an exception of its own
+    /// would replace the one that explains what went wrong.
+    /// </summary>
+    internal static async Task LogStartupFailureAsync(
+        WebApplication? app,
+        IConfiguration configuration,
+        Exception exception)
+    {
+        const string message = "London FHIR Service Manage failed to start. {StartupFailureReason}";
+        bool loggedByHost = false;
+
+        if (app is not null)
+        {
+            try
+            {
+                app.Services
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger(StartupLoggerCategory)
+                    .LogCritical(exception, message, exception.Message);
+
+                loggedByHost = true;
+            }
+            catch (Exception)
+            {
+                // Fall back to the console below.
+            }
+        }
+
+        if (loggedByHost is false)
+        {
+            try
+            {
+                // Disposed before moving on, because the console logger writes on a background
+                // thread and the process is about to end.
+                using ILoggerFactory loggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+
+                loggerFactory
+                    .CreateLogger(StartupLoggerCategory)
+                    .LogCritical(exception, message, exception.Message);
+            }
+            catch (Exception)
+            {
+                // Nothing further can be done without a console.
+            }
+        }
+
+        TrackStartupFailureInApplicationInsights(configuration, exception);
+
+        if (app is not null)
+        {
+            try
+            {
+                // Flushes the host's own logging providers before the process ends.
+                await app.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // The failure has already been reported.
+            }
+        }
+    }
+
+    private static void TrackStartupFailureInApplicationInsights(
+        IConfiguration configuration,
+        Exception exception)
+    {
+        if (ExcludeAppInsightsForTesting)
+        {
+            return;
+        }
+
+        try
+        {
+            string? connectionString =
+                configuration["ApplicationInsights:ConnectionString"]
+                    ?? configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+            if (string.IsNullOrWhiteSpace(connectionString)
+                || connectionString.Contains("InstrumentationKey=", StringComparison.OrdinalIgnoreCase) is false)
+            {
+                return;
+            }
+
+            // Fully qualified: importing Microsoft.ApplicationInsights would collide its Metric
+            // with this solution's own Metric entity.
+            using Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration telemetryConfiguration =
+                Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.CreateDefault();
+
+            telemetryConfiguration.ConnectionString = connectionString;
+            var telemetryClient = new TelemetryClient(telemetryConfiguration);
+
+            telemetryClient.TrackException(
+                new Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry(exception)
+                {
+                    SeverityLevel = Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Critical,
+                    Message = $"London FHIR Service Manage failed to start. {exception.Message}"
+                });
+
+            telemetryClient.Flush();
+        }
+        catch (Exception)
+        {
+            // A malformed connection string must not hide the failure being reported.
+        }
     }
 
     /// <summary>
