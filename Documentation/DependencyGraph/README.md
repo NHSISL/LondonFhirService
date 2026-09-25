@@ -82,9 +82,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 126 declared components and 559 declared edges draw as
-**123 components · 528 flows** in the single-copy view and **537 nodes ·
-1644 flows** per consumer (126 · 559 and 588 · 1724 with utility brokers on).
+At the last scan, 132 declared components and 583 declared edges draw as
+**129 components · 552 flows** in the single-copy view and **570 nodes ·
+1718 flows** per consumer (132 · 583 and 621 · 1798 with utility brokers on).
 
 > When re-verifying locally, serve on a **fresh port**. The page fetches the data
 > files, and a browser that has already loaded them on that port will keep
@@ -98,7 +98,7 @@ copied as-is. Pages
 has to be enabled once in the repository's Settings → Pages (source: GitHub
 Actions).
 
-## Current truths captured in the data (scanned 2026-09-22)
+## Current truths captured in the data (scanned 2026-09-25)
 
 - **`LondonFhirService.Core` has no event bus.** Every flow is a direct call.
   The comparison half of the solution is driven by polling, not messaging:
@@ -288,10 +288,12 @@ Actions).
 - **`LondonFhirService.Manage.Client` is no longer a thin SPA.** It was two
   endpoints at the previous scan; it now carries a full page → view service →
   foundation service → API broker stack over audits, metrics, providers and
-  comparisons — 10 routed admin pages, 5 view services, 7 foundation services
-  and 9 brokers. Every one of them goes through `apiBroker`, which is the
+  comparisons — 10 routed admin pages, 5 view services, 8 foundation services
+  and 10 brokers. Every API broker goes through `apiBroker`, which is the
   single place an MSAL token is attached, except `frontendConfiguration`,
-  which runs before MSAL exists and calls axios directly.
+  which runs before MSAL exists and calls axios directly. `fileDownloadBroker`
+  is the one broker that does not talk to the host at all: it wraps the
+  browser.
 - **The SPA reads far more than it writes, and that mirrors the host.**
   Providers are the only entity it can create, update or delete, because they
   are operator-managed configuration; audit and metric writes are
@@ -364,10 +366,50 @@ Actions).
   `IRequestTraceBroker` for it while the request is still alive, because the
   deferred replay runs later on a background worker with no request left to
   ask. `Log*` defer through the dispatcher, `Add*` write inline.
-- **The metrics screens never fetch a metric by id.** All three metric broker
-  verbs are GETs against the OData list endpoint with different filters: a
-  span is only meaningful alongside the other spans of its request, so even
-  the detail page queries by correlation id rather than by metric id.
+- **The metrics screens never fetch a metric by id.** Four of the five metric
+  broker verbs are GETs against the OData list endpoint with different
+  filters: a span is only meaningful alongside the other spans of its request,
+  so even the detail page queries by correlation id rather than by metric id.
+  The list page now makes two of those calls per page — the request spans,
+  then the `ProviderRequests` spans for just those rows' correlation ids in one
+  `in` query — so each row can show its proxy overhead without a round trip
+  per request. The fifth verb, `getMetricExportAsync`, is the export below.
+- **The metric CSV export is a Manage-only stack, and the first Core
+  processing and orchestration services only one host registers.**
+  `MetricsController` `GET /api/Metrics/exports` →
+  `MetricOrchestrationService.ExportRequestMetricsToCsvAsync` →
+  `MetricProcessingService.RetrieveRequestMetricExportsAsync` → Core's
+  `MetricService.RetrieveAllMetricsAsync`, then `CsvHelperBroker` →
+  `NHSISL.CsvHelperClient`, a new library package. The processing service
+  left-joins each root `Request` span to its correlation's `ProviderRequests`
+  span as one deferred query, so a request that never reached its providers
+  is still exported; the orchestration streams those rows through the broker
+  into a CSV with an explicit eleven-column map. Manage registers all three
+  (`CsvHelperBroker` as a singleton — the client holds no per-call state) and
+  its `AddProcessingServices`, empty until now, has its first entry. The Api
+  host registers none of them. The route is a literal segment ahead of
+  `{metricId}` and is not `[InvisibleApi]`: the export is a portal feature.
+- **The SPA hands the file to the browser through a broker of its own.**
+  `metricViewService.exportMetricsAsync` fetches the CSV as a Blob
+  (`apiBroker.GetBlobAsync`, `responseType: "blob"`) and passes it to
+  `fileDownloadService` → `fileDownloadBroker`, which clicks a temporary
+  object-URL anchor and revokes the URL straight after. It is the SPA's only
+  foundation service and broker that do not sit over the host. The export
+  uses the list's applied filter — correlation id, the new user id filter, and
+  the date range — so the file holds every request the search found, not the
+  pages scrolled so far.
+- **Every metric span is stamped with the caller, and that is a second
+  consumer of `SecurityBroker`.** The library's `MetricService` asks
+  `IAuditUserBroker` for the user id *and* the display name once per write
+  call (once per batch for the bulk pair), and sets `Consumer` to the display
+  name, falling back to the user id — an application caller has no name, so
+  it used to show blank. `AuditUserBroker.GetCurrentUserDisplayNameAsync`
+  reads `SecurityBroker.GetCurrentUserAsync`, so that method now has two
+  consumers rather than just the patient orchestration. The value
+  `Stu3PatientOrchestrationService` used to pass as the access-check span's
+  consumer was overwritten by this stamping anyway and has been removed; its
+  dependencies are unchanged. These edges were already true at the previous
+  scan and were missing from it.
 
 ## Modelling decisions
 
@@ -399,6 +441,10 @@ successive scans stay comparable.
   Drawing Manage's `HttpBroker` onto `API.Patient` instead was tried and
   rejected: it duplicated the whole Api subtree under the Manage tree for one
   configured url.
+- **The SPA's browser and HTTP plumbing is not drawn as external nodes.**
+  axios and MSAL behind `apiBroker`, and the object-URL / DOM APIs behind
+  `fileDownloadBroker`, are named in the components' own text. A far-external
+  node for them would pull an edge from column 3 across every server band.
 
 ## The data files
 

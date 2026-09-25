@@ -177,7 +177,7 @@ components:
     name: MetricService
     layer: foundation
     col: 14
-    description: "The fan-out point: one span, two destinations. Every write persists through the storage port and then publishes the same span to the telemetry sink. Recording is governed by IsMetricsEnabled, and the retention sweep by IsMetricsPurgingAllowed / MetricsRetentionPeriodInDays / PurgeBatchSize. It holds both a metricStorageBroker and a metricBroker — the port it persists through and this library's own ActivitySource sink. Each span is also stamped with the request's own span id, asked for through IRequestTraceBroker while the request is still alive and carried into the deferred write, because the replay runs later on a background worker with no request left to ask. The Log* pair defer through the dispatcher; the Add* pair write inline."
+    description: "The fan-out point: one span, two destinations. Every write persists through the storage port and then publishes the same span to the telemetry sink. Recording is governed by IsMetricsEnabled, and the retention sweep by IsMetricsPurgingAllowed / MetricsRetentionPeriodInDays / PurgeBatchSize. It holds both a metricStorageBroker and a metricBroker — the port it persists through and this library's own ActivitySource sink. Each span is also stamped with the request's own span id, asked for through IRequestTraceBroker while the request is still alive and carried into the deferred write, because the replay runs later on a background worker with no request left to ask. Every write verb also stamps the caller, asking IAuditUserBroker for the user id and the display name once per call (once per batch for the bulk pair); Consumer is the display name, falling back to the user id, so an application caller with no name is no longer left blank — the value callers used to pass in is overwritten. The Log* pair defer through the dispatcher; the Add* pair write inline."
     methods:
       - AddMetricAsync
       - AddMetricsAsync
@@ -245,6 +245,30 @@ components:
       - from: LogMetricsAsync
         to: RequestTraceBroker
         method: GetRequestSpanIdAsync
+      - from: AddMetricAsync
+        to: AuditUserBroker
+        method: GetCurrentUserIdAsync
+      - from: AddMetricAsync
+        to: AuditUserBroker
+        method: GetCurrentUserDisplayNameAsync
+      - from: AddMetricsAsync
+        to: AuditUserBroker
+        method: GetCurrentUserIdAsync
+      - from: AddMetricsAsync
+        to: AuditUserBroker
+        method: GetCurrentUserDisplayNameAsync
+      - from: LogMetricAsync
+        to: AuditUserBroker
+        method: GetCurrentUserIdAsync
+      - from: LogMetricAsync
+        to: AuditUserBroker
+        method: GetCurrentUserDisplayNameAsync
+      - from: LogMetricsAsync
+        to: AuditUserBroker
+        method: GetCurrentUserIdAsync
+      - from: LogMetricsAsync
+        to: AuditUserBroker
+        method: GetCurrentUserDisplayNameAsync
   - id: LIB.AM.MetricBroker
     name: MetricBroker (telemetry)
     layer: broker

@@ -175,7 +175,7 @@ components:
     name: SecurityBroker
     layer: broker
     col: 11
-    description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today (by Stu3PatientOrchestrationService, to build the ValidateAccessRequest). ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called."
+    description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today — by Stu3PatientOrchestrationService, to build the ValidateAccessRequest, and by AuditUserBroker, for the display name the metric service stamps onto every span. ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called."
     methods:
       - GetCurrentUserAsync
       - IsCurrentUserAuthenticatedAsync
@@ -362,13 +362,17 @@ components:
     name: AuditUserBroker
     layer: broker
     col: 11
-    description: "Satisfies the audit library's identity port from this application's security broker. SecurityAuditBroker captures the ClaimsPrincipal in its constructor rather than reading it per call, so this must be resolved per request — registered as a singleton it would be built at startup with no HttpContext, and every audit row in the system would be stamped anonymous with nothing failing to signal it."
+    description: "Satisfies the audit library's identity port from this application's security brokers. SecurityAuditBroker captures the ClaimsPrincipal in its constructor rather than reading it per call, so this must be resolved per request — registered as a singleton it would be built at startup with no HttpContext, and every audit row in the system would be stamped anonymous with nothing failing to signal it. The user id comes from SecurityAuditBroker; the display name from SecurityBroker's current user, falling back to given name plus surname because DisplayName is not guaranteed to be populated, and to an empty string rather than null when nothing resolves. The metric service stamps both onto every span, and uses the id as the Consumer when there is no display name."
     methods:
       - GetCurrentUserIdAsync
+      - GetCurrentUserDisplayNameAsync
     calls:
       - from: GetCurrentUserIdAsync
         to: SecurityAuditBroker
         method: GetUserIdAsync
+      - from: GetCurrentUserDisplayNameAsync
+        to: SecurityBroker
+        method: GetCurrentUserAsync
   - id: ConsumerAccessBroker
     name: ConsumerAccessBroker
     layer: broker
@@ -383,6 +387,17 @@ components:
       - from: CheckConsumerAccessAsync
         to: EXT.HttpClient
         method: SendAsync
+  - id: CsvHelperBroker
+    name: CsvHelperBroker
+    layer: broker
+    col: 11
+    description: "Wraps NHSISL.CsvHelperClient's CsvClient, which it constructs itself. Registered as a singleton, and only in the Manage host: the client holds no per-call state — every call is handed the rows and the stream to write them to — so there is nothing to gain from a new one per request. Its one consumer is MetricOrchestrationService, which streams the metric export through it."
+    methods:
+      - MapObjectToCsvAsync
+    calls:
+      - from: MapObjectToCsvAsync
+        to: LIB.CsvHelperClient
+        method: MapObjectToCsvAsync
   - id: CORE.MetricTelemetryPublisher
     name: MetricTelemetryPublisher
     layer: exposer
@@ -1570,6 +1585,17 @@ components:
       - from: GetReplacementAsync
         to: FS.JsonElement
         method: CreateStringElement
+  - id: PR.Metric
+    name: MetricProcessingService
+    layer: processing
+    col: 9
+    description: "Shapes the metric table into export rows. RetrieveRequestMetricExportsAsync takes every root Request span matching the filter — optional correlation id and user id, CreatedDate bounds inclusive at both ends, as the portal's list does — and left-joins each to the ProviderRequests span of the same correlation, so a request that never reached its providers is still exported with no provider figure rather than dropped. Composed as one deferred IQueryable, newest first, so the pairing happens in the database and nothing is read until the caller enumerates. The validation partial rejects an empty correlation id, a present-but-blank user id and a toDate before fromDate, and makes no broker calls. ILoggingBroker is used on the exception path only. Registered in the Manage host only."
+    methods:
+      - RetrieveRequestMetricExportsAsync
+    calls:
+      - from: RetrieveRequestMetricExportsAsync
+        to: FS.Metric
+        method: RetrieveAllMetricsAsync
   - id: OR.Stu3FhirReconciliation
     name: Stu3FhirReconciliationService
     layer: orchestration
@@ -1726,6 +1752,20 @@ components:
       - from: CompareAsync
         to: FS.JsonElement
         method: CreateArrayElement
+  - id: OR.Metric
+    name: MetricOrchestrationService
+    layer: orchestration
+    col: 8
+    description: "Turns the export rows into a CSV file. ExportRequestMetricsToCsvAsync asks the processing service for the rows, reads them as an IAsyncEnumerable where the query supports it so a wide export does not park a thread-pool worker in reader I/O, and has CsvHelperBroker write them with a header record into a MemoryStream it rewinds and returns. The eleven columns are named in an explicit field map rather than left to the writer, so the file does not change shape when a property is added, and Started goes out as unambiguous UTC text. ILoggingBroker is used on the exception path only. Registered in the Manage host only, behind MetricsController's export route."
+    methods:
+      - ExportRequestMetricsToCsvAsync
+    calls:
+      - from: ExportRequestMetricsToCsvAsync
+        to: PR.Metric
+        method: RetrieveRequestMetricExportsAsync
+      - from: ExportRequestMetricsToCsvAsync
+        to: CsvHelperBroker
+        method: MapObjectToCsvAsync
   - id: CO.Stu3Patient
     name: Stu3PatientCoordinationService
     layer: coordination

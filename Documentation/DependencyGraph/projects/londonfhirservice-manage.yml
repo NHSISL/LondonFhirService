@@ -36,10 +36,11 @@ components:
     name: MetricsController
     layer: exposer
     col: 4
-    description: "RESTFulController over Metric, [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Create, update and delete carry [InvisibleApi]: the middleware on this host makes them unroutable without the key header, so they answer 404 to anyone who does not hold it. There is no PUT — a metric records work that already happened, so the table is append-only and no update path exists beneath the controller to expose."
+    description: "RESTFulController over Metric, [Authorize(Roles = ManageRoles.AdministratorsAndUsers)]. The list endpoint is OData-enabled ([EnableQuery], PageSize 5000 in DEBUG and 50 otherwise) and returns the IQueryable straight from the foundation service, and the entity is registered in the host's EDM model so it is reachable on /odata as well as /api. Xeption types are mapped one-for-one onto RFC problem responses. Create, update and delete carry [InvisibleApi]: the middleware on this host makes them unroutable without the key header, so they answer 404 to anyone who does not hold it. There is no PUT — a metric records work that already happened, so the table is append-only and no update path exists beneath the controller to expose. GET /api/Metrics/exports is the one route that is not a foundation passthrough: it hands the list's filter (optional correlationId and userId, fromDate / toDate inclusive) to MetricOrchestrationService and returns every matching request, unpaged, as File(stream, text/csv, metrics.csv). It is a literal segment, so it is matched ahead of the {metricId} route, and it is not [InvisibleApi] — the export is a portal feature."
     methods:
       - POST /api/Metrics
       - GET /api/Metrics
+      - GET /api/Metrics/exports
       - "GET /api/Metrics/{metricId}"
       - "DELETE /api/Metrics/{metricId}"
     calls:
@@ -49,6 +50,9 @@ components:
       - from: GET /api/Metrics
         to: FS.Metric
         method: RetrieveAllMetricsAsync
+      - from: GET /api/Metrics/exports
+        to: OR.Metric
+        method: ExportRequestMetricsToCsvAsync
       - from: "GET /api/Metrics/{metricId}"
         to: FS.Metric
         method: RetrieveMetricByIdAsync
