@@ -5,7 +5,7 @@ import type { RefObject, UIEventHandler } from "react";
 type JsonDiffPaneProps = {
     alignedLines: AlignedLine[];
     side: ComparisonSide;
-    paneRef: RefObject<HTMLDivElement>;
+    paneRef: RefObject<HTMLDivElement | null>;
     onScroll: UIEventHandler<HTMLDivElement>;
 };
 

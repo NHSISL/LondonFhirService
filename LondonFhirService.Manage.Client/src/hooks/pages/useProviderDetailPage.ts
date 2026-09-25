@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ProviderViewService } from "../../services/views/providers/providerViewService";
@@ -65,21 +65,23 @@ export function useProviderDetailPage(providerId: string): ProviderDetailPageSta
             providerFormValidations,
             values);
 
-    // Seed the form from whatever the page is currently showing, so a background refetch while the
-    // operator is not editing does not leave stale values behind the Edit button.
-    useEffect(() => {
-        if (data && editing === false) {
-            setValues(data.editValues);
-        }
-    }, [data, editing]);
+    // While viewing, the form shows exactly what was fetched, so a background refetch never leaves
+    // stale values behind the Edit button. The draft only exists while editing: Edit seeds it from
+    // the fetched values. This used to copy data into state from an effect after every refetch.
+    const shownValues = editing ? values : (data?.editValues ?? values);
 
     const handleBackToProviders = useCallback(() => navigate("/admin/providers"), [navigate]);
 
     const handleEdit = useCallback(() => {
         setSaveError(null);
         disableValidationMessages();
+
+        if (data) {
+            setValues(data.editValues);
+        }
+
         setEditing(true);
-    }, [disableValidationMessages]);
+    }, [data, disableValidationMessages]);
 
     const handleFieldChange = useCallback(
         (fieldName: keyof ProviderFormValues, value: string | boolean) =>
@@ -166,7 +168,7 @@ export function useProviderDetailPage(providerId: string): ProviderDetailPageSta
         editing: editing,
         saving: saving,
         saveError: saveError,
-        values: values,
+        values: shownValues,
         errors: errors,
         handleBackToProviders: handleBackToProviders,
         handleEdit: handleEdit,

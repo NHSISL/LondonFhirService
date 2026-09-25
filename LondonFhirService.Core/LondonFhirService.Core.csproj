@@ -52,7 +52,7 @@
 			project. Keep the version aligned with the Microsoft.Data.SqlClient pin in
 			Directory.Build.props.
 		-->
-		<PackageReference Include="Microsoft.Data.SqlClient.Extensions.Azure" Version="7.0.3" />
+		<PackageReference Include="Microsoft.Data.SqlClient.Extensions.Azure" Version="7.1.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
 			<PrivateAssets>all</PrivateAssets>
@@ -102,7 +102,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Update="OpenTelemetry.Api" Version="1.18.0" />
+	  <PackageReference Update="OpenTelemetry.Api" Version="1.19.1" />
 	</ItemGroup>
 
 </Project>

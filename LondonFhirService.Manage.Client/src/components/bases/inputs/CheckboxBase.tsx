@@ -30,14 +30,14 @@ const CheckboxBase: FunctionComponent<CheckboxBaseProps> = (props) => {
                             <InputGroup.Text>{props.prependLabel}</InputGroup.Text>
                         )}
                     <Checkboxes>
-                        <Checkboxes.Box
+                        <Checkboxes.Item
                             id={props.id}
                             name={props.name}
                             type="checkbox"
                             checked={props.checked}
                             onChange={props.onChange}>
                             &nbsp;
-                        </Checkboxes.Box>
+                        </Checkboxes.Item>
                     </Checkboxes>
                     {
                         props.appendLabel !== undefined
@@ -55,10 +55,6 @@ const CheckboxBase: FunctionComponent<CheckboxBaseProps> = (props) => {
             {props.error && <Form.Control.Feedback type="invalid">{props.error}</Form.Control.Feedback>}
         </Form.Group>
     );
-};
-
-CheckboxBase.defaultProps = {
-    error: "",
 };
 
 export default CheckboxBase;

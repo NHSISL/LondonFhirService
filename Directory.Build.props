@@ -6,7 +6,7 @@
     Microsoft.ApplicationInsights.AspNetCore -> Azure.Monitor.OpenTelemetry.Exporter.
   -->
   <ItemGroup>
-    <PackageReference Include="OpenTelemetry.Api" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Api" Version="1.19.1" />
   </ItemGroup>
 
   <!--
@@ -31,6 +31,6 @@
     driver, its Extensions.Abstractions and the Entra ID providers all come from one release.
   -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.3" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.0" />
   </ItemGroup>
 </Project>

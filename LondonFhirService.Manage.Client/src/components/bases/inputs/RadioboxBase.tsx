@@ -27,13 +27,13 @@ const RadioBase: FunctionComponent<RadioBaseProps> = (props) => {
                             <InputGroup.Text>{props.prependLabel}</InputGroup.Text>
                         )}
                     <Radios>
-                        <Radios.Radio
+                        <Radios.Item
                             id={props.id}
                             name={props.name}
                             checked={props.checked}
                             onChange={props.onChange}>
                             &nbsp;
-                        </Radios.Radio>
+                        </Radios.Item>
                     </Radios>
                     {
                         props.appendLabel !== undefined
@@ -48,8 +48,5 @@ const RadioBase: FunctionComponent<RadioBaseProps> = (props) => {
     );
 };
 
-RadioBase.defaultProps = {
-    error: "",
-};
 
 export default RadioBase;
