@@ -16,7 +16,6 @@
     <TypeScriptConfiguration Remove="src\pages\configuration\**" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="dependencies\guid-typescript\node_modules\%40types\" />
     <Folder Include="src\models\views\components\" />
     <Folder Include="src\services\views\" />
   </ItemGroup>
