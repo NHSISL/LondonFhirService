@@ -72,7 +72,16 @@ export function useComparisonsPage(): ComparisonsPageState {
         return () => window.clearTimeout(timeoutId);
     }, [searchTerm, appliedSearchTerm]);
 
-    const mountedAt = useRef<number>(Date.now());
+    // Open for the first arrivalGraceMilliseconds after the page mounts, then closed by the timer.
+    // State rather than a Date.now() comparison made while rendering, which is impure and only
+    // ever re-checked when something else happened to render the page.
+    const [inArrivalWindow, setInArrivalWindow] = useState(true);
+
+    useEffect(() => {
+        const timeoutId = window.setTimeout(() => setInArrivalWindow(false), arrivalGraceMilliseconds);
+
+        return () => window.clearTimeout(timeoutId);
+    }, []);
 
     // Declared before the query below, not after it. A function-form refetchInterval is evaluated
     // during setOptions - which react-query runs inside the useQuery call, on the first render -
@@ -118,11 +127,14 @@ export function useComparisonsPage(): ComparisonsPageState {
     const waitingOnTheQueue =
         pendingComparisons.some(pendingComparison => pendingComparison.isAwaitingTheQueue)
         || pendingError !== null
-        || Date.now() - mountedAt.current < arrivalGraceMilliseconds;
+        || inArrivalWindow;
 
-    // Written on every render, so the interval callback declared above always reads the current
-    // answer rather than the one that held when it was created.
-    waitingOnTheQueueRef.current = waitingOnTheQueue;
+    // Synced after every render that changes it, so the interval callback declared above always
+    // reads the current answer rather than the one that held when it was created. In an effect
+    // because writing a ref while rendering is not allowed.
+    useEffect(() => {
+        waitingOnTheQueueRef.current = waitingOnTheQueue;
+    }, [waitingOnTheQueue]);
 
     const {
         data,
