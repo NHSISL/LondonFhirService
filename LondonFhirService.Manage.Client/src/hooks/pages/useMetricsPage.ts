@@ -14,6 +14,9 @@ export type MetricsPageState = {
     searching: boolean;
     handleFilterChange: (fieldName: keyof MetricFilter, value: string) => void;
     handleFilterClear: () => void;
+    exporting: boolean;
+    exportError: Error | null;
+    handleExport: () => void;
     loading: boolean;
     loadingMore: boolean;
     hasNextPage: boolean;
@@ -37,6 +40,7 @@ export function useMetricsPage(): MetricsPageState {
 
     const appliedFilterSource = useMemo<MetricFilter>(() => ({
         correlationId: correlationIdIsIncomplete ? "" : filter.correlationId.trim(),
+        userId: filter.userId.trim(),
         fromDate: filter.fromDate,
         toDate: filter.toDate
     }), [filter, correlationIdIsIncomplete]);
@@ -47,6 +51,7 @@ export function useMetricsPage(): MetricsPageState {
     // two queries against it.
     useEffect(() => {
         const isSame = appliedFilter.correlationId === appliedFilterSource.correlationId
+            && appliedFilter.userId === appliedFilterSource.userId
             && appliedFilter.fromDate === appliedFilterSource.fromDate
             && appliedFilter.toDate === appliedFilterSource.toDate;
 
@@ -101,6 +106,25 @@ export function useMetricsPage(): MetricsPageState {
         () => setFilter(metricViewService.createMetricFilter()),
         [metricViewService]);
 
+    const [exporting, setExporting] = useState(false);
+    const [exportError, setExportError] = useState<Error | null>(null);
+
+    // The filter the list is showing, so the file holds exactly the rows the search found - all of
+    // them, not just the pages scrolled so far. The button is held back while a search is still
+    // settling, so there is no newer filter this could be missing.
+    const handleExport = useCallback(async () => {
+        setExporting(true);
+        setExportError(null);
+
+        try {
+            await metricViewService.exportMetricsAsync(appliedFilter);
+        } catch (exception) {
+            setExportError(exception instanceof Error ? exception : new Error(String(exception)));
+        } finally {
+            setExporting(false);
+        }
+    }, [metricViewService, appliedFilter]);
+
     const handleLoadMore = useCallback(() => {
         if (hasNextPage && isFetchingNextPage === false) {
             fetchNextPage();
@@ -114,10 +138,14 @@ export function useMetricsPage(): MetricsPageState {
         correlationIdIsIncomplete: correlationIdIsIncomplete,
         searching: appliedFilter !== appliedFilterSource
             && (appliedFilter.correlationId !== appliedFilterSource.correlationId
+                || appliedFilter.userId !== appliedFilterSource.userId
                 || appliedFilter.fromDate !== appliedFilterSource.fromDate
                 || appliedFilter.toDate !== appliedFilterSource.toDate),
         handleFilterChange: handleFilterChange,
         handleFilterClear: handleFilterClear,
+        exporting: exporting,
+        exportError: exportError,
+        handleExport: () => { void handleExport(); },
         loading: isLoading,
         loadingMore: isFetchingNextPage,
         hasNextPage: hasNextPage === true,

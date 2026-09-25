@@ -16,6 +16,7 @@ using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.CsvHelpers;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -32,6 +33,8 @@ using LondonFhirService.Core.Services.Foundations.FhirRecords;
 using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Services.Foundations.Providers;
 using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
+using LondonFhirService.Core.Services.Orchestrations.Metrics;
+using LondonFhirService.Core.Services.Processings.Metrics;
 using LondonFhirService.Manage.Brokers.Https;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Services.Foundations.Patients;
@@ -251,6 +254,7 @@ public partial class Program
         services.AddTransient<ILoggingBroker, LoggingBroker>();
         services.AddTransient<ISecurityAuditBroker, SecurityAuditBroker>();
         services.AddTransient<ISecurityBroker, SecurityBroker>();
+        services.AddSingleton<ICsvHelperBroker, CsvHelperBroker>();
 
         services.AddScoped<IStorageBroker>(
             serviceProvider => serviceProvider.GetRequiredService<StorageBroker>());
@@ -291,11 +295,13 @@ public partial class Program
 
     private static void AddProcessingServices(IServiceCollection services)
     {
+        services.AddTransient<IMetricProcessingService, MetricProcessingService>();
     }
 
     private static void AddOrchestrationServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddTransient<IStu3FhirReconciliationService, Stu3FhirReconciliationService>();
+        services.AddTransient<IMetricOrchestrationService, MetricOrchestrationService>();
     }
 
     private static void AddCoordinationServices(IServiceCollection services, IConfiguration configuration)

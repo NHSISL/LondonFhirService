@@ -331,6 +331,28 @@ composites `(Method, Type, Started)`, `(Name, Started)`, `(Consumer, Started)`.
 > PII is what allows it to be retained, aggregated and reported on independently
 > of the audit retention rules. That applies to `Description` too.
 
+### Exporting requests to CSV
+
+The management portal's metrics page (`/admin/metrics`) pages its request list
+50 at a time as you scroll. **Export to CSV** instead downloads every request
+matching the page's filter — correlation id, user id and date range — in one
+file, whether or not those rows have been scrolled into view.
+
+It is served by `GET api/metrics/exports?correlationId=&userId=&fromDate=&toDate=`
+on the Manage host (every parameter optional, dates inclusive and matched against
+`CreatedDate`). `MetricProcessingService` left-joins each root `Request` span to
+its `ProviderRequests` span in one query, and `MetricOrchestrationService` writes
+the rows through `NHSISL.CsvHelperClient`. One row per request, newest first:
+
+| Column | Notes |
+|---|---|
+| `StartedUtc` | `yyyy-MM-dd HH:mm:ss.fff`, UTC. |
+| `CorrelationId`, `Method`, `Name`, `Status`, `ErrorCode` | From the `Request` span. |
+| `DurationMs` | The whole request. |
+| `ProviderRequestsMs` | Empty when the request never reached its providers — a failed access check, say. |
+| `ProxyOverheadMs` | `DurationMs − ProviderRequestsMs`, clamped at zero and rounded to four places; empty when provider requests are. The same figure as the portal's Proxy overhead column. |
+| `Consumer`, `UserId` | As stamped on the span. |
+
 ### `Audits`
 
 `Id`, `CorrelationId` (string), `AuditType`, `Title`, `Message`, `FileName`,

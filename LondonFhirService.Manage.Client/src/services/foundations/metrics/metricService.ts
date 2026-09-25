@@ -69,6 +69,17 @@ export class MetricService implements IMetricService {
         });
     }
 
+    public async retrieveMetricExportAsync(
+        metricFilter: MetricFilter,
+        abortSignal?: AbortSignal)
+        : Promise<Blob> {
+        return await tryCatchMetricServiceAsync(async () => {
+            validateMetricFilter(metricFilter);
+
+            return await this.metricApiBroker.getMetricExportAsync(metricFilter, abortSignal);
+        });
+    }
+
     public async retrieveMetricsByCorrelationIdAsync(
         correlationId: string,
         metricQuery: MetricQuery,

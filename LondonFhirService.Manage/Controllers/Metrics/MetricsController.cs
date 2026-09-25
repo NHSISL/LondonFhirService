@@ -2,13 +2,18 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+#nullable enable annotations
+
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Attrify.Attributes;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
+using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Metrics;
+using LondonFhirService.Core.Services.Orchestrations.Metrics;
 using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,9 +41,15 @@ namespace LondonFhirService.Manage.Controllers.Metrics
     public class MetricsController : RESTFulController
     {
         private readonly IMetricService metricService;
+        private readonly IMetricOrchestrationService metricOrchestrationService;
 
-        public MetricsController(IMetricService metricService) =>
+        public MetricsController(
+            IMetricService metricService,
+            IMetricOrchestrationService metricOrchestrationService)
+        {
             this.metricService = metricService;
+            this.metricOrchestrationService = metricOrchestrationService;
+        }
 
         [InvisibleApi]
         [HttpPost]
@@ -98,6 +109,48 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             catch (MetricServiceException metricServiceException)
             {
                 return InternalServerError(metricServiceException);
+            }
+        }
+
+        /// <summary>
+        /// Every request matching the filter as a CSV file, unpaged - the export behind the
+        /// portal's master list, which otherwise only ever holds the pages scrolled so far. The
+        /// filter matches the list's: an optional correlation id and user id, and CreatedDate
+        /// bounds that are inclusive at both ends.
+        ///
+        /// A literal segment, so it is matched ahead of the {metricId} route below.
+        /// </summary>
+        [HttpGet("exports")]
+        public async ValueTask<ActionResult> GetMetricExportAsync(
+            [FromQuery] Guid? correlationId,
+            [FromQuery] string? userId,
+            [FromQuery] DateTimeOffset? fromDate,
+            [FromQuery] DateTimeOffset? toDate)
+        {
+            try
+            {
+                Stream csvStream =
+                    await this.metricOrchestrationService.ExportRequestMetricsToCsvAsync(
+                        correlationId,
+                        userId,
+                        fromDate,
+                        toDate,
+                        HttpContext?.RequestAborted ?? default);
+
+                return File(csvStream, contentType: "text/csv", fileDownloadName: "metrics.csv");
+            }
+            catch (MetricOrchestrationDependencyValidationException
+                metricOrchestrationDependencyValidationException)
+            {
+                return BadRequest(metricOrchestrationDependencyValidationException.InnerException);
+            }
+            catch (MetricOrchestrationDependencyException metricOrchestrationDependencyException)
+            {
+                return InternalServerError(metricOrchestrationDependencyException);
+            }
+            catch (MetricOrchestrationServiceException metricOrchestrationServiceException)
+            {
+                return InternalServerError(metricOrchestrationServiceException);
             }
         }
 

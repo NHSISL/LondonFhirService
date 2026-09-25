@@ -16,6 +16,7 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Models.Metrics
     public class Metric
     {
         public Guid Id { get; set; }
+        public string UserId { get; set; }
         public Guid? ParentId { get; set; }
         public Guid CorrelationId { get; set; }
         public string Method { get; set; }

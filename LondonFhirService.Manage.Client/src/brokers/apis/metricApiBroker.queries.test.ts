@@ -1,6 +1,7 @@
 ﻿import { expect, it } from "vitest";
 import {
     buildCorrelationMetricQueryUrl,
+    buildMetricExportUrl,
     buildProviderRequestsByCorrelationIdsQueryUrl,
     buildProviderRequestsMetricQueryUrl,
     buildRequestMetricQueryUrl
@@ -47,7 +48,7 @@ it("should add no filter clauses when nothing is searched for", () => {
     const url = buildRequestMetricQueryUrl(
         "/api/metrics",
         { skip: 0, take: 50 },
-        { correlationId: "", fromDate: "", toDate: "" });
+        { correlationId: "", userId: "", fromDate: "", toDate: "" });
 
     expect(decode(url)).toContain("$filter=Type eq 'Request'&");
 });
@@ -58,6 +59,7 @@ it("should search for one correlation id alongside the type", () => {
         { skip: 0, take: 50 },
         {
             correlationId: "  0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f  ",
+            userId: "",
             fromDate: "",
             toDate: ""
         });
@@ -70,7 +72,7 @@ it("should widen a date range to whole days, with an inclusive upper bound", () 
     const url = buildRequestMetricQueryUrl(
         "/api/metrics",
         { skip: 0, take: 50 },
-        { correlationId: "", fromDate: "2026-08-24", toDate: "2026-08-25" });
+        { correlationId: "", userId: "", fromDate: "2026-08-24", toDate: "2026-08-25" });
 
     const filter = decode(url);
 
@@ -85,7 +87,7 @@ it("should apply the same filter to the provider requests sample", () => {
     const url = buildProviderRequestsMetricQueryUrl(
         "/api/metrics",
         { skip: 0, take: 50 },
-        { correlationId: "", fromDate: "2026-08-25", toDate: "" });
+        { correlationId: "", userId: "", fromDate: "2026-08-25", toDate: "" });
 
     const filter = decode(url);
     expect(filter).toContain("Type eq 'ProviderRequests'");
@@ -96,7 +98,7 @@ it("should ignore a part typed date rather than sending a broken literal", () =>
     const url = buildRequestMetricQueryUrl(
         "/api/metrics",
         { skip: 0, take: 50 },
-        { correlationId: "", fromDate: "2026-08", toDate: "not-a-date" });
+        { correlationId: "", userId: "", fromDate: "2026-08", toDate: "not-a-date" });
 
     expect(decode(url)).toContain("$filter=Type eq 'Request'&");
 });
@@ -118,4 +120,42 @@ it("should encode the correlation ids so they cannot smuggle in query options", 
         ["abc)&$top=9999"]);
 
     expect(url.split("$top=").length).toBe(2);
+});
+
+it("should search for one user id as an escaped string literal", () => {
+    const url = buildRequestMetricQueryUrl(
+        "/api/metrics",
+        { skip: 0, take: 50 },
+        { correlationId: "", userId: "  o'brien  ", fromDate: "", toDate: "" });
+
+    expect(decode(url)).toContain("$filter=Type eq 'Request' and UserId eq 'o''brien'");
+});
+
+it("should ask for the export with no parameters when nothing is searched for", () => {
+    const url = buildMetricExportUrl(
+        "/api/metrics",
+        { correlationId: "", userId: "", fromDate: "", toDate: "" });
+
+    expect(url).toBe("/api/metrics/exports");
+});
+
+it("should ask for the export with the list's filter as query parameters", () => {
+    const url = buildMetricExportUrl(
+        "/api/metrics",
+        {
+            correlationId: " 0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f ",
+            userId: " 2e9209fb-25fe-4ed8-ba3d-a830d5fffb60 ",
+            fromDate: "2026-08-24",
+            toDate: "2026-08-25"
+        });
+
+    const parameters = new URL(url, "https://portal.example").searchParams;
+
+    expect(url.startsWith("/api/metrics/exports?")).toBe(true);
+    expect(parameters.get("correlationId")).toBe("0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f");
+    expect(parameters.get("userId")).toBe("2e9209fb-25fe-4ed8-ba3d-a830d5fffb60");
+
+    // Widened to whole local days, exactly as the list's OData filter is.
+    expect(parameters.get("fromDate")).toMatch(/^2026-08-2[34]T\d{2}:00:00\.000Z$/);
+    expect(parameters.get("toDate")).toMatch(/^2026-08-2[56]T\d{2}:\d{2}:59\.999Z$/);
 });

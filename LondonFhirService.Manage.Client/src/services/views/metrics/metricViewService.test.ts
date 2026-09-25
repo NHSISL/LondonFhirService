@@ -1,5 +1,8 @@
 ﻿import { expect, it } from "vitest";
 import { MetricViewService, metricPageSize } from "./metricViewService";
+import { MetricViewServiceException } from "../../../models/views/metrics/exceptions/MetricViewServiceException";
+import type { IFileDownloadService } from "../../foundations/fileDownloads/iFileDownloadService";
+import type { MetricFilter } from "../../../models/foundations/metrics/MetricFilter";
 import type { IMetricService } from "../../foundations/metrics/iMetricService";
 import type { Metric } from "../../../models/foundations/metrics/Metric";
 import type { MetricQuery } from "../../../models/foundations/metrics/MetricQuery";
@@ -27,12 +30,13 @@ const createMetric = (overrides: Partial<Metric>): Metric => ({
     ...overrides
 });
 
-const noFilter = { correlationId: "", fromDate: "", toDate: "" };
+const noFilter = { correlationId: "", userId: "", fromDate: "", toDate: "" };
 
 const createMetricService = (overrides: Partial<IMetricService> = {}): IMetricService => ({
     retrieveRequestMetricsAsync: async () => [],
     retrieveProviderRequestsMetricsAsync: async () => [],
     retrieveProviderRequestsMetricsByCorrelationIdsAsync: async () => [],
+    retrieveMetricExportAsync: async () => new Blob(),
     retrieveMetricsByCorrelationIdAsync: async () => [],
     ...overrides
 });
@@ -553,4 +557,47 @@ it("should draw no bars on a detail card with nothing to divide", async () => {
         await metricViewService.retrieveMetricCorrelationViewAsync(correlationId);
 
     expect(correlationView.bars.hasBars).toBe(false);
+});
+
+it("should download every matching request as a timestamped csv file", async () => {
+    const exportContent = new Blob(["StartedUtc,CorrelationId"], { type: "text/csv" });
+    const userFilter = { ...noFilter, userId: "2e9209fb-25fe-4ed8-ba3d-a830d5fffb60" };
+    let requestedFilter: MetricFilter | null = null;
+    const downloads: { fileName: string; content: Blob }[] = [];
+
+    const fileDownloadService: IFileDownloadService = {
+        downloadFileAsync: async (fileName, content) => { downloads.push({ fileName, content }); }
+    };
+
+    const metricViewService = new MetricViewService(
+        createMetricService({
+            retrieveMetricExportAsync: async metricFilter => {
+                requestedFilter = metricFilter;
+
+                return exportContent;
+            }
+        }),
+        fileDownloadService);
+
+    await metricViewService.exportMetricsAsync(userFilter);
+
+    expect(requestedFilter).toEqual(userFilter);
+    expect(downloads).toHaveLength(1);
+    expect(downloads[0].content).toBe(exportContent);
+    expect(downloads[0].fileName).toMatch(/^metrics-\d{8}-\d{6}\.csv$/);
+});
+
+it("should report a failed export as a view service error without downloading", async () => {
+    let downloaded = false;
+
+    const metricViewService = new MetricViewService(
+        createMetricService({
+            retrieveMetricExportAsync: async () => { throw new Error("dependency down"); }
+        }),
+        { downloadFileAsync: async () => { downloaded = true; } });
+
+    await expect(metricViewService.exportMetricsAsync(noFilter))
+        .rejects.toBeInstanceOf(MetricViewServiceException);
+
+    expect(downloaded).toBe(false);
 });

@@ -7,6 +7,7 @@ import {
 
 const filter = (overrides: Partial<{ correlationId: string; fromDate: string; toDate: string }>) => ({
     correlationId: "",
+    userId: "",
     fromDate: "",
     toDate: "",
     ...overrides

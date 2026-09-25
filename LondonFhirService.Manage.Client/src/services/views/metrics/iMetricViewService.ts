@@ -15,6 +15,8 @@ export interface IMetricViewService {
 
     createMetricFilter(): MetricFilter;
 
+    exportMetricsAsync(metricFilter: MetricFilter, abortSignal?: AbortSignal): Promise<void>;
+
     isSearchableCorrelationId(correlationId: string): boolean;
 
     retrieveMetricCorrelationViewAsync(

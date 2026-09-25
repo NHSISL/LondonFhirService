@@ -7,7 +7,9 @@ using System.Linq;
 using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
+using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Metrics;
+using LondonFhirService.Core.Services.Orchestrations.Metrics;
 using LondonFhirService.Manage.Controllers.Metrics;
 using Moq;
 using RESTFulSense.Controllers;
@@ -19,12 +21,34 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
     public partial class MetricsControllerTests : RESTFulController
     {
         private readonly Mock<IMetricService> metricServiceMock;
+        private readonly Mock<IMetricOrchestrationService> metricOrchestrationServiceMock;
         private readonly MetricsController metricsController;
 
         public MetricsControllerTests()
         {
             metricServiceMock = new Mock<IMetricService>();
-            metricsController = new MetricsController(metricServiceMock.Object);
+            metricOrchestrationServiceMock = new Mock<IMetricOrchestrationService>();
+
+            metricsController = new MetricsController(
+                metricServiceMock.Object,
+                metricOrchestrationServiceMock.Object);
+        }
+
+        public static TheoryData<Xeption> ExportServerExceptions()
+        {
+            var someInnerException = new Xeption();
+            string someMessage = GetRandomString();
+
+            return new TheoryData<Xeption>
+            {
+                new MetricOrchestrationDependencyException(
+                    message: someMessage,
+                    innerException: someInnerException),
+
+                new MetricOrchestrationServiceException(
+                    message: someMessage,
+                    innerException: someInnerException)
+            };
         }
 
         public static TheoryData<Xeption> ValidationExceptions()
