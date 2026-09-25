@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { Alert } from "react-bootstrap";
 import { isRouteErrorResponse, useRouteError } from "react-router-dom";
 

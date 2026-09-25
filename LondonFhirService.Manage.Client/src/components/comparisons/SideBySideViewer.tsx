@@ -139,7 +139,7 @@ type SourcePanelProps = {
     diffCountText: string;
     diffCountClassName: string;
 
-    panelRef: React.RefObject<HTMLDivElement>;
+    panelRef: React.RefObject<HTMLDivElement | null>;
     onScroll: () => void;
     children: React.ReactNode;
 };

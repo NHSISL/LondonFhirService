@@ -60,8 +60,4 @@ const DateInputBase: FunctionComponent<DateInputBaseProps> = (props) => {
     );
 }
 
-DateInputBase.defaultProps = {
-    error: "",
-}
-
 export default DateInputBase;
