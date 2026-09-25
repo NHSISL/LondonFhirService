@@ -8,6 +8,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Processings.Metrics;
 
 namespace LondonFhirService.Core.Services.Processings.Metrics
@@ -20,11 +21,13 @@ namespace LondonFhirService.Core.Services.Processings.Metrics
         /// enumerated, so a caller can stream it rather than hold every row at once.
         ///
         /// The dates bound CreatedDate, inclusive at both ends, as the portal's master list does.
-        /// A user id restricts the export to the requests that one caller made.
+        /// A user id restricts the export to the requests that one caller made, and a status to
+        /// the requests that ended that way.
         /// </summary>
         ValueTask<IQueryable<MetricExport>> RetrieveRequestMetricExportsAsync(
             Guid? correlationId,
             string? userId,
+            MetricStatus? status,
             DateTimeOffset? fromDate,
             DateTimeOffset? toDate,
             CancellationToken cancellationToken = default);

@@ -37,6 +37,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 this.metricProcessingService.RetrieveRequestMetricExportsAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null,
                     TestContext.Current.CancellationToken);
@@ -81,6 +82,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 this.metricProcessingService.RetrieveRequestMetricExportsAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null,
                     TestContext.Current.CancellationToken);
@@ -130,6 +132,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 this.metricProcessingService.RetrieveRequestMetricExportsAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null,
                     TestContext.Current.CancellationToken);

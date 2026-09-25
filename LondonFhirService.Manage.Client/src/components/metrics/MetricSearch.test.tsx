@@ -1,10 +1,11 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, expect, it } from "vitest";
 import { MetricSearch } from "./MetricSearch";
 import type { MetricFilter } from "../../models/foundations/metrics/MetricFilter";
 import type { MetricSearchProps } from "../../models/components/metrics/MetricSearchProps";
 
-const noFilter: MetricFilter = { correlationId: "", userId: "", fromDate: "", toDate: "" };
+const noFilter: MetricFilter = { correlationId: "", userId: "", status: "", fromDate: "", toDate: "" };
 
 const renderSearch = (overrides: Partial<MetricSearchProps> = {}) =>
     render(
@@ -65,6 +66,52 @@ it("should filter by user id and count it as a filter to clear", () => {
     });
 
     expect(changes).toEqual([["userId", "2e9209fb-25fe-4ed8-ba3d-a830d5fffb60"]]);
+
+    const clearButton = screen.getByRole("button", { name: "Clear" }) as HTMLButtonElement;
+    expect(clearButton.disabled).toBe(false);
+});
+
+it("should offer All, Succeeded and Failed and report the choice", () => {
+    const changes: [keyof MetricFilter, string][] = [];
+
+    // Holds the filter the way the page does. Rendered against a fixed filter, the controlled select
+    // is reset by React after each change, and the test DOM reports that reset as a change of its own.
+    function StatefulSearch() {
+        const [filter, setFilter] = useState<MetricFilter>(noFilter);
+
+        return (
+            <MetricSearch
+                filter={filter}
+                correlationIdIsIncomplete={false}
+                searching={false}
+                loadedCount={60}
+                exporting={false}
+                onFilterChange={(fieldName, value) => {
+                    changes.push([fieldName, value]);
+                    setFilter(currentFilter => ({ ...currentFilter, [fieldName]: value }));
+                }}
+                onFilterClear={() => { }}
+                onExport={() => { }} />);
+    }
+
+    render(<StatefulSearch />);
+
+    const statusSelect = screen.getByLabelText("Status") as HTMLSelectElement;
+
+    expect([...statusSelect.options].map(option => option.text)).toEqual(["All", "Succeeded", "Failed"]);
+    expect(statusSelect.value).toBe("");
+
+    fireEvent.change(statusSelect, { target: { value: "Failed" } });
+
+    // How many change events the test DOM raises for one selection is its own business; what the
+    // component reports is the point.
+    expect(changes.length).toBeGreaterThan(0);
+    expect(changes.every(([fieldName, value]) => fieldName === "status" && value === "Failed")).toBe(true);
+    expect(statusSelect.value).toBe("Failed");
+});
+
+it("should count a chosen status as a filter to clear", () => {
+    renderSearch({ filter: { ...noFilter, status: "Succeeded" } });
 
     const clearButton = screen.getByRole("button", { name: "Clear" }) as HTMLButtonElement;
     expect(clearButton.disabled).toBe(false);

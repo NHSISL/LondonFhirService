@@ -94,6 +94,12 @@ function buildFilterClauses(metricFilter?: MetricFilter): string[] {
         clauses.push(`UserId eq ${toStringLiteral(userId)}`);
     }
 
+    const status = metricFilter.status.trim();
+
+    if (status.length > 0) {
+        clauses.push(`Status eq ${toStringLiteral(status)}`);
+    }
+
     const fromDate = toStartOfDay(metricFilter.fromDate);
 
     if (fromDate !== undefined) {
@@ -131,6 +137,7 @@ export function buildMetricExportUrl(
     const parameters = new URLSearchParams();
     const correlationId = metricFilter.correlationId.trim();
     const userId = metricFilter.userId.trim();
+    const status = metricFilter.status.trim();
     const fromDate = toStartOfDay(metricFilter.fromDate);
     const toDate = toEndOfDay(metricFilter.toDate);
 
@@ -140,6 +147,10 @@ export function buildMetricExportUrl(
 
     if (userId.length > 0) {
         parameters.append("userId", userId);
+    }
+
+    if (status.length > 0) {
+        parameters.append("status", status);
     }
 
     if (fromDate !== undefined) {

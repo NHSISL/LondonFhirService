@@ -53,7 +53,7 @@ it("should add no filter clauses when nothing is searched for", () => {
     const url = buildRequestMetricQueryUrl(
         "/api/metrics",
         { skip: 0, take: 50 },
-        { correlationId: "", userId: "", fromDate: "", toDate: "" });
+        { correlationId: "", userId: "", status: "", fromDate: "", toDate: "" });
 
     expect(decode(url)).toContain("$filter=Type eq 'Request'&");
 });
@@ -65,6 +65,7 @@ it("should search for one correlation id alongside the type", () => {
         {
             correlationId: "  0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f  ",
             userId: "",
+            status: "",
             fromDate: "",
             toDate: ""
         });
@@ -77,7 +78,7 @@ it("should widen a date range to whole days, with an inclusive upper bound", () 
     const url = buildRequestMetricQueryUrl(
         "/api/metrics",
         { skip: 0, take: 50 },
-        { correlationId: "", userId: "", fromDate: "2026-08-24", toDate: "2026-08-25" });
+        { correlationId: "", userId: "", status: "", fromDate: "2026-08-24", toDate: "2026-08-25" });
 
     const filter = decode(url);
 
@@ -92,7 +93,7 @@ it("should ignore a part typed date rather than sending a broken literal", () =>
     const url = buildRequestMetricQueryUrl(
         "/api/metrics",
         { skip: 0, take: 50 },
-        { correlationId: "", userId: "", fromDate: "2026-08", toDate: "not-a-date" });
+        { correlationId: "", userId: "", status: "", fromDate: "2026-08", toDate: "not-a-date" });
 
     expect(decode(url)).toContain("$filter=Type eq 'Request'&");
 });
@@ -120,7 +121,7 @@ it("should search for one user id as an escaped string literal", () => {
     const url = buildRequestMetricQueryUrl(
         "/api/metrics",
         { skip: 0, take: 50 },
-        { correlationId: "", userId: "  o'brien  ", fromDate: "", toDate: "" });
+        { correlationId: "", userId: "  o'brien  ", status: "", fromDate: "", toDate: "" });
 
     expect(decode(url)).toContain("$filter=Type eq 'Request' and UserId eq 'o''brien'");
 });
@@ -128,7 +129,7 @@ it("should search for one user id as an escaped string literal", () => {
 it("should ask for the export with no parameters when nothing is searched for", () => {
     const url = buildMetricExportUrl(
         "/api/metrics",
-        { correlationId: "", userId: "", fromDate: "", toDate: "" });
+        { correlationId: "", userId: "", status: "", fromDate: "", toDate: "" });
 
     expect(url).toBe("/api/metrics/exports");
 });
@@ -139,6 +140,7 @@ it("should ask for the export with the list's filter as query parameters", () =>
         {
             correlationId: " 0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f ",
             userId: " 2e9209fb-25fe-4ed8-ba3d-a830d5fffb60 ",
+            status: "",
             fromDate: "2026-08-24",
             toDate: "2026-08-25"
         });
@@ -152,4 +154,21 @@ it("should ask for the export with the list's filter as query parameters", () =>
     // Widened to whole local days, exactly as the list's OData filter is.
     expect(parameters.get("fromDate")).toMatch(/^2026-08-2[34]T\d{2}:00:00\.000Z$/);
     expect(parameters.get("toDate")).toMatch(/^2026-08-2[56]T\d{2}:\d{2}:59\.999Z$/);
+});
+
+it("should search for one status as an enum name", () => {
+    const url = buildRequestMetricQueryUrl(
+        "/api/metrics",
+        { skip: 0, take: 50 },
+        { correlationId: "", userId: "", status: "Failed", fromDate: "", toDate: "" });
+
+    expect(decode(url)).toContain("$filter=Type eq 'Request' and Status eq 'Failed'");
+});
+
+it("should carry the status into the export", () => {
+    const url = buildMetricExportUrl(
+        "/api/metrics",
+        { correlationId: "", userId: "", status: "Succeeded", fromDate: "", toDate: "" });
+
+    expect(url).toBe("/api/metrics/exports?status=Succeeded");
 });

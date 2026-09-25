@@ -153,6 +153,25 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
             actualMetrics.Should().OnlyContain(metric => metric.CorrelationId == correlationId);
         }
         /// <summary>
+        /// The Status filter on the master list, named as a plain string like Type.
+        /// </summary>
+        [Fact]
+        public void ShouldFilterRequestSpansByStatusWithAnUnqualifiedEnumLiteral()
+        {
+            // given
+            List<Metric> metrics = CreateSpanTree();
+            Metric failedRequest = metrics.First(metric => metric.Type == MetricType.Request);
+            failedRequest.Status = MetricStatus.Failed;
+
+            // when
+            List<Metric> actualMetrics =
+                ApplyQuery("?$filter=Type eq 'Request' and Status eq 'Failed'", metrics).ToList();
+
+            // then
+            actualMetrics.Should().ContainSingle().Which.Id.Should().Be(failedRequest.Id);
+        }
+
+        /// <summary>
         /// The master list shows each request's proxy overhead, which needs the ProviderRequests
         /// span of every request on the page. The client asks for all of them in one call with an
         /// in list of bare guid literals, rather than one call per row.

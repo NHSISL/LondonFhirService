@@ -61,6 +61,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 await this.metricProcessingService.RetrieveRequestMetricExportsAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null,
                     TestContext.Current.CancellationToken);
@@ -124,6 +125,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 await this.metricProcessingService.RetrieveRequestMetricExportsAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null,
                     TestContext.Current.CancellationToken);
@@ -144,6 +146,13 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 correlationId, MetricType.Request, durationMs: 10, randomDateTimeOffset);
 
             matchingRequest.UserId = randomUserId;
+            matchingRequest.Status = MetricStatus.Failed;
+
+            Metric otherStatusRequest = CreateRandomSpan(
+                correlationId, MetricType.Request, durationMs: 10, randomDateTimeOffset);
+
+            otherStatusRequest.UserId = randomUserId;
+            otherStatusRequest.Status = MetricStatus.Succeeded;
 
             Metric otherUserRequest = CreateRandomSpan(
                 correlationId, MetricType.Request, durationMs: 10, randomDateTimeOffset);
@@ -166,6 +175,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
             var storageMetrics = new List<Metric>
             {
                 matchingRequest,
+                otherStatusRequest,
                 otherUserRequest,
                 otherCorrelationRequest,
                 tooEarlyRequest,
@@ -181,6 +191,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
                 await this.metricProcessingService.RetrieveRequestMetricExportsAsync(
                     correlationId,
                     randomUserId,
+                    MetricStatus.Failed,
                     fromDate: randomDateTimeOffset.AddDays(-1),
                     toDate: randomDateTimeOffset.AddDays(1),
                     TestContext.Current.CancellationToken);
@@ -190,6 +201,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
             metricExports.Should().ContainSingle();
             metricExports[0].CorrelationId.Should().Be(correlationId);
             metricExports[0].UserId.Should().Be(randomUserId);
+            metricExports[0].Status.Should().Be(MetricStatus.Failed);
             metricExports[0].Started.Should().Be(randomDateTimeOffset);
         }
     }

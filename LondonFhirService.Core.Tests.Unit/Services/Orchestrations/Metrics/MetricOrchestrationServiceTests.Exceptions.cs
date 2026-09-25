@@ -8,6 +8,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Processings.Metrics;
 using Moq;
@@ -33,6 +34,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 service.RetrieveRequestMetricExportsAsync(
                     It.IsAny<Guid?>(),
                     It.IsAny<string>(),
+                    It.IsAny<MetricStatus?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
@@ -43,6 +45,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 this.metricOrchestrationService.ExportRequestMetricsToCsvAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null,
                     TestContext.Current.CancellationToken);
@@ -77,6 +80,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 service.RetrieveRequestMetricExportsAsync(
                     It.IsAny<Guid?>(),
                     It.IsAny<string>(),
+                    It.IsAny<MetricStatus?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
@@ -87,6 +91,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 this.metricOrchestrationService.ExportRequestMetricsToCsvAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null,
                     TestContext.Current.CancellationToken);
@@ -130,6 +135,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 service.RetrieveRequestMetricExportsAsync(
                     It.IsAny<Guid?>(),
                     It.IsAny<string>(),
+                    It.IsAny<MetricStatus?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
@@ -150,6 +156,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 this.metricOrchestrationService.ExportRequestMetricsToCsvAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null,
                     TestContext.Current.CancellationToken);
@@ -169,6 +176,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 service.RetrieveRequestMetricExportsAsync(
                     It.IsAny<Guid?>(),
                     It.IsAny<string>(),
+                    It.IsAny<MetricStatus?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()),
@@ -195,6 +203,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics
                 service.RetrieveRequestMetricExportsAsync(
                     It.IsAny<Guid?>(),
                     It.IsAny<string>(),
+                    It.IsAny<MetricStatus?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()),
