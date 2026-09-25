@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -21,6 +22,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
             // given
             Guid randomCorrelationId = Guid.NewGuid();
             string randomUserId = GetRandomString();
+            MetricStatus? randomStatus = MetricStatus.Failed;
             DateTimeOffset randomFromDate = DateTimeOffset.UtcNow.AddDays(-1);
             DateTimeOffset randomToDate = DateTimeOffset.UtcNow;
             Stream csvStream = new MemoryStream(Encoding.UTF8.GetBytes(GetRandomString()));
@@ -29,6 +31,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                 service.ExportRequestMetricsToCsvAsync(
                     randomCorrelationId,
                     randomUserId,
+                    randomStatus,
                     randomFromDate,
                     randomToDate,
                     It.IsAny<CancellationToken>()))
@@ -39,6 +42,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                 await this.metricsController.GetMetricExportAsync(
                     randomCorrelationId,
                     randomUserId,
+                    randomStatus,
                     randomFromDate,
                     randomToDate);
 
@@ -54,6 +58,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                 service.ExportRequestMetricsToCsvAsync(
                     randomCorrelationId,
                     randomUserId,
+                    randomStatus,
                     randomFromDate,
                     randomToDate,
                     It.IsAny<CancellationToken>()),

@@ -32,12 +32,13 @@ namespace LondonFhirService.Core.Services.Processings.Metrics
         public ValueTask<IQueryable<MetricExport>> RetrieveRequestMetricExportsAsync(
             Guid? correlationId,
             string? userId,
+            MetricStatus? status,
             DateTimeOffset? fromDate,
             DateTimeOffset? toDate,
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
-            ValidateOnRetrieveRequestMetricExports(correlationId, userId, fromDate, toDate);
+            ValidateOnRetrieveRequestMetricExports(correlationId, userId, status, fromDate, toDate);
             IQueryable<Metric> metrics = await this.metricService.RetrieveAllMetricsAsync(cancellationToken);
             IQueryable<Metric> requestMetrics = metrics.Where(metric => metric.Type == MetricType.Request);
 
@@ -53,6 +54,12 @@ namespace LondonFhirService.Core.Services.Processings.Metrics
             {
                 string requestUserId = userId;
                 requestMetrics = requestMetrics.Where(metric => metric.UserId == requestUserId);
+            }
+
+            if (status.HasValue)
+            {
+                MetricStatus requestStatus = status.Value;
+                requestMetrics = requestMetrics.Where(metric => metric.Status == requestStatus);
             }
 
             if (fromDate.HasValue)

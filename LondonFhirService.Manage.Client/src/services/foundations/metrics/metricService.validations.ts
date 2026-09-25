@@ -67,6 +67,11 @@ export function validateMetricFilter(metricFilter: MetricFilter): void {
             "A correlation id must be a valid identifier.");
     }
 
+    // Each one is sent to the API as an enum name, which rejects a name it does not know.
+    if (["", "Succeeded", "Failed"].includes(metricFilter.status) === false) {
+        throw new MetricValidationException("status", "A status must be Succeeded, Failed or empty.");
+    }
+
     validateOptionalDate(metricFilter.fromDate, "fromDate", "A from date");
     validateOptionalDate(metricFilter.toDate, "toDate", "A to date");
 

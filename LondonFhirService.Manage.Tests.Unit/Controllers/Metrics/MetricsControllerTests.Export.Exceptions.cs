@@ -6,6 +6,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -33,6 +34,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                 service.ExportRequestMetricsToCsvAsync(
                     It.IsAny<Guid?>(),
                     It.IsAny<string>(),
+                    It.IsAny<MetricStatus?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
@@ -43,6 +45,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                 await this.metricsController.GetMetricExportAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null);
 
@@ -64,6 +67,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                 service.ExportRequestMetricsToCsvAsync(
                     It.IsAny<Guid?>(),
                     It.IsAny<string>(),
+                    It.IsAny<MetricStatus?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
@@ -74,6 +78,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                 await this.metricsController.GetMetricExportAsync(
                     correlationId: null,
                     userId: null,
+                    status: null,
                     fromDate: null,
                     toDate: null);
 
@@ -88,6 +93,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                 service.ExportRequestMetricsToCsvAsync(
                     It.IsAny<Guid?>(),
                     It.IsAny<string>(),
+                    It.IsAny<MetricStatus?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()),

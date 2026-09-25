@@ -150,6 +150,36 @@ namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Metrics
         }
 
         [Fact]
+        public async Task ShouldExportOnlyRequestsWithTheGivenStatusAsync()
+        {
+            // given
+            Guid correlationId = Guid.NewGuid();
+
+            Metric succeededRequest = await this.apiBroker.PostMetricAsync(
+                CreateRandomSpan(correlationId, MetricType.Request, durationMs: 100));
+
+            Metric failedSpan = CreateRandomSpan(correlationId, MetricType.Request, durationMs: 40);
+            failedSpan.Status = MetricStatus.Failed;
+            Metric failedRequest = await this.apiBroker.PostMetricAsync(failedSpan);
+
+            // when
+            // By name, as the portal sends it.
+            string failedCsv =
+                await this.apiBroker.GetMetricExportAsync($"?correlationId={correlationId}&status=Failed");
+
+            string allCsv = await this.apiBroker.GetMetricExportAsync($"?correlationId={correlationId}");
+
+            // then
+            string[] failedLines = ReadLines(failedCsv);
+            failedLines.Should().HaveCount(2);
+            failedLines[1].Split(',')[4].Should().Be(nameof(MetricStatus.Failed));
+            ReadLines(allCsv).Should().HaveCount(3);
+
+            await this.apiBroker.DeleteMetricByIdAsync(failedRequest.Id);
+            await this.apiBroker.DeleteMetricByIdAsync(succeededRequest.Id);
+        }
+
+        [Fact]
         public async Task ShouldReturnBadRequestOnExportIfDateRangeRunsBackwardsAsync()
         {
             // given

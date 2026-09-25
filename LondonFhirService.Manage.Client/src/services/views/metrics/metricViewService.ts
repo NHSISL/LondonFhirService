@@ -164,7 +164,7 @@ export class MetricViewService implements IMetricViewService {
     }
 
     public createMetricFilter(): MetricFilter {
-        return { correlationId: "", userId: "", fromDate: "", toDate: "" };
+        return { correlationId: "", userId: "", status: "", fromDate: "", toDate: "" };
     }
 
     // Every request matching the filter, not just the pages scrolled so far: the server builds
