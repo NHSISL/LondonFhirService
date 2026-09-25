@@ -22,6 +22,8 @@ using LondonFhirService.Api.Workers;
 using LondonFhirService.Core.Workers;
 using LondonFhirService.Clients.AuditAndMetrics.Clients;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.ApplicationInsights.Extensibility;
 using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
 using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
@@ -253,66 +255,318 @@ public partial class Program
         && Uri.TryCreate(url.Trim(), UriKind.Absolute, out Uri parsedUrl)
         && (parsedUrl.Scheme == Uri.UriSchemeHttp || parsedUrl.Scheme == Uri.UriSchemeHttps);
 
+    private const string StartupLoggerCategory = "LondonFhirService.Api.Startup";
+
+    private const string ConfigurationHint =
+        "Please check appsettings.json or the corresponding environment variables/secrets.";
+
+    /// <summary>
+    /// Every problem that stops the STU3 providers being built, reported together. Checked one at
+    /// a time, each fix needed its own redeploy to find the next one.
+    ///
+    /// Fatal problems only: a section that is absent, a url the provider's HttpClient cannot take
+    /// as its base address, or a timeout HttpClient rejects. DdsStu3Provider and LdsStu3Provider are
+    /// constructed unconditionally, so any of these fails the host whether or not a Provider row
+    /// ever names that provider. Values that only fail when the provider is dialled - credentials,
+    /// scope, the relative url - are warned about after startup instead, because an environment
+    /// that does not use a provider yet legitimately ships placeholders for them.
+    /// </summary>
+    internal static void ValidateProviderConfigurations(
+        PatientServiceConfig? patientServiceConfig,
+        DdsConfigurations? ddsConfig,
+        LdsConfigurations? ldsConfig,
+        AccessConfigurations? accessConfig)
+    {
+        var problems = new List<string>();
+
+        if (patientServiceConfig is null)
+        {
+            problems.Add("PatientServiceConfig is missing.");
+        }
+
+        if (ddsConfig is null)
+        {
+            problems.Add("DdsConfigurations is missing.");
+        }
+        else
+        {
+            if (IsDialableUrl(ddsConfig.BaseUrl) is false)
+            {
+                problems.Add("DdsConfigurations:BaseUrl is missing or is not an absolute http or https URI.");
+            }
+
+            if (IsDialableUrl(ddsConfig.AuthorisationUrl) is false)
+            {
+                problems.Add(
+                    "DdsConfigurations:AuthorisationUrl is missing or is not an absolute http or https URI.");
+            }
+
+            if (IsUsableTimeout(ddsConfig.TimeoutSeconds) is false)
+            {
+                problems.Add(
+                    $"DdsConfigurations:TimeoutSeconds must be between 1 and {MaximumTimeoutSeconds}, "
+                        + $"but is {ddsConfig.TimeoutSeconds}.");
+            }
+        }
+
+        if (ldsConfig is null)
+        {
+            problems.Add("LdsConfigurations is missing.");
+        }
+        else
+        {
+            if (IsDialableUrl(ldsConfig.BaseUrl) is false)
+            {
+                problems.Add("LdsConfigurations:BaseUrl is missing or is not an absolute http or https URI.");
+            }
+
+            if (IsUsableTimeout(ldsConfig.TimeoutSeconds) is false)
+            {
+                problems.Add(
+                    $"LdsConfigurations:TimeoutSeconds must be between 1 and {MaximumTimeoutSeconds}, "
+                        + $"but is {ldsConfig.TimeoutSeconds}.");
+            }
+        }
+
+        if (accessConfig is null)
+        {
+            problems.Add("AccessConfigurations is missing.");
+        }
+
+        if (problems.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "The patient provider configuration is not usable, so the host cannot start. "
+                    + string.Join(" ", problems) + " " + ConfigurationHint);
+        }
+    }
+
+    /// <summary>
+    /// HttpClient.Timeout is held in milliseconds and rejects anything past int.MaxValue of them,
+    /// and zero or less. Either way the provider's constructor throws - and since the providers
+    /// are built on first use, that used to surface as every patient request failing rather than
+    /// as a host that would not start.
+    /// </summary>
+    private const int MaximumTimeoutSeconds = int.MaxValue / 1000;
+
+    private static bool IsUsableTimeout(int timeoutSeconds) =>
+        timeoutSeconds > 0 && timeoutSeconds <= MaximumTimeoutSeconds;
+
+    /// <summary>
+    /// Values the host starts without but a provider cannot be dialled without. Warnings, not
+    /// failures: a provider is only called when a Provider row names it, and an environment not
+    /// yet using one ships its placeholders. Logged at startup so a provider that is switched on
+    /// with them still in place is obvious from the first line of the log, not from the first
+    /// failed patient request.
+    /// </summary>
+    internal static List<string> FindProviderConfigurationWarnings(
+        DdsConfigurations ddsConfig,
+        LdsConfigurations ldsConfig)
+    {
+        var warnings = new List<string>();
+
+        void WarnIfUnset(string value, string key)
+        {
+            if (IsUnset(value))
+            {
+                warnings.Add($"{key} is not set, so calls to that provider will fail.");
+            }
+        }
+
+        WarnIfUnset(ddsConfig.ClientId, "DdsConfigurations:ClientId");
+        WarnIfUnset(ddsConfig.ClientSecret, "DdsConfigurations:ClientSecret");
+        WarnIfUnset(ddsConfig.GetStructuredRecordRelativeUrl, "DdsConfigurations:GetStructuredRecordRelativeUrl");
+        WarnIfUnset(ldsConfig.Scope, "LdsConfigurations:Scope");
+        WarnIfUnset(ldsConfig.GetStructuredRecordRelativeUrl, "LdsConfigurations:GetStructuredRecordRelativeUrl");
+
+        // Blank is legitimate here - it means the system assigned identity - so only the shipped
+        // placeholder is a mistake.
+        if (IsPlaceholder(ldsConfig.ManagedIdentityClientId))
+        {
+            warnings.Add(
+                "LdsConfigurations:ManagedIdentityClientId still holds the shipped placeholder, so "
+                    + "calls to that provider will fail to get a token.");
+        }
+
+        return warnings;
+    }
+
+    private static bool IsUnset(string value) =>
+        string.IsNullOrWhiteSpace(value) || IsPlaceholder(value);
+
+    private static bool IsPlaceholder(string value) =>
+        value is not null && value.Contains("override_this", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Run once the host is built, while startup can still fail loudly. The STU3 providers are a
+    /// lazily resolved singleton, so anything wrong with building them used to wait for the first
+    /// patient request and then fail every one after it. Building them here turns that into a
+    /// host that does not start, with the reason logged as critical.
+    /// </summary>
+    internal static void VerifyStartupDependencies(WebApplication app)
+    {
+        ILogger logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(StartupLoggerCategory);
+
+        List<string> warnings = FindProviderConfigurationWarnings(
+            app.Services.GetRequiredService<DdsConfigurations>(),
+            app.Services.GetRequiredService<LdsConfigurations>());
+
+        foreach (string warning in warnings)
+        {
+            logger.LogWarning("Provider configuration: {ConfigurationWarning} {ConfigurationHint}",
+                warning,
+                ConfigurationHint);
+        }
+
+        try
+        {
+            app.Services.GetRequiredService<STU3FhirAbstractions.IFhirAbstractionProvider>();
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException(
+                "The STU3 patient providers could not be built from DdsConfigurations and "
+                    + "LdsConfigurations. " + ConfigurationHint,
+                exception);
+        }
+    }
+
+    /// <summary>
+    /// A host that fails to start used to leave nothing behind but a process exit: the guards throw
+    /// from ConfigureServices, before logging or Application Insights exist, so in Azure the only
+    /// symptom was a generic "failed to start" page. This makes sure the reason is logged as
+    /// critical wherever it can be seen.
+    ///
+    /// Locally it goes through the host's own logger when there is a host, and straight to the
+    /// console when there is not. Application Insights is always given it through a client built
+    /// from the connection string alone - even when the host exists, because its telemetry pipeline
+    /// only starts with the host, and a host that failed before app.Run never started it. Verified:
+    /// logged through the host's ILogger alone, a failed migration reached the console and nothing
+    /// reached Application Insights.
+    ///
+    /// Nothing here may throw: it runs on the way out of a failure, and an exception of its own
+    /// would replace the one that explains what went wrong.
+    /// </summary>
+    internal static async Task LogStartupFailureAsync(
+        WebApplication? app,
+        IConfiguration configuration,
+        Exception exception)
+    {
+        const string message = "London FHIR Service API failed to start. {StartupFailureReason}";
+        bool loggedByHost = false;
+
+        if (app is not null)
+        {
+            try
+            {
+                app.Services
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger(StartupLoggerCategory)
+                    .LogCritical(exception, message, exception.Message);
+
+                loggedByHost = true;
+            }
+            catch (Exception)
+            {
+                // Fall back to the console below.
+            }
+        }
+
+        if (loggedByHost is false)
+        {
+            try
+            {
+                // Disposed before moving on, because the console logger writes on a background
+                // thread and the process is about to end.
+                using ILoggerFactory loggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+
+                loggerFactory
+                    .CreateLogger(StartupLoggerCategory)
+                    .LogCritical(exception, message, exception.Message);
+            }
+            catch (Exception)
+            {
+                // Nothing further can be done without a console.
+            }
+        }
+
+        TrackStartupFailureInApplicationInsights(configuration, exception);
+
+        if (app is not null)
+        {
+            try
+            {
+                // Flushes the host's own logging providers before the process ends.
+                await app.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // The failure has already been reported.
+            }
+        }
+    }
+
+    private static void TrackStartupFailureInApplicationInsights(
+        IConfiguration configuration,
+        Exception exception)
+    {
+        if (ExcludeAppInsightsForTesting)
+        {
+            return;
+        }
+
+        try
+        {
+            string? connectionString =
+                configuration["ApplicationInsights:ConnectionString"]
+                    ?? configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+            if (string.IsNullOrWhiteSpace(connectionString)
+                || connectionString.Contains("InstrumentationKey=", StringComparison.OrdinalIgnoreCase) is false)
+            {
+                return;
+            }
+
+            using TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.CreateDefault();
+            telemetryConfiguration.ConnectionString = connectionString;
+            var telemetryClient = new TelemetryClient(telemetryConfiguration);
+
+            telemetryClient.TrackException(new ExceptionTelemetry(exception)
+            {
+                SeverityLevel = SeverityLevel.Critical,
+                Message = $"London FHIR Service API failed to start. {exception.Message}"
+            });
+
+            telemetryClient.Flush();
+        }
+        catch (Exception)
+        {
+            // A malformed connection string must not hide the failure being reported.
+        }
+    }
+
     private static void AddProviders(IServiceCollection services, IConfiguration configuration)
     {
         PatientServiceConfig patientServiceConfig = configuration
             .GetSection("PatientServiceConfig")
             .Get<PatientServiceConfig>();
 
-        // Guarded the same way LdsConfigurations is below, because it was not and a clean checkout
-        // paid for it. Every url in this section ships as the
-        // override_this_in_your_appsettings.Development.json_file_or_environment_variables marker,
-        // and DdsStu3Provider is constructed unconditionally - so the first thing a new developer
-        // met was a UriFormatException thrown from a collection initialiser that names neither the
-        // setting nor the file it belongs in. Failing here instead says which key to set.
         DdsConfigurations ddsConfig = configuration
             .GetSection("DdsConfigurations")
-            .Get<DdsConfigurations>()
-            ?? throw new InvalidOperationException(
-                "DdsConfigurations is missing or invalid. Please check appsettings.json.");
-
-        if (IsDialableUrl(ddsConfig.BaseUrl) is false)
-        {
-            throw new InvalidOperationException(
-                "DdsConfigurations:BaseUrl is missing or is not an absolute http or https URI. "
-                    + "Please check appsettings.json or the corresponding environment variable/secret.");
-        }
-
-        if (IsDialableUrl(ddsConfig.AuthorisationUrl) is false)
-        {
-            throw new InvalidOperationException(
-                "DdsConfigurations:AuthorisationUrl is missing or is not an absolute http or "
-                    + "https URI. Please check appsettings.json or the corresponding environment "
-                    + "variable/secret.");
-        }
+            .Get<DdsConfigurations>();
 
         LdsConfigurations ldsConfig = configuration
             .GetSection("LdsConfigurations")
-            .Get<LdsConfigurations>()
-            ?? throw new InvalidOperationException(
-                "LdsConfigurations is missing or invalid. Please check appsettings.json.");
+            .Get<LdsConfigurations>();
 
-        if (IsDialableUrl(ldsConfig.BaseUrl) is false)
-        {
-            throw new InvalidOperationException(
-                "LdsConfigurations:BaseUrl is missing or is not an absolute http or https URI. "
-                    + "Please check appsettings.json or the corresponding environment variable/secret.");
-        }
-
-        // Guarded like LdsConfigurations above. Get<T> returns null for a section that is absent
-        // or has no children, and this section decides whether the per-patient consumer access
-        // check runs at all - so an absent one should stop startup rather than reach AddSingleton
-        // as a null and fail somewhere less obvious.
-        //
-        // The guard is about ABSENCE, not the value. checkAccessPermissions is deliberately false
-        // for now: the consumer access service is not yet in use, and the flag is the switch that
-        // turns it on when it is. A present section saying false is the intended state, not a
-        // misconfiguration.
+        // checkAccessPermissions is deliberately false for now: the consumer access service is not
+        // yet in use, and the flag is the switch that turns it on when it is. A present section
+        // saying false is the intended state; only an absent one is a misconfiguration.
         AccessConfigurations accessConfig = configuration
             .GetSection("AccessConfigurations")
-            .Get<AccessConfigurations>()
-            ?? throw new InvalidOperationException(
-                "AccessConfigurations is missing or invalid. Please check appsettings.json.");
+            .Get<AccessConfigurations>();
+
+        ValidateProviderConfigurations(patientServiceConfig, ddsConfig, ldsConfig, accessConfig);
 
         services.AddSingleton(patientServiceConfig);
         services.AddSingleton(ddsConfig);
@@ -348,9 +602,15 @@ public partial class Program
         }
         else
         {
+            // Guarded because AddSingleton(null) throws an ArgumentNullException naming
+            // "implementationInstance" - which says nothing about which setting is missing.
             GoogleReCaptchaConfigurations reCaptchaConfigurations = configuration
                 .GetSection("googleReCaptchaConfigurations")
-                .Get<GoogleReCaptchaConfigurations>();
+                .Get<GoogleReCaptchaConfigurations>()
+                ?? throw new InvalidOperationException(
+                    "googleReCaptchaConfigurations is missing, and FakeCaptchaProviderMode is not "
+                        + "true. Please check appsettings.json or the corresponding environment "
+                        + "variables/secrets.");
 
             services.AddSingleton(reCaptchaConfigurations);
             services.AddTransient<ICaptchaProvider, GoogleReCaptchaProvider>();
