@@ -68,8 +68,4 @@ const TextInputBase: FunctionComponent<TextInputBaseProps> = (props) => {
     );
 }
 
-TextInputBase.defaultProps = {
-    error: "",
-}
-
 export default TextInputBase;

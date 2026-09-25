@@ -38,7 +38,8 @@ const TextAreaInputBase: FunctionComponent<TextAreaInputBaseProps> = (props) => 
                         name={props.name}
                         value={props.value || ""}
                         onChange={props.onChange}
-                        rows={props.rows}
+                        // Was a defaultProps entry, which React 19 ignores on function components.
+                        rows={props.rows ?? 5}
                         placeholder={props.placeholder || ""}
                         disabled={props.disabled}
                         //error={props.error}
@@ -76,11 +77,6 @@ const TextAreaInputBase: FunctionComponent<TextAreaInputBaseProps> = (props) => 
             {props.error && <Form.Control.Feedback type="invalid">{props.error}</Form.Control.Feedback>}
         </Form.Group>
     );
-};
-
-TextAreaInputBase.defaultProps = {
-    rows: 5,
-    error: "",
 };
 
 export default TextAreaInputBase;

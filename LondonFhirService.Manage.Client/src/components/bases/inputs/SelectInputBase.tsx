@@ -65,8 +65,4 @@ const SelectInputBase: FunctionComponent<SelectInputBaseProps> = (props) => {
     );
 };
 
-SelectInputBase.defaultProps = {
-    error: "",
-};
-
 export default SelectInputBase;
