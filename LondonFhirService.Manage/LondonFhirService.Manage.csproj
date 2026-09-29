@@ -40,7 +40,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LondonFhirService.Core\LondonFhirService.Core.csproj" />
-		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
 
 		<!--
 			The SPA this host serves. SpaRoot, SpaProxyServerUrl and SpaProxyLaunchCommand above

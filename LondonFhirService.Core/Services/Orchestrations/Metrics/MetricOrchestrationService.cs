@@ -10,11 +10,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Brokers.CsvHelpers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Processings.Metrics;
 using LondonFhirService.Core.Services.Processings.Metrics;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Metrics
 {

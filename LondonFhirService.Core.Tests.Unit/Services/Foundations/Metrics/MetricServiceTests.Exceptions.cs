@@ -11,8 +11,8 @@ using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using Moq;
 using Xeptions;
-using AbstractionExceptions = LondonFhirService.Core.Abstractions.Models.Metrics.Exceptions;
-using ClientExceptions = LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions;
+using AbstractionExceptions = NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics.Exceptions;
+using ClientExceptions = NHSOneLondon.AuditAndMetrics.Clients.Models.Metrics.Exceptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
 {
@@ -95,28 +95,24 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
         }
 
         /// <summary>
-        /// The metric client wraps dependency validation failures in the same
-        /// MetricClientValidationException it uses for plain validation failures, unlike the audit
-        /// client which keeps the two apart. If this service dispatched on the caught type alone,
-        /// every duplicate, locked and bad-reference row would reach callers as a plain
-        /// validation error.
+        /// The metric client reports a duplicate, locked or bad-reference row as its own
+        /// MetricClientDependencyValidationException, carrying the storage exception the host's
+        /// broker raised. Each has to reach callers as this service's dependency validation
+        /// category with the matching categorised inner exception, because the controllers choose
+        /// a status code from it - a duplicate is not the same answer as a malformed span.
         /// </summary>
         [Theory]
         [MemberData(nameof(DependencyValidationInnerExceptions))]
-        public async Task ShouldSurfaceDependencyValidationWhenTheClientWrapsItAsValidationAsync(
+        public async Task ShouldLocaliseClientDependencyValidationIntoItsCategoryAsync(
             Xeption abstractionException,
             Type expectedCategorisedType)
         {
             // given
             Metric randomMetric = CreateRandomMetric();
 
-            var dependencyValidationException =
-                new ClientExceptions.MetricDependencyValidationException(
-                    "Client dependency validation.", abstractionException);
-
             var clientException =
-                new ClientExceptions.MetricClientValidationException(
-                    "Client validation.", dependencyValidationException);
+                new ClientExceptions.MetricClientDependencyValidationException(
+                    "Client dependency validation.", abstractionException);
 
             this.auditAndMetricBrokerMock.Setup(broker =>
                 broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))

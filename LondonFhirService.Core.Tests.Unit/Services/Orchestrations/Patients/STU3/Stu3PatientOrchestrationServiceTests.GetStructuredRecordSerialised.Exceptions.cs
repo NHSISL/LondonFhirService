@@ -88,7 +88,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Orchestration Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -97,7 +96,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     accessMessage,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -106,7 +104,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Retrieve active providers and execute request",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -186,7 +183,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Orchestration Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -195,7 +191,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     accessMessage,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -204,7 +199,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Retrieve active providers and execute request",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -432,7 +426,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Orchestration Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -441,7 +434,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     accessMessage,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -450,7 +442,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Retrieve active providers and execute request",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 

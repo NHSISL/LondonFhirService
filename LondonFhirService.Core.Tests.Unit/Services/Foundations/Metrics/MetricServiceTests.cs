@@ -14,7 +14,7 @@ using LondonFhirService.Core.Services.Foundations.Metrics;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
-using ClientExceptions = LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions;
+using ClientExceptions = NHSOneLondon.AuditAndMetrics.Clients.Models.Metrics.Exceptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
 {
@@ -42,10 +42,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Metrics
 
         /// <summary>
         /// Each case is a client exception paired with the service exception it must surface as.
-        ///
-        /// The metric client collapses plain validation and dependency validation into one
-        /// MetricClientValidationException, so which category comes out is decided by the inner
-        /// exception rather than by the type caught. Both directions are covered.
+        /// Dependency validation is covered separately, because its inner exception is
+        /// categorised rather than carried through as is.
         /// </summary>
         public static TheoryData<Xeption, Xeption> ClientExceptionMappings()
         {

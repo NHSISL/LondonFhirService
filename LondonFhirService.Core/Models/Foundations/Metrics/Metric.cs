@@ -4,8 +4,8 @@
 
 using System;
 using System.Text.Json.Serialization;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Abstractions.Models;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Core.Models.Foundations.Metrics
 {

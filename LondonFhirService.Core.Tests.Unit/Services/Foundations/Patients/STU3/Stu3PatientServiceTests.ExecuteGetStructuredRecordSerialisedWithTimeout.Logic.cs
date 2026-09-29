@@ -9,10 +9,10 @@ using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
@@ -108,7 +108,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -117,7 +116,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith($"{fhirProvider.DisplayName} Provider Execution Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -223,7 +221,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.Is<string>(auditMessage => auditMessage == rawOutputJson),
-                    It.IsAny<string>(),
                     It.IsAny<string>()),
                         Times.Never);
 
@@ -425,7 +422,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -502,7 +498,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -511,7 +506,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"Parallel Provider Execution - {fhirProvider.DisplayName} failed",
                     It.IsAny<string>(),
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -606,7 +600,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     $"{fhirProvider.DisplayName} Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 

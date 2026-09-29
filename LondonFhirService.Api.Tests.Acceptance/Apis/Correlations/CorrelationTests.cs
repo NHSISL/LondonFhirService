@@ -10,9 +10,9 @@ using System.Net.Http;
 using FluentAssertions;
 using LondonFhirService.Api.Middlewares;
 using LondonFhirService.Api.Tests.Acceptance.Brokers;
-using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using Microsoft.Extensions.DependencyInjection;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Api.Tests.Acceptance.Apis.Correlations

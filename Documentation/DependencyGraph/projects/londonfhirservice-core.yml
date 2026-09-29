@@ -200,7 +200,7 @@ components:
     name: AuditAndMetricBroker
     layer: broker
     col: 11
-    description: "The utility broker any service can call to record an audit entry or a metric span. Recording is service work, but every layer needs it and a broker may not call a service — so those services live in LondonFhirService.Clients.AuditAndMetrics and this broker wraps an external dependency, which is what a broker is for. It stamps nothing and constructs nothing: calling services build their own entries so the timestamp is the event time rather than the submit time. Not to be confused with AuditAndMetricStorageBroker beside it — this one runs up into the library, that one runs down into storage."
+    description: "The utility broker any service can call to record an audit entry or a metric span. Recording is service work, but every layer needs it and a broker may not call a service — so those services live in the NHSOneLondon.AuditAndMetrics.Clients package and this broker wraps an external dependency, which is what a broker is for. It stamps nothing and constructs nothing: calling services build their own entries so the timestamp is the event time rather than the submit time. Not to be confused with AuditAndMetricStorageBroker beside it — this one runs up into the library, that one runs down into storage."
     methods:
       - LogInformationAsync
       - RecordAuditAsync

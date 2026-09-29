@@ -4,7 +4,6 @@
 
 using System;
 using System.Linq;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
@@ -12,6 +11,7 @@ using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Services.Orchestrations.Metrics;
 using LondonFhirService.Manage.Controllers.Metrics;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using RESTFulSense.Controllers;
 using Tynamix.ObjectFiller;
 using Xeptions;

@@ -17,8 +17,8 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
     ///
     /// This is what the separate library buys. Recording audits and metrics is behaviour that
     /// belongs in a service, but every layer needs to call it, and a broker may not call a
-    /// service. Because those services now live in LondonFhirService.Clients.AuditAndMetrics,
-    /// this broker wraps an external dependency - which is what a broker is for.
+    /// service. Because those services now live in the NHSOneLondon.AuditAndMetrics.Clients
+    /// package, this broker wraps an external dependency - which is what a broker is for.
     ///
     /// It stamps nothing and constructs nothing. Calling services build their own entries and
     /// stamp CreatedDate and CreatedBy when the event happens; doing it here would be business
@@ -36,7 +36,6 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             string auditType,
             string title,
             string message,
-            string fileName,
             string correlationId,
             CancellationToken cancellationToken = default);
 
@@ -49,7 +48,6 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             string auditType,
             string title,
             string message,
-            string fileName,
             string correlationId,
             string logLevel = "Information",
             CancellationToken cancellationToken = default);

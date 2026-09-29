@@ -22,7 +22,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
             string auditType = GetRandomString();
             string title = GetRandomString();
             string message = GetRandomString();
-            string fileName = GetRandomString();
             string correlationId = GetRandomString();
             string logLevel = GetRandomString();
             Audit expectedAudit = CreateRandomAudit();
@@ -33,7 +32,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 
             // when
             Audit actualAudit = await this.auditService.AddAuditAsync(
-                auditType, title, message, fileName, correlationId, logLevel,
+                auditType, title, message, correlationId, logLevel,
                 TestContext.Current.CancellationToken);
 
             // then
@@ -48,7 +47,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
                         audit.AuditType == auditType
                         && audit.Title == title
                         && audit.Message == message
-                        && audit.FileName == fileName
                         && audit.CorrelationId == correlationId
                         && audit.LogLevel == logLevel),
                     It.IsAny<CancellationToken>()),

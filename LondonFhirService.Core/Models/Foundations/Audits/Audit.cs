@@ -4,7 +4,7 @@
 
 using System;
 using LondonFhirService.Core.Abstractions.Models;
-using LondonFhirService.Core.Abstractions.Models.Audits;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Audits;
 
 namespace LondonFhirService.Core.Models.Foundations.Audits
 {

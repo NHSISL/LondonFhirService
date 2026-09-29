@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Attrify.Attributes;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
@@ -19,6 +18,7 @@ using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Query;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using RESTFulSense.Controllers;
 
 namespace LondonFhirService.Manage.Controllers.Metrics

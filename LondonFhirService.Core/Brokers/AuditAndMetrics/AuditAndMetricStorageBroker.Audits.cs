@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Abstractions.Models.Audits;
 using LondonFhirService.Core.Brokers.Storages.Sql;
 using LondonFhirService.Core.Models.Foundations.Audits;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Audits;
 
 namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {
@@ -41,7 +41,6 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
                 AuditType = audit.AuditType,
                 Title = audit.Title,
                 Message = audit.Message,
-                FileName = audit.FileName,
                 LogLevel = audit.LogLevel,
                 CreatedBy = audit.CreatedBy,
                 CreatedDate = audit.CreatedDate,

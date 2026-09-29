@@ -9,11 +9,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Core.Abstractions.Models;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
-using IAudit = LondonFhirService.Core.Abstractions.Models.Audits.IAudit;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
+using IAudit = NHSOneLondon.AuditAndMetrics.Abstractions.Models.Audits.IAudit;
 
 namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
 {
@@ -39,7 +39,6 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
                 AuditType = GetRandomString(),
                 Title = GetRandomString(),
                 Message = GetRandomString(),
-                FileName = GetRandomString(),
                 LogLevel = GetRandomString(),
                 CreatedBy = GetRandomString(),
                 CreatedDate = GetRandomDateTimeOffset(),
@@ -68,7 +67,6 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             capturedAudit.AuditType.Should().Be(foreignAudit.AuditType);
             capturedAudit.Title.Should().Be(foreignAudit.Title);
             capturedAudit.Message.Should().Be(foreignAudit.Message);
-            capturedAudit.FileName.Should().Be(foreignAudit.FileName);
             capturedAudit.LogLevel.Should().Be(foreignAudit.LogLevel);
             capturedAudit.CreatedBy.Should().Be(foreignAudit.CreatedBy);
             capturedAudit.CreatedDate.Should().Be(foreignAudit.CreatedDate);
@@ -256,7 +254,6 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             public string AuditType { get; set; }
             public string Title { get; set; }
             public string Message { get; set; }
-            public string FileName { get; set; }
             public string LogLevel { get; set; }
             public string CreatedBy { get; set; }
             public DateTimeOffset CreatedDate { get; set; }

@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
 {

@@ -5,10 +5,10 @@
 using System;
 using System.Threading.Tasks;
 using EFxceptions.Models.Exceptions;
-using LondonFhirService.Core.Abstractions.Models.Audits.Exceptions;
-using LondonFhirService.Core.Abstractions.Models.Metrics.Exceptions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Audits.Exceptions;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics.Exceptions;
 
 namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {

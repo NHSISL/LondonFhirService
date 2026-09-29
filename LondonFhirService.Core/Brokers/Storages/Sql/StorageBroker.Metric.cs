@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using Microsoft.EntityFrameworkCore;
-using IMetric = LondonFhirService.Core.Abstractions.Models.Metrics.IMetric;
+using IMetric = NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics.IMetric;
 
 namespace LondonFhirService.Core.Brokers.Storages.Sql
 {

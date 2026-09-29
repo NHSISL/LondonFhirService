@@ -3,8 +3,8 @@
 // ---------------------------------------------------------
 
 using System.Threading.Tasks;
-using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.Correlations;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 
 namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {

@@ -7,8 +7,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Metrics;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using MetricType = LondonFhirService.Core.Models.Foundations.Metrics.MetricType;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Metrics

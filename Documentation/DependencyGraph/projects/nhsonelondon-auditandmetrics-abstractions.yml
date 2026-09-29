@@ -1,0 +1,31 @@
+# NHSOneLondon.AuditAndMetrics.Abstractions — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: pkg-am-abstractions
+components:
+  - id: ABS.Ports
+    name: "Audit & metric ports"
+    layer: broker
+    col: 12
+    shared: true
+    description: "NHSOneLondon.AuditAndMetrics.Abstractions 0.1.0. Declared in the package rather than consumed from the hosting application, so the dependency runs one way — application to library — and the reference stays acyclic while the library still writes to the application's database. Everything is expressed in IAudit / IMetric; the library never sees the concrete entities or the ORM. Core's Audit and Metric implement those contracts, and Audit keeps a FileName column of its own that the package's IAudit no longer carries. Implementations also classify storage failures: the library carries no ORM so it cannot name SqlException or DbUpdateException, and needs those arriving as the exceptions in Models.Audits/Metrics.Exceptions. LondonFhirService.Core.Abstractions still exists, but only for IKey and IAuditable, which are model contracts rather than components."
+    methods:
+      - IAuditAndMetricStorageBroker
+      - IAuditUserBroker
+      - IAuditAndMetricsDispatcher
+      - IRequestTraceBroker
+    calls:
+      - from: IAuditAndMetricStorageBroker
+        to: AuditAndMetricStorageBroker
+        method: null
+      - from: IAuditUserBroker
+        to: AuditUserBroker
+        method: null
+      - from: IRequestTraceBroker
+        to: RequestTraceBroker
+        method: null
+      - from: IAuditAndMetricsDispatcher
+        to: API.Dispatcher
+        method: null

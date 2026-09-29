@@ -9,8 +9,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Abstractions.Brokers;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Fhirs.STU3;
@@ -24,6 +22,8 @@ using LondonFhirService.Core.Models.Foundations.Patients;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions;
 using LondonFhirService.Providers.FHIR.STU3.Abstractions.Extensions;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
@@ -95,7 +95,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     auditType,
                     title: $"Foundation Service Request Submitted",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 List<(string providerFriendlyName, bool isPrimaryProvider, IFhirProvider provider)> fhirProviders =
@@ -105,7 +104,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     auditType,
                     title: $"Parallel Provider Execution Started",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 // The fan out span is the parent of every provider task, so subtracting a
@@ -172,7 +170,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     auditType,
                     title: $"Parallel Provider Execution Completed in {stopwatchOutcomes.ElapsedMilliseconds}ms",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 var jsonBundles = new List<(string, string)>(outcomes.Length);
@@ -206,7 +203,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     auditType,
                     title: $"Foundation Service Request Completed in {elapsedTime}ms",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 return jsonBundles;
@@ -290,7 +286,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 auditType,
                 title: $"{provider.DisplayName} Provider Execution Started",
                 message,
-                fileName: null,
                 correlationId: correlationId.ToString("N"));
 
             Guid providerSpanId = await this.identifierBroker.GetIdentifierAsync();
@@ -340,7 +335,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     auditType,
                     title: $"{provider.DisplayName} Provider Execution Completed in {elapsedTime}ms",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 providerStopwatch.Stop();
@@ -402,7 +396,6 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         $"{exception.InnerException?.Message} " +
                         $"{exception.InnerException?.InnerException?.Message}",
 
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 await RecordFailedProviderSpanAsync(

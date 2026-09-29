@@ -6,9 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using FluentAssertions;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3

@@ -6,8 +6,8 @@ using System;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Abstractions.Brokers;
 using Microsoft.Extensions.Options;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 
 namespace LondonFhirService.Api.Dispatchers
 {

@@ -3,7 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
-using LondonFhirService.Core.Abstractions.Brokers;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 
 namespace LondonFhirService.Core.Brokers.Storages.Sql
 {

@@ -41,14 +41,14 @@ projects:
     name: LondonFhirService.Core
     kind: internal
     file: projects/londonfhirservice-core.yml
-  - id: core-abstractions
-    name: LondonFhirService.Core.Abstractions
-    kind: internal
-    file: projects/londonfhirservice-core-abstractions.yml
-  - id: clients-am
-    name: LondonFhirService.Clients.AuditAndMetrics
-    kind: internal
-    file: projects/londonfhirservice-clients-auditandmetrics.yml
+  - id: pkg-am-abstractions
+    name: NHSOneLondon.AuditAndMetrics.Abstractions
+    kind: library
+    file: projects/nhsonelondon-auditandmetrics-abstractions.yml
+  - id: pkg-am-clients
+    name: NHSOneLondon.AuditAndMetrics.Clients
+    kind: library
+    file: projects/nhsonelondon-auditandmetrics-clients.yml
   - id: pkg-security
     name: ISL.Security.Client
     kind: library

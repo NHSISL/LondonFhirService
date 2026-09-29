@@ -317,7 +317,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -326,7 +325,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -335,7 +333,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -344,7 +341,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -490,7 +486,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -499,7 +494,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -508,7 +502,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -517,7 +510,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -679,7 +671,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -688,7 +679,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -697,7 +687,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -706,7 +695,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -863,7 +851,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -872,7 +859,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -881,7 +867,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -890,7 +875,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -1050,7 +1034,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -1059,7 +1042,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -1068,7 +1050,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -1077,7 +1058,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -1232,7 +1212,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Foundation Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -1241,7 +1220,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     "Parallel Provider Execution Started",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -1250,7 +1228,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Parallel Provider Execution Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -1259,7 +1236,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     auditType,
                     It.Is<string>(s => s.StartsWith("Foundation Service Request Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 

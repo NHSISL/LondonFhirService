@@ -15,7 +15,7 @@ using LondonFhirService.Core.Services.Foundations.Audits;
 using Moq;
 using Tynamix.ObjectFiller;
 using Xeptions;
-using ClientExceptions = LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
+using ClientExceptions = NHSOneLondon.AuditAndMetrics.Clients.Models.Audits.Exceptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Audits
 {

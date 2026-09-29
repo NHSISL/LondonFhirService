@@ -8,11 +8,11 @@ using System.Threading;
 using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Orchestrations.Patients;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
@@ -142,7 +142,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     auditType,
                     "Coordination Service Request Submitted",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -151,7 +150,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     auditType,
                     "Requesting Patient Info",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -160,7 +158,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     auditType,
                     "Reconcile bundles",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -169,7 +166,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     auditType,
                     It.Is<string>(title => title.StartsWith("Coordination Service Request Completed")),
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
