@@ -3,9 +3,6 @@
     "path": "LondonFhirService.slnx",
     "projects": [
       "LondonFhirService.Infrastructure/LondonFhirService.Infrastructure.csproj",
-      "LondonFhirService.Clients.AuditAndMetrics/LondonFhirService.Clients.AuditAndMetrics.csproj",
-      "LondonFhirService.Clients.AuditAndMetrics.Tests.Acceptance/LondonFhirService.Clients.AuditAndMetrics.Tests.Acceptance.csproj",
-      "LondonFhirService.Clients.AuditAndMetrics.Tests.Unit/LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.csproj",
       "LondonFhirService.Core.Tests.Unit/LondonFhirService.Core.Tests.Unit.csproj",
       "LondonFhirService.Core.Abstractions/LondonFhirService.Core.Abstractions.csproj",
       "LondonFhirService.Core/LondonFhirService.Core.csproj",

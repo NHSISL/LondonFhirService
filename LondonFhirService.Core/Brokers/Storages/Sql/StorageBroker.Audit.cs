@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using Microsoft.EntityFrameworkCore;
-using IAudit = LondonFhirService.Core.Abstractions.Models.Audits.IAudit;
+using IAudit = NHSOneLondon.AuditAndMetrics.Abstractions.Models.Audits.IAudit;
 
 namespace LondonFhirService.Core.Brokers.Storages.Sql
 {

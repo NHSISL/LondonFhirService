@@ -12,9 +12,6 @@ using Attrify.Extensions;
 using Attrify.InvisibleApi.Models;
 using Hl7.Fhir.Serialization;
 using ISL.Security.Client.Models.Clients;
-using LondonFhirService.Clients.AuditAndMetrics.Clients;
-using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
-using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Abstractions.Models;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.CsvHelpers;
@@ -54,6 +51,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
 using Microsoft.OData.Edm;
 using Microsoft.OData.ModelBuilder;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
+using NHSOneLondon.AuditAndMetrics.Clients.Clients;
+using NHSOneLondon.AuditAndMetrics.Clients.Models.Configurations;
 
 public partial class Program
 {

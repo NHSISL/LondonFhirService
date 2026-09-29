@@ -8,11 +8,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LondonFhirService.Api.Dispatchers;
-using LondonFhirService.Core.Abstractions.Brokers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 
 namespace LondonFhirService.Api.Tests.Unit.Dispatchers
 {

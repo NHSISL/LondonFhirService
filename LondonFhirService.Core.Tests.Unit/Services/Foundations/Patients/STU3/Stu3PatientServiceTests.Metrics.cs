@@ -9,11 +9,11 @@ using System.Threading;
 using FluentAssertions;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Xeptions;
 using Task = System.Threading.Tasks.Task;
 
@@ -165,7 +165,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                 broker.LogInformationAsync(
                     It.IsAny<string>(),
                     "Parallel Provider Execution Started",
-                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()))

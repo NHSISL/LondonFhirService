@@ -10,11 +10,11 @@ using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Orchestrations.Patients;
 using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 {
@@ -102,14 +102,12 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     auditType,
                     title: $"Coordination Service Request Submitted",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Requesting Patient Info",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 StructuredRecordsResponse structuredRecordsResponse =
@@ -126,7 +124,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     auditType,
                     title: $"Reconcile bundles",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 Guid consolidationSpanId = await this.identifierBroker.GetIdentifierAsync();
@@ -164,7 +161,6 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
                     auditType,
                     title: $"Coordination Service Request Completed in {stopwatch.ElapsedMilliseconds}ms",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 // Last statement in the try on purpose. Anything that throws after the success

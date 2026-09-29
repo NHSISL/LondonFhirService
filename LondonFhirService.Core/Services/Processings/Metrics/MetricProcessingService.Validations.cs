@@ -5,8 +5,8 @@
 #nullable enable annotations
 
 using System;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Processings.Metrics.Exceptions;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Xeptions;
 
 namespace LondonFhirService.Core.Services.Processings.Metrics

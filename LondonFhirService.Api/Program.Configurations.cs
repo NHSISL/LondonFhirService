@@ -20,12 +20,9 @@ using LondonFhirService.Api.Dispatchers;
 using LondonFhirService.Api.Middlewares;
 using LondonFhirService.Api.Workers;
 using LondonFhirService.Core.Workers;
-using LondonFhirService.Clients.AuditAndMetrics.Clients;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
-using LondonFhirService.Clients.AuditAndMetrics.Models.Configurations;
-using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
@@ -90,9 +87,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Web;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
+using NHSOneLondon.AuditAndMetrics.Clients.Clients;
+using NHSOneLondon.AuditAndMetrics.Clients.Clients.Audits;
+using NHSOneLondon.AuditAndMetrics.Clients.Clients.Metrics;
+using NHSOneLondon.AuditAndMetrics.Clients.Models.Configurations;
 using STU3FhirAbstractions = LondonFhirService.Providers.FHIR.STU3.Abstractions;
-using LondonFhirService.Clients.AuditAndMetrics.Clients.Metrics;
-using LondonFhirService.Clients.AuditAndMetrics.Clients.Audits;
 
 public partial class Program
 {

@@ -4,7 +4,7 @@
 
 using System;
 using System.Globalization;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Core.Models.Processings.Metrics
 {

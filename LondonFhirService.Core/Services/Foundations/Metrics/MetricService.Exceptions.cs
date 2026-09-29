@@ -6,8 +6,8 @@ using System;
 using System.Threading.Tasks;
 // Only the client exceptions are imported. A blanket using would collide with Core's own
 // MetricServiceException, since both layers name their categories the same way.
-using AbstractionExceptions = LondonFhirService.Core.Abstractions.Models.Metrics.Exceptions;
-using ClientExceptions = LondonFhirService.Clients.AuditAndMetrics.Models.Metrics.Exceptions;
+using AbstractionExceptions = NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics.Exceptions;
+using ClientExceptions = NHSOneLondon.AuditAndMetrics.Clients.Models.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using Xeptions;
 
@@ -40,6 +40,12 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             catch (ClientExceptions.MetricClientValidationException metricClientValidationException)
             {
                 throw await CreateAndLogValidationExceptionAsync(metricClientValidationException);
+            }
+            catch (ClientExceptions.MetricClientDependencyValidationException
+                metricClientDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    metricClientDependencyValidationException);
             }
             catch (ClientExceptions.MetricClientDependencyException metricClientDependencyException)
             {
@@ -85,22 +91,9 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             return metricServiceValidationException;
         }
 
-        /// <summary>
-        /// The metric client collapses plain validation and dependency validation into one
-        /// MetricClientValidationException, unlike the audit client which keeps them apart. The
-        /// two still have to arrive at callers as different categories - a duplicate or locked
-        /// row is not the same answer as a malformed span - so the inner exception decides which
-        /// one this is.
-        /// </summary>
-        private async ValueTask<Xeption> CreateAndLogValidationExceptionAsync(Xeption exception)
+        private async ValueTask<MetricServiceValidationException> CreateAndLogValidationExceptionAsync(
+            Xeption exception)
         {
-            if (exception.InnerException is ClientExceptions.MetricDependencyValidationException
-                metricDependencyValidationException)
-            {
-                return await CreateAndLogDependencyValidationExceptionAsync(
-                    metricDependencyValidationException);
-            }
-
             var metricServiceValidationException =
                 new MetricServiceValidationException(
                     message: "Metric validation errors occurred, please try again.",
@@ -111,6 +104,11 @@ namespace LondonFhirService.Core.Services.Foundations.Metrics
             return metricServiceValidationException;
         }
 
+        /// <summary>
+        /// The client carries the storage exception the host's broker raised as its inner
+        /// exception - a duplicate, a dangling reference or a lock - so it is categorised here
+        /// into this application's own, which the controllers map to a status code.
+        /// </summary>
         private async ValueTask<MetricServiceDependencyValidationException>
             CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {

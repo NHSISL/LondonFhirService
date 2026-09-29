@@ -8,11 +8,11 @@ using System.Threading;
 using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Orchestrations.Patients;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Xeptions;
 using Task = System.Threading.Tasks.Task;
 

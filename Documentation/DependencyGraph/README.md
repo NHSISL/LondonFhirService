@@ -82,9 +82,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 137 declared components and 588 declared edges draw as
-**134 components · 557 flows** in the single-copy view and **603 nodes ·
-1771 flows** per consumer (137 · 588 and 654 · 1851 with utility brokers on).
+At the last scan, 137 declared components and 589 declared edges draw as
+**134 components · 558 flows** in the single-copy view and **603 nodes ·
+1774 flows** per consumer (137 · 589 and 654 · 1854 with utility brokers on).
 
 > When re-verifying locally, serve on a **fresh port**. The page fetches the data
 > files, and a browser that has already loaded them on that port will keep
@@ -98,20 +98,29 @@ copied as-is. Pages
 has to be enabled once in the repository's Settings → Pages (source: GitHub
 Actions).
 
-## Current truths captured in the data (scanned 2026-09-25)
+## Current truths captured in the data (scanned 2026-09-30)
 
 - **`LondonFhirService.Core` has no event bus.** Every flow is a direct call.
   The comparison half of the solution is driven by polling, not messaging:
   `ComparisonWorker` (a `BackgroundService` in the API host) is the *only*
   entry point into `ComparisonCoordinationService`.
-- **Auditing and metrics moved out of Core into their own library.**
-  `LondonFhirService.Clients.AuditAndMetrics` owns the validation, stamping and
-  telemetry; Core reaches it through the single `AuditAndMetricBroker`, and the
-  library reaches back down through ports declared in
-  `LondonFhirService.Core.Abstractions`. That is what makes the broker legal:
-  recording is service work, every layer needs it, and a broker may not call a
-  service — but it *may* wrap an external dependency. `AuditBroker` and Core's
-  old `AuditClient` are gone.
+- **Auditing and metrics moved out of Core into their own library, and that
+  library is now a NuGet package.** `NHSOneLondon.AuditAndMetrics.Clients`
+  owns the validation, stamping and telemetry; Core reaches it through the
+  single `AuditAndMetricBroker`, and the library reaches back down through
+  ports declared in `NHSOneLondon.AuditAndMetrics.Abstractions`. That is what
+  makes the broker legal: recording is service work, every layer needs it, and
+  a broker may not call a service — but it *may* wrap an external dependency.
+  `AuditBroker` and Core's old `AuditClient` are gone. Both used to be projects
+  in this solution (`LondonFhirService.Clients.AuditAndMetrics`, and the ports
+  in `LondonFhirService.Core.Abstractions`); they are drawn as library packages
+  now, with the client's internals kept because they call back into ports this
+  solution implements. `LondonFhirService.Core.Abstractions` survives only for
+  `IKey` and `IAuditable`, which are model contracts rather than components.
+  The package's `IAudit` has no `FileName`, so the host's audit verbs no longer
+  take one; the column stays on Core's `Audit` entity. It also stamps
+  `UpdatedBy` on `ModifyAuditAsync` from the audit user port, which is the one
+  flow this move added.
 - **The arrows into `AuditAndMetricStorageBroker` run right-to-left.** It
   implements `IAuditAndMetricStorageBroker`, so the library calls back down
   into the application that hosts it. `IStorageBroker` inherits that port,

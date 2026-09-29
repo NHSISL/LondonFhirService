@@ -8,10 +8,10 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Processings.Metrics;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Xeptions;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Metrics

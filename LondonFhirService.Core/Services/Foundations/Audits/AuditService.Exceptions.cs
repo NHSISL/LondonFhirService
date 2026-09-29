@@ -7,8 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 // Only the three client exceptions are imported. A blanket using would collide with
 // Core's own AuditServiceException, since both layers name their categories the same way.
-using AbstractionExceptions = LondonFhirService.Core.Abstractions.Models.Audits.Exceptions;
-using ClientExceptions = LondonFhirService.Clients.AuditAndMetrics.Models.Audits.Exceptions;
+using AbstractionExceptions = NHSOneLondon.AuditAndMetrics.Abstractions.Models.Audits.Exceptions;
+using ClientExceptions = NHSOneLondon.AuditAndMetrics.Clients.Models.Audits.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using Xeptions;

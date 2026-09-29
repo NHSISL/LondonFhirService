@@ -11,7 +11,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using ISL.Security.Client.Models.Foundations.Users;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Brokers.AuditAndMetrics;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Identifiers;
@@ -26,6 +25,7 @@ using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Foundations.ConsumerAccesses;
 using LondonFhirService.Core.Services.Foundations.Patients.STU3;
 using LondonFhirService.Core.Services.Foundations.Providers;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
 {
@@ -89,7 +89,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 auditType,
                 title: $"Orchestration Service Request Submitted",
                 message,
-                fileName: null,
                 correlationId: correlationId.ToString("N"));
 
             await CheckAccessPermissionsAsync(
@@ -99,7 +98,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 auditType,
                 title: $"Retrieve active providers and execute request",
                 message,
-                fileName: null,
                 correlationId: correlationId.ToString("N"));
 
             // ProviderRequests wraps discovery and the fan out together, so it is the single
@@ -195,7 +193,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 auditType,
                 title: $"Orchestration Service Request Completed in {elapsedTime}ms",
                 message,
-                fileName: null,
                 correlationId: correlationId.ToString("N"));
 
             return new StructuredRecordsResponse
@@ -273,7 +270,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         auditType,
                         title: $"Check Access Permissions",
                         message,
-                        fileName: null,
                         correlationId: correlationId.ToString("N"));
 
                     User currentUser = await this.securityBroker.GetCurrentUserAsync();
@@ -292,7 +288,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                         auditType: "Access",
                         title: "Check Access Permissions",
                         message: currentUserJson,
-                        fileName: null,
                         correlationId: correlationId.ToString("N"));
 
                     if (currentUser is null)
@@ -332,7 +327,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                                 $"to access patient with NHS number {nhsNumber}. Reasons: {reasons}  " +
                                 $"CorrelationId: {correlationId.ToString("N")}, ElapsedTime: {elapsedTime}ms",
 
-                            fileName: null,
                             correlationId: correlationId.ToString("N"));
 
                         await RecordAccessCheckSpanAsync(
@@ -356,7 +350,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                             $"{string.Join(", ", consumerAccess.AllowedViaOrganisations)}  " +
                             $"CorrelationId: {correlationId.ToString("N")}, ElapsedTime: {elapsedTime}ms",
 
-                        fileName: null,
                         correlationId: correlationId.ToString("N"));
 
                     await RecordAccessCheckSpanAsync(
@@ -387,7 +380,6 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     auditType,
                     title: $"Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     message,
-                    fileName: null,
                     correlationId: correlationId.ToString("N"));
 
                 // Recorded rather than omitted, so a request with no access check is visibly a

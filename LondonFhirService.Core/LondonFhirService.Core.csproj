@@ -25,10 +25,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LondonFhirService.Clients.AuditAndMetrics\LondonFhirService.Clients.AuditAndMetrics.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Azure.Identity" Version="1.21.0" />
 		<PackageReference Include="EFxceptions" Version="10.0.0" />
 		<PackageReference Include="Hl7.Fhir.STU3" Version="6.5.0" />
@@ -67,7 +63,7 @@
 		<!--
 			For Workers\MetricTelemetryPublisher, which both hosts register: it subscribes to the
 			metric library's ActivitySource and forwards completed spans to Application Insights.
-			The vendor dependency stops here deliberately - LondonFhirService.Clients.AuditAndMetrics
+			The vendor dependency stops here deliberately - NHSOneLondon.AuditAndMetrics.Clients
 			publishes to an ActivitySource and carries no telemetry vendor at all, which is what
 			lets the choice of listener be the host's.
 		-->
@@ -78,6 +74,7 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.12" />
 		<PackageReference Include="NHSISL.CsvHelperClient" Version="3.1.0" />
+		<PackageReference Include="NHSOneLondon.AuditAndMetrics.Clients" Version="0.1.0" />
 		<PackageReference Include="RESTFulSense" Version="3.2.0" />
 		<PackageReference Include="STX.EFCore.Client" Version="3.0.0" />
 		<PackageReference Include="Tynamix.ObjectFiller" Version="1.5.9" />

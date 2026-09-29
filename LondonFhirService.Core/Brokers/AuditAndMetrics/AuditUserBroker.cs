@@ -4,8 +4,8 @@
 
 using System.Threading.Tasks;
 using ISL.Security.Client.Models.Foundations.Users;
-using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.Securities;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 
 namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {

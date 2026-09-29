@@ -8,11 +8,11 @@ using System.Linq;
 using System.Threading;
 using FluentAssertions;
 using ISL.Security.Client.Models.Foundations.Users;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Xeptions;
 using Task = System.Threading.Tasks.Task;
 

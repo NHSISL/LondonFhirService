@@ -2,8 +2,8 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-using LondonFhirService.Core.Abstractions.Brokers;
 using LondonFhirService.Core.Brokers.Storages.Sql;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 
 namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {

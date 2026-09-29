@@ -279,8 +279,8 @@ store.
 `MetricTelemetryPublisher` lives in `LondonFhirService.Core/Workers` and is
 registered by **both hosts**, so metric spans from the API and from Manage both
 reach Application Insights. It sits in Core rather than in either host because
-both need it, and rather than in `LondonFhirService.Clients.AuditAndMetrics`
-because that library deliberately carries no telemetry vendor — it publishes to
+both need it, and rather than in the `NHSOneLondon.AuditAndMetrics.Clients`
+package because that library deliberately carries no telemetry vendor — it publishes to
 an `ActivitySource` and leaves the choice of listener to whoever hosts it.
 
 Two differences remain. The API host registers the three services that actually
@@ -363,6 +363,12 @@ the rows through `NHSISL.CsvHelperClient`. One row per request, newest first:
 
 `Id`, `CorrelationId` (string), `AuditType`, `Title`, `Message`, `FileName`,
 `LogLevel`, `CreatedBy`, `CreatedDate`, `UpdatedBy`, `UpdatedDate`.
+
+`FileName` belongs to this service's `Audit` entity only. The
+`NHSOneLondon.AuditAndMetrics` package's `IAudit` contract does not carry it, so
+entries the library builds (`LogInformationAsync`, `RecordAuditAsync`) leave it
+empty; it is set only when a caller hands in a whole `Audit`, as the Manage
+audits API does.
 
 Indexed on `CorrelationId`, `LogLevel`, `CreatedDate`, and the composites
 `(AuditType, CreatedDate)` and `(Title, CreatedDate)`.

@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LondonFhirService.Manage.Tests.Acceptance.Brokers;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Metrics;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 using Tynamix.ObjectFiller;
 using MetricType = LondonFhirService.Core.Models.Foundations.Metrics.MetricType;
 

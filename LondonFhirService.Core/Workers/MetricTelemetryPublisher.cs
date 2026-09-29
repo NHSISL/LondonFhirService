@@ -29,7 +29,7 @@ namespace LondonFhirService.Core.Workers
     /// requests and dependencies. This subscribes to one source and leaves everything else alone.
     ///
     /// It lives here rather than in either host because both register it, and rather than in
-    /// LondonFhirService.Clients.AuditAndMetrics because that library's whole point is to carry no
+    /// NHSOneLondon.AuditAndMetrics.Clients because that library's whole point is to carry no
     /// telemetry vendor of its own - it publishes to an ActivitySource and leaves the choice of
     /// listener to whoever hosts it. This is that choice, made once for both hosts.
     /// </summary>

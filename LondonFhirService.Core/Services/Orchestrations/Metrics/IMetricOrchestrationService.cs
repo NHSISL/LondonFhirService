@@ -8,7 +8,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Core.Abstractions.Models.Metrics;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics;
 
 namespace LondonFhirService.Core.Services.Orchestrations.Metrics
 {

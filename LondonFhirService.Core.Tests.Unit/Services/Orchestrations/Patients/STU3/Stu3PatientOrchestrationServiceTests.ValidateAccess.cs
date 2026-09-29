@@ -66,7 +66,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Check Access Permissions",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -79,7 +78,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Access",
                     "Check Access Permissions",
                     currentUserJson,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -100,7 +98,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         $"{string.Join(", ", returnedConsumerAccess.AllowedViaOrganisations)}  " +
                         $"CorrelationId: {correlationId.ToString("N")}")),
 
-                    null,
                     correlationId.ToString("N"),
                     "Information",
                     default),
@@ -136,7 +133,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Access permission check skipped due to configuration (CheckAccessPermissions = false)",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -269,7 +265,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Check Access Permissions",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -278,7 +273,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Access",
                     "Check Access Permissions",
                     currentUserJson,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -376,7 +370,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     auditType,
                     "Check Access Permissions",
                     message,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -385,7 +378,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     "Access",
                     "Check Access Permissions",
                     currentUserJson,
-                    null,
                     correlationId.ToString("N")),
                         Times.Once);
 
@@ -399,7 +391,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         $"to access patient with NHS number {inputNhsNumber}. Reasons: {reasons}  " +
                         $"CorrelationId: {correlationId.ToString("N")}")),
 
-                    null,
                     correlationId.ToString("N"),
                     "Information",
                     default),

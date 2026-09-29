@@ -17,7 +17,6 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             string auditType,
             string title,
             string message,
-            string fileName,
             string correlationId,
             string logLevel = "Information",
             CancellationToken cancellationToken = default);

@@ -8,8 +8,4 @@
 		<NoWarn>CS1998</NoWarn>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Xeption" Version="2.9.0" />
-	</ItemGroup>
-
 </Project>

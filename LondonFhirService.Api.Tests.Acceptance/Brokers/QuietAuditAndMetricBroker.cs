@@ -33,7 +33,6 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             string auditType,
             string title,
             string message,
-            string fileName,
             string correlationId,
             CancellationToken cancellationToken = default) =>
             ValueTask.CompletedTask;
@@ -59,12 +58,11 @@ namespace LondonFhirService.Api.Tests.Acceptance.Brokers
             string auditType,
             string title,
             string message,
-            string fileName,
             string correlationId,
             string logLevel = "Information",
             CancellationToken cancellationToken = default) =>
             this.auditAndMetricBroker.RecordAuditAsync(
-                auditType, title, message, fileName, correlationId, logLevel, cancellationToken);
+                auditType, title, message, correlationId, logLevel, cancellationToken);
 
         // The audits API's own data path, delegated so the endpoints run against the database.
         public ValueTask<Audit> AddAuditAsync(Audit audit, CancellationToken cancellationToken = default) =>

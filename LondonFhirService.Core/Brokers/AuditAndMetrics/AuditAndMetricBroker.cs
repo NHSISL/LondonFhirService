@@ -7,11 +7,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LondonFhirService.Clients.AuditAndMetrics.Clients;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Metrics;
-using IAudit = LondonFhirService.Core.Abstractions.Models.Audits.IAudit;
-using IMetric = LondonFhirService.Core.Abstractions.Models.Metrics.IMetric;
+using NHSOneLondon.AuditAndMetrics.Clients.Clients;
+using IAudit = NHSOneLondon.AuditAndMetrics.Abstractions.Models.Audits.IAudit;
+using IMetric = NHSOneLondon.AuditAndMetrics.Abstractions.Models.Metrics.IMetric;
 
 namespace LondonFhirService.Core.Brokers.AuditAndMetrics
 {
@@ -35,14 +35,12 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             string auditType,
             string title,
             string message,
-            string fileName,
             string correlationId,
             CancellationToken cancellationToken = default) =>
             await this.auditAndMetricsClient.AuditClient.LogAuditAsync(
                 auditType,
                 title,
                 message,
-                fileName,
                 correlationId,
                 logLevel: "Information",
                 cancellationToken);
@@ -51,12 +49,11 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
             string auditType,
             string title,
             string message,
-            string fileName,
             string correlationId,
             string logLevel = "Information",
             CancellationToken cancellationToken = default) =>
             (Audit)await this.auditAndMetricsClient.AuditClient.RecordAuditAsync(
-                auditType, title, message, fileName, correlationId, logLevel, cancellationToken);
+                auditType, title, message, correlationId, logLevel, cancellationToken);
 
         public async ValueTask LogAuditAsync(Audit audit, CancellationToken cancellationToken = default) =>
             await this.auditAndMetricsClient.AuditClient.LogAuditAsync(audit, cancellationToken);
