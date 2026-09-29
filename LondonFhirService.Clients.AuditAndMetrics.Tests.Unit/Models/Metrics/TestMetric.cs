@@ -20,7 +20,8 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Models.Metrics
         public Guid CorrelationId { get; set; }
         public string RequestSpanId { get; set; }
         public string Method { get; set; }
-        public MetricType Type { get; set; }
+        public string Type { get; set; }
+        public MetricSpanKind SpanKind { get; set; }
         public string Name { get; set; }
         public string Target { get; set; }
         public DateTimeOffset Started { get; set; }

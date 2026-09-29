@@ -9,6 +9,7 @@ using LondonFhirService.Manage.Tests.Acceptance.Brokers;
 using LondonFhirService.Core.Abstractions.Models.Metrics;
 using LondonFhirService.Manage.Tests.Acceptance.Models.Metrics;
 using Tynamix.ObjectFiller;
+using MetricType = LondonFhirService.Core.Models.Foundations.Metrics.MetricType;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Apis.Metrics
 {

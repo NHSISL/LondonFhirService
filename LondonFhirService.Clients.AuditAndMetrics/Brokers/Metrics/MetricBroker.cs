@@ -82,7 +82,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
             // applicable once the arguments are named, and the call becomes ambiguous.
             Activity activity = this.activitySource.StartActivity(
                 $"{metric.Method}/{metric.Name}",
-                ToActivityKind(metric.Type),
+                ToActivityKind(metric.SpanKind),
                 CreateTraceContext(metric.CorrelationId, metric.RequestSpanId),
                 null,
                 null,
@@ -99,7 +99,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
             activity.SetTag("metric.parentId", metric.ParentId?.ToString());
             activity.SetTag("metric.correlationId", metric.CorrelationId.ToString());
             activity.SetTag("metric.method", metric.Method);
-            activity.SetTag("metric.type", metric.Type.ToString());
+            activity.SetTag("metric.type", metric.Type);
             activity.SetTag("metric.name", metric.Name);
             activity.SetTag("metric.target", metric.Target);
             activity.SetTag("metric.durationMs", metric.DurationMs);
@@ -214,14 +214,17 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Brokers.Metrics
             return true;
         }
 
-        private static ActivityKind ToActivityKind(MetricType metricType) =>
-            metricType switch
+        /// <summary>
+        /// Maps the library's own span kind rather than the host's span type. Which types are
+        /// calls out and which is the incoming request is the host's knowledge, so the host
+        /// classifies and the library only translates. Anything unrecognised is Internal, the
+        /// same reading the library gives a host that never classifies at all.
+        /// </summary>
+        private static ActivityKind ToActivityKind(MetricSpanKind metricSpanKind) =>
+            metricSpanKind switch
             {
-                MetricType.Request => ActivityKind.Server,
-                MetricType.AccessCheck => ActivityKind.Client,
-                MetricType.Provider => ActivityKind.Client,
-                MetricType.ProviderCall => ActivityKind.Client,
-                MetricType.Persist => ActivityKind.Client,
+                MetricSpanKind.Server => ActivityKind.Server,
+                MetricSpanKind.Client => ActivityKind.Client,
                 _ => ActivityKind.Internal
             };
     }

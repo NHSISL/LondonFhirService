@@ -4,6 +4,7 @@
 
 using System;
 using LondonFhirService.Core.Abstractions.Models.Metrics;
+using MetricType = LondonFhirService.Core.Models.Foundations.Metrics.MetricType;
 
 namespace LondonFhirService.Manage.Tests.Acceptance.Models.Metrics
 {

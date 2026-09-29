@@ -223,7 +223,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
 
             filler.Setup()
                 .OnType<DateTimeOffset>().Use(dateTimeOffset)
-                .OnProperty(metric => metric.Type).Use(MetricType.Provider)
+                .OnProperty(metric => metric.Type).Use(GetRandomStringWithLengthOf(50))
                 .OnProperty(metric => metric.Status).Use(MetricStatus.Succeeded)
                 .OnProperty(metric => metric.Method).Use(GetRandomStringWithLengthOf(255))
                 .OnProperty(metric => metric.Name).Use(GetRandomStringWithLengthOf(255))

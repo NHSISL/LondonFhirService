@@ -133,6 +133,8 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
         public async Task ShouldCopyEveryMetricFieldWhenTheContractIsNotTheEntityAsync()
         {
             // given
+            MetricType expectedType = MetricType.Provider;
+
             var foreignMetric = new ForeignMetric
             {
                 Id = Guid.NewGuid(),
@@ -141,7 +143,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
                 CorrelationId = Guid.NewGuid(),
                 RequestSpanId = GetRandomString(),
                 Method = GetRandomString(),
-                Type = MetricType.Provider,
+                Type = expectedType.ToString(),
                 Name = GetRandomString(),
                 Target = GetRandomString(),
                 Started = GetRandomDateTimeOffset(),
@@ -184,7 +186,7 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             capturedMetric.RequestSpanId.Should().Be(foreignMetric.RequestSpanId);
 
             capturedMetric.Method.Should().Be(foreignMetric.Method);
-            capturedMetric.Type.Should().Be(foreignMetric.Type);
+            capturedMetric.Type.Should().Be(expectedType);
             capturedMetric.Name.Should().Be(foreignMetric.Name);
             capturedMetric.Target.Should().Be(foreignMetric.Target);
             capturedMetric.Started.Should().Be(foreignMetric.Started);
@@ -196,6 +198,31 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             capturedMetric.Consumer.Should().Be(foreignMetric.Consumer);
             capturedMetric.Description.Should().Be(foreignMetric.Description);
             capturedMetric.CreatedDate.Should().Be(foreignMetric.CreatedDate);
+        }
+
+        [Fact]
+        public async Task ShouldNotWriteAForeignMetricWhoseTypeThisHostDoesNotDefineAsync()
+        {
+            // given
+            // The port carries the type as text, so nothing stops a caller naming a span this
+            // host has no member for. Written anyway, it would be a row no report could place.
+            var foreignMetric = new ForeignMetric
+            {
+                Id = Guid.NewGuid(),
+                Type = GetRandomString()
+            };
+
+            // when
+            Func<Task> insertMetricTask = async () =>
+                await this.auditAndMetricStorageBroker.InsertMetricAsync(
+                    foreignMetric, TestContext.Current.CancellationToken);
+
+            // then
+            await insertMetricTask.Should().ThrowAsync<ArgumentException>();
+
+            this.storageBrokerMock.Verify(broker =>
+                broker.InsertMetricAsync(It.IsAny<IMetric>(), It.IsAny<CancellationToken>()),
+                    Times.Never);
         }
 
         [Fact]
@@ -245,7 +272,8 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.AuditAndMetrics
             public Guid CorrelationId { get; set; }
             public string RequestSpanId { get; set; }
             public string Method { get; set; }
-            public MetricType Type { get; set; }
+            public string Type { get; set; }
+            public MetricSpanKind SpanKind { get; set; }
             public string Name { get; set; }
             public string Target { get; set; }
             public DateTimeOffset Started { get; set; }

@@ -44,7 +44,25 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
         /// </summary>
         string RequestSpanId { get; set; }
         string Method { get; set; }
-        MetricType Type { get; set; }
+
+        /// <summary>
+        /// The kind of work measured, in the host's own vocabulary - "Provider", "Persist",
+        /// "Consolidation" and so on. The library validates, stores and tags it but never
+        /// interprets it, so each host names its spans without the library carrying a list of
+        /// them. A host is free to keep an enum and expose it here as text.
+        ///
+        /// Read only because the library never assigns it - the host names the span when it
+        /// creates the metric - and because a host exposing an enum here would otherwise need a
+        /// setter that parses, and throws, on the library's behalf.
+        /// </summary>
+        string Type { get; }
+
+        /// <summary>
+        /// How the replayed span is presented to telemetry. Read only for the same reason as
+        /// <see cref="Type"/>, and because it is a classification of that type rather than a fact
+        /// recorded alongside it: a host derives it, which keeps the two from disagreeing.
+        /// </summary>
+        MetricSpanKind SpanKind { get; }
         string Name { get; set; }
         string Target { get; set; }
         DateTimeOffset Started { get; set; }
