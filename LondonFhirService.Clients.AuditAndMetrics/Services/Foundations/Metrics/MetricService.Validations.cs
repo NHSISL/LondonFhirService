@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -32,7 +32,9 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
                 (Rule: IsInvalid(metric.CreatedDate), Parameter: nameof(IMetric.CreatedDate)),
                 (Rule: IsInvalid(metric.Type), Parameter: nameof(IMetric.Type)),
                 (Rule: IsInvalid(metric.Status), Parameter: nameof(IMetric.Status)),
+                (Rule: IsInvalid(metric.SpanKind), Parameter: nameof(IMetric.SpanKind)),
                 (Rule: IsGreaterThan(metric.Method, 255), Parameter: nameof(IMetric.Method)),
+                (Rule: IsGreaterThan(metric.Type, 50), Parameter: nameof(IMetric.Type)),
                 (Rule: IsGreaterThan(metric.Name, 255), Parameter: nameof(IMetric.Name)),
                 (Rule: IsGreaterThan(metric.Target, 255), Parameter: nameof(IMetric.Target)),
                 (Rule: IsGreaterThan(metric.ErrorCode, 100), Parameter: nameof(IMetric.ErrorCode)),
@@ -122,16 +124,16 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Services.Foundations.Metrics
             Message = "Date is required"
         };
 
-        private static dynamic IsInvalid(MetricType metricType) => new
-        {
-            Condition = Enum.IsDefined(metricType) is false,
-            Message = "Type is invalid"
-        };
-
         private static dynamic IsInvalid(MetricStatus metricStatus) => new
         {
             Condition = Enum.IsDefined(metricStatus) is false,
             Message = "Status is invalid"
+        };
+
+        private static dynamic IsInvalid(MetricSpanKind metricSpanKind) => new
+        {
+            Condition = Enum.IsDefined(metricSpanKind) is false,
+            Message = "Span kind is invalid"
         };
 
         private static dynamic IsGreaterThan(string text, int maxLength) => new

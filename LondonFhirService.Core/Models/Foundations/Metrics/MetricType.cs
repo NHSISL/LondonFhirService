@@ -2,7 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
-namespace LondonFhirService.Core.Abstractions.Models.Metrics
+namespace LondonFhirService.Core.Models.Foundations.Metrics
 {
     /// <summary>
     /// The kind of work a metric span represents. Request is the root span; every other value is
@@ -37,6 +37,10 @@ namespace LondonFhirService.Core.Abstractions.Models.Metrics
     /// tree without adding a figure that could not be derived. The members are kept because the
     /// column is persisted as text and read back through EnumToStringConverter: dropping one
     /// would fail to parse every historic row still inside the retention window.
+    ///
+    /// This is the host's vocabulary, not the audit and metrics library's. The library sees a
+    /// span type only as text, through IMetric.Type, and learns how to present it to telemetry
+    /// through IMetric.SpanKind - both of which Metric derives from this enum.
     /// </summary>
     public enum MetricType
     {

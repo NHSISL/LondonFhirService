@@ -70,6 +70,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
                 Id = Guid.Empty,
                 CorrelationId = Guid.Empty,
                 Method = invalidText,
+                Type = invalidText,
                 Name = invalidText,
                 Started = default,
                 Completed = default
@@ -102,6 +103,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             invalidMetricException.AddData(
                 key: nameof(IMetric.Completed),
                 values: "Date is required");
+
+            invalidMetricException.AddData(
+                key: nameof(IMetric.Type),
+                values: "Text is required");
 
             var expectedMetricValidationException =
                 new MetricValidationException(
@@ -304,9 +309,13 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         {
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
-            IMetric randomMetric = CreateRandomMetric(randomDateTimeOffset);
-            IMetric invalidMetric = randomMetric;
+
+            // The concrete type rather than IMetric: Type is read only on the contract, because
+            // a host names its spans, so only the test's own implementation can set it.
+            TestMetric randomMetric = CreateMetricFiller(randomDateTimeOffset).Create();
+            TestMetric invalidMetric = randomMetric;
             invalidMetric.Method = GetRandomStringWithLengthOf(256);
+            invalidMetric.Type = GetRandomStringWithLengthOf(51);
             invalidMetric.Name = GetRandomStringWithLengthOf(256);
             invalidMetric.Target = GetRandomStringWithLengthOf(256);
             invalidMetric.ErrorCode = GetRandomStringWithLengthOf(101);
@@ -326,6 +335,10 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
             invalidMetricException.AddData(
                 key: nameof(IMetric.Method),
                 values: "Text exceeds max length of 255 characters");
+
+            invalidMetricException.AddData(
+                key: nameof(IMetric.Type),
+                values: "Text exceeds max length of 50 characters");
 
             invalidMetricException.AddData(
                 key: nameof(IMetric.Name),
@@ -383,26 +396,29 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Services.Foundati
         }
 
         [Fact]
-        public async Task ShouldThrowValidationExceptionOnAddIfTypeOrStatusIsUndefinedAndLogItAsync()
+        public async Task ShouldThrowValidationExceptionOnAddIfStatusOrSpanKindIsUndefinedAndLogItAsync()
         {
             // given
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
-            IMetric randomMetric = CreateRandomMetric(randomDateTimeOffset);
-            IMetric invalidMetric = randomMetric;
-            invalidMetric.Type = (MetricType)GetRandomNegativeNumber();
+
+            // The concrete type rather than IMetric: SpanKind is read only on the contract,
+            // because a host derives it, so only the test's own implementation can set it.
+            TestMetric randomMetric = CreateMetricFiller(randomDateTimeOffset).Create();
+            TestMetric invalidMetric = randomMetric;
             invalidMetric.Status = (MetricStatus)GetRandomNegativeNumber();
+            invalidMetric.SpanKind = (MetricSpanKind)GetRandomNegativeNumber();
 
             var invalidMetricException =
                 new InvalidMetricException(
                     message: "Invalid metric. Please correct the errors and try again.");
 
             invalidMetricException.AddData(
-                key: nameof(IMetric.Type),
-                values: "Type is invalid");
-
-            invalidMetricException.AddData(
                 key: nameof(IMetric.Status),
                 values: "Status is invalid");
+
+            invalidMetricException.AddData(
+                key: nameof(IMetric.SpanKind),
+                values: "Span kind is invalid");
 
             var expectedMetricValidationException =
                 new MetricValidationException(

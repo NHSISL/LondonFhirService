@@ -64,6 +64,29 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
 
         public MetricType Type { get; set; }
 
+        /// <summary>
+        /// The library's view of <see cref="Type"/>: text, because the span vocabulary belongs to
+        /// this host rather than to the library. Implemented explicitly so the enum stays the only
+        /// Type that EF maps, OData filters on and the Manage API serialises.
+        /// </summary>
+        string IMetric.Type => Type.ToString();
+
+        /// <summary>
+        /// Derived from <see cref="Type"/> rather than stored, so a span can never be recorded as
+        /// one kind of work and presented to telemetry as another. Explicit for the same reason as
+        /// IMetric.Type: it is telemetry plumbing, not part of the record or the API.
+        /// </summary>
+        MetricSpanKind IMetric.SpanKind =>
+            Type switch
+            {
+                MetricType.Request => MetricSpanKind.Server,
+                MetricType.AccessCheck => MetricSpanKind.Client,
+                MetricType.Provider => MetricSpanKind.Client,
+                MetricType.ProviderCall => MetricSpanKind.Client,
+                MetricType.Persist => MetricSpanKind.Client,
+                _ => MetricSpanKind.Internal
+            };
+
         /// <summary>The display name of what was measured, such as a provider friendly name.</summary>
         public string Name { get; set; }
 

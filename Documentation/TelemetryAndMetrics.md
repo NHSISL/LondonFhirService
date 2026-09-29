@@ -205,6 +205,12 @@ correlation id.
 The metric library publishes each completed span to an `ActivitySource`
 (`LondonFhirService.Metrics`) as a second sink alongside the database.
 
+The library does not know this service's span types. It receives `IMetric.Type`
+as text and tags it unchanged, and takes the activity's kind from
+`IMetric.SpanKind` — `Server`, `Client` or `Internal`. `Metric` derives that from
+its own `MetricType`: `Request` is `Server`; `AccessCheck`, `Provider`,
+`ProviderCall` and `Persist` are `Client`; everything else is `Internal`.
+
 Nothing in the classic SDK subscribes to arbitrary activity sources, so every
 published span used to be dropped before it reached Application Insights.
 `MetricTelemetryPublisher`, a hosted service registered by both hosts, registers

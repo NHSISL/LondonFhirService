@@ -69,8 +69,30 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             Activity activity = this.capturedActivities.Should().ContainSingle().Subject;
             activity.DisplayName.Should().Be($"{metric.Method}/{metric.Name}");
             activity.GetTagItem("metric.id").Should().Be(metric.Id.ToString());
-            activity.GetTagItem("metric.type").Should().Be(metric.Type.ToString());
+            activity.GetTagItem("metric.type").Should().Be(metric.Type);
             activity.GetTagItem("metric.target").Should().Be(metric.Target);
+        }
+
+        [Theory]
+        [InlineData(MetricSpanKind.Internal, ActivityKind.Internal)]
+        [InlineData(MetricSpanKind.Server, ActivityKind.Server)]
+        [InlineData(MetricSpanKind.Client, ActivityKind.Client)]
+        public async Task ShouldPresentTheSpanAsTheKindTheHostClassifiedItAsAsync(
+            MetricSpanKind spanKind,
+            ActivityKind expectedActivityKind)
+        {
+            // given
+            // The kind comes from the host's classification, never from the span type: the type
+            // is the host's vocabulary and the library does not interpret it.
+            TestMetric metric = CreateMetric();
+            metric.SpanKind = spanKind;
+
+            // when
+            await this.metricBroker.RecordAsync(metric, TestContext.Current.CancellationToken);
+
+            // then
+            Activity activity = this.capturedActivities.Should().ContainSingle().Subject;
+            activity.Kind.Should().Be(expectedActivityKind);
         }
 
         [Fact]
@@ -256,7 +278,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
             activity.StatusDescription.Should().Be("ProviderTimeout");
         }
 
-        private static IMetric CreateMetric()
+        private static TestMetric CreateMetric()
         {
             DateTimeOffset started = DateTimeOffset.UtcNow.AddSeconds(-1);
 
@@ -267,7 +289,7 @@ namespace LondonFhirService.Clients.AuditAndMetrics.Tests.Unit.Brokers
                 Method = new MnemonicString(wordCount: 2).GetValue(),
                 Name = new MnemonicString(wordCount: 2).GetValue(),
                 Target = new MnemonicString(wordCount: 2).GetValue(),
-                Type = MetricType.Provider,
+                Type = new MnemonicString(wordCount: 1).GetValue(),
                 Status = MetricStatus.Succeeded,
                 Started = started,
                 Completed = started.AddMilliseconds(1000),

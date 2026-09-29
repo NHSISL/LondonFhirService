@@ -38,7 +38,11 @@ namespace LondonFhirService.Core.Brokers.AuditAndMetrics
                 CorrelationId = metric.CorrelationId,
                 RequestSpanId = metric.RequestSpanId,
                 Method = metric.Method,
-                Type = metric.Type,
+
+                // The port carries the type as text; this host stores its own enum. Parsed rather
+                // than defaulted, so a name this host does not define fails here instead of being
+                // written as a row no report could place.
+                Type = Enum.Parse<MetricType>(metric.Type),
                 Name = metric.Name,
                 Target = metric.Target,
                 Started = metric.Started,
