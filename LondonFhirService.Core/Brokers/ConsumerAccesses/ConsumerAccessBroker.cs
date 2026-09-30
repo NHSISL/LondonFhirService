@@ -61,14 +61,16 @@ namespace LondonFhirService.Core.Brokers.ConsumerAccesses
             return new ConsumerAccessResponse
             {
                 StatusCode = httpResponseMessage.StatusCode,
+                ContentType = httpResponseMessage.Content.Headers.ContentType?.MediaType,
+                WwwAuthenticate = httpResponseMessage.Headers.WwwAuthenticate.ToString(),
                 Content = content
             };
         }
 
         /// <summary>
-        /// EnsureSuccessStatusCode, except for the two statuses that are the dependency answering
-        /// rather than failing: 401, it does not know the consumer, and 403, it refuses the access
-        /// - with the same Access body a 200 carries. Every other status still fails with the same
+        /// EnsureSuccessStatusCode, except for 401 and 403, which the dependency uses both to answer
+        /// about a consumer and to refuse this service's own credentials. Both are handed back with
+        /// everything that tells them apart. Every other status still fails with the same
         /// HttpRequestException as ever, so a validation or server error from the dependency stays
         /// a dependency failure. The one check a broker cannot avoid when its resource speaks in
         /// more than one status; what each answer means is left to the service.

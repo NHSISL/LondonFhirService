@@ -35,6 +35,16 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
                 throw await CreateAndLogDependencyValidationExceptionAsync(
                     unauthorizedConsumerAccessServiceException);
             }
+            catch (FailedConsumerAccessAuthenticationException failedConsumerAccessAuthenticationException)
+            {
+                throw await CreateAndLogCriticalDependencyExceptionAsync(
+                    failedConsumerAccessAuthenticationException);
+            }
+            catch (FailedConsumerAccessAuthorizationException failedConsumerAccessAuthorizationException)
+            {
+                throw await CreateAndLogCriticalDependencyExceptionAsync(
+                    failedConsumerAccessAuthorizationException);
+            }
             // The dependency's own timeout, not the caller cancelling: an HttpClient timeout
             // surfaces as a cancelled task wrapping a TimeoutException. Ordered before the plain
             // cancellation catch, which would otherwise take it.
