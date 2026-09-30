@@ -162,10 +162,10 @@ components:
         to: AuditAndMetricStorageBroker
         method: CreateAudit
       - from: LogAuditAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserIdAsync
       - from: ModifyAuditAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserIdAsync
       - from: LogAuditAsync
         to: API.Dispatcher
@@ -249,28 +249,28 @@ components:
         to: CorrelationBroker
         method: GetRequestSpanIdAsync
       - from: AddMetricAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserIdAsync
       - from: AddMetricAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserDisplayNameAsync
       - from: AddMetricsAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserIdAsync
       - from: AddMetricsAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserDisplayNameAsync
       - from: LogMetricAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserIdAsync
       - from: LogMetricAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserDisplayNameAsync
       - from: LogMetricsAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserIdAsync
       - from: LogMetricsAsync
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: GetCurrentUserDisplayNameAsync
   - id: LIB.AM.MetricBroker
     name: MetricBroker (telemetry)

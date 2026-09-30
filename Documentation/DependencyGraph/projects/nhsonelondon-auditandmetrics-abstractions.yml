@@ -21,7 +21,7 @@ components:
         to: AuditAndMetricStorageBroker
         method: null
       - from: IAuditUserBroker
-        to: AuditUserBroker
+        to: SecurityAuditBroker
         method: null
       - from: IRequestTraceBroker
         to: CorrelationBroker

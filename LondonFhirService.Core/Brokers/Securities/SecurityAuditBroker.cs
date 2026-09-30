@@ -7,22 +7,33 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using ISL.Security.Client.Clients;
 using ISL.Security.Client.Models.Clients;
+using ISL.Security.Client.Models.Foundations.Users;
 using Microsoft.AspNetCore.Http;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 
 namespace LondonFhirService.Core.Brokers.Securities
 {
     /// <summary>
     /// Provides security-related functionalities such as user authentication, claim verification, and role checks.
     /// Supports both REST API (using <see cref="IHttpContextAccessor"/>) and Azure Functions (using access token).
+    ///
+    /// Also answers the audit library's identity port, <see cref="IAuditUserBroker"/>, straight from
+    /// the security client - a broker may not call another broker, so the port is not satisfied by
+    /// a separate broker sitting on top of this one or <see cref="SecurityBroker"/>.
+    ///
+    /// The ClaimsPrincipal is captured in the constructor rather than read per call, so this must
+    /// be resolved per request. Registered as a singleton it would be built at startup with no
+    /// HttpContext, and every audit row and metric span in the system would be stamped anonymous
+    /// with nothing failing to signal it.
     /// </summary>
-    public class SecurityAuditBroker : ISecurityAuditBroker
+    public class SecurityAuditBroker : ISecurityAuditBroker, IAuditUserBroker
     {
         /// <summary>
         /// Shared for the same reason as <see cref="SecurityBroker"/>: constructing a
-        /// SecurityClient builds and abandons a DI container, and this transient broker is
-        /// resolved several times per patient request. The client holds no per-caller state -
-        /// every method takes the ClaimsPrincipal as a parameter - so sharing one is safe, and the
-        /// per-request ClaimsPrincipal capture below is unchanged.
+        /// SecurityClient builds and abandons a DI container, and this broker is resolved several
+        /// times per patient request. The client holds no per-caller state - every method takes
+        /// the ClaimsPrincipal as a parameter - so sharing one is safe, and the per-request
+        /// ClaimsPrincipal capture below is unchanged.
         /// </summary>
         private static readonly ISecurityClient SharedSecurityClient = new SecurityClient();
 
@@ -70,6 +81,20 @@ namespace LondonFhirService.Core.Brokers.Securities
             this.claimsPrincipal = claimsPrincipal;
             this.securityConfigurations = securityConfigurations;
             securityClient = SharedSecurityClient;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecurityAuditBroker"/> class with the
+        /// security client supplied rather than shared, so tests can stand in for it.
+        /// </summary>
+        internal SecurityAuditBroker(
+            ClaimsPrincipal claimsPrincipal,
+            SecurityConfigurations securityConfigurations,
+            ISecurityClient securityClient)
+        {
+            this.claimsPrincipal = claimsPrincipal;
+            this.securityConfigurations = securityConfigurations;
+            this.securityClient = securityClient;
         }
 
         /// <summary>
@@ -145,5 +170,35 @@ namespace LondonFhirService.Core.Brokers.Securities
         /// </example>
         public async ValueTask<string> GetUserIdAsync() =>
             await securityClient.Audits.GetUserIdAsync(claimsPrincipal);
+
+        /// <summary>
+        /// The audit library's identity port. An empty string rather than a null when no id is
+        /// resolved, so callers stamping this onto a row do not have to guard it.
+        /// </summary>
+        public async ValueTask<string> GetCurrentUserIdAsync() =>
+            await securityClient.Audits.GetUserIdAsync(claimsPrincipal) ?? string.Empty;
+
+        /// <summary>
+        /// The audit library's identity port. Falls back to the given and family names because
+        /// DisplayName is not guaranteed to be populated - a directory entry can carry the parts
+        /// without the whole. An empty string rather than a null when nothing is resolvable, so
+        /// callers stamping this onto a row do not have to guard it.
+        /// </summary>
+        public async ValueTask<string> GetCurrentUserDisplayNameAsync()
+        {
+            User currentUser = await securityClient.Users.GetUserAsync(claimsPrincipal);
+
+            if (currentUser is null)
+            {
+                return string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(currentUser.DisplayName) is false)
+            {
+                return currentUser.DisplayName;
+            }
+
+            return $"{currentUser.GivenName} {currentUser.Surname}".Trim();
+        }
     }
 }

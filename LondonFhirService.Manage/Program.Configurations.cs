@@ -434,7 +434,7 @@ public partial class Program
     {
     }
 
-    private static void AddBrokers(IServiceCollection services, IConfiguration configuration)
+    internal static void AddBrokers(IServiceCollection services, IConfiguration configuration)
     {
         SecurityConfigurations securityConfigurations = new()
         {
@@ -455,7 +455,16 @@ public partial class Program
         services.AddSingleton(securityConfigurations);
         services.AddTransient<IAuditAndMetricBroker, AuditAndMetricBroker>();
         services.AddScoped<IAuditAndMetricStorageBroker, AuditAndMetricStorageBroker>();
-        services.AddScoped<IAuditUserBroker, AuditUserBroker>();
+
+        // The audit library's identity port, answered by SecurityAuditBroker. Scoped, never a
+        // singleton: the broker captures the ClaimsPrincipal in its constructor, so a singleton
+        // would be built at startup with no HttpContext and stamp every audit row and metric span
+        // anonymous. Built explicitly so the request constructor is the one used.
+        services.AddScoped<IAuditUserBroker>(serviceProvider =>
+            new SecurityAuditBroker(
+                serviceProvider.GetRequiredService<IHttpContextAccessor>(),
+                serviceProvider.GetRequiredService<SecurityConfigurations>()));
+
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IIdentifierBroker, IdentifierBroker>();
         services.AddTransient<ILoggingBroker, LoggingBroker>();

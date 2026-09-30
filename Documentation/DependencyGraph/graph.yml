@@ -166,7 +166,6 @@ roots:
   - FS.Matcher.ReferralRequest
   - AuditAndMetricBroker
   - AuditAndMetricStorageBroker
-  - AuditUserBroker
   - SecurityBroker
   - SecurityAuditBroker
   - StorageBroker
