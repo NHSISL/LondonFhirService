@@ -2,8 +2,16 @@
 
 How a request is identified, what is measured, and where each thing is written.
 
-Scanned against the source on 2026-09-17. If you change the correlation flow, the
+Scanned against the source on 2026-09-30. If you change the correlation flow, the
 metric span tree or either sink, update this file with it.
+
+Audits and metrics are recorded by the NuGet package
+`NHSOneLondon.AuditAndMetrics.Clients` (version 0.1.1, referenced from
+`LondonFhirService.Core/LondonFhirService.Core.csproj`). This service no longer
+carries its own copy of that library. The package is the source of truth for how
+recording, deferred writes, purging and span replay work, and for what each
+setting means. Its [README](https://github.com/NHSISL/NHSOneLondon.AuditAndMetrics)
+documents it. This file covers how this service uses the package.
 
 ## At a glance
 
@@ -13,8 +21,8 @@ One request produces up to four kinds of record, in three places:
 |---|---|---|---|
 | Request telemetry | Application Insights SDK collectors | Application Insights | Per the App Insights workspace |
 | Metric spans (replayed) | `MetricTelemetryPublisher` → `TrackDependency` | Application Insights, as dependencies | Per the App Insights workspace (default 90 days, configurable) |
-| Metric spans (authoritative) | `MetricService` → `AuditAndMetricStorageBroker` | `Metrics` table | `RetentionPeriodInDays`, when purging is enabled — see **Retention** |
-| Audit entries | `AuditService` → `AuditAndMetricStorageBroker` | `Audits` table | Never purged — there is no audit sweep |
+| Metric spans (authoritative) | `MetricService` → `AuditAndMetricBroker` → the package → `AuditAndMetricStorageBroker` | `Metrics` table | `MetricsRetentionPeriodInDays`, when `IsMetricsPurgingAllowed` is on — see **Retention** |
+| Audit entries | `AuditService` → `AuditAndMetricBroker` → the package → `AuditAndMetricStorageBroker` | `Audits` table | `AuditRetentionPeriodInDays`, when `IsAuditPurgingAllowed` is on — see **Retention** |
 
 Everything above is tied together by one value: the **correlation id**.
 
@@ -48,17 +56,18 @@ not, so a byte-level conversion silently scrambles the value.
 
 ### Resolution order
 
-`CorrelationBroker.GetCorrelationIdAsync()` resolves once per request and caches
-the result on `HttpContext.Items`:
+`CorrelationBroker.GetCorrelationIdAsync()` resolves once and caches the result.
+In a request it is cached on `HttpContext.Items`. With no `HttpContext` (a
+background worker) it is cached in a field of the broker, which is registered
+scoped, so it lasts as long as that unit of work:
 
-1. **Already on `HttpContext.Items`** — return it. Every later reader in the
-   request sees the same value.
+1. **Already resolved** — return it. Every later reader sees the same value.
 2. **`Activity.Current.TraceId`**, when there is a W3C activity with a non-zero
    trace id. This covers both the caller who sent `traceparent` and the caller
-   who sent nothing, because ASP.NET generates a trace id either way.
-3. **A fresh `Guid` from `IIdentifierBroker`** — no `HttpContext` (a background
-   worker), no activity (nothing listening for activities), or a non-W3C
-   hierarchical activity.
+   who sent nothing, because ASP.NET generates a trace id either way. It is
+   also tried when there is no `HttpContext`.
+3. **A fresh `Guid` from `IIdentifierBroker`** — no activity (nothing listening
+   for activities), or a non-W3C hierarchical activity.
 
 `Guid.Empty` is never used. It would fail the coordination service's argument
 validation and would stamp every row written under it with the same meaningless
@@ -202,8 +211,10 @@ correlation id.
 
 ### b. Metric spans — replayed as dependencies
 
-The metric library publishes each completed span to an `ActivitySource`
-(`LondonFhirService.Metrics`) as a second sink alongside the database.
+The package's `MetricBroker` publishes each completed span to an
+`ActivitySource` as a second sink alongside the database. This service names the
+source `LondonFhirService.Metrics` through `ActivitySourceName`; the package's
+own default is `NHSOneLondon.AuditAndMetrics`.
 
 The library does not know this service's span types. It receives `IMetric.Type`
 as text and tags it unchanged, and takes the activity's kind from
@@ -230,7 +241,7 @@ Each span arrives as a `DependencyTelemetry`:
 | `Target` | `Metric.Target` |
 | `Duration` | the measured duration, not the replay duration |
 | `Timestamp` | `Metric.Started` |
-| `Success` | false when the span status is an error |
+| `Success` | false for any status other than `Succeeded` |
 | `ResultCode` | `Metric.ErrorCode` |
 | `Id` | the replayed activity's span id |
 
@@ -254,13 +265,15 @@ it.**
 That shared parent is the **HTTP request's own span id**, so the flat group hangs
 *under* the incoming request rather than floating beside it. Flattening and
 anchoring are independent. The span id reaches the replay through
-`IRequestTraceBroker`, a port the host satisfies from `CorrelationBroker`:
-`MetricService` reads it while the request is still alive and carries it into the
-deferred write, because the replay itself runs on a background worker with no
-request left to ask. Without one — a background worker, or a host that registers
-no implementation and gets the library's null object — it falls back to a parent
-derived from the correlation id, which groups correctly but places the spans at
-the top of the trace.
+`IRequestTraceBroker`, a package port that this service's `RequestTraceBroker`
+satisfies from `CorrelationBroker`. The package's `MetricService` reads it while
+the request is still alive and stamps it on `IMetric.RequestSpanId` before the
+write is deferred, because the replay itself runs on a background worker with no
+request left to ask. Without one — a background worker, or a host that passes no
+`IRequestTraceBroker` to `AuditAndMetricsClient` and gets the package's
+`UnknownRequestTraceBroker` — it falls back to a parent derived from the
+correlation id, which groups correctly but places the spans at the top of the
+trace.
 
 ### c. Traces — from `ILogger`
 
@@ -283,18 +296,22 @@ both need it, and rather than in the `NHSOneLondon.AuditAndMetrics.Clients`
 package because that library deliberately carries no telemetry vendor — it publishes to
 an `ActivitySource` and leaves the choice of listener to whoever hosts it.
 
-Two differences remain. The API host registers the three services that actually
+Three differences remain. The API host registers the three services that actually
 record metric spans (`Stu3PatientCoordinationService`,
 `Stu3PatientOrchestrationService`, `Stu3PatientService`); Manage registers none
 of them, so in practice almost nothing is published from there today — the
 listener is registered so that changes if Manage ever grows such a path, not
-because it is busy now. Manage also registers no `ICorrelationBroker`, so its
-spans group by trace but are not anchored under a request.
+because it is busy now. Manage also registers no `ICorrelationBroker` and passes
+no `IRequestTraceBroker` to `AuditAndMetricsClient`, so its spans group by trace
+but are not anchored under a request.
 
-And the API host registers the bounded
+The API host registers the bounded
 `AuditAndMetricsDispatcher`, Manage does not. Manage therefore falls back to the
 library's `ThreadPoolDispatcher` — deferred writes still happen, but one work
 item per write, unbounded, with nothing draining them on shutdown.
+
+Only the API host registers `AuditAndMetricPurgeWorker`, so the retention sweeps
+run there and nowhere else. See **Retention**.
 
 ---
 
@@ -309,8 +326,8 @@ The authoritative store, and the only place the true span tree exists.
 | `Id` | The span's own id. |
 | `ParentId` | The enclosing span, `null` for the root. |
 | `CorrelationId` | The W3C trace id as a `Guid`. Ties every span of one request together. |
-| `UserId` | Opaque account id, or null for background work. Stamped by `MetricService`. |
-| `Consumer` | The calling consumer's display name, or its user id (oid) when it has none — an application calling the API has no display name. Stamped by `MetricService`. |
+| `UserId` | Opaque account id, or empty for background work. Stamped by the package's `MetricService`, from this service's `AuditUserBroker`. |
+| `Consumer` | The calling consumer's display name, or its user id (oid) when it has none — an application calling the API has no display name. Stamped by the package's `MetricService`. |
 | `Method` | The operation, matching the audit type string — e.g. `STU3-Patient-GetStructuredRecordSerialised`. The FHIR version is part of it, so STU3 and R4 timings never merge. |
 | `Type` | `MetricType`, persisted **as text**. |
 | `Name` | What was measured, e.g. a provider friendly name. |
@@ -365,9 +382,9 @@ the rows through `NHSISL.CsvHelperClient`. One row per request, newest first:
 `LogLevel`, `CreatedBy`, `CreatedDate`, `UpdatedBy`, `UpdatedDate`.
 
 `FileName` belongs to this service's `Audit` entity only. The
-`NHSOneLondon.AuditAndMetrics` package's `IAudit` contract does not carry it, so
-entries the library builds (`LogInformationAsync`, `RecordAuditAsync`) leave it
-empty; it is set only when a caller hands in a whole `Audit`, as the Manage
+`IAudit` contract (from the `NHSOneLondon.AuditAndMetrics.Abstractions` package)
+does not carry it, so entries the library builds (`LogInformationAsync`,
+`RecordAuditAsync`) leave it empty; it is set only when a caller hands in a whole `Audit`, as the Manage
 audits API does.
 
 Indexed on `CorrelationId`, `LogLevel`, `CreatedDate`, and the composites
@@ -380,8 +397,9 @@ failures, because losing one to a process restart is not acceptable.
 ### How writes are deferred
 
 Recording must not lengthen the work being recorded, so writes go through
-`IAuditAndMetricsDispatcher`: a bounded queue owned by the host, drained by
-`AuditAndMetricsDispatchWorker`.
+`IAuditAndMetricsDispatcher`, a port the package defines and the host fills. On
+the API host that is `AuditAndMetricsDispatcher`, a bounded queue drained by
+`AuditAndMetricsDispatchWorker` (both in `LondonFhirService.Api/Dispatchers`).
 
 - Values that depend on the request — `CreatedDate`, `UserId`, `Consumer`, the
   request span id — are **stamped before the deferral**, while the request is
@@ -398,32 +416,59 @@ Current settings: `Capacity` 10000, `DrainConcurrency` 4, `ShutdownGraceSeconds`
 
 ### Retention
 
-`MetricPurgeWorker` runs the metric retention sweep (`SweepIntervalHours` 24,
-`InitialDelayMinutes` 5). Whether anything is deleted is decided by
-`AuditAndMetricsConfigurations`:
+`AuditAndMetricPurgeWorker` (`LondonFhirService.Api/Workers`) runs two retention
+sweeps on one timer: the audit sweep first, then the metric sweep. Its settings
+are in `AuditAndMetricPurgeWorkerSettings` (`SweepIntervalHours` 24,
+`InitialDelayMinutes` 5). Only the API host registers it.
+
+Each sweep runs in its own scope and its own `try` block. If one fails, the error
+is logged and the other still runs; the next sweep picks up whatever was missed.
+The worker calls this service's `AuditService` and `MetricService`, which pass
+through `AuditAndMetricBroker` to the package.
+
+The worker only decides **when** to sweep. Whether anything is deleted is decided
+by the package, from `AuditAndMetricsConfigurations`. Audits and metrics each have
+their own switch and retention period; `PurgeBatchSize` is shared:
 
 ```jsonc
 "AuditAndMetricsConfigurations": {
-  "IsPurgingAllowed": false,      // repo default — see the note below
-  "RetentionPeriodInDays": 90,
+  "IsAuditPurgingAllowed": false,      // repo default — see the note below
+  "AuditRetentionPeriodInDays": 90,
+  "IsMetricsPurgingAllowed": false,    // repo default — see the note below
+  "MetricsRetentionPeriodInDays": 90,
   "PurgeBatchSize": 5000
 }
 ```
 
 > **The values in `appsettings.json` are development defaults, not the deployed
 > configuration.** `Program.cs` adds environment variables last, so they win over
-> both JSON files. Deployed environments enable purging that way
-> (`AuditAndMetricsConfigurations__IsPurgingAllowed`), and the operative retention
-> is whatever that environment sets — read the App Service configuration, not this
-> file, to know what a given environment is doing.
+> both JSON files. A deployed environment turns purging on that way, for example
+> `AuditAndMetricsConfigurations__IsMetricsPurgingAllowed` and
+> `AuditAndMetricsConfigurations__IsAuditPurgingAllowed`, and the operative
+> retention is whatever that environment sets — read the App Service
+> configuration, not this file, to know what a given environment is doing.
+>
+> The old single keys `IsEnabled`, `IsPurgingAllowed` and `RetentionPeriodInDays`
+> are **no longer read**. An environment variable that still uses one of them
+> does nothing, so check the App Service settings use the new names.
 
-Two things that are true regardless of environment:
+Things that are true regardless of environment:
 
-- **There is no audit purge at all.** No sweep exists for the `Audits` table, and
-  no setting turns one on. Audit rows accumulate indefinitely by design — they
-  are the information-governance record.
-- A zero or negative retention period is **rejected rather than obeyed**. It
-  would put the cut-off at the present or the future and delete the entire table.
+- **Audits can be purged, but only when `IsAuditPurgingAllowed` is on.** The
+  repo default is off, so with nothing set audit rows are kept. Audits are the
+  information-governance record, so audit purging is switched separately from
+  metric purging: an environment can age out metrics and still keep every audit.
+- A zero or negative retention period, or a zero or negative `PurgeBatchSize`,
+  is **rejected rather than obeyed**. A bad retention period would put the
+  cut-off at the present or the future and delete the entire table. The sweep
+  fails, the worker logs the error, and nothing is deleted.
+- Rows are deleted in batches of `PurgeBatchSize`, in the database, until a
+  batch comes back smaller than that. The first sweep against a table that has
+  never been purged does not take one long lock.
+- If a key is missing from every configuration source, the **package default**
+  applies, and it is not the same as this repo's: both purges allowed, 30 days'
+  retention, source name `NHSOneLondon.AuditAndMetrics`. See the package
+  [README](https://github.com/NHSISL/NHSOneLondon.AuditAndMetrics).
 
 Sizing note: the `Metrics` table takes a row **per span**, not per request. A
 single `$getstructuredrecord` against two providers writes eight or more rows.
@@ -450,9 +495,9 @@ WHERE  CorrelationId = '00000000-0000-0000-0000-000000000000'
 ORDER  BY Started;
 ```
 
-Note the id is a `Guid` in `Metrics` and a string in `Audits`, and that the
-telemetry viewer wants the 32-character form without dashes
-(`Guid.ToString("N")`).
+Note the id is a `Guid` in `Metrics` and a string in `Audits`. The patient
+services write the `Audits` string in the 32-character form without dashes
+(`Guid.ToString("N")`), which is also the form the telemetry viewer wants.
 
 ---
 
@@ -461,21 +506,31 @@ telemetry viewer wants the 32-character form without dashes
 Values below are the **repo defaults** from `LondonFhirService.Api/appsettings.json`.
 `Program.cs` layers configuration as `appsettings.json` → `appsettings.Development.json`
 → environment variables, so a deployed environment overrides any of them with
-`Section__Key` (for example `AuditAndMetricsConfigurations__IsPurgingAllowed`).
+`Section__Key` (for example `AuditAndMetricsConfigurations__IsMetricsPurgingAllowed`).
 Treat this column as "what you get with nothing set", not as what production runs.
+
+The `AuditAndMetricsConfigurations` section is owned by the package. It is bound
+once by `AuditAndMetricsClient.BindConfigurations` and registered as a singleton
+in each host. `LondonFhirService.Manage/appsettings.json` carries the same values.
+The package [README](https://github.com/NHSISL/NHSOneLondon.AuditAndMetrics)
+describes each key and gives the package's own defaults, which differ from the
+repo defaults below.
 
 | Setting | Repo default | Effect |
 |---|---|---|
-| `AuditAndMetricsConfigurations:IsEnabled` | `true` | Master switch. Off, `MetricService` returns without writing or publishing. |
-| `AuditAndMetricsConfigurations:IsPurgingAllowed` | `false` | Whether the retention sweep deletes anything. |
-| `AuditAndMetricsConfigurations:RetentionPeriodInDays` | `90` | Age beyond which metric rows are eligible for purge. |
-| `AuditAndMetricsConfigurations:PurgeBatchSize` | `5000` | Rows deleted per batch. |
+| `AuditAndMetricsConfigurations:IsAuditEnabled` | `true` | Audit switch. Off, audit writes are skipped. Metrics are not affected. |
+| `AuditAndMetricsConfigurations:IsAuditPurgingAllowed` | `false` | Whether the audit sweep deletes anything. |
+| `AuditAndMetricsConfigurations:AuditRetentionPeriodInDays` | `90` | Age beyond which audit rows are eligible for purge. |
+| `AuditAndMetricsConfigurations:IsMetricsEnabled` | `true` | Metric switch. Off, the package's `MetricService` returns without writing or publishing. Audits are not affected. |
+| `AuditAndMetricsConfigurations:IsMetricsPurgingAllowed` | `false` | Whether the metric sweep deletes anything. |
+| `AuditAndMetricsConfigurations:MetricsRetentionPeriodInDays` | `90` | Age beyond which metric rows are eligible for purge. |
+| `AuditAndMetricsConfigurations:PurgeBatchSize` | `5000` | Rows deleted per batch. Shared by both sweeps. |
 | `AuditAndMetricsConfigurations:ActivitySourceName` | `LondonFhirService.Metrics` | The source the publisher subscribes to. Bound once and shared, so the two cannot drift. |
 | `AuditAndMetricsDispatcherSettings:Capacity` | `10000` | Bounded queue depth. |
 | `AuditAndMetricsDispatcherSettings:DrainConcurrency` | `4` | Parallel drain workers. |
 | `AuditAndMetricsDispatcherSettings:ShutdownGraceSeconds` | `5` | How long shutdown waits for in-flight writes. |
-| `MetricPurgeWorkerSettings:SweepIntervalHours` | `24` | How often the sweep is attempted. |
-| `MetricPurgeWorkerSettings:InitialDelayMinutes` | `5` | Delay before the first sweep after start. |
+| `AuditAndMetricPurgeWorkerSettings:SweepIntervalHours` | `24` | How often both sweeps are attempted. |
+| `AuditAndMetricPurgeWorkerSettings:InitialDelayMinutes` | `5` | Delay before the first sweep after start. |
 | `ApplicationInsights:EnableAdaptiveSampling` | `false` | Sampling off, so telemetry and the metrics table agree. |
 | `Logging:ApplicationInsights:LogLevel:Default` | `Information` | Floor for `ILogger` traces reaching App Insights. |
 
@@ -485,3 +540,6 @@ Treat this column as "what you get with nothing set", not as what production run
 
 - [Dependency graph](./DependencyGraph/README.md) — the components named here and
   how they wire together.
+- [NHSOneLondon.AuditAndMetrics](https://github.com/NHSISL/NHSOneLondon.AuditAndMetrics)
+  — the package README: how the library records, defers, purges and replays, and
+  every setting it reads.
