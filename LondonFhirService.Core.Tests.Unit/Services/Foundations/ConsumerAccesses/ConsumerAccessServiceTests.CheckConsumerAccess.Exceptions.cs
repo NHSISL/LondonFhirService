@@ -122,23 +122,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
         [Theory]
         [MemberData(nameof(CancellationExceptions))]
-        public async Task ShouldThrowDependencyExceptionOnCheckConsumerAccessIfCancelledAndLogItAsync(
+        public async Task ShouldPassCancellationThroughOnCheckConsumerAccessAsync(
             Exception cancellationException)
         {
             // given
             ValidateAccessRequest randomValidateAccessRequest = CreateRandomValidateAccessRequest();
             ValidateAccessRequest inputValidateAccessRequest = randomValidateAccessRequest;
-
-            var cancelledConsumerAccessServiceException =
-                new CancelledConsumerAccessServiceException(
-                    message: "Consumer access request was cancelled, please try again.",
-                    innerException: cancellationException,
-                    data: cancellationException.Data);
-
-            var expectedConsumerAccessServiceDependencyException =
-                new ConsumerAccessServiceDependencyException(
-                    message: "ConsumerAccess dependency error occurred, contact support.",
-                    innerException: cancelledConsumerAccessServiceException);
 
             this.consumerAccessBrokerMock.Setup(broker =>
                 broker.CheckConsumerAccessAsync(
@@ -151,30 +140,26 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 this.consumerAccessService.CheckConsumerAccessAsync(
                     inputValidateAccessRequest, TestContext.Current.CancellationToken);
 
-            ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
-                await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
+            OperationCanceledException actualOperationCanceledException =
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
                     testCode: checkConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessServiceDependencyException.Should()
-                .BeEquivalentTo(expectedConsumerAccessServiceDependencyException);
+            // A caller that cancels gets the cancellation it asked for, not a dependency error it
+            // has to unwrap - and nothing is logged, because nothing went wrong.
+            actualOperationCanceledException.Should().BeSameAs(cancellationException);
 
             this.consumerAccessBrokerMock.Verify(broker =>
                 broker.CheckConsumerAccessAsync(
                     inputValidateAccessRequest, It.IsAny<CancellationToken>()),
                     Times.Once);
 
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessServiceDependencyException))),
-                        Times.Once);
-
             this.consumerAccessBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldThrowDependencyExceptionOnCheckConsumerAccessIfTokenIsAlreadyCancelledAndLogItAsync()
+        public async Task ShouldPassCancellationThroughOnCheckConsumerAccessIfTokenIsAlreadyCancelledAsync()
         {
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
@@ -182,36 +167,18 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             CancellationToken cancelledToken = cancellationTokenSource.Token;
             ValidateAccessRequest randomValidateAccessRequest = CreateRandomValidateAccessRequest();
             ValidateAccessRequest inputValidateAccessRequest = randomValidateAccessRequest;
-            var operationCanceledException = new OperationCanceledException(cancelledToken);
-
-            var cancelledConsumerAccessServiceException =
-                new CancelledConsumerAccessServiceException(
-                    message: "Consumer access request was cancelled, please try again.",
-                    innerException: operationCanceledException,
-                    data: operationCanceledException.Data);
-
-            var expectedConsumerAccessServiceDependencyException =
-                new ConsumerAccessServiceDependencyException(
-                    message: "ConsumerAccess dependency error occurred, contact support.",
-                    innerException: cancelledConsumerAccessServiceException);
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
                 this.consumerAccessService.CheckConsumerAccessAsync(
                     inputValidateAccessRequest, cancelledToken);
 
-            ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
-                await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
+            OperationCanceledException actualOperationCanceledException =
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
                     testCode: checkConsumerAccessTask.AsTask);
 
             // then
-            actualConsumerAccessServiceDependencyException.Should()
-                .BeEquivalentTo(expectedConsumerAccessServiceDependencyException);
-
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessServiceDependencyException))),
-                        Times.Once);
+            actualOperationCanceledException.CancellationToken.Should().Be(cancelledToken);
 
             // The outbound call is never made. A caller that has already given up should not
             // cost a round trip to the access service.
@@ -226,45 +193,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
         }
 
         [Fact]
-        public async Task ShouldThrowDependencyExceptionBeforeValidationOnCheckConsumerAccessIfTokenIsAlreadyCancelledAndLogItAsync()
+        public async Task ShouldPassCancellationThroughBeforeValidatingOnCheckConsumerAccessIfAlreadyCancelledAsync()
         {
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Cancel();
             CancellationToken cancelledToken = cancellationTokenSource.Token;
             ValidateAccessRequest nullValidateAccessRequest = null;
-            var operationCanceledException = new OperationCanceledException(cancelledToken);
-
-            var cancelledConsumerAccessServiceException =
-                new CancelledConsumerAccessServiceException(
-                    message: "Consumer access request was cancelled, please try again.",
-                    innerException: operationCanceledException,
-                    data: operationCanceledException.Data);
-
-            var expectedConsumerAccessServiceDependencyException =
-                new ConsumerAccessServiceDependencyException(
-                    message: "ConsumerAccess dependency error occurred, contact support.",
-                    innerException: cancelledConsumerAccessServiceException);
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
                 this.consumerAccessService.CheckConsumerAccessAsync(
                     nullValidateAccessRequest, cancelledToken);
 
-            ConsumerAccessServiceDependencyException actualConsumerAccessServiceDependencyException =
-                await Assert.ThrowsAsync<ConsumerAccessServiceDependencyException>(
+            OperationCanceledException actualOperationCanceledException =
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
                     testCode: checkConsumerAccessTask.AsTask);
 
             // then
             // The token is checked first, so an abandoned request is reported as cancelled rather
             // than as whatever happens to be wrong with its arguments.
-            actualConsumerAccessServiceDependencyException.Should()
-                .BeEquivalentTo(expectedConsumerAccessServiceDependencyException);
-
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedConsumerAccessServiceDependencyException))),
-                        Times.Once);
+            actualOperationCanceledException.CancellationToken.Should().Be(cancelledToken);
 
             this.consumerAccessBrokerMock.Verify(broker =>
                 broker.CheckConsumerAccessAsync(

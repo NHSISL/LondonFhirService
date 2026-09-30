@@ -6,6 +6,8 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
@@ -43,6 +45,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Providers
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
+
+        public static TheoryData<Exception> CancellationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            return new TheoryData<Exception>
+            {
+                new OperationCanceledException(randomMessage),
+                new OperationCanceledException(cancellationTokenSource.Token),
+                new TaskCanceledException(randomMessage)
+            };
+        }
 
         private static SqlException GetSqlException() =>
             (SqlException)RuntimeHelpers.GetUninitializedObject(typeof(SqlException));

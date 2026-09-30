@@ -19,9 +19,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
     /// precisely so durations are only ever compared within one status. A 130-second timeout
     /// averaged against a fast validation failure tells nobody anything.
     ///
-    /// The nested cases are the realistic ones: by the time an abort reaches the coordination
-    /// layer it has already been localised into a dependency exception, so the cause survives only
-    /// in the inner chain.
+    /// The nested cases are the realistic ones for a timeout: by the time it reaches the
+    /// coordination layer it has already been localised into a dependency exception, so the cause
+    /// survives only in the inner chain. The caller's own cancellation is never wrapped by this
+    /// service's dependencies, but one buried by something outside them is still classified.
     /// </summary>
     public partial class Stu3PatientCoordinationServiceTests
     {

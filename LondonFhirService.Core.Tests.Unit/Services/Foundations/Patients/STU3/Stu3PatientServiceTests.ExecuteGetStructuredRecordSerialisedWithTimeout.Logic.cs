@@ -210,7 +210,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: TestContext.Current.CancellationToken);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Json.Should().Be(rawOutputJson);
@@ -339,7 +339,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: alreadyCanceledToken);
+                    cancellationToken: alreadyCanceledToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -404,7 +404,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: TestContext.Current.CancellationToken);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -480,7 +480,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: TestContext.Current.CancellationToken);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Should().BeEquivalentTo(expectedResult);
@@ -576,7 +576,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     null,
                     null,
                     parentId: null,
-                    globalToken: TestContext.Current.CancellationToken);
+                    cancellationToken: TestContext.Current.CancellationToken);
 
             // then
             actualResult.Json.Should().BeNull();

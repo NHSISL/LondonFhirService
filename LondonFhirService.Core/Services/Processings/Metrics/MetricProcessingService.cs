@@ -38,6 +38,7 @@ namespace LondonFhirService.Core.Services.Processings.Metrics
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnRetrieveRequestMetricExports(correlationId, userId, status, fromDate, toDate);
             IQueryable<Metric> metrics = await this.metricService.RetrieveAllMetricsAsync(cancellationToken);
             IQueryable<Metric> requestMetrics = metrics.Where(metric => metric.Type == MetricType.Request);

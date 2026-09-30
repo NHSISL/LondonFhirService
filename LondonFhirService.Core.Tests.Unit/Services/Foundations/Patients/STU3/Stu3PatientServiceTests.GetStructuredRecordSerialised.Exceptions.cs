@@ -406,7 +406,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
         [Theory]
         [MemberData(nameof(CancelledExceptions))]
-        public async Task ShouldThrowDependencyCancellationOnGetStructuredRecordSerialisedAndLogItAsync(
+        public async Task ShouldPassProviderCancellationThroughOnGetStructuredRecordSerialisedAsync(
             Xeption cancelledProviderException)
         {
             // given
@@ -431,17 +431,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var cancelledInnerException =
                 (OperationCanceledException)cancelledProviderException.InnerException.InnerException;
-
-            var cancelledPatientServiceException =
-                new CancelledPatientServiceException(
-                    message: "Patient service was cancelled, please try again.",
-                    innerException: cancelledInnerException,
-                    data: cancelledInnerException.Data);
-
-            var expectedPatientServiceDependencyException =
-                new PatientServiceDependencyException(
-                    message: "Patient service dependency error occurred, contact support.",
-                    innerException: cancelledPatientServiceException);
 
             var patientServiceMock = new Mock<Stu3PatientService>(
                 this.fhirBroker,
@@ -482,14 +471,15 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     nhsNumber: inputNhsNumber,
                     cancellationToken: TestContext.Current.CancellationToken);
 
-            PatientServiceDependencyException
-                actualPatientServiceDependencyException =
-                    await Assert.ThrowsAsync<PatientServiceDependencyException>(
-                        testCode: getStructuredRecordTask.AsTask);
+            OperationCanceledException actualOperationCanceledException =
+                await Assert.ThrowsAnyAsync<OperationCanceledException>(
+                    testCode: getStructuredRecordTask.AsTask);
 
             // then
-            actualPatientServiceDependencyException.Should()
-                .BeEquivalentTo(expectedPatientServiceDependencyException);
+            // The provider library had already wrapped the caller's cancellation in one of its own
+            // categories. It is unwrapped rather than wrapped again, so the caller gets back the
+            // cancellation it caused, and nothing is logged as an error.
+            actualOperationCanceledException.Should().BeSameAs(cancelledInnerException);
 
             patientServiceMock.Verify(service =>
                 service.ExecuteGetStructuredRecordSerialisedWithTimeoutAsync(
@@ -504,11 +494,6 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
                     It.IsAny<Guid?>(),
                     It.IsAny<CancellationToken>()),
                         Times.Once());
-
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(
-                    expectedPatientServiceDependencyException))),
-                        Times.Once);
 
             this.auditAndMetricBrokerMock.Verify(broker =>
                 broker.LogInformationAsync(

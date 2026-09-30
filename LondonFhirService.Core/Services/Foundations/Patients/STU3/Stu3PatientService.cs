@@ -76,6 +76,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var stopwatch = Stopwatch.StartNew();
                 dateOfBirth = string.IsNullOrWhiteSpace(dateOfBirth) ? null : dateOfBirth.Trim();
                 ValidateOnGetStructuredRecord(activeProviders, nhsNumber, dateOfBirth, correlationId);
@@ -165,6 +166,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
 
                     throw;
                 }
+
+                // A provider that the caller's cancellation reached reports it as its outcome
+                // rather than throwing, so the fan out can finish. That is right for the provider's
+                // own timeout, which stays that provider's failure while the request carries on -
+                // but the caller cancelling is not a provider failing. Nobody is waiting for the
+                // bundles any more, so the cancellation goes back to the caller as itself, rather
+                // than being logged below as a batch of provider errors.
+                cancellationToken.ThrowIfCancellationRequested();
 
                 await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
@@ -268,11 +277,11 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 bool? demographicsOnly = null,
                 bool? includeInactivePatients = null,
                 Guid? parentId = null,
-                CancellationToken globalToken = default)
+                CancellationToken cancellationToken = default)
         {
-            if (globalToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
             {
-                return (providerFriendlyName, null, new OperationCanceledException(globalToken));
+                return (providerFriendlyName, null, new OperationCanceledException(cancellationToken));
             }
 
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
@@ -292,7 +301,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             DateTimeOffset providerStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
             var providerStopwatch = Stopwatch.StartNew();
             int maxWaitTimeout = this.patientServiceConfig.MaxProviderWaitTimeMilliseconds;
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(globalToken);
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
             if (maxWaitTimeout > 0)
             {
@@ -363,7 +372,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                 return (providerFriendlyName, json, null);
             }
             catch (OperationCanceledException operationCancelledException)
-                when (timeoutCts.IsCancellationRequested && !globalToken.IsCancellationRequested)
+                when (timeoutCts.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
             {
                 TimeoutException timeoutException =
                     new TimeoutException($"Provider call exceeded {maxWaitTimeout} milliseconds.",
@@ -455,7 +464,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             // and floats beside the request while all its siblings hang under it.
             string requestSpanId = await this.requestTraceBroker.GetRequestSpanIdAsync();
 
-            bool accepted = this.dispatcher.TryDispatch(async token =>
+            bool accepted = this.dispatcher.TryDispatch(async cancellationToken =>
             {
                 DateTimeOffset persistStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
                 var persistStopwatch = Stopwatch.StartNew();
@@ -492,7 +501,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                         Status = status,
                         ErrorCode = errorCode,
                         PayloadBytes = json?.Length
-                    }, token);
+                    }, cancellationToken);
                 }
 
                 try
@@ -500,7 +509,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                     await using IStorageBroker storageBroker =
                         await this.storageBrokerFactory.CreateStorageBrokerAsync();
 
-                    await storageBroker.InsertFhirRecordAsync(fhirRecord);
+                    await storageBroker.InsertFhirRecordAsync(fhirRecord, cancellationToken);
                     await RecordPersistSpanAsync(MetricStatus.Succeeded, errorCode: null);
                 }
                 catch (Exception exception)

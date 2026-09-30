@@ -26,6 +26,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             {
                 return await returningStructuredRecordsResponseFunction();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (InvalidArgumentPatientOrchestrationException invalidArgumentPatientOrchestrationException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentPatientOrchestrationException);
@@ -106,6 +110,10 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             try
             {
                 await returningNothingFunction();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (InvalidArgumentPatientOrchestrationException invalidArgumentPatientOrchestrationException)
             {

@@ -27,6 +27,10 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             {
                 return await returningProviderFunction();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (NullProviderServiceException nullProviderServiceException)
             {
                 throw await CreateAndLogValidationException(nullProviderServiceException);
@@ -102,6 +106,10 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             {
                 return await returningProvidersFunction();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (SqlException sqlException)
             {
                 var failedStorageProviderServiceException =
@@ -129,6 +137,10 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             try
             {
                 return await returningProviderListFunction();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (SqlException sqlException)
             {

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Brokers.DateTimes;
 using LondonFhirService.Core.Brokers.Loggings;
@@ -64,6 +66,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.FhirRecordDiffe
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
+
+        public static TheoryData<Exception> CancellationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            return new TheoryData<Exception>
+            {
+                new OperationCanceledException(randomMessage),
+                new OperationCanceledException(cancellationTokenSource.Token),
+                new TaskCanceledException(randomMessage)
+            };
+        }
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();

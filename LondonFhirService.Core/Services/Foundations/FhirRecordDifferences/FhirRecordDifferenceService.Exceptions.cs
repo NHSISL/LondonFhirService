@@ -25,6 +25,10 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
             {
                 return await returningFhirRecordDifferenceFunction();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (NullFhirRecordDifferenceException nullFhirRecordDifferenceException)
             {
                 throw await CreateAndLogValidationException(nullFhirRecordDifferenceException);
@@ -99,6 +103,10 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
             try
             {
                 return await returningFhirRecordDifferencesFunction();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (SqlException sqlException)
             {

@@ -38,6 +38,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 fhirRecord = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecord);
                 await ValidateFhirRecordOnAdd(fhirRecord);
 
@@ -46,13 +47,19 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
 
         public ValueTask<IQueryable<FhirRecord>> RetrieveAllFhirRecordsAsync(
             CancellationToken cancellationToken = default) =>
-            TryCatch(async () => await this.storageBroker.SelectAllFhirRecordsAsync(cancellationToken));
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.storageBroker.SelectAllFhirRecordsAsync(cancellationToken);
+            });
 
         public ValueTask<FhirRecord> RetrieveFhirRecordByIdAsync(
             Guid fhirRecordId,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ValidateFhirRecordId(fhirRecordId);
 
                 FhirRecord maybeFhirRecord = await this.storageBroker
@@ -106,6 +113,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ValidateFhirRecordId(fhirRecordId);
 
                 string claimedBy = await this.securityAuditBroker.GetUserIdAsync();
@@ -128,6 +136,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 fhirRecord = await this.securityAuditBroker.ApplyModifyAuditValuesAsync(fhirRecord);
 
                 await ValidateFhirRecordOnModify(fhirRecord);
@@ -152,6 +161,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ValidateFhirRecordId(fhirRecordId);
 
                 FhirRecord maybeFhirRecord = await this.storageBroker

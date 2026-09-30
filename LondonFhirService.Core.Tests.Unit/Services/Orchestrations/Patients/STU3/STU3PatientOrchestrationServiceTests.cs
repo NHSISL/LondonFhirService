@@ -318,6 +318,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             };
         }
 
+        public static TheoryData<Exception> CancellationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            return new TheoryData<Exception>
+            {
+                new OperationCanceledException(randomMessage),
+                new OperationCanceledException(cancellationTokenSource.Token),
+                new System.Threading.Tasks.TaskCanceledException(randomMessage)
+            };
+        }
+
         /// <summary>
         /// Metric spans are cross cutting - every path through this service records them, and
         /// asserting on each one in every behavioural test would bury what the test is actually

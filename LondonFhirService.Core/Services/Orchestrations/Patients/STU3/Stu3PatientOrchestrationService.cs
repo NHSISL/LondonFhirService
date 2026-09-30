@@ -73,6 +73,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var stopwatch = Stopwatch.StartNew();
             ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
@@ -147,7 +148,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                 DateTimeOffset discoveryStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
                 var discoveryStopwatch = Stopwatch.StartNew();
 
-                (primaryProvider, activeProviders) = await GetProviderInfo();
+                (primaryProvider, activeProviders) = await GetProviderInfo(cancellationToken);
 
                 discoveryStopwatch.Stop();
 
@@ -207,11 +208,15 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             Guid correlationId,
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
             await CheckAccessPermissionsAsync(
                 nhsNumber,
                 correlationId,
                 parentId: null,
-                cancellationToken));
+                cancellationToken);
+        });
 
         /// <summary>
         /// The access decision itself. Kept separate from the public ValidateAccess so
@@ -401,13 +406,14 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             }
         }
 
-        private async ValueTask<(Provider primaryProvider, List<Provider> activeProvider)> GetProviderInfo()
+        private async ValueTask<(Provider primaryProvider, List<Provider> activeProvider)> GetProviderInfo(
+            CancellationToken cancellationToken = default)
         {
             // Materialised by the broker rather than enumerated here. The service returns a
             // deferred queryable, so a synchronous ToList would run the round trip on this thread
             // and park a thread-pool worker inside reader I/O for its duration.
             List<Provider> allProviders =
-                await this.providerService.RetrieveAllProvidersAsListAsync();
+                await this.providerService.RetrieveAllProvidersAsListAsync(cancellationToken);
 
             List<Provider> orderedProviders = allProviders
                 .Where(provider => provider.FhirVersion == "STU3")

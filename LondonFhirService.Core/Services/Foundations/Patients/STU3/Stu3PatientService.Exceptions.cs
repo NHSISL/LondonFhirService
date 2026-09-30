@@ -24,6 +24,10 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             {
                 return await returningBundleListFunction();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (InvalidArgumentsPatientServiceException invalidArgumentsPatientServiceException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentsPatientServiceException);
@@ -35,14 +39,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                   && exception.InnerException?.InnerException is OperationCanceledException cancelledInnerException
                   && cancelledInnerException.CancellationToken.IsCancellationRequested)
             {
-                var cancelledPatientServiceException =
-                    new CancelledPatientServiceException(
-                        message: "Patient service was cancelled, please try again.",
-                        innerException: cancelledInnerException,
-                        data: cancelledInnerException.Data);
-
-                throw await CreateAndLogDependencyException(cancelledPatientServiceException);
+                // The provider library has already put the caller's cancellation inside one of
+                // its own categories. It is unwrapped rather than wrapped a second time, so the
+                // caller gets back the cancellation it caused, and nothing is logged as an error.
+                throw cancelledInnerException;
             }
+            // A cancellation whose token was never cancelled is the transport giving up - an
+            // HttpClient timeout or a dropped connection - rather than the caller, so it stays a
+            // failure.
             catch (Exception exception)
                when ((exception is IFhirValidationException
                    || exception is IFhirDependencyException
@@ -103,6 +107,10 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             {
                 return await returningStringListFunction();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (InvalidArgumentsPatientServiceException invalidArgumentsPatientServiceException)
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidArgumentsPatientServiceException);
@@ -114,14 +122,14 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
                   && exception.InnerException?.InnerException is OperationCanceledException cancelledInnerException
                   && cancelledInnerException.CancellationToken.IsCancellationRequested)
             {
-                var cancelledPatientServiceException =
-                    new CancelledPatientServiceException(
-                        message: "Patient service was cancelled, please try again.",
-                        innerException: cancelledInnerException,
-                        data: cancelledInnerException.Data);
-
-                throw await CreateAndLogDependencyException(cancelledPatientServiceException);
+                // The provider library has already put the caller's cancellation inside one of
+                // its own categories. It is unwrapped rather than wrapped a second time, so the
+                // caller gets back the cancellation it caused, and nothing is logged as an error.
+                throw cancelledInnerException;
             }
+            // A cancellation whose token was never cancelled is the transport giving up - an
+            // HttpClient timeout or a dropped connection - rather than the caller, so it stays a
+            // failure.
             catch (Exception exception)
                when ((exception is IFhirValidationException
                    || exception is IFhirDependencyException

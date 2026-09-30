@@ -274,7 +274,7 @@ namespace LondonFhirService.Manage.Brokers.Https
         private static async Task<string> GuardTimeout(
             Task<string> readTask,
             CancellationTokenSource readCancellation,
-            CancellationToken callerToken)
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -282,7 +282,7 @@ namespace LondonFhirService.Manage.Brokers.Https
             }
             catch (OperationCanceledException operationCanceledException)
                 when (readCancellation.IsCancellationRequested
-                    && callerToken.IsCancellationRequested is false)
+                    && cancellationToken.IsCancellationRequested is false)
             {
                 throw new TaskCanceledException(
                     message: "The response body was not read within the configured timeout.",
