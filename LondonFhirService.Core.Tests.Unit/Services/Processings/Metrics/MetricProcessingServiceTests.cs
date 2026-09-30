@@ -4,6 +4,8 @@
 
 using System;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
@@ -82,5 +84,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Processings.Metrics
 
         private static Expression<Func<Xeption, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => actualException.SameExceptionAs(expectedException);
+
+        public static TheoryData<Exception> CancellationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            return new TheoryData<Exception>
+            {
+                new OperationCanceledException(randomMessage),
+                new OperationCanceledException(cancellationTokenSource.Token),
+                new TaskCanceledException(randomMessage)
+            };
+        }
     }
 }

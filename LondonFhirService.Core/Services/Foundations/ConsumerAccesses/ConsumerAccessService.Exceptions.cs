@@ -30,6 +30,9 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidConsumerAccessServiceException);
             }
+            // The dependency's own timeout, not the caller cancelling: an HttpClient timeout
+            // surfaces as a cancelled task wrapping a TimeoutException. Ordered before the plain
+            // cancellation catch, which would otherwise take it.
             catch (OperationCanceledException operationCanceledException)
                 when (operationCanceledException.InnerException is TimeoutException)
             {
@@ -51,15 +54,11 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
 
                 throw await CreateAndLogDependencyExceptionAsync(timedOutConsumerAccessServiceException);
             }
-            catch (OperationCanceledException operationCanceledException)
+            // Never wrapped and never logged. A caller that cancels gets the cancellation it asked
+            // for, not a dependency error that reads like the access service broke.
+            catch (OperationCanceledException)
             {
-                var cancelledConsumerAccessServiceException =
-                    new CancelledConsumerAccessServiceException(
-                        message: "Consumer access request was cancelled, please try again.",
-                        innerException: operationCanceledException,
-                        data: operationCanceledException.Data);
-
-                throw await CreateAndLogDependencyExceptionAsync(cancelledConsumerAccessServiceException);
+                throw;
             }
             catch (HttpRequestException httpRequestException)
             {

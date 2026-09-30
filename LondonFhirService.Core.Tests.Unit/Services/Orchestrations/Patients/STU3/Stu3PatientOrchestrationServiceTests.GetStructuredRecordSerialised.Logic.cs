@@ -29,7 +29,8 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             string inputDateOfBirth = DateTime.Now.ToString("yyyy-MM-dd");
             bool? inputDemographicsOnly = false;
             bool? inputActivePatientsOnly = true;
-            CancellationToken cancellationToken = CancellationToken.None;
+            using var cancellationTokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
             List<(string Provider, string Json)> randomBundles = CreateRandomBundles();
             List<(string Provider, string Json)> expectedBundles = randomBundles;
             Guid correlationId = Guid.NewGuid();
@@ -78,7 +79,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         .ReturnsAsync(returnedConsumerAccess);
 
             this.providerServiceMock.Setup(service =>
-                service.RetrieveAllProvidersAsListAsync())
+                service.RetrieveAllProvidersAsListAsync(cancellationToken))
                     .ReturnsAsync(allProviders);
 
             List<Provider> activeProviders = new List<Provider>
@@ -121,11 +122,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             this.consumerAccessServiceMock.Verify(service =>
                 service.CheckConsumerAccessAsync(
                     It.Is(SameValidateAccessRequestAs(userId, inputNhsNumber, correlationId)),
-                    default),
+                    cancellationToken),
                         Times.Once);
 
             this.providerServiceMock.Verify(service =>
-                service.RetrieveAllProvidersAsListAsync(),
+                service.RetrieveAllProvidersAsListAsync(cancellationToken),
                     Times.Once);
 
             this.patientServiceMock.Verify(service =>

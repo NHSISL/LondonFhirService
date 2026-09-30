@@ -149,5 +149,68 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             this.patientCoordinationServiceMock.VerifyNoOtherCalls();
             this.correlationBrokerMock.VerifyNoOtherCalls();
         }
+
+        [Theory]
+        [MemberData(nameof(CancellationExceptions))]
+        public async Task ShouldPassCancellationThroughOnGetStructuredRecordAsync(
+            Exception cancellationException)
+        {
+            // given
+            string randomNhsNumber = GetRandomString();
+            string inputNhsNumber = randomNhsNumber;
+            DateTimeOffset randomDateOfBirth = GetRandomDateTimeOffset();
+            string inputDateOfBirth = randomDateOfBirth.ToString("yyyy-MM-dd");
+            bool inputDemographicsOnly = false;
+            bool inputIncludeInactivePatients = false;
+            CancellationToken cancellationToken = CancellationToken.None;
+            Guid correlationId = Guid.NewGuid();
+
+            Parameters inputParameters = CreateRandomGetStructuredRecordParameters(
+                nhsNumber: inputNhsNumber,
+                dateOfBirth: inputDateOfBirth,
+                demographicsOnly: inputDemographicsOnly,
+                includeInactivePatients: inputIncludeInactivePatients);
+
+            this.correlationBrokerMock.Setup(broker =>
+                broker.GetCorrelationIdAsync())
+                    .ReturnsAsync(correlationId);
+
+            this.patientCoordinationServiceMock.Setup(coordination =>
+                coordination.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    inputNhsNumber,
+                    inputDateOfBirth,
+                    inputDemographicsOnly,
+                    inputIncludeInactivePatients,
+                    cancellationToken))
+                    .ThrowsAsync(cancellationException);
+
+            // when
+            Func<Task> getStructuredRecord = async () =>
+                await this.patientController.GetStructuredRecord(inputParameters, cancellationToken);
+
+            // then
+            // Not mapped to a status code here. The request timeout middleware answers a timed
+            // out request with 504, and a client that hung up is not sent anything at all.
+            (await getStructuredRecord.Should().ThrowAsync<OperationCanceledException>())
+                .Which.Should().BeSameAs(cancellationException);
+
+            this.patientCoordinationServiceMock.Verify(coordination =>
+                coordination.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    inputNhsNumber,
+                    inputDateOfBirth,
+                    inputDemographicsOnly,
+                    inputIncludeInactivePatients,
+                    cancellationToken),
+                        Times.Once);
+
+            this.correlationBrokerMock.Verify(broker =>
+                broker.GetCorrelationIdAsync(),
+                    Times.Once);
+
+            this.patientCoordinationServiceMock.VerifyNoOtherCalls();
+            this.correlationBrokerMock.VerifyNoOtherCalls();
+        }
     }
 }

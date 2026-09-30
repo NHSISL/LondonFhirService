@@ -48,6 +48,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Awaited, unlike the broker's fire and forget logging verbs. This is the API
             // surface: a caller posting an audit is asking for the stored entity back, so it
             // has to wait for the write and see any failure.
@@ -66,6 +68,8 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
         public ValueTask<Audit> AddAuditAsync(Audit audit, CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Stamped here, overwriting whatever the caller sent. This entity arrived on the API
             // surface from a request body, so its CreatedBy and CreatedDate are claims rather
             // than facts. The library's stamping only fills gaps, which is correct for entries
@@ -82,20 +86,35 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             int batchSize = 10000,
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
-            await this.auditAndMetricBroker.BulkLogAuditsAsync(audits, batchSize, cancellationToken));
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await this.auditAndMetricBroker.BulkLogAuditsAsync(audits, batchSize, cancellationToken);
+        });
 
         public ValueTask<IQueryable<Audit>> RetrieveAllAuditsAsync(CancellationToken cancellationToken = default) =>
-            TryCatch(async () => await this.auditAndMetricBroker.RetrieveAllAuditsAsync(cancellationToken));
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.auditAndMetricBroker.RetrieveAllAuditsAsync(cancellationToken);
+            });
 
         public ValueTask<Audit> RetrieveAuditByIdAsync(
             Guid auditId,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
-                await this.auditAndMetricBroker.RetrieveAuditByIdAsync(auditId, cancellationToken));
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.auditAndMetricBroker.RetrieveAuditByIdAsync(auditId, cancellationToken);
+            });
 
         public ValueTask<Audit> ModifyAuditAsync(Audit audit, CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // UpdatedBy and UpdatedDate come from the principal, never the request body. The
             // creation stamp is protected further down, where the stored row is available to
             // compare against.
@@ -110,12 +129,20 @@ namespace LondonFhirService.Core.Services.Foundations.Audits
             Guid auditId,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
-                await this.auditAndMetricBroker.RemoveAuditByIdAsync(auditId, cancellationToken));
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.auditAndMetricBroker.RemoveAuditByIdAsync(auditId, cancellationToken);
+            });
 
         public ValueTask<int> PurgeAuditsOlderThanRetentionPeriodAsync(
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
-                await this.auditAndMetricBroker
-                    .PurgeAuditsOlderThanRetentionPeriodAsync(cancellationToken));
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.auditAndMetricBroker
+                    .PurgeAuditsOlderThanRetentionPeriodAsync(cancellationToken);
+            });
     }
 }

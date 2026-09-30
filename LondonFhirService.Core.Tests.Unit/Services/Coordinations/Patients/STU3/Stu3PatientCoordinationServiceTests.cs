@@ -18,6 +18,7 @@ using LondonFhirService.Core.Services.Coordinations.Patients.STU3;
 using LondonFhirService.Core.Services.Orchestrations.FhirReconciliations.STU3;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
 using System.Threading;
+using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using Moq;
 using Tynamix.ObjectFiller;
@@ -162,6 +163,20 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                 new FhirReconciliationOrchestrationServiceException(
                     message: "FHIR reconciliation orchestration service error occurred, please contact support.",
                     innerException)
+            };
+        }
+
+        public static TheoryData<Exception> CancellationExceptions()
+        {
+            string randomMessage = GetRandomString();
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            return new TheoryData<Exception>
+            {
+                new OperationCanceledException(randomMessage),
+                new OperationCanceledException(cancellationTokenSource.Token),
+                new TaskCanceledException(randomMessage)
             };
         }
 

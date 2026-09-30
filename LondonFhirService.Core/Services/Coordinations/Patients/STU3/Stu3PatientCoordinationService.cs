@@ -52,6 +52,7 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var stopwatch = Stopwatch.StartNew();
             ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
@@ -208,9 +209,11 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
         });
 
         /// <summary>
-        /// A cancellation or timeout that has already been localised arrives here wrapped in a
-        /// dependency exception, so the cause survives only in the inner chain. Walking it keeps
-        /// the root span's status honest instead of recording every localised abort as Failed.
+        /// A timeout that has already been localised arrives here wrapped in a dependency
+        /// exception, so the cause survives only in the inner chain. Walking it keeps the root
+        /// span's status honest instead of recording every localised abort as Failed. The caller's
+        /// own cancellation is never wrapped and is caught above, but a dependency outside this
+        /// service's control may still bury one, so the chain is checked for it too.
         /// </summary>
         private static MetricStatus ClassifyFailure(Exception exception)
         {

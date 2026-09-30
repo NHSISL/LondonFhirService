@@ -26,6 +26,10 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             {
                 return await returningFhirRecordFunction();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (NullFhirRecordException nullFhirRecordException)
             {
                 throw await CreateAndLogValidationException(nullFhirRecordException);
@@ -101,6 +105,10 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             {
                 return await returningFhirRecordsFunction();
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (SqlException sqlException)
             {
                 var failedFhirRecordStorageException =
@@ -126,6 +134,10 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecords
             try
             {
                 return await returningBooleanFunction();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (InvalidFhirRecordException invalidFhirRecordException)
             {

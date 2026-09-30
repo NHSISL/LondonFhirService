@@ -1085,7 +1085,7 @@ components:
     name: ConsumerAccessService
     layer: foundation
     col: 10
-    description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService's access check. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and timeout / cancellation onto TimedOut- and CancelledConsumerAccessServiceException. It takes no storage broker — consumer access is no longer held locally."
+    description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService's access check. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and a timeout (including an HttpClient timeout, a cancelled task wrapping a TimeoutException) onto TimedOutConsumerAccessServiceException. The caller's own cancellation is rethrown untouched and never logged. It takes no storage broker — consumer access is no longer held locally."
     methods:
       - CheckConsumerAccessAsync
     calls:
@@ -1176,7 +1176,7 @@ components:
     name: Stu3PatientService
     layer: foundation
     col: 10
-    description: "Fans out to every active provider in parallel (Task.WhenAll), each call wrapped in a linked CancellationTokenSource that cancels after PatientServiceConfig.MaxProviderWaitTimeMilliseconds. Each returned bundle is queued for persistence as a Pending FhirRecord through the dispatcher, so the write leaves the request's critical path, and each provider call emits a metric span — including a failure span when a provider times out or throws. Providers that do not support Patients/$GetStructuredRecord are dropped before the fan-out."
+    description: "Fans out to every active provider in parallel (Task.WhenAll), each call wrapped in a linked CancellationTokenSource that cancels after PatientServiceConfig.MaxProviderWaitTimeMilliseconds. Each returned bundle is queued for persistence as a Pending FhirRecord through the dispatcher, so the write leaves the request's critical path, and each provider call emits a metric span — including a failure span when a provider times out or throws. A provider timeout stays that provider's failure while the request carries on, but the caller's own cancellation is rethrown once the fan-out settles rather than logged as provider errors. Providers that do not support Patients/$GetStructuredRecord are dropped before the fan-out."
     methods:
       - GetStructuredRecordSerialisedAsync
       - QueueFhirRecordPersistenceAsync

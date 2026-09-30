@@ -38,6 +38,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 fhirRecordDifference = await this.securityAuditBroker.ApplyAddAuditValuesAsync(fhirRecordDifference);
                 await ValidateFhirRecordDifferenceOnAdd(fhirRecordDifference);
 
@@ -46,13 +47,19 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
 
         public ValueTask<IQueryable<FhirRecordDifference>> RetrieveAllFhirRecordDifferencesAsync(
             CancellationToken cancellationToken = default) =>
-            TryCatch(async () => await this.storageBroker.SelectAllFhirRecordDifferencesAsync(cancellationToken));
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.storageBroker.SelectAllFhirRecordDifferencesAsync(cancellationToken);
+            });
 
         public ValueTask<FhirRecordDifference> RetrieveFhirRecordDifferenceByIdAsync(
             Guid fhirRecordDifferenceId,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ValidateFhirRecordDifferenceId(fhirRecordDifferenceId);
 
                 FhirRecordDifference maybeFhirRecordDifference = await this.storageBroker
@@ -68,6 +75,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 fhirRecordDifference = await this.securityAuditBroker.ApplyModifyAuditValuesAsync(fhirRecordDifference);
 
                 await ValidateFhirRecordDifferenceOnModify(fhirRecordDifference);
@@ -92,6 +100,7 @@ namespace LondonFhirService.Core.Services.Foundations.FhirRecordDifferences
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ValidateFhirRecordDifferenceId(fhirRecordDifferenceId);
 
                 FhirRecordDifference maybeFhirRecordDifference = await this.storageBroker

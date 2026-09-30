@@ -39,6 +39,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 provider = await this.securityAuditBroker.ApplyAddAuditValuesAsync(provider);
                 await ValidateProviderOnAdd(provider);
 
@@ -47,17 +48,28 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
 
         public ValueTask<IQueryable<Provider>> RetrieveAllProvidersAsync(
             CancellationToken cancellationToken = default) =>
-            TryCatch(async () => await this.storageBroker.SelectAllProvidersAsync(cancellationToken));
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.storageBroker.SelectAllProvidersAsync(cancellationToken);
+            });
 
         public ValueTask<List<Provider>> RetrieveAllProvidersAsListAsync(
             CancellationToken cancellationToken = default) =>
-            TryCatch(async () => await this.storageBroker.SelectAllProvidersAsListAsync(cancellationToken));
+            TryCatch(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return await this.storageBroker.SelectAllProvidersAsListAsync(cancellationToken);
+            });
 
         public ValueTask<Provider> RetrieveProviderByIdAsync(
             Guid providerId,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ValidateProviderId(providerId);
 
                 Provider maybeProvider = await this.storageBroker
@@ -73,6 +85,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 provider = await this.securityAuditBroker.ApplyModifyAuditValuesAsync(provider);
                 await ValidateProviderOnModify(provider);
 
@@ -96,6 +109,7 @@ namespace LondonFhirService.Core.Services.Foundations.Providers
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ValidateProviderId(providerId);
 
                 Provider maybeProvider = await this.storageBroker

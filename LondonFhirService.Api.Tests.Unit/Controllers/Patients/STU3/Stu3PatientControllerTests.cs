@@ -183,5 +183,19 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                     innerException: someInnerException)
             };
         }
+
+        public static TheoryData<Exception> CancellationExceptions()
+        {
+            string someMessage = GetRandomString();
+            var cancellationTokenSource = new System.Threading.CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
+            return new TheoryData<Exception>
+            {
+                new OperationCanceledException(someMessage),
+                new OperationCanceledException(cancellationTokenSource.Token),
+                new System.Threading.Tasks.TaskCanceledException(someMessage)
+            };
+        }
     }
 }
