@@ -60,6 +60,16 @@ namespace LondonFhirService.Api.Dispatchers
 
         public bool TryDispatch(Func<CancellationToken, ValueTask> work)
         {
+            // Channel<T> takes a null happily for a reference type, so without this a null would
+            // occupy a queue slot and surface much later as a NullReferenceException in the drain
+            // loop - logged against the write rather than the caller that never supplied one.
+            if (work is null)
+            {
+                Interlocked.Increment(ref this.droppedCount);
+
+                return false;
+            }
+
             if (this.channel.Writer.TryWrite(work))
             {
                 return true;

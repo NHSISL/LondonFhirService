@@ -112,6 +112,31 @@ namespace LondonFhirService.Api.Tests.Unit.Dispatchers
         }
 
         [Fact]
+        public void ShouldRefuseAndCountNullWorkWithoutQueueingIt()
+        {
+            // given
+            AuditAndMetricsDispatcher dispatcher = CreateDispatcher(capacity: 1);
+            Func<CancellationToken, ValueTask> noWork = null;
+
+            // when
+            bool acceptedNull = dispatcher.TryDispatch(noWork);
+            bool acceptedWork = dispatcher.TryDispatch(_ => ValueTask.CompletedTask);
+
+            // then
+            // Channel<T> takes a null happily for a reference type. Queued, it would hold the only
+            // slot here - refusing the real work behind it - and surface much later as a
+            // NullReferenceException in the drain loop, logged against the write rather than the
+            // caller that never supplied one.
+            acceptedNull.Should().BeFalse();
+            acceptedWork.Should().BeTrue();
+            dispatcher.DroppedCount.Should().Be(1);
+            dispatcher.RefusedAfterCloseCount.Should().Be(0);
+            dispatcher.Reader.TryRead(out Func<CancellationToken, ValueTask> queuedWork).Should().BeTrue();
+            queuedWork.Should().NotBeNull();
+            dispatcher.Reader.TryRead(out _).Should().BeFalse();
+        }
+
+        [Fact]
         public void ShouldRefuseWorkOnceCompleted()
         {
             // given
