@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -28,7 +29,7 @@ namespace LondonFhirService.Core.Brokers.ConsumerAccesses
             this.tokenCredential = tokenCredential;
         }
 
-        public async ValueTask<ConsumerAccess> CheckConsumerAccessAsync(
+        public async ValueTask<ConsumerAccessResponse> CheckConsumerAccessAsync(
             ValidateAccessRequest request,
             CancellationToken cancellationToken = default)
         {
@@ -47,15 +48,39 @@ namespace LondonFhirService.Core.Brokers.ConsumerAccesses
             httpRequestMessage.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", accessToken.Token);
 
-            HttpResponseMessage httpResponseMessage = await this.httpClient
+            using HttpResponseMessage httpResponseMessage = await this.httpClient
                 .SendAsync(httpRequestMessage, cancellationToken)
                 .ConfigureAwait(false);
 
-            httpResponseMessage.EnsureSuccessStatusCode();
+            EnsureAnsweredStatusCode(httpResponseMessage);
 
-            return await httpResponseMessage.Content
-                .ReadFromJsonAsync<ConsumerAccess>(cancellationToken)
+            string content = await httpResponseMessage.Content
+                .ReadAsStringAsync(cancellationToken)
                 .ConfigureAwait(false);
+
+            return new ConsumerAccessResponse
+            {
+                StatusCode = httpResponseMessage.StatusCode,
+                Content = content
+            };
+        }
+
+        /// <summary>
+        /// EnsureSuccessStatusCode, except for the two statuses that are the dependency answering
+        /// rather than failing: 401, it does not know the consumer, and 403, it refuses the access
+        /// - with the same Access body a 200 carries. Every other status still fails with the same
+        /// HttpRequestException as ever, so a validation or server error from the dependency stays
+        /// a dependency failure. The one check a broker cannot avoid when its resource speaks in
+        /// more than one status; what each answer means is left to the service.
+        /// </summary>
+        private static void EnsureAnsweredStatusCode(HttpResponseMessage httpResponseMessage)
+        {
+            if (httpResponseMessage.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                return;
+            }
+
+            httpResponseMessage.EnsureSuccessStatusCode();
         }
     }
 }

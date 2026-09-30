@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
@@ -67,6 +69,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 CorrelationId = Guid.NewGuid()
             };
 
+        /// <summary>
+        /// The broker hands back the dependency's status and body verbatim, so a test states the
+        /// answer the way the dependency would have sent it: serialised, under a status.
+        /// </summary>
+        private static ConsumerAccessResponse CreateConsumerAccessResponse(
+            HttpStatusCode statusCode,
+            ConsumerAccess consumerAccess) =>
+            new ConsumerAccessResponse
+            {
+                StatusCode = statusCode,
+                Content = JsonSerializer.Serialize(consumerAccess)
+            };
+
         private static List<string> CreateRandomStrings() =>
             Enumerable.Range(start: 1, count: GetRandomNumber())
                 .Select(_ => GetRandomString()).ToList();
@@ -85,7 +100,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             return new TheoryData<Exception>
             {
                 new HttpRequestException(randomMessage),
-                new HttpRequestException(randomMessage, new Exception(randomMessage))
+                new HttpRequestException(randomMessage, new Exception(randomMessage)),
+
+                // What the broker throws for any status that is not an answer - the same
+                // EnsureSuccessStatusCode failure as before 401 and 403 became answers.
+                new HttpRequestException(randomMessage, null, HttpStatusCode.BadRequest),
+                new HttpRequestException(randomMessage, null, HttpStatusCode.InternalServerError)
             };
         }
 

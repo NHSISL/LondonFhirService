@@ -11,10 +11,12 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
+using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
 using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using LondonFhirService.Core.Services.Orchestrations.Patients.STU3;
 using Moq;
+using Xeptions;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU3
@@ -287,6 +289,109 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                     It.IsAny<CancellationToken>()),
                         Times.Never);
 
+            AcceptMetricSpans();
+            this.consumerAccessServiceMock.VerifyNoOtherCalls();
+            this.securityBrokerMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task
+            ShouldThrowValidationExceptionOnValidateAccessIfConsumerAccessDoesNotKnowTheConsumerAndLogItAsync()
+        {
+            // given
+            string userId = GetRandomString();
+            User randomUser = CreateRandomUser(userId);
+            User outputUser = randomUser;
+            Guid correlationId = Guid.NewGuid();
+            string randomNhsNumber = GetRandomStringWithLengthOf(10);
+            string inputNhsNumber = randomNhsNumber;
+            string auditType = "STU3-Patient-GetStructuredRecordSerialised";
+            string message = $"Parameters:  {{ nhsNumber = \"{inputNhsNumber}\" }}";
+
+            ConsumerAccessServiceDependencyValidationException unknownConsumerException =
+                CreateUnknownConsumerAccessServiceDependencyValidationException();
+
+            JsonSerializerOptions options = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles
+            };
+
+            string currentUserJson = JsonSerializer.Serialize(outputUser, options);
+
+            // The same exception, with the same message, as when this service cannot identify the
+            // caller itself - so the consumer is answered exactly as it always is for an unknown
+            // consumer. The dependency's answer is kept underneath it for the log.
+            var unauthorizedPatientOrchestrationException =
+                new UnauthorizedPatientOrchestrationException(
+                    message: "Current consumer is not a valid consumer.",
+                    innerException: unknownConsumerException.InnerException as Xeption);
+
+            var expectedPatientOrchestrationValidationException =
+                new PatientOrchestrationValidationException(
+                    message: "Patient orchestration validation error occurred, please try again.",
+                    innerException: unauthorizedPatientOrchestrationException);
+
+            this.securityBrokerMock.Setup(broker =>
+                broker.GetCurrentUserAsync())
+                    .ReturnsAsync(outputUser);
+
+            this.consumerAccessServiceMock.Setup(service =>
+                service.CheckConsumerAccessAsync(
+                    It.Is(SameValidateAccessRequestAs(userId, inputNhsNumber, correlationId)),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(unknownConsumerException);
+
+            // when
+            ValueTask validateAccessTask =
+                this.patientOrchestrationService.ValidateAccess(
+                    inputNhsNumber, correlationId, TestContext.Current.CancellationToken);
+
+            PatientOrchestrationValidationException actualPatientOrchestrationValidationException =
+                await Assert.ThrowsAsync<PatientOrchestrationValidationException>(
+                    validateAccessTask.AsTask);
+
+            // then
+            actualPatientOrchestrationValidationException.Should()
+                .BeEquivalentTo(expectedPatientOrchestrationValidationException);
+
+            this.securityBrokerMock.Verify(broker =>
+                broker.GetCurrentUserAsync(),
+                    Times.Once);
+
+            this.consumerAccessServiceMock.Verify(service =>
+                service.CheckConsumerAccessAsync(
+                    It.Is(SameValidateAccessRequestAs(userId, inputNhsNumber, correlationId)),
+                    TestContext.Current.CancellationToken),
+                        Times.Once);
+
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    auditType,
+                    "Check Access Permissions",
+                    message,
+                    correlationId.ToString("N")),
+                        Times.Once);
+
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogInformationAsync(
+                    "Access",
+                    "Check Access Permissions",
+                    currentUserJson,
+                    correlationId.ToString("N")),
+                        Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedPatientOrchestrationValidationException))),
+                        Times.Once);
+
+            // No access decision audit, just as for a caller this service cannot identify: the
+            // consumer was never assessed, so there is no allowed or forbidden to record.
             AcceptMetricSpans();
             this.consumerAccessServiceMock.VerifyNoOtherCalls();
             this.securityBrokerMock.VerifyNoOtherCalls();

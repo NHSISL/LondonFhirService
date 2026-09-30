@@ -172,7 +172,11 @@ Actions).
   single-method passthrough over `ConsumerAccessBroker`. The returned
   `ConsumerAccess` decides the outcome: `IsAccessAllowed == false` audits
   "Access Forbidden" with the returned reason codes and throws; allowed audits
-  "Access Allowed" naming the organisations that granted it. Every allow and
+  "Access Allowed" naming the organisations that granted it. The remote
+  service refuses with a 403 carrying the same body, which
+  `ConsumerAccessService` returns as a refusing `ConsumerAccess`, so it takes
+  the same forbidden path; its 401, an unknown consumer, takes the same
+  unauthorized path as a caller this service cannot identify. Every allow and
   every denial is still written to the audit trail. There is no
   `AccessOrchestrationService` any more — with one service dependency it was
   no longer an orchestration.

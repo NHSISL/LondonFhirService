@@ -30,6 +30,11 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             {
                 throw await CreateAndLogValidationExceptionAsync(invalidConsumerAccessServiceException);
             }
+            catch (UnauthorizedConsumerAccessServiceException unauthorizedConsumerAccessServiceException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    unauthorizedConsumerAccessServiceException);
+            }
             // The dependency's own timeout, not the caller cancelling: an HttpClient timeout
             // surfaces as a cancelled task wrapping a TimeoutException. Ordered before the plain
             // cancellation catch, which would otherwise take it.
@@ -91,6 +96,19 @@ namespace LondonFhirService.Core.Services.Foundations.ConsumerAccesses
             await this.loggingBroker.LogErrorAsync(consumerAccessServiceValidationException);
 
             return consumerAccessServiceValidationException;
+        }
+
+        private async ValueTask<ConsumerAccessServiceDependencyValidationException>
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
+        {
+            var consumerAccessServiceDependencyValidationException =
+                new ConsumerAccessServiceDependencyValidationException(
+                    message: "ConsumerAccess dependency validation error occurred, please fix errors and try again.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(consumerAccessServiceDependencyValidationException);
+
+            return consumerAccessServiceDependencyValidationException;
         }
 
         private async ValueTask<ConsumerAccessServiceDependencyException> CreateAndLogCriticalDependencyExceptionAsync(
