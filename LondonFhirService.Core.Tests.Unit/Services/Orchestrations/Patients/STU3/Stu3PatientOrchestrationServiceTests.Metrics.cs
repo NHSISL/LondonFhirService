@@ -136,6 +136,62 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                         Times.Once);
         }
 
+        [Theory]
+        [MemberData(nameof(UnknownConsumerCauses))]
+        public async Task ShouldRecordTheAccessCheckTheSameWayWhicheverSaysTheConsumerIsUnknownAsync(
+            bool isUnknownToConsumerAccess)
+        {
+            // given
+            string inputNhsNumber = GetRandomString();
+            Guid correlationId = Guid.NewGuid();
+            Guid inputParentId = Guid.NewGuid();
+            Guid accessCheckSpanId = Guid.NewGuid();
+            DateTimeOffset startedAt = GetRandomDateTimeOffset();
+            User randomUser = CreateRandomUser(GetRandomString());
+            User outputUser = isUnknownToConsumerAccess ? randomUser : null;
+            var recordedMetrics = new List<Metric>();
+
+            this.identifierBrokerMock.Setup(broker => broker.GetIdentifierAsync())
+                .ReturnsAsync(accessCheckSpanId);
+
+            this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
+                .ReturnsAsync(startedAt);
+
+            this.securityBrokerMock.Setup(broker => broker.GetCurrentUserAsync())
+                .ReturnsAsync(outputUser);
+
+            this.consumerAccessServiceMock.Setup(service =>
+                service.CheckConsumerAccessAsync(
+                    It.IsAny<ValidateAccessRequest>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(CreateUnknownConsumerAccessServiceDependencyValidationException());
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                    .Callback<Metric, CancellationToken>((metric, _) => recordedMetrics.Add(metric));
+
+            // when
+            Func<Task> getStructuredRecord = async () =>
+                await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    inputNhsNumber,
+                    parentId: inputParentId,
+                    cancellationToken: CancellationToken.None);
+
+            await getStructuredRecord.Should().ThrowAsync<Xeption>();
+
+            // then
+            // One AccessCheck row, failed, and classified identically whichever of the two found
+            // the consumer unknown - so a report sliced on the error code counts both together.
+            Metric accessCheckSpan = recordedMetrics.Should().ContainSingle().Subject;
+            accessCheckSpan.Id.Should().Be(accessCheckSpanId);
+            accessCheckSpan.ParentId.Should().Be(inputParentId);
+            accessCheckSpan.Type.Should().Be(MetricType.AccessCheck);
+            accessCheckSpan.Status.Should().Be(MetricStatus.Failed);
+            accessCheckSpan.ErrorCode.Should().Be("UnauthorizedPatientOrchestrationException");
+            accessCheckSpan.Description.Should().Be("Access check did not complete.");
+        }
+
         [Fact]
         public async Task ShouldRecordProviderRequestsAsFailedWhenTheRequestFailsAsync()
         {
