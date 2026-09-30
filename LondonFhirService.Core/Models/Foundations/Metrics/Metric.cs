@@ -97,8 +97,12 @@ namespace LondonFhirService.Core.Models.Foundations.Metrics
         public string Target { get; set; }
 
         /// <summary>
-        /// Wall clock start. Derived from a single monotonic timestamp taken once per request,
-        /// so sibling spans are directly comparable and never appear to start before their parent.
+        /// Wall clock start, read by this span itself as it begins. There is no shared timestamp
+        /// per request: every span reads the clock once and times itself with its own stopwatch.
+        /// A parent reads the clock before its children start, so a child normally starts at or
+        /// after its parent and sequential siblings sort in the order they ran - but the wall
+        /// clock is not monotonic, and a clock correction between two readings can break either.
+        /// Build the tree from <see cref="ParentId"/>, not by ordering on this.
         /// </summary>
         public DateTimeOffset Started { get; set; }
 
