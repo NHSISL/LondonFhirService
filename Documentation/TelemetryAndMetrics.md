@@ -265,15 +265,16 @@ it.**
 That shared parent is the **HTTP request's own span id**, so the flat group hangs
 *under* the incoming request rather than floating beside it. Flattening and
 anchoring are independent. The span id reaches the replay through
-`IRequestTraceBroker`, a package port that this service's `RequestTraceBroker`
-satisfies from `CorrelationBroker`. The package's `MetricService` reads it while
-the request is still alive and stamps it on `IMetric.RequestSpanId` before the
-write is deferred, because the replay itself runs on a background worker with no
-request left to ask. Without one — a background worker, or a host that passes no
-`IRequestTraceBroker` to `AuditAndMetricsClient` and gets the package's
-`UnknownRequestTraceBroker` — it falls back to a parent derived from the
-correlation id, which groups correctly but places the spans at the top of the
-trace.
+`IRequestTraceBroker`, a package port that this service's `CorrelationBroker`
+implements itself, alongside `ICorrelationBroker` — one scoped instance behind
+both interfaces, rather than a second broker forwarding to it. The package's
+`MetricService` reads it while the request is still alive and stamps it on
+`IMetric.RequestSpanId` before the write is deferred, because the replay itself
+runs on a background worker with no request left to ask. Without one — a
+background worker, or a host that passes no `IRequestTraceBroker` to
+`AuditAndMetricsClient` and gets the package's `UnknownRequestTraceBroker` — it
+falls back to a parent derived from the correlation id, which groups correctly
+but places the spans at the top of the trace.
 
 ### c. Traces — from `ILogger`
 
