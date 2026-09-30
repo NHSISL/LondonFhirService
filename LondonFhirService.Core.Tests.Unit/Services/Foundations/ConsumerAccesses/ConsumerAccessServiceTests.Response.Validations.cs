@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -22,13 +23,19 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
     /// </summary>
     public partial class ConsumerAccessServiceTests
     {
-        [Fact]
-        public async Task ShouldThrowValidationExceptionOnCheckConsumerAccessIfResponseIsNullAndLogItAsync()
+        [Theory]
+        [InlineData(HttpStatusCode.OK)]
+        [InlineData(HttpStatusCode.Forbidden)]
+        public async Task ShouldThrowValidationExceptionOnCheckConsumerAccessIfResponseIsNullAndLogItAsync(
+            HttpStatusCode answeredStatusCode)
         {
             // given
             ValidateAccessRequest randomValidateAccessRequest = CreateRandomValidateAccessRequest();
             ValidateAccessRequest inputValidateAccessRequest = randomValidateAccessRequest;
             ConsumerAccess nullConsumerAccess = null;
+
+            ConsumerAccessResponse returnedConsumerAccessResponse =
+                CreateConsumerAccessResponse(answeredStatusCode, nullConsumerAccess);
 
             var nullConsumerAccessServiceException =
                 new NullConsumerAccessServiceException(
@@ -43,7 +50,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 broker.CheckConsumerAccessAsync(
                     It.IsAny<ValidateAccessRequest>(),
                     It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(nullConsumerAccess);
+                        .ReturnsAsync(returnedConsumerAccessResponse);
 
             // when
             ValueTask<ConsumerAccess> checkConsumerAccessTask =
@@ -86,6 +93,9 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             randomConsumerAccess.AllowedViaInformationSharingAgreements = null;
             ConsumerAccess returnedConsumerAccess = randomConsumerAccess;
 
+            ConsumerAccessResponse returnedConsumerAccessResponse =
+                CreateConsumerAccessResponse(HttpStatusCode.OK, returnedConsumerAccess);
+
             // Snapshotted before the call, because the service normalises the response in place -
             // reading the expectation back off the same instance afterwards would assert nothing.
             ConsumerAccess expectedConsumerAccess = returnedConsumerAccess.DeepClone();
@@ -97,7 +107,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
 
             this.consumerAccessBrokerMock.Setup(broker =>
                 broker.CheckConsumerAccessAsync(inputValidateAccessRequest, cancellationToken))
-                    .ReturnsAsync(returnedConsumerAccess);
+                    .ReturnsAsync(returnedConsumerAccessResponse);
 
             // when
             ConsumerAccess actualConsumerAccess = await this.consumerAccessService
@@ -116,6 +126,124 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             this.consumerAccessBrokerMock.Verify(broker =>
                 broker.CheckConsumerAccessAsync(inputValidateAccessRequest, cancellationToken),
                     Times.Once);
+
+            this.consumerAccessBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnCheckConsumerAccessIfBrokerResponseIsNullAndLogItAsync()
+        {
+            // given
+            ValidateAccessRequest randomValidateAccessRequest = CreateRandomValidateAccessRequest();
+            ValidateAccessRequest inputValidateAccessRequest = randomValidateAccessRequest;
+            ConsumerAccessResponse nullConsumerAccessResponse = null;
+
+            var nullConsumerAccessServiceException =
+                new NullConsumerAccessServiceException(
+                    message: "Consumer access response is null.");
+
+            var expectedConsumerAccessServiceValidationException =
+                new ConsumerAccessServiceValidationException(
+                    message: "ConsumerAccess validation error occurred, please fix errors and try again.",
+                    innerException: nullConsumerAccessServiceException);
+
+            this.consumerAccessBrokerMock.Setup(broker =>
+                broker.CheckConsumerAccessAsync(
+                    It.IsAny<ValidateAccessRequest>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(nullConsumerAccessResponse);
+
+            // when
+            ValueTask<ConsumerAccess> checkConsumerAccessTask =
+                this.consumerAccessService.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, TestContext.Current.CancellationToken);
+
+            ConsumerAccessServiceValidationException actualConsumerAccessServiceValidationException =
+                await Assert.ThrowsAsync<ConsumerAccessServiceValidationException>(
+                    testCode: checkConsumerAccessTask.AsTask);
+
+            // then
+            actualConsumerAccessServiceValidationException.Should()
+                .BeEquivalentTo(expectedConsumerAccessServiceValidationException);
+
+            this.consumerAccessBrokerMock.Verify(broker =>
+                broker.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedConsumerAccessServiceValidationException))),
+                        Times.Once);
+
+            this.consumerAccessBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task
+            ShouldThrowDependencyValidationExceptionOnCheckConsumerAccessIfConsumerIsUnknownAndLogItAsync()
+        {
+            // given
+            ValidateAccessRequest randomValidateAccessRequest = CreateRandomValidateAccessRequest();
+            ValidateAccessRequest inputValidateAccessRequest = randomValidateAccessRequest;
+            string randomProblemDetails = GetRandomString();
+
+            var returnedConsumerAccessResponse = new ConsumerAccessResponse
+            {
+                StatusCode = HttpStatusCode.Unauthorized,
+                Content = randomProblemDetails
+            };
+
+            var unauthorizedConsumerAccessServiceException =
+                new UnauthorizedConsumerAccessServiceException(
+                    message: "Consumer access service does not recognise the consumer.");
+
+            unauthorizedConsumerAccessServiceException.AddData(
+                key: nameof(ConsumerAccessResponse.Content),
+                values: randomProblemDetails);
+
+            var expectedConsumerAccessServiceDependencyValidationException =
+                new ConsumerAccessServiceDependencyValidationException(
+                    message: "ConsumerAccess dependency validation error occurred, please fix errors and try again.",
+                    innerException: unauthorizedConsumerAccessServiceException);
+
+            this.consumerAccessBrokerMock.Setup(broker =>
+                broker.CheckConsumerAccessAsync(
+                    It.IsAny<ValidateAccessRequest>(),
+                    It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(returnedConsumerAccessResponse);
+
+            // when
+            ValueTask<ConsumerAccess> checkConsumerAccessTask =
+                this.consumerAccessService.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, TestContext.Current.CancellationToken);
+
+            ConsumerAccessServiceDependencyValidationException
+                actualConsumerAccessServiceDependencyValidationException =
+                    await Assert.ThrowsAsync<ConsumerAccessServiceDependencyValidationException>(
+                        testCode: checkConsumerAccessTask.AsTask);
+
+            // then
+            // A 401 is the dependency saying it does not know this consumer - an answer about the
+            // caller, not a fault in the dependency. Categorised apart from the critical dependency
+            // failure every non 2xx status used to become, so the orchestration can send it down
+            // the same unauthorized path an unidentified caller takes. The problem details body
+            // travels in Data: an empty one is the tell of a 401 from the dependency's own
+            // authentication rather than from its access decision.
+            actualConsumerAccessServiceDependencyValidationException.Should()
+                .BeEquivalentTo(expectedConsumerAccessServiceDependencyValidationException);
+
+            this.consumerAccessBrokerMock.Verify(broker =>
+                broker.CheckConsumerAccessAsync(
+                    inputValidateAccessRequest, It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(
+                    expectedConsumerAccessServiceDependencyValidationException))),
+                        Times.Once);
 
             this.consumerAccessBrokerMock.VerifyNoOtherCalls();
             this.loggingBrokerMock.VerifyNoOtherCalls();
