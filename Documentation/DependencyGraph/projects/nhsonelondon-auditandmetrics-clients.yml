@@ -237,16 +237,16 @@ components:
         to: API.Dispatcher
         method: TryDispatch
       - from: AddMetricAsync
-        to: RequestTraceBroker
+        to: CorrelationBroker
         method: GetRequestSpanIdAsync
       - from: AddMetricsAsync
-        to: RequestTraceBroker
+        to: CorrelationBroker
         method: GetRequestSpanIdAsync
       - from: LogMetricAsync
-        to: RequestTraceBroker
+        to: CorrelationBroker
         method: GetRequestSpanIdAsync
       - from: LogMetricsAsync
-        to: RequestTraceBroker
+        to: CorrelationBroker
         method: GetRequestSpanIdAsync
       - from: AddMetricAsync
         to: AuditUserBroker

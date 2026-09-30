@@ -414,7 +414,7 @@ components:
     name: CorrelationBroker
     layer: broker
     col: 11
-    description: "The one correlation id belonging to the request in flight, taken from W3C Trace Context rather than minted: ASP.NET parses the caller's traceparent into Activity.Current before any of our code runs, and the trace id becomes the correlation id — same 128 bits, same 32 hex characters, so Guid.ToString(N) of a correlation id IS the trace id. Settled on first read and kept on HttpContext.Items, so the middleware that writes the X-Correlation-Id response header, the exposer that hands the id down to the coordination service, and anything else resolved during the request all read the same value. Registered scoped in the API host only. With no HttpContext, or no W3C activity to read, it falls back to the IdentifierBroker rather than Guid.Empty."
+    description: "The one correlation id belonging to the request in flight, taken from W3C Trace Context rather than minted: ASP.NET parses the caller's traceparent into Activity.Current before any of our code runs, and the trace id becomes the correlation id — same 128 bits, same 32 hex characters, so Guid.ToString(N) of a correlation id IS the trace id. Settled on first read and kept on HttpContext.Items, so the middleware that writes the X-Correlation-Id response header, the exposer that hands the id down to the coordination service, and anything else resolved during the request all read the same value. Registered scoped in the API host only, once per scope behind both ICorrelationBroker and the metric library's IRequestTraceBroker port: it answers that port itself, with the same GetRequestSpanIdAsync, rather than through a forwarding broker - one broker calling another is what The Standard rules out. The metric service asks the port while the request is still alive and carries the answer into the deferred replay, which runs later on a background worker with no request left to ask. With no HttpContext, or no W3C activity to read, it falls back to the IdentifierBroker rather than Guid.Empty."
     methods:
       - GetCorrelationIdAsync
       - GetRequestSpanIdAsync
@@ -422,17 +422,6 @@ components:
       - from: GetCorrelationIdAsync
         to: IdentifierBroker
         method: GetIdentifierAsync
-  - id: RequestTraceBroker
-    name: RequestTraceBroker
-    layer: broker
-    col: 11
-    description: "Satisfies the metric library's request-span port from the correlation broker, the way AuditUserBroker satisfies its identity port from the security broker. The metric service asks for it while the request is still alive and carries the answer into the deferred replay, which runs later on a background worker with no request left to ask. Registered scoped in the API host; a host that registers nothing gets the library's null object and its replayed spans group by trace alone."
-    methods:
-      - GetRequestSpanIdAsync
-    calls:
-      - from: GetRequestSpanIdAsync
-        to: CorrelationBroker
-        method: GetRequestSpanIdAsync
   - id: DateTimeBroker
     name: DateTimeBroker
     layer: broker

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.Identifiers;
 using Microsoft.AspNetCore.Http;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 
 namespace LondonFhirService.Core.Brokers.Correlations
 {
@@ -47,8 +48,16 @@ namespace LondonFhirService.Core.Brokers.Correlations
     /// With no W3C activity to read, a fresh correlation id is drawn and there is no request span
     /// to name. Guid.Empty would validate away at the next layer and stamp every row written
     /// under it with the same meaningless value.
+    ///
+    /// It also answers the metric library's request-span port, IRequestTraceBroker, directly:
+    /// GetRequestSpanIdAsync has the same signature on both interfaces, so the one method serves
+    /// both. That used to be a separate RequestTraceBroker forwarding to this one, which is a
+    /// broker calling a broker. The host registers this class once per scope and resolves both
+    /// interfaces to that instance, so the port and the correlation id always read the same
+    /// settled pair - which matters most for a background worker's scope, where the pair lives
+    /// in this instance rather than on an HttpContext.
     /// </summary>
-    public class CorrelationBroker : ICorrelationBroker
+    public class CorrelationBroker : ICorrelationBroker, IRequestTraceBroker
     {
         public const string CorrelationIdHeaderName = "X-Correlation-Id";
 

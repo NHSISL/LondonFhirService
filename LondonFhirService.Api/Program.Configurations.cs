@@ -652,10 +652,19 @@ public partial class Program
         // Scoped, because the correlation id is per request. The value itself lives on
         // HttpContext.Items, so a second instance within the same request still reads the first
         // one's id - the lifetime is what the broker means, not what makes it work.
-        services.AddScoped<ICorrelationBroker, CorrelationBroker>();
+        //
+        // One instance behind both interfaces. The same broker answers the metric library's
+        // request-span port, and resolving the two separately would give a background worker's
+        // scope - which has no HttpContext, so keeps the pair in the instance - two instances
+        // that each mint their own correlation id for one operation.
+        services.AddScoped<CorrelationBroker>();
 
-        // Scoped for the same reason: it forwards a value captured on the request in flight.
-        services.AddScoped<IRequestTraceBroker, RequestTraceBroker>();
+        services.AddScoped<ICorrelationBroker>(serviceProvider =>
+            serviceProvider.GetRequiredService<CorrelationBroker>());
+
+        services.AddScoped<IRequestTraceBroker>(serviceProvider =>
+            serviceProvider.GetRequiredService<CorrelationBroker>());
+
         services.AddScoped<IAuditAndMetricStorageBroker, AuditAndMetricStorageBroker>();
         services.AddScoped<IAuditUserBroker, AuditUserBroker>();
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();

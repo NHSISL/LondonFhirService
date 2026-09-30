@@ -82,9 +82,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 137 declared components and 589 declared edges draw as
-**134 components · 558 flows** in the single-copy view and **603 nodes ·
-1774 flows** per consumer (137 · 589 and 654 · 1854 with utility brokers on).
+At the last scan, 136 declared components and 588 declared edges draw as
+**133 components · 557 flows** in the single-copy view and **597 nodes ·
+1769 flows** per consumer (136 · 588 and 649 · 1850 with utility brokers on).
 
 > When re-verifying locally, serve on a **fresh port**. The page fetches the data
 > files, and a browser that has already loaded them on that port will keep
@@ -234,10 +234,11 @@ Actions).
   request's own span, so the flat group hangs *under* the incoming request in
   the transaction view rather than beside it — flattening and anchoring are
   independent, and only the second changed. The span id reaches the replay
-  through `IRequestTraceBroker`, a port the host satisfies from
-  `CorrelationBroker`: `MetricService` asks for it while the request is still
-  alive and carries it into the deferred write, because the replay itself runs
-  on a background worker with no request left to ask. Without a request span —
+  through `IRequestTraceBroker`, a port `CorrelationBroker` implements itself
+  alongside `ICorrelationBroker`, rather than a second broker forwarding to it:
+  `MetricService` asks for it while the request is still alive and carries it
+  into the deferred write, because the replay itself runs on a background
+  worker with no request left to ask. Without a request span —
   a background worker, or a host that registers no implementation and gets the
   library's null object — it falls back to a parent derived from the correlation
   id, which groups correctly but places the spans at the top of the trace.

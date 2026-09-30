@@ -24,7 +24,7 @@ components:
         to: AuditUserBroker
         method: null
       - from: IRequestTraceBroker
-        to: RequestTraceBroker
+        to: CorrelationBroker
         method: null
       - from: IAuditAndMetricsDispatcher
         to: API.Dispatcher

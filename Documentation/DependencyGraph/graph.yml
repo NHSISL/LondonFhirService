@@ -175,7 +175,6 @@ roots:
   - ConsumerAccessBroker
   - CsvHelperBroker
   - CorrelationBroker
-  - RequestTraceBroker
   - DateTimeBroker
   - IdentifierBroker
   - LoggingBroker
