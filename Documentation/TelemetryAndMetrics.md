@@ -265,15 +265,16 @@ it.**
 That shared parent is the **HTTP request's own span id**, so the flat group hangs
 *under* the incoming request rather than floating beside it. Flattening and
 anchoring are independent. The span id reaches the replay through
-`IRequestTraceBroker`, a package port that this service's `RequestTraceBroker`
-satisfies from `CorrelationBroker`. The package's `MetricService` reads it while
-the request is still alive and stamps it on `IMetric.RequestSpanId` before the
-write is deferred, because the replay itself runs on a background worker with no
-request left to ask. Without one — a background worker, or a host that passes no
-`IRequestTraceBroker` to `AuditAndMetricsClient` and gets the package's
-`UnknownRequestTraceBroker` — it falls back to a parent derived from the
-correlation id, which groups correctly but places the spans at the top of the
-trace.
+`IRequestTraceBroker`, a package port that this service's `CorrelationBroker`
+implements itself, alongside `ICorrelationBroker` — one scoped instance behind
+both interfaces, rather than a second broker forwarding to it. The package's
+`MetricService` reads it while the request is still alive and stamps it on
+`IMetric.RequestSpanId` before the write is deferred, because the replay itself
+runs on a background worker with no request left to ask. Without one — a
+background worker, or a host that passes no `IRequestTraceBroker` to
+`AuditAndMetricsClient` and gets the package's `UnknownRequestTraceBroker` — it
+falls back to a parent derived from the correlation id, which groups correctly
+but places the spans at the top of the trace.
 
 ### c. Traces — from `ILogger`
 
@@ -332,9 +333,9 @@ The authoritative store, and the only place the true span tree exists.
 | `Type` | `MetricType`, persisted **as text**. |
 | `Name` | What was measured, e.g. a provider friendly name. |
 | `Target` | The stable identifier behind `Name`, e.g. a provider's fully qualified name. Survives a rename. |
-| `Started` | Wall-clock start, from one monotonic timestamp per request, so siblings are comparable and never appear to start before their parent. |
+| `Started` | Wall-clock start (UTC), read by the span itself as it begins. See **How span times are taken** below. |
 | `Completed` | Always `Started + DurationMs`, by construction — never a second clock read. |
-| `DurationMs` | Measured with `Stopwatch`, held as a `double` because the fastest spans are sub-millisecond. |
+| `DurationMs` | Measured with the span's own `Stopwatch`, held as a `double` because the fastest spans are sub-millisecond. |
 | `Status` | `MetricStatus`. |
 | `ErrorCode` | A short classification, never an exception message. |
 | `PayloadBytes` | Provider durations are not comparable without it — a provider returning a large bundle slowly is not necessarily the slower provider. |
@@ -344,6 +345,32 @@ The authoritative store, and the only place the true span tree exists.
 `Type` is text rather than an ordinal because this table is queried ad hoc for
 reporting, where `WHERE Type = 'Provider'` is readable and an ordinal is not, and
 where an enum reorder would silently rewrite the meaning of historic rows.
+
+**How span times are taken.** There is no shared timestamp per request. Every
+span reads the wall clock once, through `IDateTimeBroker`
+(`DateTimeOffset.UtcNow`), as it starts, and starts a `Stopwatch` of its own.
+`DurationMs` is that stopwatch's elapsed time and `Completed` is
+`Started + DurationMs`. A span's duration is therefore exact and monotonic, but
+its place on the timeline is only as good as the wall clock was at the moment
+that span read it. In practice:
+
+- A parent reads the clock before any of its children start, so a child's
+  `Started` is normally at or after its parent's, and sequential siblings —
+  `AccessCheck`, `ProviderRequests`, `Consolidation` — normally sort in the
+  order they ran. The gap between two such readings is real elapsed time, spent
+  on the work in between.
+- Parallel siblings, the `Provider` spans under one `ProviderFanOut`, each read
+  the clock as their own task starts. The differences between their `Started`
+  values reflect when each task actually got going, which is thread scheduling
+  as much as anything the provider did.
+- None of that ordering is guaranteed. The wall clock is not monotonic: if it is
+  stepped or slewed between two readings (an NTP correction, say), a child can
+  appear to start before its parent, or to complete after it. Durations are
+  unaffected, because none is ever the difference of two clock readings.
+
+So build the tree from `ParentId` rather than by sorting on `Started`, compare
+spans by `DurationMs`, and treat the gaps between spans' timestamps as
+approximate.
 
 Indexed on `CorrelationId`, `ParentId`, `CreatedDate`, `Completed`, and the
 composites `(Method, Type, Started)`, `(Name, Started)`, `(Consumer, Started)`.
