@@ -8,6 +8,7 @@ using System.Threading;
 using FluentAssertions;
 using Force.DeepCloner;
 using Hl7.Fhir.Model;
+using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Orchestrations.Patients;
@@ -160,6 +161,135 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
             requestSpan.ParentId.Should().BeNull();
             requestSpan.Status.Should().Be(MetricStatus.Failed);
             requestSpan.ErrorCode.Should().Be(nameof(Exception));
+        }
+
+        [Fact]
+        public async Task ShouldRecordTheRequestSpanAsCancelledIfTheRequestIsAlreadyCancelledAsync()
+        {
+            // given
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+            CancellationToken cancelledToken = cancellationTokenSource.Token;
+            string inputNhsNumber = GetRandomString();
+            Guid correlationId = Guid.NewGuid();
+            Guid requestSpanId = Guid.NewGuid();
+            DateTimeOffset startedAt = GetRandomDateTimeOffset();
+            var recordedMetrics = new List<Metric>();
+
+            this.identifierBrokerMock.Setup(broker => broker.GetIdentifierAsync())
+                .ReturnsAsync(requestSpanId);
+
+            this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
+                .ReturnsAsync(startedAt);
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                    .Callback<Metric, CancellationToken>((metric, _) => recordedMetrics.Add(metric));
+
+            // when
+            Func<Task> getStructuredRecord = async () =>
+                await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    inputNhsNumber,
+                    cancellationToken: cancelledToken);
+
+            // then
+            // A request the caller had already given up on is still a request. Without a root row
+            // it is invisible to every report, and a burst of them is exactly what a client-side
+            // timeout that is set too low looks like.
+            OperationCanceledException actualOperationCanceledException =
+                (await getStructuredRecord.Should().ThrowAsync<OperationCanceledException>()).Which;
+
+            actualOperationCanceledException.CancellationToken.Should().Be(cancelledToken);
+            Metric requestSpan = recordedMetrics.Should().ContainSingle().Subject;
+            requestSpan.Id.Should().Be(requestSpanId);
+            requestSpan.ParentId.Should().BeNull();
+            requestSpan.CorrelationId.Should().Be(correlationId);
+            requestSpan.Type.Should().Be(MetricType.Request);
+            requestSpan.Method.Should().Be("STU3-Patient-GetStructuredRecordSerialised");
+            requestSpan.Started.Should().Be(startedAt);
+            requestSpan.Status.Should().Be(MetricStatus.Cancelled);
+            requestSpan.ErrorCode.Should().Be(nameof(OperationCanceledException));
+            requestSpan.PayloadBytes.Should().BeNull();
+
+            // Still checked before any dependency is touched: the span needs only an id and a
+            // clock reading, so an abandoned request does no work.
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.dateTimeBrokerMock.Verify(broker =>
+                broker.GetCurrentDateTimeOffsetAsync(),
+                    Times.Once);
+
+            this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            this.dateTimeBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public async Task ShouldRecordTheRequestSpanAsFailedIfTheRequestIsInvalidAsync(string invalidNhsNumber)
+        {
+            // given
+            Guid correlationId = Guid.NewGuid();
+            Guid requestSpanId = Guid.NewGuid();
+            DateTimeOffset startedAt = GetRandomDateTimeOffset();
+            var recordedMetrics = new List<Metric>();
+
+            this.identifierBrokerMock.Setup(broker => broker.GetIdentifierAsync())
+                .ReturnsAsync(requestSpanId);
+
+            this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
+                .ReturnsAsync(startedAt);
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                    .Callback<Metric, CancellationToken>((metric, _) => recordedMetrics.Add(metric));
+
+            // when
+            Func<Task> getStructuredRecord = async () =>
+                await this.patientCoordinationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    invalidNhsNumber,
+                    cancellationToken: TestContext.Current.CancellationToken);
+
+            // then
+            // The caller still gets the validation exception it always did - recording the span
+            // changes what is measured, not what is thrown.
+            await getStructuredRecord.Should().ThrowExactlyAsync<PatientCoordinationValidationException>();
+
+            Metric requestSpan = recordedMetrics.Should().ContainSingle().Subject;
+            requestSpan.Id.Should().Be(requestSpanId);
+            requestSpan.ParentId.Should().BeNull();
+            requestSpan.CorrelationId.Should().Be(correlationId);
+            requestSpan.Type.Should().Be(MetricType.Request);
+            requestSpan.Started.Should().Be(startedAt);
+            requestSpan.Status.Should().Be(MetricStatus.Failed);
+            requestSpan.ErrorCode.Should().Be(nameof(InvalidArgumentPatientCoordinationException));
+            requestSpan.PayloadBytes.Should().BeNull();
+
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()),
+                    Times.Once);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.IsAny<PatientCoordinationValidationException>()),
+                    Times.Once);
+
+            this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
+            this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
+            this.auditAndMetricBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]

@@ -52,22 +52,25 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var stopwatch = Stopwatch.StartNew();
-            ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
             string auditType = "STU3-Patient-GetStructuredRecordSerialised";
 
             // The root span. Every other span of this request is a descendant of it, so its id
             // travels down as the parent id rather than the correlation id doing double duty -
             // the correlation id says which request, this says where within it.
+            //
+            // Started before the cancellation check and the argument validation, not after them.
+            // A request that is rejected at the door is still a request: without a root row, one
+            // that arrived already cancelled or with invalid arguments would be invisible to every
+            // report. Only an id and a clock reading come first - no dependency is touched before
+            // the check.
             Guid requestSpanId = await this.identifierBroker.GetIdentifierAsync();
             DateTimeOffset requestStarted = await this.dateTimeBroker.GetCurrentDateTimeOffsetAsync();
+            var stopwatch = Stopwatch.StartNew();
 
             string message =
                 $"Parameters:  {{ nhsNumber = \"{nhsNumber}\", dateOfBirth = \"{dateOfBirth}\", " +
                 $"demographicsOnly = \"{demographicsOnly}\", " +
                 $"includeInactivePatients = \"{includeInactivePatients}\" }}";
-
 
             // Recorded on both exits. Children are written as they complete, so a request that
             // throws part way through would otherwise leave every span already written pointing
@@ -99,6 +102,9 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
 
             try
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateArgsOnGetStructuredRecord(nhsNumber, correlationId);
+
                 await this.auditAndMetricBroker.LogInformationAsync(
                     auditType,
                     title: $"Coordination Service Request Submitted",

@@ -21,9 +21,9 @@ namespace LondonFhirService.Core.Services.Coordinations.Patients.STU3
             {
                 return await returningStringFunction();
             }
-            // Never wrapped and never logged. A request abandoned part way through has already had
-            // its root span recorded as Cancelled on the way out; the caller gets back the
-            // cancellation it asked for.
+            // Never wrapped and never logged. A request abandoned before it started, or part way
+            // through, has already had its root span recorded as Cancelled on the way out; the
+            // caller gets back the cancellation it asked for.
             catch (OperationCanceledException)
             {
                 throw;
