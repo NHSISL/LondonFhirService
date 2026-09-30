@@ -69,6 +69,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             {
                 throw await CreateAndLogDependencyValidationExceptionAsync(consumerAccessServiceValidationException);
             }
+            catch (ConsumerAccessServiceDependencyValidationException
+                   consumerAccessServiceDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    consumerAccessServiceDependencyValidationException);
+            }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
                 throw await CreateAndLogDependencyExceptionAsync(providerServiceDependencyException);
@@ -130,6 +136,12 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
             catch (ConsumerAccessServiceValidationException consumerAccessServiceValidationException)
             {
                 throw await CreateAndLogDependencyValidationExceptionAsync(consumerAccessServiceValidationException);
+            }
+            catch (ConsumerAccessServiceDependencyValidationException
+                   consumerAccessServiceDependencyValidationException)
+            {
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    consumerAccessServiceDependencyValidationException);
             }
             catch (ConsumerAccessServiceDependencyException consumerAccessServiceDependencyException)
             {

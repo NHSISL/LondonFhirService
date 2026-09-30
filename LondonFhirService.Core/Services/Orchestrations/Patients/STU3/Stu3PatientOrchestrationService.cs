@@ -17,6 +17,7 @@ using LondonFhirService.Core.Brokers.Identifiers;
 using LondonFhirService.Core.Brokers.Loggings;
 using LondonFhirService.Core.Brokers.Securities;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
+using LondonFhirService.Core.Models.Foundations.ConsumerAccesses.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Orchestrations.Accesses;
@@ -309,8 +310,7 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     };
 
                     ConsumerAccess consumerAccess =
-                        await this.consumerAccessService.CheckConsumerAccessAsync(
-                            validateAccessRequest, cancellationToken);
+                        await CheckConsumerAccessAsync(validateAccessRequest, cancellationToken);
 
                     stopwatch.Stop();
                     long elapsedTime = stopwatch.ElapsedMilliseconds;
@@ -403,6 +403,35 @@ namespace LondonFhirService.Core.Services.Orchestrations.Patients.STU3
                     Status = MetricStatus.Skipped,
                     Description = "Skipped: CheckAccessPermissions is false."
                 });
+            }
+        }
+
+        /// <summary>
+        /// ConsumerAccessService answering that it does not know the consumer is the same answer
+        /// this service gives when it cannot identify the caller itself, so it takes the same
+        /// path: an UnauthorizedPatientOrchestrationException, with the same message, thrown inside
+        /// the access check so its span and the consumer's response come out exactly as they do
+        /// for an unidentified caller. The dependency's own answer is kept as the inner exception,
+        /// for the log. Any other failure passes through to be localised as before.
+        /// </summary>
+        private async ValueTask<ConsumerAccess> CheckConsumerAccessAsync(
+            ValidateAccessRequest validateAccessRequest,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                return await this.consumerAccessService.CheckConsumerAccessAsync(
+                    validateAccessRequest,
+                    cancellationToken);
+            }
+            catch (ConsumerAccessServiceDependencyValidationException
+                   consumerAccessServiceDependencyValidationException)
+                when (consumerAccessServiceDependencyValidationException.InnerException
+                    is UnauthorizedConsumerAccessServiceException unauthorizedConsumerAccessServiceException)
+            {
+                throw new UnauthorizedPatientOrchestrationException(
+                    message: "Current consumer is not a valid consumer.",
+                    innerException: unauthorizedConsumerAccessServiceException);
             }
         }
 

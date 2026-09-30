@@ -3,9 +3,12 @@ import type { MetricFilter } from "../../../models/foundations/metrics/MetricFil
 import type { MetricQuery } from "../../../models/foundations/metrics/MetricQuery";
 
 // A correlation id goes into an OData filter as a bare guid literal, so a malformed one would be
-// rejected by the API rather than simply matching nothing.
+// rejected by the API rather than simply matching nothing. Either spelling of one is whole: the
+// dashed form a Metric serialises, or the 32 digit "N" form the X-Correlation-Id header and a
+// FhirRecord carry. The service dashes the second before it reaches the broker, because an OData
+// guid literal is only defined with the dashes in - see helpers/correlationIds.
 const correlationIdPattern =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{32})$/i;
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 

@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LondonFhirService.Core.Brokers.ConsumerAccesses;
@@ -67,6 +69,68 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                 CorrelationId = Guid.NewGuid()
             };
 
+        /// <summary>
+        /// The broker hands back the dependency's status and body verbatim, so a test states the
+        /// answer the way the dependency would have sent it: serialised, under a status.
+        /// </summary>
+        private static ConsumerAccessResponse CreateConsumerAccessResponse(
+            HttpStatusCode statusCode,
+            ConsumerAccess consumerAccess) =>
+            new ConsumerAccessResponse
+            {
+                StatusCode = statusCode,
+                ContentType = "application/json",
+                WwwAuthenticate = string.Empty,
+                Content = JsonSerializer.Serialize(consumerAccess)
+            };
+
+        /// <summary>
+        /// A problem the way the dependency sends one: application/problem+json, carrying the
+        /// errorCode that says which of its refusals this is.
+        /// </summary>
+        private static ConsumerAccessResponse CreateProblemResponse(
+            HttpStatusCode statusCode,
+            string errorCode,
+            string detail,
+            string correlationId) =>
+            new ConsumerAccessResponse
+            {
+                StatusCode = statusCode,
+                ContentType = "application/problem+json",
+                WwwAuthenticate = string.Empty,
+
+                Content = JsonSerializer.Serialize(new
+                {
+                    type = "https://tools.ietf.org/html/rfc9110",
+                    title = GetRandomString(),
+                    status = (int)statusCode,
+                    detail = detail,
+                    errorCode = errorCode,
+                    correlationId = correlationId
+                })
+            };
+
+        /// <summary>
+        /// What every classified refusal carries in Data, so the log says which status, which code
+        /// and which of the dependency's own requests it was, without the body having to be read.
+        /// </summary>
+        private static void AddExpectedResponseData(
+            Xeption exception,
+            HttpStatusCode statusCode,
+            string errorCode,
+            string detail,
+            string correlationId,
+            string contentType,
+            string wwwAuthenticate)
+        {
+            exception.AddData(key: "StatusCode", values: ((int)statusCode).ToString());
+            exception.AddData(key: "ErrorCode", values: errorCode ?? string.Empty);
+            exception.AddData(key: "Detail", values: detail ?? string.Empty);
+            exception.AddData(key: "CorrelationId", values: correlationId ?? string.Empty);
+            exception.AddData(key: "ContentType", values: contentType ?? string.Empty);
+            exception.AddData(key: "WwwAuthenticate", values: wwwAuthenticate ?? string.Empty);
+        }
+
         private static List<string> CreateRandomStrings() =>
             Enumerable.Range(start: 1, count: GetRandomNumber())
                 .Select(_ => GetRandomString()).ToList();
@@ -85,7 +149,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             return new TheoryData<Exception>
             {
                 new HttpRequestException(randomMessage),
-                new HttpRequestException(randomMessage, new Exception(randomMessage))
+                new HttpRequestException(randomMessage, new Exception(randomMessage)),
+
+                // What the broker throws for any status that is not an answer - the same
+                // EnsureSuccessStatusCode failure as before 401 and 403 became answers.
+                new HttpRequestException(randomMessage, null, HttpStatusCode.BadRequest),
+                new HttpRequestException(randomMessage, null, HttpStatusCode.InternalServerError)
             };
         }
 

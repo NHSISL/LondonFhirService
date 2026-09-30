@@ -84,9 +84,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Coordinations.Patients.STU3
                     getStructuredRecordSerialisedTask.AsTask);
 
             // then
-            // Checked before any dependency is touched, so an abandoned request does no work.
+            // Checked before any dependency is touched, so an abandoned request does no work. Only
+            // its root span is recorded, as Cancelled - covered by the Metrics tests.
             actualOperationCanceledException.CancellationToken.Should().Be(cancelledToken);
 
+            AcceptMetricSpans();
             this.patientOrchestrationServiceMock.VerifyNoOtherCalls();
             this.fhirReconciliationServiceMock.VerifyNoOtherCalls();
             this.auditAndMetricBrokerMock.VerifyNoOtherCalls();

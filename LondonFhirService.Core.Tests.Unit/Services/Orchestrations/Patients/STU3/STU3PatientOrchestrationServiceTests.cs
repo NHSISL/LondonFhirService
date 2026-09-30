@@ -297,6 +297,12 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             {
                 new ConsumerAccessServiceValidationException(
                     message: "Consumer access validation errors occurred, please try again",
+                    innerException),
+
+                // Any dependency validation other than the unknown consumer, which takes the
+                // unauthorized path instead - see ValidateAccess.
+                new ConsumerAccessServiceDependencyValidationException(
+                    message: "Consumer access dependency validation errors occurred, please try again",
                     innerException)
             };
         }
@@ -315,6 +321,54 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 new ConsumerAccessServiceException(
                     message: "Consumer access service error occurred, please contact support.",
                     innerException)
+            };
+        }
+
+        /// <summary>
+        /// The two ways a consumer can turn out to be unknown: this service cannot identify the
+        /// caller at all, or ConsumerAccessService answers 401 for the one it identified. Both take
+        /// the same unauthorized path, so both are recorded the same way.
+        /// </summary>
+        public static TheoryData<bool> UnknownConsumerCauses() =>
+            new TheoryData<bool>
+            {
+                // Unidentified by this service - no current user.
+                false,
+
+                // Identified here, unknown to ConsumerAccessService.
+                true
+            };
+
+        private static ConsumerAccessServiceDependencyValidationException
+            CreateUnknownConsumerAccessServiceDependencyValidationException()
+        {
+            var unauthorizedConsumerAccessServiceException =
+                new UnauthorizedConsumerAccessServiceException(
+                    message: "Consumer access service does not recognise the consumer.");
+
+            return new ConsumerAccessServiceDependencyValidationException(
+                message: "ConsumerAccess dependency validation error occurred, please fix errors and try again.",
+                innerException: unauthorizedConsumerAccessServiceException);
+        }
+
+        /// <summary>
+        /// ConsumerAccessService refusing this service rather than the consumer: its bearer token
+        /// rejected, or its identity missing an app role. Configuration faults, localised by the
+        /// foundation as critical dependency failures.
+        /// </summary>
+        public static TheoryData<Xeption> ConsumerAccessConfigurationFailures()
+        {
+            string randomMessage = GetRandomString();
+
+            return new TheoryData<Xeption>
+            {
+                new ConsumerAccessServiceDependencyException(
+                    message: "ConsumerAccess dependency error occurred, contact support.",
+                    innerException: new FailedConsumerAccessAuthenticationException(randomMessage)),
+
+                new ConsumerAccessServiceDependencyException(
+                    message: "ConsumerAccess dependency error occurred, contact support.",
+                    innerException: new FailedConsumerAccessAuthorizationException(randomMessage))
             };
         }
 

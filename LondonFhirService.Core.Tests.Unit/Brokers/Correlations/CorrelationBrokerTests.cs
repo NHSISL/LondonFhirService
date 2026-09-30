@@ -10,6 +10,7 @@ using LondonFhirService.Core.Brokers.Correlations;
 using LondonFhirService.Core.Brokers.Identifiers;
 using Microsoft.AspNetCore.Http;
 using Moq;
+using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 using Task = System.Threading.Tasks.Task;
 
 namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
@@ -412,6 +413,75 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.Correlations
 
             // No request means no span, but the correlation id half of the pair still has to come
             // from somewhere, so the mint happens here too.
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Once);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Once);
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
+        }
+
+        [Fact]
+        public async Task ShouldAnswerTheRequestTracePortWithTheRequestSpanIdAsync()
+        {
+            // given
+            var items = new Dictionary<object, object>();
+            CreateHttpContext(items);
+            using Activity activity = StartW3CActivity();
+
+            // The metric library's request-span port is answered by this broker itself, rather
+            // than by a second broker forwarding to it - one broker calling another is exactly
+            // what The Standard rules out.
+            IRequestTraceBroker requestTraceBroker =
+                this.correlationBroker.Should().BeAssignableTo<IRequestTraceBroker>().Subject;
+
+            // when
+            string actualPortRequestSpanId = await requestTraceBroker.GetRequestSpanIdAsync();
+            string actualRequestSpanId = await this.correlationBroker.GetRequestSpanIdAsync();
+            Guid actualCorrelationId = await this.correlationBroker.GetCorrelationIdAsync();
+
+            // then
+            // One resolution behind both interfaces, so the span the metrics are anchored under
+            // belongs to the same trace as the correlation id they are filed under.
+            actualPortRequestSpanId.Should().Be(activity.SpanId.ToHexString());
+            actualRequestSpanId.Should().Be(actualPortRequestSpanId);
+            actualCorrelationId.ToString("N").Should().Be(activity.TraceId.ToHexString());
+
+            this.identifierBrokerMock.Verify(broker =>
+                broker.GetIdentifierAsync(),
+                    Times.Never);
+
+            this.httpContextAccessorMock.VerifyGet(accessor =>
+                accessor.HttpContext,
+                    Times.Exactly(3));
+
+            this.identifierBrokerMock.VerifyNoOtherCalls();
+            VerifyNoOtherContextCalls();
+        }
+
+        [Fact]
+        public async Task ShouldAnswerTheRequestTracePortWithNoRequestSpanIdWhenThereIsNoHttpContextAsync()
+        {
+            // given
+            this.httpContextAccessorMock.SetupGet(accessor =>
+                accessor.HttpContext)
+                    .Returns((HttpContext)null);
+
+            IRequestTraceBroker requestTraceBroker =
+                this.correlationBroker.Should().BeAssignableTo<IRequestTraceBroker>().Subject;
+
+            // when
+            string actualPortRequestSpanId = await requestTraceBroker.GetRequestSpanIdAsync();
+
+            // then
+            // Background work has no request span to name. Null, not zeroes, is what tells the
+            // library to fall back to a parent derived from the correlation id.
+            actualPortRequestSpanId.Should().BeNull();
+
             this.identifierBrokerMock.Verify(broker =>
                 broker.GetIdentifierAsync(),
                     Times.Once);

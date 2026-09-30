@@ -10,7 +10,7 @@ using System.Net.Http;
 using FluentAssertions;
 using LondonFhirService.Api.Middlewares;
 using LondonFhirService.Api.Tests.Acceptance.Brokers;
-using LondonFhirService.Core.Brokers.AuditAndMetrics;
+using LondonFhirService.Core.Brokers.Correlations;
 using Microsoft.Extensions.DependencyInjection;
 using NHSOneLondon.AuditAndMetrics.Abstractions.Brokers;
 using Task = System.Threading.Tasks.Task;
@@ -161,11 +161,41 @@ namespace LondonFhirService.Api.Tests.Acceptance.Apis.Correlations
             var requestTraceBroker =
                 scope.ServiceProvider.GetRequiredService<IRequestTraceBroker>();
 
+            var correlationBroker =
+                scope.ServiceProvider.GetRequiredService<ICorrelationBroker>();
+
             // then
             // Registered, and registered as the real implementation. The library falls back to a
             // null object when a host supplies nothing, so a missing registration here would not
             // fail anything - it would silently stop anchoring every metric span.
-            requestTraceBroker.Should().BeOfType<RequestTraceBroker>();
+            requestTraceBroker.Should().BeOfType<CorrelationBroker>();
+
+            // And the same instance as the correlation broker, not a second one. A background
+            // worker's scope has no HttpContext, and the pair it resolves lives in the instance -
+            // two instances would mint two correlation ids for one operation.
+            requestTraceBroker.Should().BeSameAs(correlationBroker);
+        }
+
+        [Fact]
+        public void ShouldGiveEachScopeItsOwnCorrelationBroker()
+        {
+            // given . when
+            using IServiceScope firstScope =
+                this.apiBroker.WebApplicationFactory.Services.CreateScope();
+
+            using IServiceScope secondScope =
+                this.apiBroker.WebApplicationFactory.Services.CreateScope();
+
+            var firstRequestTraceBroker =
+                firstScope.ServiceProvider.GetRequiredService<IRequestTraceBroker>();
+
+            var secondRequestTraceBroker =
+                secondScope.ServiceProvider.GetRequiredService<IRequestTraceBroker>();
+
+            // then
+            // Scoped, not singleton: a shared instance would hand every later operation the
+            // first one's settled correlation.
+            firstRequestTraceBroker.Should().NotBeSameAs(secondRequestTraceBroker);
         }
 
         private static Guid ReadCorrelationId(HttpResponseMessage response)

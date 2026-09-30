@@ -11,8 +11,10 @@
 // it is a parse error. The comparisons filter is `contains(CorrelationId, '<text>')` against the
 // string column, where a dashed needle simply never matches.
 //
-// So a link between the two screens has to convert, and the two functions below are the only
-// places that know it.
+// So anything that carries an id from one spelling to the other has to convert: a link between the
+// two screens, and the metrics service, which dashes an id pasted in the undashed "N" form - the
+// one the X-Correlation-Id header carries - before it goes into a filter. The two functions below
+// are the only places that know how.
 
 const compactCorrelationIdPattern = /^[0-9a-fA-F]{32}$/;
 const dashedCorrelationIdPattern =

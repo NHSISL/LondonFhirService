@@ -1,4 +1,5 @@
 ﻿import { MetricApiBroker } from "../../../brokers/apis/metricApiBroker";
+import { toDashedCorrelationId } from "../../../helpers/correlationIds";
 import { tryCatchMetricServiceAsync } from "./metricService.exceptions";
 import {
     validateCorrelationId,
@@ -31,7 +32,7 @@ export class MetricService implements IMetricService {
 
             return await this.metricApiBroker.getRequestMetricsAsync(
                 metricQuery,
-                metricFilter,
+                this.toDashedMetricFilter(metricFilter),
                 abortSignal);
         });
     }
@@ -54,7 +55,7 @@ export class MetricService implements IMetricService {
             }
 
             return await this.metricApiBroker.getProviderRequestsMetricsByCorrelationIdsAsync(
-                correlationIds,
+                correlationIds.map(correlationId => toDashedCorrelationId(correlationId)),
                 abortSignal);
         });
     }
@@ -66,7 +67,9 @@ export class MetricService implements IMetricService {
         return await tryCatchMetricServiceAsync(async () => {
             validateMetricFilter(metricFilter);
 
-            return await this.metricApiBroker.getMetricExportAsync(metricFilter, abortSignal);
+            return await this.metricApiBroker.getMetricExportAsync(
+                this.toDashedMetricFilter(metricFilter),
+                abortSignal);
         });
     }
 
@@ -80,9 +83,19 @@ export class MetricService implements IMetricService {
             validateMetricQuery(metricQuery);
 
             return await this.metricApiBroker.getMetricsByCorrelationIdAsync(
-                correlationId,
+                toDashedCorrelationId(correlationId),
                 metricQuery,
                 abortSignal);
         });
+    }
+
+    // The validations accept either spelling of a correlation id, but the broker puts it into an
+    // OData filter as a guid literal, which is only defined with the dashes in. A copy, so the
+    // caller's filter - and the query key the page built from it - is left as the operator typed it.
+    private toDashedMetricFilter(metricFilter: MetricFilter): MetricFilter {
+        return {
+            ...metricFilter,
+            correlationId: toDashedCorrelationId(metricFilter.correlationId)
+        };
     }
 }

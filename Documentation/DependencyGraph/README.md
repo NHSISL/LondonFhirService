@@ -82,9 +82,9 @@ view you were on, and switching carries your current selection across.
   toggle reveals the DateTime / Identifier / Logging broker copies that are
   hidden by default for readability.
 
-At the last scan, 137 declared components and 589 declared edges draw as
-**134 components · 558 flows** in the single-copy view and **603 nodes ·
-1774 flows** per consumer (137 · 589 and 654 · 1854 with utility brokers on).
+At the last scan, 135 declared components and 588 declared edges draw as
+**132 components · 557 flows** in the single-copy view and **583 nodes ·
+1761 flows** per consumer (135 · 588 and 635 · 1842 with utility brokers on).
 
 > When re-verifying locally, serve on a **fresh port**. The page fetches the data
 > files, and a browser that has already loaded them on that port will keep
@@ -176,6 +176,30 @@ Actions).
   every denial is still written to the audit trail. There is no
   `AccessOrchestrationService` any more — with one service dependency it was
   no longer an orchestration.
+- **The remote service uses 401 and 403 for two different things, and
+  `ConsumerAccessService` tells them apart.** Its answers about a consumer and
+  its refusals of this service's own credentials share the same two statuses;
+  only the body separates them — its media type, and the `errorCode` on an
+  `application/problem+json` problem. `ConsumerAccessBroker` hands back the
+  status, body, media type and `WWW-Authenticate` challenge untouched, and the
+  foundation classifies:
+
+  | Answer | Meaning | LFS path | Consumer sees |
+  |---|---|---|---|
+  | 200, `Access` body | access decided | allowed, or the denial path if `isAccessAllowed` is false | the record, or 404 |
+  | 403, `application/json` `Access` body | access refused | returned as a refusing `ConsumerAccess`: "Access Forbidden" audit, AccessCheck span Failed / `AccessForbidden` | 404 |
+  | 401 problem, `ConsumerUnknown` | consumer not registered | `UnauthorizedConsumerAccessServiceException` (dependency validation), the same unauthorized path as a caller LFS cannot identify | 404 |
+  | 401 problem, `BearerTokenMissing` / `BearerTokenInvalid` / any other or no code | LFS's token missing or rejected | `FailedConsumerAccessAuthenticationException`, critical dependency | 500 |
+  | 401 with no readable problem (empty, not `application/problem+json`) | a gateway or the service's authentication refused LFS | `FailedConsumerAccessAuthenticationException`, critical; the message quotes the content type and `WWW-Authenticate` | 500 |
+  | 403 problem, `InsufficientPermissions` or any other code | LFS's identity lacks the app role | `FailedConsumerAccessAuthorizationException`, critical dependency | 500 |
+  | 403 that is neither an `Access` body nor a problem | refused LFS, not the consumer | `FailedConsumerAccessAuthorizationException`, critical | 500 |
+  | anything else outside 2xx | dependency failure | `HttpRequestException`, critical dependency, as ever | 500 |
+
+  The two `Failed*` exceptions carry `StatusCode`, `ErrorCode`, `Detail`, the
+  remote service's `CorrelationId`, `ContentType` and `WwwAuthenticate` in
+  `Data`, and their messages name the cause and what to check. They are never
+  audited as an access decision: the AccessCheck span is Failed under the
+  dependency failure's own name, not `AccessForbidden`.
 - **`AccessConfigurations.CheckAccessPermissions` gates the check inside
   `ValidateAccess`,** not at the coordination layer: off, it audits the skip
   and returns. `GetStructuredRecordSerialisedAsync` runs the same check first
@@ -234,10 +258,11 @@ Actions).
   request's own span, so the flat group hangs *under* the incoming request in
   the transaction view rather than beside it — flattening and anchoring are
   independent, and only the second changed. The span id reaches the replay
-  through `IRequestTraceBroker`, a port the host satisfies from
-  `CorrelationBroker`: `MetricService` asks for it while the request is still
-  alive and carries it into the deferred write, because the replay itself runs
-  on a background worker with no request left to ask. Without a request span —
+  through `IRequestTraceBroker`, a port `CorrelationBroker` implements itself
+  alongside `ICorrelationBroker`, rather than a second broker forwarding to it:
+  `MetricService` asks for it while the request is still alive and carries it
+  into the deferred write, because the replay itself runs on a background
+  worker with no request left to ask. Without a request span —
   a background worker, or a host that registers no implementation and gets the
   library's null object — it falls back to a parent derived from the correlation
   id, which groups correctly but places the spans at the top of the trace.
@@ -423,18 +448,24 @@ Actions).
   uses the list's applied filter — correlation id, the new user id filter, and
   the date range — so the file holds every request the search found, not the
   pages scrolled so far.
-- **Every metric span is stamped with the caller, and that is a second
-  consumer of `SecurityBroker`.** The library's `MetricService` asks
-  `IAuditUserBroker` for the user id *and* the display name once per write
-  call (once per batch for the bulk pair), and sets `Consumer` to the display
-  name, falling back to the user id — an application caller has no name, so
-  it used to show blank. `AuditUserBroker.GetCurrentUserDisplayNameAsync`
-  reads `SecurityBroker.GetCurrentUserAsync`, so that method now has two
-  consumers rather than just the patient orchestration. The value
-  `Stu3PatientOrchestrationService` used to pass as the access-check span's
-  consumer was overwritten by this stamping anyway and has been removed; its
-  dependencies are unchanged. These edges were already true at the previous
-  scan and were missing from it.
+- **Every metric span is stamped with the caller, and `SecurityAuditBroker`
+  answers for it.** The library's `MetricService` asks `IAuditUserBroker` for
+  the user id *and* the display name once per write call (once per batch for
+  the bulk pair), and sets `Consumer` to the display name, falling back to the
+  user id — an application caller has no name, so it used to show blank.
+  `SecurityAuditBroker` implements that port itself and asks the security
+  client directly: the id from `Audits.GetUserIdAsync`, the display name from
+  `Users.GetUserAsync`. `AuditUserBroker` is gone — it answered the port by
+  calling `SecurityAuditBroker` and `SecurityBroker`, and a broker may not call
+  another broker — so the port's arrows now land on `SecurityAuditBroker`, and
+  `SecurityBroker.GetCurrentUserAsync` is back to one consumer, the patient
+  orchestration. Both hosts register the port scoped, built from the request
+  constructor, because the broker captures the `ClaimsPrincipal` when it is
+  constructed; `ISecurityAuditBroker` stays transient. A registration test in
+  each host pins that neither the port nor either security broker is a
+  singleton. The value `Stu3PatientOrchestrationService` used to pass as the
+  access-check span's consumer was overwritten by this stamping anyway and has
+  been removed; its dependencies are unchanged.
 - **Both hosts report one release, and it is Core's.** `CoreVersion.Value` in
   `LondonFhirService.Core` reads the Core assembly version, so the Version a
   release bumps in `LondonFhirService.Core.csproj` is the only copy and neither

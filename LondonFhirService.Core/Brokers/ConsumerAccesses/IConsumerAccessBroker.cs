@@ -10,7 +10,7 @@ namespace LondonFhirService.Core.Brokers.ConsumerAccesses
 {
     public interface IConsumerAccessBroker
     {
-        ValueTask<ConsumerAccess> CheckConsumerAccessAsync(
+        ValueTask<ConsumerAccessResponse> CheckConsumerAccessAsync(
             ValidateAccessRequest request,
             CancellationToken cancellationToken = default);
     }

@@ -32,6 +32,32 @@ it("should accept a whole correlation id in either case", () => {
     expect(isSearchableCorrelationId("")).toBe(false);
 });
 
+// The X-Correlation-Id header, and a FhirRecord, carry the undashed "N" form of the same guid, so
+// that is what an operator most often has to paste.
+it("should accept a whole correlation id in its compact form, in either case", () => {
+    expect(isSearchableCorrelationId("0f1c4d6b9a2e4f318c771b2a3c4d5e6f")).toBe(true);
+    expect(isSearchableCorrelationId("0F1C4D6B9A2E4F318C771B2A3C4D5E6F")).toBe(true);
+    expect(isSearchableCorrelationId("  0f1c4d6b9a2e4f318c771b2a3c4d5e6f  ")).toBe(true);
+});
+
+it("should reject a compact correlation id that is short, long or not hexadecimal", () => {
+    expect(isSearchableCorrelationId("0f1c4d6b9a2e4f318c771b2a3c4d5e6")).toBe(false);
+    expect(isSearchableCorrelationId("0f1c4d6b9a2e4f318c771b2a3c4d5e6f0")).toBe(false);
+    expect(isSearchableCorrelationId("0f1c4d6b9a2e4f318c771b2a3c4d5e6g")).toBe(false);
+});
+
+it("should accept a filter holding a compact correlation id", () => {
+    expect(() => validateMetricFilter(filter({ correlationId: "0f1c4d6b9a2e4f318c771b2a3c4d5e6f" })))
+        .not.toThrow();
+});
+
+it("should accept a list of correlation ids in either spelling", () => {
+    expect(() => validateCorrelationIds([
+        "0f1c4d6b-9a2e-4f31-8c77-1b2a3c4d5e6f",
+        "0f1c4d6b9a2e4f318c771b2a3c4d5e6f"
+    ])).not.toThrow();
+});
+
 it("should reject a malformed date", () => {
     expect(() => validateMetricFilter(filter({ fromDate: "25-08-2026" })))
         .toThrowError("fromDate: A from date must be a valid date.");

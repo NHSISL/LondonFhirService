@@ -148,14 +148,22 @@ components:
     name: SecurityAuditBroker
     layer: broker
     col: 11
-    description: "Stamps CreatedBy/CreatedDate/UpdatedBy/UpdatedDate (and DeletedBy/DeletedDate) using the SecurityConfigurations built in each host's AddBrokers. Delegates to ISL.Security.Client's Audits client."
+    description: "Stamps CreatedBy/CreatedDate/UpdatedBy/UpdatedDate (and DeletedBy/DeletedDate) using the SecurityConfigurations built in each host's AddBrokers. Delegates to ISL.Security.Client's Audits client. Also implements the audit library's identity port, IAuditUserBroker, straight from the security client — a broker may not call another broker, so the port is no longer a separate AuditUserBroker sitting on top of this broker and SecurityBroker. GetCurrentUserIdAsync is the Audits client's user id, and an empty string rather than null when none resolves; GetCurrentUserDisplayNameAsync is the Users client's DisplayName, falling back to given name plus surname because DisplayName is not guaranteed to be populated, and to an empty string when nothing resolves. The metric service stamps both onto every span, and uses the id as the Consumer when there is no display name. The ClaimsPrincipal is captured in the constructor rather than read per call, so both hosts register the port scoped from the request constructor — as a singleton it would be built at startup with no HttpContext and every audit row would be stamped anonymous with nothing failing to signal it. ISecurityAuditBroker itself stays transient; a registration test in each host pins that neither is a singleton."
     methods:
       - ApplyAddAuditValuesAsync
       - ApplyModifyAuditValuesAsync
       - ApplyRemoveAuditValuesAsync
       - EnsureAddAuditValuesRemainsUnchangedOnModifyAsync
       - GetUserIdAsync
+      - GetCurrentUserIdAsync
+      - GetCurrentUserDisplayNameAsync
     calls:
+      - from: GetCurrentUserIdAsync
+        to: LIB.SecurityClient
+        method: Audits.GetUserIdAsync
+      - from: GetCurrentUserDisplayNameAsync
+        to: LIB.SecurityClient
+        method: Users.GetUserAsync
       - from: ApplyAddAuditValuesAsync
         to: LIB.SecurityClient
         method: Audits.ApplyAddAuditValuesAsync
@@ -175,7 +183,7 @@ components:
     name: SecurityBroker
     layer: broker
     col: 11
-    description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today — by Stu3PatientOrchestrationService, to build the ValidateAccessRequest, and by AuditUserBroker, for the display name the metric service stamps onto every span. ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called."
+    description: "Reads the caller from the ClaimsPrincipal. Only GetCurrentUserAsync is consumed today — by Stu3PatientOrchestrationService, to build the ValidateAccessRequest. The display name the metric service stamps onto every span comes from SecurityAuditBroker, which asks the security client itself rather than calling this broker. ValidateCaptchaAsync is stubbed to return true — the captcha providers are registered but not yet called."
     methods:
       - GetCurrentUserAsync
       - IsCurrentUserAuthenticatedAsync
@@ -275,7 +283,7 @@ components:
     name: AuditAndMetricStorageBroker
     layer: broker
     col: 11
-    description: "Satisfies the storage port the audit and metrics library declares, the same way AuditUserBroker satisfies its identity port. Classifying storage failures is part of the port's contract rather than logic of its own — the library carries no ORM, so it cannot name SqlException. Writes go through the factory and get their own short-lived context, which is what makes them safe to fire and forget: a write dispatched to the background outlives the request scope. Reads keep the scoped broker, because they hand back an IQueryable the caller enumerates. The arrows into this component run right-to-left: the library calls back down into the application that hosts it."
+    description: "Satisfies the storage port the audit and metrics library declares, the same way SecurityAuditBroker satisfies its identity port. Classifying storage failures is part of the port's contract rather than logic of its own — the library carries no ORM, so it cannot name SqlException. Writes go through the factory and get their own short-lived context, which is what makes them safe to fire and forget: a write dispatched to the background outlives the request scope. Reads keep the scoped broker, because they hand back an IQueryable the caller enumerates. The arrows into this component run right-to-left: the library calls back down into the application that hosts it."
     methods:
       - CreateAudit
       - InsertAuditAsync
@@ -358,26 +366,11 @@ components:
       - from: DeleteMetricsOlderThanAsync
         to: StorageBroker
         method: DeleteMetricsOlderThanAsync
-  - id: AuditUserBroker
-    name: AuditUserBroker
-    layer: broker
-    col: 11
-    description: "Satisfies the audit library's identity port from this application's security brokers. SecurityAuditBroker captures the ClaimsPrincipal in its constructor rather than reading it per call, so this must be resolved per request — registered as a singleton it would be built at startup with no HttpContext, and every audit row in the system would be stamped anonymous with nothing failing to signal it. The user id comes from SecurityAuditBroker; the display name from SecurityBroker's current user, falling back to given name plus surname because DisplayName is not guaranteed to be populated, and to an empty string rather than null when nothing resolves. The metric service stamps both onto every span, and uses the id as the Consumer when there is no display name."
-    methods:
-      - GetCurrentUserIdAsync
-      - GetCurrentUserDisplayNameAsync
-    calls:
-      - from: GetCurrentUserIdAsync
-        to: SecurityAuditBroker
-        method: GetUserIdAsync
-      - from: GetCurrentUserDisplayNameAsync
-        to: SecurityBroker
-        method: GetCurrentUserAsync
   - id: ConsumerAccessBroker
     name: ConsumerAccessBroker
     layer: broker
     col: 11
-    description: "Posts a ValidateAccessRequest to a remote consumer-access endpoint with a DefaultAzureCredential bearer token and reads back a ConsumerAccess verdict. Registered in the API host (AddHttpClient) and consumed by ConsumerAccessService — this is now the whole access decision."
+    description: "Posts a ValidateAccessRequest to a remote consumer-access endpoint with a DefaultAzureCredential bearer token and hands back what it answered — the status code, the raw body, its media type and any WWW-Authenticate challenge together, as a ConsumerAccessResponse. 200, 401 and 403 are all handed back, because the remote service uses 401 and 403 both for its answers about a consumer and for refusing this service's own credentials; every other status fails with the HttpRequestException EnsureSuccessStatusCode has always thrown. Telling the 401s and 403s apart is left to ConsumerAccessService. Registered in the API host (AddHttpClient) — this is now the whole access decision."
     methods:
       - CheckConsumerAccessAsync
     calls:
@@ -414,7 +407,7 @@ components:
     name: CorrelationBroker
     layer: broker
     col: 11
-    description: "The one correlation id belonging to the request in flight, taken from W3C Trace Context rather than minted: ASP.NET parses the caller's traceparent into Activity.Current before any of our code runs, and the trace id becomes the correlation id — same 128 bits, same 32 hex characters, so Guid.ToString(N) of a correlation id IS the trace id. Settled on first read and kept on HttpContext.Items, so the middleware that writes the X-Correlation-Id response header, the exposer that hands the id down to the coordination service, and anything else resolved during the request all read the same value. Registered scoped in the API host only. With no HttpContext, or no W3C activity to read, it falls back to the IdentifierBroker rather than Guid.Empty."
+    description: "The one correlation id belonging to the request in flight, taken from W3C Trace Context rather than minted: ASP.NET parses the caller's traceparent into Activity.Current before any of our code runs, and the trace id becomes the correlation id — same 128 bits, same 32 hex characters, so Guid.ToString(N) of a correlation id IS the trace id. Settled on first read and kept on HttpContext.Items, so the middleware that writes the X-Correlation-Id response header, the exposer that hands the id down to the coordination service, and anything else resolved during the request all read the same value. Registered scoped in the API host only, once per scope behind both ICorrelationBroker and the metric library's IRequestTraceBroker port: it answers that port itself, with the same GetRequestSpanIdAsync, rather than through a forwarding broker - one broker calling another is what The Standard rules out. The metric service asks the port while the request is still alive and carries the answer into the deferred replay, which runs later on a background worker with no request left to ask. With no HttpContext, or no W3C activity to read, it falls back to the IdentifierBroker rather than Guid.Empty."
     methods:
       - GetCorrelationIdAsync
       - GetRequestSpanIdAsync
@@ -422,17 +415,6 @@ components:
       - from: GetCorrelationIdAsync
         to: IdentifierBroker
         method: GetIdentifierAsync
-  - id: RequestTraceBroker
-    name: RequestTraceBroker
-    layer: broker
-    col: 11
-    description: "Satisfies the metric library's request-span port from the correlation broker, the way AuditUserBroker satisfies its identity port from the security broker. The metric service asks for it while the request is still alive and carries the answer into the deferred replay, which runs later on a background worker with no request left to ask. Registered scoped in the API host; a host that registers nothing gets the library's null object and its replayed spans group by trace alone."
-    methods:
-      - GetRequestSpanIdAsync
-    calls:
-      - from: GetRequestSpanIdAsync
-        to: CorrelationBroker
-        method: GetRequestSpanIdAsync
   - id: DateTimeBroker
     name: DateTimeBroker
     layer: broker
@@ -1085,7 +1067,7 @@ components:
     name: ConsumerAccessService
     layer: foundation
     col: 10
-    description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService's access check. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken; its TryCatch maps HttpRequestException to a critical dependency exception and a timeout (including an HttpClient timeout, a cancelled task wrapping a TimeoutException) onto TimedOutConsumerAccessServiceException. The caller's own cancellation is rethrown untouched and never logged. It takes no storage broker — consumer access is no longer held locally."
+    description: "A single passthrough onto ConsumerAccessBroker, consumed by Stu3PatientOrchestrationService's access check. Validates the ValidateAccessRequest (ConsumerUserId, NhsNumber, CorrelationId) and forwards it with the caller's CancellationToken, then classifies the answer by status, media type and problem errorCode: a 403 carrying an application/json Access body is read as the ConsumerAccess it carries and returned with IsAccessAllowed forced false, exactly as a refusing 200 would be; a 401 problem with errorCode ConsumerUnknown becomes UnauthorizedConsumerAccessServiceException, a dependency validation failure the orchestration sends down its unauthorized path; every other 401 becomes FailedConsumerAccessAuthenticationException and every other 403 FailedConsumerAccessAuthorizationException - this service's own token or app role refused, critical dependency failures whose messages name the cause and whose Data carries status, errorCode, detail, the remote correlation id, content type and WWW-Authenticate. See the README table. Its TryCatch maps HttpRequestException - every other non 2xx status - to a critical dependency exception and a timeout (including an HttpClient timeout, a cancelled task wrapping a TimeoutException) onto TimedOutConsumerAccessServiceException. The caller's own cancellation is rethrown untouched and never logged. It takes no storage broker — consumer access is no longer held locally."
     methods:
       - CheckConsumerAccessAsync
     calls:

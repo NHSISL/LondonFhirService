@@ -11,5 +11,9 @@ namespace LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions
         public UnauthorizedPatientOrchestrationException(string message)
             : base(message)
         { }
+
+        public UnauthorizedPatientOrchestrationException(string message, Xeption innerException)
+            : base(message, innerException)
+        { }
     }
 }

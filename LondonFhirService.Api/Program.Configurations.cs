@@ -619,7 +619,7 @@ public partial class Program
         }
     }
 
-    private static void AddBrokers(IServiceCollection services, IConfiguration configuration)
+    internal static void AddBrokers(IServiceCollection services, IConfiguration configuration)
     {
         SecurityConfigurations securityConfigurations = new()
         {
@@ -652,12 +652,30 @@ public partial class Program
         // Scoped, because the correlation id is per request. The value itself lives on
         // HttpContext.Items, so a second instance within the same request still reads the first
         // one's id - the lifetime is what the broker means, not what makes it work.
-        services.AddScoped<ICorrelationBroker, CorrelationBroker>();
+        //
+        // One instance behind both interfaces. The same broker answers the metric library's
+        // request-span port, and resolving the two separately would give a background worker's
+        // scope - which has no HttpContext, so keeps the pair in the instance - two instances
+        // that each mint their own correlation id for one operation.
+        services.AddScoped<CorrelationBroker>();
 
-        // Scoped for the same reason: it forwards a value captured on the request in flight.
-        services.AddScoped<IRequestTraceBroker, RequestTraceBroker>();
+        services.AddScoped<ICorrelationBroker>(serviceProvider =>
+            serviceProvider.GetRequiredService<CorrelationBroker>());
+
+        services.AddScoped<IRequestTraceBroker>(serviceProvider =>
+            serviceProvider.GetRequiredService<CorrelationBroker>());
+
         services.AddScoped<IAuditAndMetricStorageBroker, AuditAndMetricStorageBroker>();
-        services.AddScoped<IAuditUserBroker, AuditUserBroker>();
+
+        // The audit library's identity port, answered by SecurityAuditBroker. Scoped, never a
+        // singleton: the broker captures the ClaimsPrincipal in its constructor, so a singleton
+        // would be built at startup with no HttpContext and stamp every audit row and metric span
+        // anonymous. Built explicitly so the request constructor is the one used.
+        services.AddScoped<IAuditUserBroker>(serviceProvider =>
+            new SecurityAuditBroker(
+                serviceProvider.GetRequiredService<IHttpContextAccessor>(),
+                serviceProvider.GetRequiredService<SecurityConfigurations>()));
+
         services.AddTransient<IDateTimeBroker, DateTimeBroker>();
         services.AddTransient<IStu3FhirBroker, Stu3FhirBroker>();
         services.AddTransient<IIdentifierBroker, IdentifierBroker>();
