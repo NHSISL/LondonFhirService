@@ -2,6 +2,7 @@
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
@@ -23,9 +24,10 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
     /// </summary>
     public partial class ConsumerAccessServiceTests
     {
+        // A 403 whose body is null is not an access decision, so it is a refusal of this service
+        // rather than of the consumer - see ConsumerAccessServiceTests.Response.Exceptions.
         [Theory]
         [InlineData(HttpStatusCode.OK)]
-        [InlineData(HttpStatusCode.Forbidden)]
         public async Task ShouldThrowValidationExceptionOnCheckConsumerAccessIfResponseIsNullAndLogItAsync(
             HttpStatusCode answeredStatusCode)
         {
@@ -188,21 +190,28 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             // given
             ValidateAccessRequest randomValidateAccessRequest = CreateRandomValidateAccessRequest();
             ValidateAccessRequest inputValidateAccessRequest = randomValidateAccessRequest;
-            string randomProblemDetails = GetRandomString();
+            string randomDetail = GetRandomString();
+            string randomCorrelationId = Guid.NewGuid().ToString("N");
 
-            var returnedConsumerAccessResponse = new ConsumerAccessResponse
-            {
-                StatusCode = HttpStatusCode.Unauthorized,
-                Content = randomProblemDetails
-            };
+            ConsumerAccessResponse returnedConsumerAccessResponse =
+                CreateProblemResponse(
+                    HttpStatusCode.Unauthorized,
+                    errorCode: "ConsumerUnknown",
+                    detail: randomDetail,
+                    correlationId: randomCorrelationId);
 
             var unauthorizedConsumerAccessServiceException =
                 new UnauthorizedConsumerAccessServiceException(
                     message: "Consumer access service does not recognise the consumer.");
 
-            unauthorizedConsumerAccessServiceException.AddData(
-                key: nameof(ConsumerAccessResponse.Content),
-                values: randomProblemDetails);
+            AddExpectedResponseData(
+                unauthorizedConsumerAccessServiceException,
+                HttpStatusCode.Unauthorized,
+                errorCode: "ConsumerUnknown",
+                detail: randomDetail,
+                correlationId: randomCorrelationId,
+                contentType: "application/problem+json",
+                wwwAuthenticate: string.Empty);
 
             var expectedConsumerAccessServiceDependencyValidationException =
                 new ConsumerAccessServiceDependencyValidationException(
@@ -226,12 +235,11 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
                         testCode: checkConsumerAccessTask.AsTask);
 
             // then
-            // A 401 is the dependency saying it does not know this consumer - an answer about the
-            // caller, not a fault in the dependency. Categorised apart from the critical dependency
-            // failure every non 2xx status used to become, so the orchestration can send it down
-            // the same unauthorized path an unidentified caller takes. The problem details body
-            // travels in Data: an empty one is the tell of a 401 from the dependency's own
-            // authentication rather than from its access decision.
+            // A 401 with errorCode ConsumerUnknown is the dependency saying it does not know this
+            // consumer - an answer about the caller, not a fault in the dependency. It is the only
+            // 401 categorised apart from a critical dependency failure, so the orchestration can
+            // send it down the same unauthorized path an unidentified caller takes. Every other
+            // 401 is this service's own credentials being refused - see Response.Exceptions.
             actualConsumerAccessServiceDependencyValidationException.Should()
                 .BeEquivalentTo(expectedConsumerAccessServiceDependencyValidationException);
 

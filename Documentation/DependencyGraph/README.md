@@ -172,14 +172,34 @@ Actions).
   single-method passthrough over `ConsumerAccessBroker`. The returned
   `ConsumerAccess` decides the outcome: `IsAccessAllowed == false` audits
   "Access Forbidden" with the returned reason codes and throws; allowed audits
-  "Access Allowed" naming the organisations that granted it. The remote
-  service refuses with a 403 carrying the same body, which
-  `ConsumerAccessService` returns as a refusing `ConsumerAccess`, so it takes
-  the same forbidden path; its 401, an unknown consumer, takes the same
-  unauthorized path as a caller this service cannot identify. Every allow and
+  "Access Allowed" naming the organisations that granted it. Every allow and
   every denial is still written to the audit trail. There is no
   `AccessOrchestrationService` any more — with one service dependency it was
   no longer an orchestration.
+- **The remote service uses 401 and 403 for two different things, and
+  `ConsumerAccessService` tells them apart.** Its answers about a consumer and
+  its refusals of this service's own credentials share the same two statuses;
+  only the body separates them — its media type, and the `errorCode` on an
+  `application/problem+json` problem. `ConsumerAccessBroker` hands back the
+  status, body, media type and `WWW-Authenticate` challenge untouched, and the
+  foundation classifies:
+
+  | Answer | Meaning | LFS path | Consumer sees |
+  |---|---|---|---|
+  | 200, `Access` body | access decided | allowed, or the denial path if `isAccessAllowed` is false | the record, or 404 |
+  | 403, `application/json` `Access` body | access refused | returned as a refusing `ConsumerAccess`: "Access Forbidden" audit, AccessCheck span Failed / `AccessForbidden` | 404 |
+  | 401 problem, `ConsumerUnknown` | consumer not registered | `UnauthorizedConsumerAccessServiceException` (dependency validation), the same unauthorized path as a caller LFS cannot identify | 404 |
+  | 401 problem, `BearerTokenMissing` / `BearerTokenInvalid` / any other or no code | LFS's token missing or rejected | `FailedConsumerAccessAuthenticationException`, critical dependency | 500 |
+  | 401 with no readable problem (empty, not `application/problem+json`) | a gateway or the service's authentication refused LFS | `FailedConsumerAccessAuthenticationException`, critical; the message quotes the content type and `WWW-Authenticate` | 500 |
+  | 403 problem, `InsufficientPermissions` or any other code | LFS's identity lacks the app role | `FailedConsumerAccessAuthorizationException`, critical dependency | 500 |
+  | 403 that is neither an `Access` body nor a problem | refused LFS, not the consumer | `FailedConsumerAccessAuthorizationException`, critical | 500 |
+  | anything else outside 2xx | dependency failure | `HttpRequestException`, critical dependency, as ever | 500 |
+
+  The two `Failed*` exceptions carry `StatusCode`, `ErrorCode`, `Detail`, the
+  remote service's `CorrelationId`, `ContentType` and `WwwAuthenticate` in
+  `Data`, and their messages name the cause and what to check. They are never
+  audited as an access decision: the AccessCheck span is Failed under the
+  dependency failure's own name, not `AccessForbidden`.
 - **`AccessConfigurations.CheckAccessPermissions` gates the check inside
   `ValidateAccess`,** not at the coordination layer: off, it audits the skip
   and returns. `GetStructuredRecordSerialisedAsync` runs the same check first

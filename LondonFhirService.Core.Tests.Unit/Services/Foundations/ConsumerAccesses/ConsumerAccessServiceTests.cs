@@ -79,8 +79,57 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.ConsumerAccesse
             new ConsumerAccessResponse
             {
                 StatusCode = statusCode,
+                ContentType = "application/json",
+                WwwAuthenticate = string.Empty,
                 Content = JsonSerializer.Serialize(consumerAccess)
             };
+
+        /// <summary>
+        /// A problem the way the dependency sends one: application/problem+json, carrying the
+        /// errorCode that says which of its refusals this is.
+        /// </summary>
+        private static ConsumerAccessResponse CreateProblemResponse(
+            HttpStatusCode statusCode,
+            string errorCode,
+            string detail,
+            string correlationId) =>
+            new ConsumerAccessResponse
+            {
+                StatusCode = statusCode,
+                ContentType = "application/problem+json",
+                WwwAuthenticate = string.Empty,
+
+                Content = JsonSerializer.Serialize(new
+                {
+                    type = "https://tools.ietf.org/html/rfc9110",
+                    title = GetRandomString(),
+                    status = (int)statusCode,
+                    detail = detail,
+                    errorCode = errorCode,
+                    correlationId = correlationId
+                })
+            };
+
+        /// <summary>
+        /// What every classified refusal carries in Data, so the log says which status, which code
+        /// and which of the dependency's own requests it was, without the body having to be read.
+        /// </summary>
+        private static void AddExpectedResponseData(
+            Xeption exception,
+            HttpStatusCode statusCode,
+            string errorCode,
+            string detail,
+            string correlationId,
+            string contentType,
+            string wwwAuthenticate)
+        {
+            exception.AddData(key: "StatusCode", values: ((int)statusCode).ToString());
+            exception.AddData(key: "ErrorCode", values: errorCode ?? string.Empty);
+            exception.AddData(key: "Detail", values: detail ?? string.Empty);
+            exception.AddData(key: "CorrelationId", values: correlationId ?? string.Empty);
+            exception.AddData(key: "ContentType", values: contentType ?? string.Empty);
+            exception.AddData(key: "WwwAuthenticate", values: wwwAuthenticate ?? string.Empty);
+        }
 
         private static List<string> CreateRandomStrings() =>
             Enumerable.Range(start: 1, count: GetRandomNumber())

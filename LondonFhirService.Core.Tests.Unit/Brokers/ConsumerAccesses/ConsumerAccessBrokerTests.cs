@@ -53,20 +53,26 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.ConsumerAccesses
         }
 
         [Theory]
-        [InlineData(HttpStatusCode.OK)]
-        [InlineData(HttpStatusCode.Unauthorized)]
-        [InlineData(HttpStatusCode.Forbidden)]
+        [InlineData(HttpStatusCode.OK, "application/json", null)]
+        [InlineData(HttpStatusCode.Unauthorized, "application/problem+json", null)]
+        [InlineData(HttpStatusCode.Unauthorized, null, "Bearer error=\"invalid_token\"")]
+        [InlineData(HttpStatusCode.Forbidden, "application/json", null)]
+        [InlineData(HttpStatusCode.Forbidden, "application/problem+json", null)]
         public async Task ShouldReturnTheStatusCodeAndBodyOnCheckConsumerAccessAsync(
-            HttpStatusCode answeredStatusCode)
+            HttpStatusCode answeredStatusCode,
+            string answeredMediaType,
+            string answeredWwwAuthenticate)
         {
             // given
             string randomToken = GetRandomString();
-            string randomContent = GetRandomString();
+            string randomContent = answeredMediaType is null ? string.Empty : GetRandomString();
             ValidateAccessRequest inputValidateAccessRequest = CreateRandomValidateAccessRequest();
 
             var expectedConsumerAccessResponse = new ConsumerAccessResponse
             {
                 StatusCode = answeredStatusCode,
+                ContentType = answeredMediaType,
+                WwwAuthenticate = answeredWwwAuthenticate ?? string.Empty,
                 Content = randomContent
             };
 
@@ -77,7 +83,11 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.ConsumerAccesses
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(new AccessToken(randomToken, DateTimeOffset.UtcNow.AddHours(1)));
 
-            this.httpMessageHandler.Respond(answeredStatusCode, randomContent);
+            this.httpMessageHandler.Respond(
+                answeredStatusCode,
+                randomContent,
+                answeredMediaType,
+                answeredWwwAuthenticate);
 
             // when
             ConsumerAccessResponse actualConsumerAccessResponse =
@@ -86,8 +96,10 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.ConsumerAccesses
                     TestContext.Current.CancellationToken);
 
             // then
-            // Both halves, untouched. A 403 carries the same Access body a 200 does, and a 401
-            // carries problem details; which is which is for the service to decide, not this.
+            // Everything the service needs to tell the answers apart, untouched: the status, the
+            // body, its media type - an Access body is application/json, a problem is
+            // application/problem+json - and any WWW-Authenticate challenge, which is all a
+            // gateway's bare 401 carries. Which is which is for the service to decide, not this.
             actualConsumerAccessResponse.Should().BeEquivalentTo(expectedConsumerAccessResponse);
 
             this.httpMessageHandler.RequestMethod.Should().Be(HttpMethod.Post);
@@ -120,7 +132,11 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.ConsumerAccesses
                     It.IsAny<CancellationToken>()))
                         .ReturnsAsync(new AccessToken(GetRandomString(), DateTimeOffset.UtcNow.AddHours(1)));
 
-            this.httpMessageHandler.Respond(failedStatusCode, GetRandomString());
+            this.httpMessageHandler.Respond(
+                failedStatusCode,
+                GetRandomString(),
+                mediaType: "application/json",
+                wwwAuthenticate: null);
 
             // when
             ValueTask<ConsumerAccessResponse> checkConsumerAccessTask =
@@ -157,16 +173,24 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.ConsumerAccesses
         {
             private HttpStatusCode statusCode;
             private string content;
+            private string mediaType;
+            private string wwwAuthenticate;
 
             public HttpMethod RequestMethod { get; private set; }
             public Uri RequestUri { get; private set; }
             public AuthenticationHeaderValue RequestAuthorization { get; private set; }
             public string RequestContent { get; private set; }
 
-            public void Respond(HttpStatusCode statusCode, string content)
+            public void Respond(
+                HttpStatusCode statusCode,
+                string content,
+                string mediaType,
+                string wwwAuthenticate)
             {
                 this.statusCode = statusCode;
                 this.content = content;
+                this.mediaType = mediaType;
+                this.wwwAuthenticate = wwwAuthenticate;
             }
 
             protected override async Task<HttpResponseMessage> SendAsync(
@@ -178,10 +202,24 @@ namespace LondonFhirService.Core.Tests.Unit.Brokers.ConsumerAccesses
                 this.RequestAuthorization = request.Headers.Authorization;
                 this.RequestContent = await request.Content.ReadAsStringAsync(cancellationToken);
 
-                return new HttpResponseMessage(this.statusCode)
+                // No media type means no body at all, the way a gateway's bare 401 arrives.
+                HttpContent responseContent = this.mediaType is null
+                    ? new ByteArrayContent(Array.Empty<byte>())
+                    : new StringContent(this.content, Encoding.UTF8, this.mediaType);
+
+                var httpResponseMessage = new HttpResponseMessage(this.statusCode)
                 {
-                    Content = new StringContent(this.content, Encoding.UTF8, "application/json")
+                    Content = responseContent
                 };
+
+                if (this.wwwAuthenticate is not null)
+                {
+                    httpResponseMessage.Headers.TryAddWithoutValidation(
+                        "WWW-Authenticate",
+                        this.wwwAuthenticate);
+                }
+
+                return httpResponseMessage;
             }
         }
     }

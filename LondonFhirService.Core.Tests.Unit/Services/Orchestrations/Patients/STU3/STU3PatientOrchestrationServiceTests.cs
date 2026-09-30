@@ -351,6 +351,27 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
                 innerException: unauthorizedConsumerAccessServiceException);
         }
 
+        /// <summary>
+        /// ConsumerAccessService refusing this service rather than the consumer: its bearer token
+        /// rejected, or its identity missing an app role. Configuration faults, localised by the
+        /// foundation as critical dependency failures.
+        /// </summary>
+        public static TheoryData<Xeption> ConsumerAccessConfigurationFailures()
+        {
+            string randomMessage = GetRandomString();
+
+            return new TheoryData<Xeption>
+            {
+                new ConsumerAccessServiceDependencyException(
+                    message: "ConsumerAccess dependency error occurred, contact support.",
+                    innerException: new FailedConsumerAccessAuthenticationException(randomMessage)),
+
+                new ConsumerAccessServiceDependencyException(
+                    message: "ConsumerAccess dependency error occurred, contact support.",
+                    innerException: new FailedConsumerAccessAuthorizationException(randomMessage))
+            };
+        }
+
         public static TheoryData<Exception> CancellationExceptions()
         {
             string randomMessage = GetRandomString();

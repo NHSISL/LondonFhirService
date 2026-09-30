@@ -9,6 +9,7 @@ using System.Threading;
 using FluentAssertions;
 using ISL.Security.Client.Models.Foundations.Users;
 using LondonFhirService.Core.Models.Brokers.ConsumerAccesses;
+using LondonFhirService.Core.Models.Orchestrations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Foundations.Metrics;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using Moq;
@@ -190,6 +191,72 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Orchestrations.Patients.STU
             accessCheckSpan.Status.Should().Be(MetricStatus.Failed);
             accessCheckSpan.ErrorCode.Should().Be("UnauthorizedPatientOrchestrationException");
             accessCheckSpan.Description.Should().Be("Access check did not complete.");
+        }
+
+        [Theory]
+        [MemberData(nameof(ConsumerAccessConfigurationFailures))]
+        public async Task ShouldNotRecordAConfigurationFailureAsAnAccessDenialAsync(
+            Xeption configurationFailure)
+        {
+            // given
+            string inputNhsNumber = GetRandomString();
+            Guid correlationId = Guid.NewGuid();
+            Guid inputParentId = Guid.NewGuid();
+            Guid accessCheckSpanId = Guid.NewGuid();
+            DateTimeOffset startedAt = GetRandomDateTimeOffset();
+            User randomUser = CreateRandomUser(GetRandomString());
+            var recordedMetrics = new List<Metric>();
+
+            this.identifierBrokerMock.Setup(broker => broker.GetIdentifierAsync())
+                .ReturnsAsync(accessCheckSpanId);
+
+            this.dateTimeBrokerMock.Setup(broker => broker.GetCurrentDateTimeOffsetAsync())
+                .ReturnsAsync(startedAt);
+
+            this.securityBrokerMock.Setup(broker => broker.GetCurrentUserAsync())
+                .ReturnsAsync(randomUser);
+
+            this.consumerAccessServiceMock.Setup(service =>
+                service.CheckConsumerAccessAsync(
+                    It.IsAny<ValidateAccessRequest>(),
+                    It.IsAny<CancellationToken>()))
+                        .ThrowsAsync(configurationFailure);
+
+            this.auditAndMetricBrokerMock.Setup(broker =>
+                broker.LogMetricAsync(It.IsAny<Metric>(), It.IsAny<CancellationToken>()))
+                    .Callback<Metric, CancellationToken>((metric, _) => recordedMetrics.Add(metric));
+
+            // when
+            Func<Task> getStructuredRecord = async () =>
+                await this.patientOrchestrationService.GetStructuredRecordSerialisedAsync(
+                    correlationId,
+                    inputNhsNumber,
+                    parentId: inputParentId,
+                    cancellationToken: CancellationToken.None);
+
+            // then
+            // The dependency refused this service, not the consumer, so nothing was decided about
+            // the consumer: no "Access Forbidden" audit, no AccessForbidden span - a failed access
+            // check under the dependency failure's own name, and a dependency error upward.
+            await getStructuredRecord.Should().ThrowAsync<PatientOrchestrationDependencyException>();
+
+            Metric accessCheckSpan = recordedMetrics.Should().ContainSingle().Subject;
+            accessCheckSpan.Id.Should().Be(accessCheckSpanId);
+            accessCheckSpan.Type.Should().Be(MetricType.AccessCheck);
+            accessCheckSpan.Status.Should().Be(MetricStatus.Failed);
+            accessCheckSpan.ErrorCode.Should().Be(configurationFailure.GetType().Name);
+            accessCheckSpan.ErrorCode.Should().NotBe("AccessForbidden");
+            accessCheckSpan.Description.Should().Be("Access check did not complete.");
+
+            this.auditAndMetricBrokerMock.Verify(broker =>
+                broker.RecordAuditAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Never);
         }
 
         [Fact]
