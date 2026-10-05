@@ -332,7 +332,7 @@ public partial class Program
 
         if (accessConfig is null)
         {
-            problems.Add("AccessConfigurations is missing.");
+            problems.Add("ConsumerAccessConfiguration is missing.");
         }
 
         if (problems.Count > 0)
@@ -547,7 +547,7 @@ public partial class Program
         }
     }
 
-    private static void AddProviders(IServiceCollection services, IConfiguration configuration)
+    internal static void AddProviders(IServiceCollection services, IConfiguration configuration)
     {
         PatientServiceConfig patientServiceConfig = configuration
             .GetSection("PatientServiceConfig")
@@ -564,8 +564,17 @@ public partial class Program
         // checkAccessPermissions is deliberately false for now: the consumer access service is not
         // yet in use, and the flag is the switch that turns it on when it is. A present section
         // saying false is the intended state; only an absent one is a misconfiguration.
+        //
+        // Read from ConsumerAccessConfiguration rather than a section of its own. The switch and the
+        // endpoint it switches on belong together, so one section carries both; the binder picks
+        // CheckAccessPermissions out of it and ignores the url and scope.
+        //
+        // The model defaults to true, but appsettings.json sets false and is loaded before the
+        // environment variables, so an environment that leaves the new key unset runs with the
+        // check off. One still setting the old AccessConfigurations__checkAccessPermissions is
+        // ignored the same way - turn the check on with ConsumerAccessConfiguration__checkAccessPermissions.
         AccessConfigurations accessConfig = configuration
-            .GetSection("AccessConfigurations")
+            .GetSection("ConsumerAccessConfiguration")
             .Get<AccessConfigurations>();
 
         ValidateProviderConfigurations(patientServiceConfig, ddsConfig, ldsConfig, accessConfig);
