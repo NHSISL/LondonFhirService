@@ -547,7 +547,7 @@ public partial class Program
         }
     }
 
-    private static void AddProviders(IServiceCollection services, IConfiguration configuration)
+    internal static void AddProviders(IServiceCollection services, IConfiguration configuration)
     {
         PatientServiceConfig patientServiceConfig = configuration
             .GetSection("PatientServiceConfig")
