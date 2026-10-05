@@ -45,7 +45,9 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         }
 
         /// <summary>
-        /// A section without the key checks access: the safe default, not an unchecked one.
+        /// When no configuration source sets the key, the model's own default checks access. The
+        /// shipped appsettings.json does set it - to false - so in the running API this default
+        /// applies only if that base value is removed; see the next test for what actually runs.
         /// </summary>
         [Fact]
         public void ShouldCheckAccessPermissionsIfConsumerAccessConfigurationOmitsTheKey()
@@ -59,6 +61,43 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
 
             // then
             actualAccessConfigurations.CheckAccessPermissions.Should().BeTrue();
+        }
+
+        /// <summary>
+        /// What an environment that has not migrated gets. appsettings.json is loaded before the
+        /// environment variables and sets checkAccessPermissions to false, so an environment that
+        /// still sets only the old AccessConfigurations__checkAccessPermissions=true runs with the
+        /// access check OFF - the old key is ignored and the base value wins. Deployments must move
+        /// the setting to ConsumerAccessConfiguration__checkAccessPermissions.
+        /// </summary>
+        [Fact]
+        public void ShouldNotCheckAccessPermissionsIfAnEnvironmentStillSetsOnlyTheOldKey()
+        {
+            // given
+            Dictionary<string, string> baseSettings = CreateProviderSettings();
+            baseSettings["ConsumerAccessConfiguration:checkAccessPermissions"] = "false";
+
+            var environmentSettings = new Dictionary<string, string>
+            {
+                ["AccessConfigurations:checkAccessPermissions"] = "true"
+            };
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(baseSettings)
+                .AddInMemoryCollection(environmentSettings)
+                .Build();
+
+            var services = new ServiceCollection();
+
+            // when
+            Program.AddProviders(services, configuration);
+
+            // then
+            services
+                .Single(descriptor => descriptor.ServiceType == typeof(AccessConfigurations))
+                .ImplementationInstance
+                .Should().BeOfType<AccessConfigurations>()
+                .Which.CheckAccessPermissions.Should().BeFalse();
         }
 
         /// <summary>
@@ -109,22 +148,25 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         /// are the only thing under test. The consumer section carries its url and scope but not
         /// the switch, which each test sets or leaves out.
         /// </summary>
-        private static Dictionary<string, string> CreateProviderSettings() => new()
+        private static Dictionary<string, string> CreateProviderSettings()
         {
-            ["PatientServiceConfig:MaxProviderWaitTimeMilliseconds"] = "120000",
-            ["DdsConfigurations:clientId"] = "fhir-api",
-            ["DdsConfigurations:clientSecret"] = "secret",
-            ["DdsConfigurations:authorisationUrl"] = "https://auth.example.invalid/token",
-            ["DdsConfigurations:baseUrl"] = "https://dds.example.invalid/",
-            ["DdsConfigurations:getStructuredRecordRelativeUrl"] = "patient/$getstructuredrecord",
-            ["DdsConfigurations:timeoutSeconds"] = "120",
-            ["LdsConfigurations:scope"] = "api://lds/.default",
-            ["LdsConfigurations:baseUrl"] = "https://lds.example.invalid/",
-            ["LdsConfigurations:getStructuredRecordRelativeUrl"] = "api/patient/$getstructuredrecord",
-            ["LdsConfigurations:timeoutSeconds"] = "120",
-            ["ConsumerAccessConfiguration:url"] = "https://consumer-access.example.invalid/",
-            ["ConsumerAccessConfiguration:scope"] = "api://consumer-access/.default",
-            ["FakeCaptchaProviderMode"] = "true"
-        };
+            return new Dictionary<string, string>
+            {
+                ["PatientServiceConfig:MaxProviderWaitTimeMilliseconds"] = "120000",
+                ["DdsConfigurations:clientId"] = "fhir-api",
+                ["DdsConfigurations:clientSecret"] = "secret",
+                ["DdsConfigurations:authorisationUrl"] = "https://auth.example.invalid/token",
+                ["DdsConfigurations:baseUrl"] = "https://dds.example.invalid/",
+                ["DdsConfigurations:getStructuredRecordRelativeUrl"] = "patient/$getstructuredrecord",
+                ["DdsConfigurations:timeoutSeconds"] = "120",
+                ["LdsConfigurations:scope"] = "api://lds/.default",
+                ["LdsConfigurations:baseUrl"] = "https://lds.example.invalid/",
+                ["LdsConfigurations:getStructuredRecordRelativeUrl"] = "api/patient/$getstructuredrecord",
+                ["LdsConfigurations:timeoutSeconds"] = "120",
+                ["ConsumerAccessConfiguration:url"] = "https://consumer-access.example.invalid/",
+                ["ConsumerAccessConfiguration:scope"] = "api://consumer-access/.default",
+                ["FakeCaptchaProviderMode"] = "true"
+            };
+        }
     }
 }

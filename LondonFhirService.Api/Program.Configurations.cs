@@ -568,6 +568,11 @@ public partial class Program
         // Read from ConsumerAccessConfiguration rather than a section of its own. The switch and the
         // endpoint it switches on belong together, so one section carries both; the binder picks
         // CheckAccessPermissions out of it and ignores the url and scope.
+        //
+        // The model defaults to true, but appsettings.json sets false and is loaded before the
+        // environment variables, so an environment that leaves the new key unset runs with the
+        // check off. One still setting the old AccessConfigurations__checkAccessPermissions is
+        // ignored the same way - turn the check on with ConsumerAccessConfiguration__checkAccessPermissions.
         AccessConfigurations accessConfig = configuration
             .GetSection("ConsumerAccessConfiguration")
             .Get<AccessConfigurations>();
