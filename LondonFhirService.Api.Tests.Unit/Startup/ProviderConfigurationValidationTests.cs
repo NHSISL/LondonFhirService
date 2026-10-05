@@ -71,7 +71,7 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
             message.Should().Contain("PatientServiceConfig is missing.");
             message.Should().Contain("DdsConfigurations is missing.");
             message.Should().Contain("LdsConfigurations is missing.");
-            message.Should().Contain("AccessConfigurations is missing.");
+            message.Should().Contain("ConsumerAccessConfiguration is missing.");
         }
 
         [Theory]
