@@ -148,9 +148,8 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         /// are the only thing under test. The consumer section carries its url and scope but not
         /// the switch, which each test sets or leaves out.
         /// </summary>
-        private static Dictionary<string, string> CreateProviderSettings()
-        {
-            return new Dictionary<string, string>
+        private static Dictionary<string, string> CreateProviderSettings() =>
+            new Dictionary<string, string>
             {
                 ["PatientServiceConfig:MaxProviderWaitTimeMilliseconds"] = "120000",
                 ["DdsConfigurations:clientId"] = "fhir-api",
@@ -167,6 +166,5 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
                 ["ConsumerAccessConfiguration:scope"] = "api://consumer-access/.default",
                 ["FakeCaptchaProviderMode"] = "true"
             };
-        }
     }
 }
