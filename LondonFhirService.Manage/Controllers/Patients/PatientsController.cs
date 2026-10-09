@@ -123,7 +123,7 @@ namespace LondonFhirService.Manage.Controllers.Patients
         {
             var problemDetails = new ProblemDetails
             {
-                Title = exception.Message,
+                Title = exception.InnerException?.Message ?? exception.Message,
                 Status = statusCode,
 
                 Detail = string.IsNullOrWhiteSpace(responseBody)
