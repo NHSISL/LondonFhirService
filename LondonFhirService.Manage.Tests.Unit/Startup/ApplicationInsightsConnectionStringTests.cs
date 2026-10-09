@@ -33,6 +33,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Startup
             "InstrumentationKey=22222222-2222-2222-2222-222222222222;"
                 + "IngestionEndpoint=https://app-service.example.invalid/";
 
+        private const string InstrumentationKeySetting =
+            "InstrumentationKey=33333333-3333-3333-3333-333333333333";
+
         private const string Placeholder = "override in appsettings.Development.json";
 
         [Fact]
@@ -55,6 +58,26 @@ namespace LondonFhirService.Manage.Tests.Unit.Startup
         /// A placeholder is never null, so it must not stop the App Service's connection string
         /// being read.
         /// </summary>
+        [Theory]
+        [InlineData(InstrumentationKeySetting)]
+        [InlineData(InstrumentationKeySetting + ";")]
+        [InlineData(" InstrumentationKey = 33333333-3333-3333-3333-333333333333 ")]
+        [InlineData(InstrumentationKeySetting + ";IngestionEndpoint=https://configured.example.invalid/")]
+        public void ShouldUseTheConfiguredConnectionStringIfItIsWellFormed(string wellFormedConnectionString)
+        {
+            // given
+            IConfiguration configuration = CreateConfiguration(
+                configuredConnectionString: wellFormedConnectionString,
+                appServiceConnectionString: AppServiceConnectionString);
+
+            // when
+            string actualConnectionString =
+                Program.GetApplicationInsightsConnectionString(configuration);
+
+            // then
+            actualConnectionString.Should().Be(wellFormedConnectionString);
+        }
+
         [Fact]
         public void ShouldUseTheAppServiceConnectionStringIfTheConfiguredOneIsAPlaceholder()
         {
@@ -77,6 +100,10 @@ namespace LondonFhirService.Manage.Tests.Unit.Startup
         [InlineData(
             "IngestionEndpoint=https://configured.example.invalid/;"
                 + "NotInstrumentationKey=11111111-1111-1111-1111-111111111111")]
+        [InlineData(InstrumentationKeySetting + ";malformed-segment")]
+        [InlineData(InstrumentationKeySetting + "; ;")]
+        [InlineData(InstrumentationKeySetting + ";IngestionEndpoint=")]
+        [InlineData(InstrumentationKeySetting + ";" + InstrumentationKeySetting)]
         public void ShouldUseTheAppServiceConnectionStringIfTheConfiguredOneIsMalformed(
             string malformedConnectionString)
         {
