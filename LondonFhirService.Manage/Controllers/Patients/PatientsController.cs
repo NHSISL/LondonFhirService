@@ -118,6 +118,13 @@ namespace LondonFhirService.Manage.Controllers.Patients
         /// The body is read from a property rather than from Exception.Data, and this is the only
         /// place it is read. It never passed through the logging broker on the way here, so the
         /// provider's OperationOutcome reaches the person who asked for it and nowhere else.
+        ///
+        /// The title is the inner exception's message, never the categorical wrapper's. That is
+        /// the original failure - the status the broker reported, the transport or parser error -
+        /// rather than "dependency error occurred, contact support", which tells the operator
+        /// nothing on the one screen whose purpose is explaining why a call failed. It can name a
+        /// host or a parser position, which is deliberate: this endpoint answers only the
+        /// operators authorised above, from the business IP range, never a consumer.
         /// </summary>
         private ObjectResult UpstreamProblem(int statusCode, Xeption exception, string responseBody)
         {
@@ -135,17 +142,13 @@ namespace LondonFhirService.Manage.Controllers.Patients
         }
 
         /// <summary>
-        /// What to say when the upstream said nothing to relay.
+        /// What to put in the detail when the upstream said nothing to relay.
         ///
-        /// A timed out call has no response body by definition, so the operator was shown the
-        /// wrapper's generic title over an empty detail - on the one screen whose purpose is
-        /// explaining why a call failed. The timeout message is written by this service and worth
-        /// relaying; the wrapper's own is not.
+        /// A timed out call has no response body by definition, so the detail would otherwise be
+        /// empty. The timeout message is written by this service and is worth repeating there.
         ///
-        /// Deliberately narrow. Relaying any inner message would surface whatever an arbitrary
-        /// dependency failure happened to carry - including Xeption's default
-        /// "Exception of type ... was thrown", which tells an operator nothing and reads like a
-        /// leak of something internal.
+        /// Deliberately narrow. The title already carries the inner exception's message, so any
+        /// other failure without a body leaves the detail null rather than saying it twice.
         /// </summary>
         private static string DescribeFailureWithoutUpstreamBody(Xeption exception) =>
             exception.InnerException is TimedOutPatientServiceException timedOutException
