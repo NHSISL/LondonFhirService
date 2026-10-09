@@ -74,7 +74,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Startup
         [Theory]
         [InlineData("InstrumentationKey=")]
         [InlineData("InstrumentationKey=not-a-guid")]
-        [InlineData("IngestionEndpoint=https://configured.example.invalid/;NotInstrumentationKey=11111111-1111-1111-1111-111111111111")]
+        [InlineData(
+            "IngestionEndpoint=https://configured.example.invalid/;"
+                + "NotInstrumentationKey=11111111-1111-1111-1111-111111111111")]
         public void ShouldUseTheAppServiceConnectionStringIfTheConfiguredOneIsMalformed(
             string malformedConnectionString)
         {
