@@ -67,10 +67,73 @@ public partial class Program
 
     internal static void ConfigureApplicationInsightsTelemetry(WebApplicationBuilder builder)
     {
-        if (ExcludeAppInsightsForTesting == false)
+        if (ExcludeAppInsightsForTesting)
         {
-            builder.Services.AddApplicationInsightsTelemetry();
+            return;
         }
+
+        string? connectionString = GetApplicationInsightsConnectionString(builder.Configuration);
+
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        builder.Services.AddApplicationInsightsTelemetry(options =>
+            options.ConnectionString = connectionString);
+    }
+
+    internal static string? GetApplicationInsightsConnectionString(IConfiguration configuration)
+    {
+        string? configuredConnectionString = configuration["ApplicationInsights:ConnectionString"];
+
+        string? connectionString =
+            IsApplicationInsightsConnectionString(configuredConnectionString)
+                ? configuredConnectionString
+                : configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+        return IsApplicationInsightsConnectionString(connectionString) ? connectionString : null;
+    }
+
+    private static bool IsApplicationInsightsConnectionString(string? connectionString)
+    {
+        if (connectionString is null)
+        {
+            return false;
+        }
+
+        var keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        string? instrumentationKey = null;
+
+        foreach (string setting in connectionString.Split(';'))
+        {
+            if (setting.Length == 0)
+            {
+                continue;
+            }
+
+            string[] keywordAndValue = setting.Split('=', 2);
+
+            if (keywordAndValue.Length != 2)
+            {
+                return false;
+            }
+
+            string keyword = keywordAndValue[0].Trim();
+            string value = keywordAndValue[1].Trim();
+
+            if (keyword.Length == 0 || value.Length == 0 || keywords.Add(keyword) is false)
+            {
+                return false;
+            }
+
+            if (keyword.Equals("InstrumentationKey", StringComparison.OrdinalIgnoreCase))
+            {
+                instrumentationKey = value;
+            }
+        }
+
+        return Guid.TryParse(instrumentationKey, out _);
     }
 
     internal static void ConfigureServices(WebApplicationBuilder builder)
@@ -376,12 +439,9 @@ public partial class Program
 
         try
         {
-            string? connectionString =
-                configuration["ApplicationInsights:ConnectionString"]
-                    ?? configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+            string? connectionString = GetApplicationInsightsConnectionString(configuration);
 
-            if (string.IsNullOrWhiteSpace(connectionString)
-                || connectionString.Contains("InstrumentationKey=", StringComparison.OrdinalIgnoreCase) is false)
+            if (connectionString is null)
             {
                 return;
             }

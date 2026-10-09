@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences;
 using LondonFhirService.Core.Models.Foundations.FhirRecordDifferences.Exceptions;
 using LondonFhirService.Core.Services.Foundations.FhirRecordDifferences;
+using LondonFhirService.Manage.Extensions.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,11 +55,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -81,11 +82,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -116,11 +117,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -157,11 +158,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -198,11 +199,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.ToInnerMessageOnly());
             }
         }
     }

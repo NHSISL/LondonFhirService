@@ -8,6 +8,7 @@ using FluentAssertions;
 using Hl7.Fhir.Model;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using RESTFulSense.Clients.Extensions;
 using RESTFulSense.Models;
 using Xeptions;
 using Task = System.Threading.Tasks.Task;
@@ -107,7 +108,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
             Parameters inputParameters = randomParameters;
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(serverException);
+                InternalServerError(new Xeption(message: serverException.InnerException.Message));
 
             var expectedActionResult = new ActionResult<Bundle>(expectedInternalServerErrorObjectResult);
 
@@ -130,7 +131,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
                 await this.patientController.GetStructuredRecord(inputParameters, cancellationToken);
 
             // then
-            actualActionResult.Should().BeEquivalentTo(expectedActionResult);
+            actualActionResult.ShouldBeEquivalentTo(expectedActionResult);
 
             this.patientCoordinationServiceMock.Verify(coordination =>
                 coordination.GetStructuredRecordSerialisedAsync(

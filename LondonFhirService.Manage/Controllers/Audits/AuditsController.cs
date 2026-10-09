@@ -9,6 +9,7 @@ using Attrify.Attributes;
 using LondonFhirService.Core.Models.Foundations.Audits;
 using LondonFhirService.Core.Models.Foundations.Audits.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Audits;
+using LondonFhirService.Manage.Extensions.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -63,11 +64,11 @@ namespace LondonFhirService.Manage.Controllers.Audits
             }
             catch (AuditServiceDependencyException auditServiceDependencyException)
             {
-                return InternalServerError(auditServiceDependencyException);
+                return InternalServerError(auditServiceDependencyException.ToInnerMessageOnly());
             }
             catch (AuditServiceException auditServiceException)
             {
-                return InternalServerError(auditServiceException);
+                return InternalServerError(auditServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -89,11 +90,11 @@ namespace LondonFhirService.Manage.Controllers.Audits
             }
             catch (AuditServiceDependencyException auditServiceDependencyException)
             {
-                return InternalServerError(auditServiceDependencyException);
+                return InternalServerError(auditServiceDependencyException.ToInnerMessageOnly());
             }
             catch (AuditServiceException auditServiceException)
             {
-                return InternalServerError(auditServiceException);
+                return InternalServerError(auditServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -121,11 +122,11 @@ namespace LondonFhirService.Manage.Controllers.Audits
             }
             catch (AuditServiceDependencyException auditServiceDependencyException)
             {
-                return InternalServerError(auditServiceDependencyException);
+                return InternalServerError(auditServiceDependencyException.ToInnerMessageOnly());
             }
             catch (AuditServiceException auditServiceException)
             {
-                return InternalServerError(auditServiceException);
+                return InternalServerError(auditServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -160,11 +161,11 @@ namespace LondonFhirService.Manage.Controllers.Audits
             }
             catch (AuditServiceDependencyException auditServiceDependencyException)
             {
-                return InternalServerError(auditServiceDependencyException);
+                return InternalServerError(auditServiceDependencyException.ToInnerMessageOnly());
             }
             catch (AuditServiceException auditServiceException)
             {
-                return InternalServerError(auditServiceException);
+                return InternalServerError(auditServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -199,11 +200,11 @@ namespace LondonFhirService.Manage.Controllers.Audits
             }
             catch (AuditServiceDependencyException auditServiceDependencyException)
             {
-                return InternalServerError(auditServiceDependencyException);
+                return InternalServerError(auditServiceDependencyException.ToInnerMessageOnly());
             }
             catch (AuditServiceException auditServiceException)
             {
-                return InternalServerError(auditServiceException);
+                return InternalServerError(auditServiceException.ToInnerMessageOnly());
             }
         }
     }

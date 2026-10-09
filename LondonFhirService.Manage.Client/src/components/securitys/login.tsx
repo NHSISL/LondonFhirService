@@ -5,8 +5,9 @@ import { UserProfile } from '../securitys/userProfile';
 import { MsalConfig } from '../../authConfig';
 
 const Login: React.FC = () => {
-    const { instance } = useMsal();
-    const activeAccount = instance.getActiveAccount();
+    const { instance, accounts } = useMsal();
+
+    const activeAccount = instance.getActiveAccount() ?? accounts[0];
 
     const handleLogoutRedirect = () => {
         instance.logoutRedirect().catch((error) => console.log(error));

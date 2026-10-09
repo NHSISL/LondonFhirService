@@ -56,7 +56,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Audits
             Audit someAudit = CreateRandomAudit();
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(validationException);
+                InternalServerError(new Xeption(message: validationException.InnerException.Message));
 
             var expectedActionResult =
                 new ActionResult<Audit>(expectedInternalServerErrorObjectResult);

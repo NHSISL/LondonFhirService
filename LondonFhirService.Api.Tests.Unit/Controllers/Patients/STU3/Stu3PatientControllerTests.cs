@@ -40,6 +40,15 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
         private static DateTimeOffset GetRandomDateTimeOffset() =>
             new DateTimeRange(earliestDate: new DateTime()).GetValue();
 
+        private static Xeption CreateRandomInnerExceptionWithData()
+        {
+            var innerException = new Xeption(message: GetRandomString());
+            innerException.Data.Add(GetRandomString(), new[] { GetRandomString() });
+            innerException.Data.Add(GetRandomString(), GetRandomString());
+
+            return innerException;
+        }
+
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();
 
@@ -169,7 +178,7 @@ namespace LondonFhirService.Api.Tests.Unit.Controllers.Patients.STU3
 
         public static TheoryData<Xeption> ServerExceptions()
         {
-            var someInnerException = new Xeption();
+            Xeption someInnerException = CreateRandomInnerExceptionWithData();
             string someMessage = GetRandomString();
 
             return new TheoryData<Xeption>
