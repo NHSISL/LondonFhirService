@@ -70,7 +70,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
                 CreateRandomStructuredRecordRequest();
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(serverException);
+                InternalServerError(serverException.InnerException);
 
             var expectedActionResult =
                 new ActionResult<string>(expectedInternalServerErrorObjectResult);

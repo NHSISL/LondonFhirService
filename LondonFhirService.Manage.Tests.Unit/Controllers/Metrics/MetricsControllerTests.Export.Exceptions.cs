@@ -61,7 +61,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
         {
             // given
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(serverException);
+                InternalServerError(serverException.InnerException);
 
             this.metricOrchestrationServiceMock.Setup(service =>
                 service.ExportRequestMetricsToCsvAsync(

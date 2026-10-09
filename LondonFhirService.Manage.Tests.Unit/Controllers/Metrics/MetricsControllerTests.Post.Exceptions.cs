@@ -56,7 +56,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
             Metric someMetric = CreateRandomMetric();
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(validationException);
+                InternalServerError(validationException.InnerException);
 
             var expectedActionResult =
                 new ActionResult<Metric>(expectedInternalServerErrorObjectResult);

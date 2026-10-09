@@ -54,11 +54,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.InnerException);
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.InnerException);
             }
         }
 
@@ -81,11 +81,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.InnerException);
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.InnerException);
             }
         }
 
@@ -116,11 +116,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.InnerException);
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.InnerException);
             }
         }
 
@@ -157,11 +157,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.InnerException);
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.InnerException);
             }
         }
 
@@ -198,11 +198,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecordDifferences
             }
             catch (FhirRecordDifferenceDependencyException fhirRecordDifferenceDependencyException)
             {
-                return InternalServerError(fhirRecordDifferenceDependencyException);
+                return InternalServerError(fhirRecordDifferenceDependencyException.InnerException);
             }
             catch (FhirRecordDifferenceServiceException fhirRecordDifferenceServiceException)
             {
-                return InternalServerError(fhirRecordDifferenceServiceException);
+                return InternalServerError(fhirRecordDifferenceServiceException.InnerException);
             }
         }
     }

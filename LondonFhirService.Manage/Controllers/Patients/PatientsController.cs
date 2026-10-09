@@ -105,7 +105,7 @@ namespace LondonFhirService.Manage.Controllers.Patients
             }
             catch (PatientServiceException patientServiceException)
             {
-                return InternalServerError(patientServiceException);
+                return InternalServerError(patientServiceException.InnerException);
             }
         }
 

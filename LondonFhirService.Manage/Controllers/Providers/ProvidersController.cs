@@ -67,11 +67,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException);
+                return InternalServerError(providerServiceDependencyException.InnerException);
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException);
+                return InternalServerError(providerServiceException.InnerException);
             }
         }
 
@@ -93,11 +93,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException);
+                return InternalServerError(providerServiceDependencyException.InnerException);
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException);
+                return InternalServerError(providerServiceException.InnerException);
             }
         }
 
@@ -125,11 +125,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException);
+                return InternalServerError(providerServiceDependencyException.InnerException);
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException);
+                return InternalServerError(providerServiceException.InnerException);
             }
         }
 
@@ -165,11 +165,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException);
+                return InternalServerError(providerServiceDependencyException.InnerException);
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException);
+                return InternalServerError(providerServiceException.InnerException);
             }
         }
 
@@ -205,11 +205,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException);
+                return InternalServerError(providerServiceDependencyException.InnerException);
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException);
+                return InternalServerError(providerServiceException.InnerException);
             }
         }
     }

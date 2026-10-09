@@ -56,7 +56,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecordDifferences
             FhirRecordDifference someFhirRecordDifference = CreateRandomFhirRecordDifference();
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(validationException);
+                InternalServerError(validationException.InnerException);
 
             var expectedActionResult =
                 new ActionResult<FhirRecordDifference>(expectedInternalServerErrorObjectResult);

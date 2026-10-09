@@ -79,11 +79,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricServiceDependencyException metricServiceDependencyException)
             {
-                return InternalServerError(metricServiceDependencyException);
+                return InternalServerError(metricServiceDependencyException.InnerException);
             }
             catch (MetricServiceException metricServiceException)
             {
-                return InternalServerError(metricServiceException);
+                return InternalServerError(metricServiceException.InnerException);
             }
         }
 
@@ -105,11 +105,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricServiceDependencyException metricServiceDependencyException)
             {
-                return InternalServerError(metricServiceDependencyException);
+                return InternalServerError(metricServiceDependencyException.InnerException);
             }
             catch (MetricServiceException metricServiceException)
             {
-                return InternalServerError(metricServiceException);
+                return InternalServerError(metricServiceException.InnerException);
             }
         }
 
@@ -150,11 +150,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricOrchestrationDependencyException metricOrchestrationDependencyException)
             {
-                return InternalServerError(metricOrchestrationDependencyException);
+                return InternalServerError(metricOrchestrationDependencyException.InnerException);
             }
             catch (MetricOrchestrationServiceException metricOrchestrationServiceException)
             {
-                return InternalServerError(metricOrchestrationServiceException);
+                return InternalServerError(metricOrchestrationServiceException.InnerException);
             }
         }
 
@@ -182,11 +182,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricServiceDependencyException metricServiceDependencyException)
             {
-                return InternalServerError(metricServiceDependencyException);
+                return InternalServerError(metricServiceDependencyException.InnerException);
             }
             catch (MetricServiceException metricServiceException)
             {
-                return InternalServerError(metricServiceException);
+                return InternalServerError(metricServiceException.InnerException);
             }
         }
 
@@ -222,11 +222,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricServiceDependencyException metricServiceDependencyException)
             {
-                return InternalServerError(metricServiceDependencyException);
+                return InternalServerError(metricServiceDependencyException.InnerException);
             }
             catch (MetricServiceException metricServiceException)
             {
-                return InternalServerError(metricServiceException);
+                return InternalServerError(metricServiceException.InnerException);
             }
         }
     }

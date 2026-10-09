@@ -24,7 +24,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecords
             IQueryable<FhirRecord> someFhirRecords = CreateRandomFhirRecords();
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(serverException);
+                InternalServerError(serverException.InnerException);
 
             var expectedActionResult =
                 new ActionResult<IQueryable<FhirRecord>>(expectedInternalServerErrorObjectResult);
