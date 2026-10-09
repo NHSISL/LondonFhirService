@@ -39,8 +39,8 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         {
             // given
             IConfiguration configuration = CreateConfiguration(
-                configured: ConfiguredConnectionString,
-                appService: AppServiceConnectionString);
+                configuredConnectionString: ConfiguredConnectionString,
+                appServiceConnectionString: AppServiceConnectionString);
 
             // when
             string actualConnectionString =
@@ -59,8 +59,8 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         {
             // given
             IConfiguration configuration = CreateConfiguration(
-                configured: Placeholder,
-                appService: AppServiceConnectionString);
+                configuredConnectionString: Placeholder,
+                appServiceConnectionString: AppServiceConnectionString);
 
             // when
             string actualConnectionString =
@@ -81,8 +81,8 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         {
             // given
             IConfiguration configuration = CreateConfiguration(
-                configured: malformedConnectionString,
-                appService: AppServiceConnectionString);
+                configuredConnectionString: malformedConnectionString,
+                appServiceConnectionString: AppServiceConnectionString);
 
             // when
             string actualConnectionString =
@@ -97,8 +97,8 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         {
             // given
             IConfiguration configuration = CreateConfiguration(
-                configured: null,
-                appService: AppServiceConnectionString);
+                configuredConnectionString: null,
+                appServiceConnectionString: AppServiceConnectionString);
 
             // when
             string actualConnectionString =
@@ -113,8 +113,8 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         {
             // given
             IConfiguration configuration = CreateConfiguration(
-                configured: Placeholder,
-                appService: null);
+                configuredConnectionString: Placeholder,
+                appServiceConnectionString: null);
 
             // when
             string actualConnectionString =
@@ -129,8 +129,8 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         {
             // given
             WebApplicationBuilder builder = CreateBuilder(
-                configured: Placeholder,
-                appService: AppServiceConnectionString);
+                configuredConnectionString: Placeholder,
+                appServiceConnectionString: AppServiceConnectionString);
 
             // when
             Program.ConfigureApplicationInsightsTelemetry(builder);
@@ -154,8 +154,8 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
         {
             // given
             WebApplicationBuilder builder = CreateBuilder(
-                configured: Placeholder,
-                appService: null);
+                configuredConnectionString: Placeholder,
+                appServiceConnectionString: null);
 
             // when
             Program.ConfigureApplicationInsightsTelemetry(builder);
@@ -166,28 +166,32 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
                 .Should().BeFalse();
         }
 
-        private static IConfiguration CreateConfiguration(string configured, string appService) =>
+        private static IConfiguration CreateConfiguration(string configuredConnectionString,
+            string appServiceConnectionString) =>
             new ConfigurationBuilder()
-                .AddInMemoryCollection(CreateSettings(configured, appService))
+                .AddInMemoryCollection(CreateSettings(configuredConnectionString, appServiceConnectionString))
                 .Build();
 
         /// <summary>
         /// Empty, so nothing the machine running the tests has set - an
         /// APPLICATIONINSIGHTS_CONNECTION_STRING of its own - reaches the configuration.
         /// </summary>
-        private static WebApplicationBuilder CreateBuilder(string configured, string appService)
+        private static WebApplicationBuilder CreateBuilder(string configuredConnectionString,
+            string appServiceConnectionString)
         {
             WebApplicationBuilder builder = WebApplication.CreateEmptyBuilder(new WebApplicationOptions());
-            builder.Configuration.AddInMemoryCollection(CreateSettings(configured, appService));
+            builder.Configuration.AddInMemoryCollection(
+                CreateSettings(configuredConnectionString, appServiceConnectionString));
 
             return builder;
         }
 
-        private static Dictionary<string, string> CreateSettings(string configured, string appService) =>
+        private static Dictionary<string, string> CreateSettings(string configuredConnectionString,
+            string appServiceConnectionString) =>
             new Dictionary<string, string>
             {
-                ["ApplicationInsights:ConnectionString"] = configured,
-                ["APPLICATIONINSIGHTS_CONNECTION_STRING"] = appService
+                ["ApplicationInsights:ConnectionString"] = configuredConnectionString,
+                ["APPLICATIONINSIGHTS_CONNECTION_STRING"] = appServiceConnectionString
             };
     }
 }
