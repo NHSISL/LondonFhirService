@@ -95,13 +95,46 @@ public partial class Program
         return IsApplicationInsightsConnectionString(connectionString) ? connectionString : null;
     }
 
-    private static bool IsApplicationInsightsConnectionString(string? connectionString) =>
-        connectionString is not null
-            && Array.Exists(
-                connectionString.Split(';', StringSplitOptions.TrimEntries),
-                setting =>
-                    setting.StartsWith("InstrumentationKey=", StringComparison.OrdinalIgnoreCase)
-                        && Guid.TryParse(setting["InstrumentationKey=".Length..], out _));
+    private static bool IsApplicationInsightsConnectionString(string? connectionString)
+    {
+        if (connectionString is null)
+        {
+            return false;
+        }
+
+        var keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        string? instrumentationKey = null;
+
+        foreach (string setting in connectionString.Split(';'))
+        {
+            if (setting.Length == 0)
+            {
+                continue;
+            }
+
+            string[] keywordAndValue = setting.Split('=', 2);
+
+            if (keywordAndValue.Length != 2)
+            {
+                return false;
+            }
+
+            string keyword = keywordAndValue[0].Trim();
+            string value = keywordAndValue[1].Trim();
+
+            if (keyword.Length == 0 || value.Length == 0 || keywords.Add(keyword) is false)
+            {
+                return false;
+            }
+
+            if (keyword.Equals("InstrumentationKey", StringComparison.OrdinalIgnoreCase))
+            {
+                instrumentationKey = value;
+            }
+        }
+
+        return Guid.TryParse(instrumentationKey, out _);
+    }
 
     internal static void ConfigureServices(WebApplicationBuilder builder)
     {
