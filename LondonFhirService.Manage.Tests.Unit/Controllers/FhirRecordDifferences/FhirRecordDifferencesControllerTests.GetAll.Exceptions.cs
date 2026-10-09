@@ -24,7 +24,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.FhirRecordDifferences
             IQueryable<FhirRecordDifference> someFhirRecordDifferences = CreateRandomFhirRecordDifferences();
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(serverException.InnerException);
+                InternalServerError(new Xeption(message: serverException.InnerException.Message));
 
             var expectedActionResult =
                 new ActionResult<IQueryable<FhirRecordDifference>>(expectedInternalServerErrorObjectResult);

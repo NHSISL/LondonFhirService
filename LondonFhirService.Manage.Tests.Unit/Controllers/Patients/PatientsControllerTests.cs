@@ -60,7 +60,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
         public static TheoryData<Xeption> ServerExceptions()
         {
-            var someInnerException = new Xeption();
+            Xeption someInnerException = CreateRandomInnerExceptionWithData();
             string someMessage = GetRandomString();
 
             return new TheoryData<Xeption>
@@ -86,6 +86,15 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
         /// </summary>
         private static string GetRandomCorrelationId() =>
             Guid.NewGuid().ToString("N");
+
+        private static Xeption CreateRandomInnerExceptionWithData()
+        {
+            var innerException = new Xeption(message: GetRandomString());
+            innerException.Data.Add(GetRandomString(), new[] { GetRandomString() });
+            innerException.Data.Add(GetRandomString(), GetRandomString());
+
+            return innerException;
+        }
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: GetRandomNumber()).GetValue();

@@ -23,7 +23,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Providers
         {
             // given
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(serverException.InnerException);
+                InternalServerError(new Xeption(message: serverException.InnerException.Message));
 
             var expectedActionResult =
                 new ActionResult<IQueryable<Provider>>(expectedInternalServerErrorObjectResult);

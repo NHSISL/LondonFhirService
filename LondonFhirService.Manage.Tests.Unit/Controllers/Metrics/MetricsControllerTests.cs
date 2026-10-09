@@ -36,7 +36,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
 
         public static TheoryData<Xeption> ExportServerExceptions()
         {
-            var someInnerException = new Xeption();
+            Xeption someInnerException = CreateRandomInnerExceptionWithData();
             string someMessage = GetRandomString();
 
             return new TheoryData<Xeption>
@@ -70,7 +70,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
 
         public static TheoryData<Xeption> ServerExceptions()
         {
-            var someInnerException = new Xeption();
+            Xeption someInnerException = CreateRandomInnerExceptionWithData();
             string someMessage = GetRandomString();
 
             return new TheoryData<Xeption>
@@ -83,6 +83,15 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Metrics
                     message: someMessage,
                     innerException: someInnerException)
             };
+        }
+
+        private static Xeption CreateRandomInnerExceptionWithData()
+        {
+            var innerException = new Xeption(message: GetRandomString());
+            innerException.Data.Add(GetRandomString(), new[] { GetRandomString() });
+            innerException.Data.Add(GetRandomString(), GetRandomString());
+
+            return innerException;
         }
 
         private static string GetRandomString() =>

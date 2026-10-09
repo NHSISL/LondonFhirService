@@ -56,7 +56,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Providers
             Guid someId = Guid.NewGuid();
 
             InternalServerErrorObjectResult expectedInternalServerErrorObjectResult =
-                InternalServerError(validationException.InnerException);
+                InternalServerError(new Xeption(message: validationException.InnerException.Message));
 
             var expectedActionResult =
                 new ActionResult<Provider>(expectedInternalServerErrorObjectResult);
