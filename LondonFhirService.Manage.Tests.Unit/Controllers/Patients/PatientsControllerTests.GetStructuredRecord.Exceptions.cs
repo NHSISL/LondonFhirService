@@ -112,18 +112,19 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             StructuredRecordRequest someStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
 
-            string randomMessage = GetRandomString();
+            string randomOuterMessage = GetRandomString();
+            string randomInnerMessage = GetRandomString();
             string refusalBody = CreateRefusalBody();
 
             var dependencyValidationException =
                 new PatientServiceDependencyValidationException(
-                    message: randomMessage,
-                    innerException: new Xeption(),
+                    message: randomOuterMessage,
+                    innerException: new Xeption(message: randomInnerMessage),
                     responseBody: refusalBody);
 
             var expectedProblemDetails = new ProblemDetails
             {
-                Title = randomMessage,
+                Title = randomInnerMessage,
                 Status = StatusCodes.Status400BadRequest,
                 Detail = refusalBody
             };
@@ -169,18 +170,19 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             StructuredRecordRequest someStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
 
-            string randomMessage = GetRandomString();
+            string randomOuterMessage = GetRandomString();
+            string randomInnerMessage = GetRandomString();
             string failureBody = CreateRefusalBody();
 
             var dependencyException =
                 new PatientServiceDependencyException(
-                    message: randomMessage,
-                    innerException: new Xeption(),
+                    message: randomOuterMessage,
+                    innerException: new Xeption(message: randomInnerMessage),
                     responseBody: failureBody);
 
             var expectedProblemDetails = new ProblemDetails
             {
-                Title = randomMessage,
+                Title = randomInnerMessage,
                 Status = StatusCodes.Status500InternalServerError,
                 Detail = failureBody
             };
@@ -274,10 +276,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             StructuredRecordRequest someStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
 
+            string randomOuterMessage = GetRandomString();
+            string randomInnerMessage = GetRandomString();
+
             var dependencyException =
                 new PatientServiceDependencyException(
-                    message: GetRandomString(),
-                    innerException: new Xeption());
+                    message: randomOuterMessage,
+                    innerException: new Xeption(message: randomInnerMessage));
 
             this.patientServiceMock.Setup(service =>
                 service.GetStructuredRecordAsync(
@@ -297,6 +302,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
 
             var actualProblemDetails = actualObjectResult.Value as ProblemDetails;
             actualProblemDetails.Should().NotBeNull();
+            actualProblemDetails.Title.Should().Be(randomInnerMessage);
             actualProblemDetails.Detail.Should().BeNull();
 
             this.patientServiceMock.Verify(service =>

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -83,7 +83,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             {
                 var failedPatientDependencyException =
                     new FailedPatientDependencyException(
-                        message: "Failed patient dependency error occurred, contact support.",
+                        message: jsonException.Message,
                         innerException: jsonException);
 
                 throw await CreateAndLogDependencyException(failedPatientDependencyException);
@@ -97,8 +97,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             {
                 var failedPatientDependencyValidationException =
                     new FailedPatientDependencyValidationException(
-                        message: "Failed patient dependency validation error occurred, " +
-                            "please fix the errors and try again.",
+                        message: httpRequestException.Message,
                         innerException: httpRequestException);
 
                 throw await CreateAndLogDependencyValidationException(
@@ -109,7 +108,7 @@ namespace LondonFhirService.Manage.Services.Foundations.Patients
             {
                 var failedPatientDependencyException =
                     new FailedPatientDependencyException(
-                        message: "Failed patient dependency error occurred, contact support.",
+                        message: httpRequestException.Message,
                         innerException: httpRequestException);
 
                 throw await CreateAndLogDependencyException(

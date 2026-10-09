@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -37,7 +37,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             var failedPatientDependencyException =
                 new FailedPatientDependencyException(
-                    message: "Failed patient dependency error occurred, contact support.",
+                    message: dependencyException.Message,
                     innerException: dependencyException);
 
             var expectedPatientServiceDependencyException =
@@ -102,7 +102,7 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
 
             var failedPatientDependencyException =
                 new FailedPatientDependencyException(
-                    message: "Failed patient dependency error occurred, contact support.",
+                    message: dependencyException.Message,
                     innerException: dependencyException);
 
             var expectedPatientServiceDependencyException =
@@ -371,6 +371,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceDependencyException.InnerException.InnerException
                 .Should().BeAssignableTo<JsonException>();
 
+            Exception actualJsonException =
+                actualPatientServiceDependencyException.InnerException.InnerException;
+
+            actualPatientServiceDependencyException.InnerException.Message
+                .Should().Be(actualJsonException.Message);
+
             this.httpBrokerMock.Verify(broker =>
                 broker.PostJsonContentAsync(
                     It.IsAny<string>(),
@@ -557,6 +563,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             actualPatientServiceDependencyValidationException.InnerException.InnerException
                 .Should().BeSameAs(refusal);
 
+            actualPatientServiceDependencyValidationException.InnerException.Message
+                .Should().Be(refusal.Message);
+
             actualPatientServiceDependencyValidationException.ResponseBody
                 .Should().Be(refusalBody);
 
@@ -618,6 +627,9 @@ namespace LondonFhirService.Manage.Tests.Unit.Services.Foundations.Patients
             // then
             actualPatientServiceDependencyException.InnerException
                 .Should().BeOfType<FailedPatientDependencyException>();
+
+            actualPatientServiceDependencyException.InnerException.Message
+                .Should().Be(failure.Message);
 
             actualPatientServiceDependencyException.ResponseBody
                 .Should().Be(failureBody);
