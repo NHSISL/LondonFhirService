@@ -65,13 +65,49 @@ public partial class Program
         TestConfigurationOverrides?.Invoke(builder);
     }
 
+    /// <summary>
+    /// Registers telemetry with the connection string GetApplicationInsightsConnectionString
+    /// chooses, handed to the SDK so it sends with the value checked there. Without one there is
+    /// nothing to send to, so telemetry is left out and the MetricTelemetryPublisher idles.
+    /// </summary>
     internal static void ConfigureApplicationInsightsTelemetry(WebApplicationBuilder builder)
     {
-        if (ExcludeAppInsightsForTesting == false)
+        if (ExcludeAppInsightsForTesting)
         {
-            builder.Services.AddApplicationInsightsTelemetry();
+            return;
         }
+
+        string? connectionString = GetApplicationInsightsConnectionString(builder.Configuration);
+
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        builder.Services.AddApplicationInsightsTelemetry(options =>
+            options.ConnectionString = connectionString);
     }
+
+    /// <summary>
+    /// Either key is supported: ApplicationInsights:ConnectionString (an
+    /// ApplicationInsights__ConnectionString app setting, or appsettings.Development.json) or the
+    /// APPLICATIONINSIGHTS_CONNECTION_STRING the App Service sets. The first can be a placeholder,
+    /// which is never null, so it is only taken when it holds a real connection string.
+    /// </summary>
+    internal static string? GetApplicationInsightsConnectionString(IConfiguration configuration)
+    {
+        string? configuredConnectionString = configuration["ApplicationInsights:ConnectionString"];
+
+        string? connectionString =
+            IsApplicationInsightsConnectionString(configuredConnectionString)
+                ? configuredConnectionString
+                : configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+        return IsApplicationInsightsConnectionString(connectionString) ? connectionString : null;
+    }
+
+    private static bool IsApplicationInsightsConnectionString(string? connectionString) =>
+        connectionString?.Contains("InstrumentationKey=", StringComparison.OrdinalIgnoreCase) is true;
 
     internal static void ConfigureServices(WebApplicationBuilder builder)
     {
@@ -376,12 +412,9 @@ public partial class Program
 
         try
         {
-            string? connectionString =
-                configuration["ApplicationInsights:ConnectionString"]
-                    ?? configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+            string? connectionString = GetApplicationInsightsConnectionString(configuration);
 
-            if (string.IsNullOrWhiteSpace(connectionString)
-                || connectionString.Contains("InstrumentationKey=", StringComparison.OrdinalIgnoreCase) is false)
+            if (connectionString is null)
             {
                 return;
             }
