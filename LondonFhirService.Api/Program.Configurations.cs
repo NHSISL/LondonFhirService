@@ -104,11 +104,6 @@ public partial class Program
         TestConfigurationOverrides?.Invoke(builder);
     }
 
-    /// <summary>
-    /// Registers telemetry with the connection string GetApplicationInsightsConnectionString
-    /// chooses, handed to the SDK so it sends with the value checked there. Without one there is
-    /// nothing to send to, so telemetry is left out and the MetricTelemetryPublisher idles.
-    /// </summary>
     internal static void ConfigureApplicationInsightsTelemetry(WebApplicationBuilder builder)
     {
         if (ExcludeAppInsightsForTesting)
@@ -127,12 +122,6 @@ public partial class Program
             options.ConnectionString = connectionString);
     }
 
-    /// <summary>
-    /// Either key is supported: ApplicationInsights:ConnectionString (an
-    /// ApplicationInsights__ConnectionString app setting, or appsettings.Development.json) or the
-    /// APPLICATIONINSIGHTS_CONNECTION_STRING the App Service sets. The first can be a placeholder,
-    /// which is never null, so it is only taken when it holds a real connection string.
-    /// </summary>
     internal static string? GetApplicationInsightsConnectionString(IConfiguration configuration)
     {
         string? configuredConnectionString = configuration["ApplicationInsights:ConnectionString"];
