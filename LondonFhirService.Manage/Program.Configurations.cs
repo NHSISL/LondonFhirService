@@ -96,7 +96,12 @@ public partial class Program
     }
 
     private static bool IsApplicationInsightsConnectionString(string? connectionString) =>
-        connectionString?.Contains("InstrumentationKey=", StringComparison.OrdinalIgnoreCase) is true;
+        connectionString is not null
+            && Array.Exists(
+                connectionString.Split(';', StringSplitOptions.TrimEntries),
+                setting =>
+                    setting.StartsWith("InstrumentationKey=", StringComparison.OrdinalIgnoreCase)
+                        && Guid.TryParse(setting["InstrumentationKey=".Length..], out _));
 
     internal static void ConfigureServices(WebApplicationBuilder builder)
     {
