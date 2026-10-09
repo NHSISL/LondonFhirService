@@ -5,8 +5,11 @@ import { UserProfile } from '../securitys/userProfile';
 import { MsalConfig } from '../../authConfig';
 
 const Login: React.FC = () => {
-    const { instance } = useMsal();
-    const activeAccount = instance.getActiveAccount();
+    const { instance, accounts } = useMsal();
+
+    // Straight after the login redirect MSAL holds the account before main.tsx makes it active,
+    // and making it active does not re-render, so the signed in account is the fallback.
+    const activeAccount = instance.getActiveAccount() ?? accounts[0];
 
     const handleLogoutRedirect = () => {
         instance.logoutRedirect().catch((error) => console.log(error));
