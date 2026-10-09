@@ -70,6 +70,26 @@ namespace LondonFhirService.Api.Tests.Unit.Startup
             actualConnectionString.Should().Be(AppServiceConnectionString);
         }
 
+        [Theory]
+        [InlineData("InstrumentationKey=")]
+        [InlineData("InstrumentationKey=not-a-guid")]
+        [InlineData("IngestionEndpoint=https://configured.example.invalid/;NotInstrumentationKey=11111111-1111-1111-1111-111111111111")]
+        public void ShouldUseTheAppServiceConnectionStringIfTheConfiguredOneIsMalformed(
+            string malformedConnectionString)
+        {
+            // given
+            IConfiguration configuration = CreateConfiguration(
+                configured: malformedConnectionString,
+                appService: AppServiceConnectionString);
+
+            // when
+            string actualConnectionString =
+                Program.GetApplicationInsightsConnectionString(configuration);
+
+            // then
+            actualConnectionString.Should().Be(AppServiceConnectionString);
+        }
+
         [Fact]
         public void ShouldUseTheAppServiceConnectionStringIfNoneIsConfigured()
         {
