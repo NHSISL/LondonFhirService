@@ -47,7 +47,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var failedPatientDependencyValidationException =
                 new FailedPatientDependencyValidationException(
-                    message: "Failed patient dependency validation error occurred, please try again.",
+                    message: dependencyValidationException.InnerException.Message,
                     innerException: dependencyValidationException.InnerException,
                     data: dependencyValidationException.Data);
 
@@ -175,7 +175,7 @@ namespace LondonFhirService.Core.Tests.Unit.Services.Foundations.Patients.STU3
 
             var failedPatientDependencyException =
                 new FailedPatientDependencyException(
-                    message: "Failed patient dependency error occurred, contact support.",
+                    message: dependencyException.InnerException.Message,
                     innerException: dependencyException.InnerException,
                     data: dependencyException.Data);
 
