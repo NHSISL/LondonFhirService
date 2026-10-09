@@ -229,11 +229,10 @@ namespace LondonFhirService.Infrastructure.Services
                     },
                     {
                         "add_tag",
-                        new TagJobV2(
+                        new TagJobV3(
                             runsOn: BuildMachines.UbuntuLatest,
                             dependsOn: "build",
                             projectRelativePath: $"{projectName}/{projectName}.csproj",
-                            githubToken: "${{ secrets.PAT_FOR_TAGGING }}",
                             branchName: branchName)
                         {
                             Name = "Tag and Release"
