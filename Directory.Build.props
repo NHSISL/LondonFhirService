@@ -31,6 +31,6 @@
     driver, its Extensions.Abstractions and the Entra ID providers all come from one release.
   -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
   </ItemGroup>
 </Project>
