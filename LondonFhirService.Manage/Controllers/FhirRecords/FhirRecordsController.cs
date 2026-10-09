@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.FhirRecords;
 using LondonFhirService.Core.Models.Foundations.FhirRecords.Exceptions;
 using LondonFhirService.Core.Services.Foundations.FhirRecords;
+using LondonFhirService.Manage.Extensions.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -53,11 +54,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
             }
             catch (FhirRecordDependencyException fhirRecordDependencyException)
             {
-                return InternalServerError(fhirRecordDependencyException.InnerException);
+                return InternalServerError(fhirRecordDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordServiceException fhirRecordServiceException)
             {
-                return InternalServerError(fhirRecordServiceException.InnerException);
+                return InternalServerError(fhirRecordServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -81,11 +82,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
             }
             catch (FhirRecordDependencyException fhirRecordDependencyException)
             {
-                return InternalServerError(fhirRecordDependencyException.InnerException);
+                return InternalServerError(fhirRecordDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordServiceException fhirRecordServiceException)
             {
-                return InternalServerError(fhirRecordServiceException.InnerException);
+                return InternalServerError(fhirRecordServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -115,11 +116,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
             }
             catch (FhirRecordDependencyException fhirRecordDependencyException)
             {
-                return InternalServerError(fhirRecordDependencyException.InnerException);
+                return InternalServerError(fhirRecordDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordServiceException fhirRecordServiceException)
             {
-                return InternalServerError(fhirRecordServiceException.InnerException);
+                return InternalServerError(fhirRecordServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -155,11 +156,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
             }
             catch (FhirRecordDependencyException fhirRecordDependencyException)
             {
-                return InternalServerError(fhirRecordDependencyException.InnerException);
+                return InternalServerError(fhirRecordDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordServiceException fhirRecordServiceException)
             {
-                return InternalServerError(fhirRecordServiceException.InnerException);
+                return InternalServerError(fhirRecordServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -195,11 +196,11 @@ namespace LondonFhirService.Manage.Controllers.FhirRecords
             }
             catch (FhirRecordDependencyException fhirRecordDependencyException)
             {
-                return InternalServerError(fhirRecordDependencyException.InnerException);
+                return InternalServerError(fhirRecordDependencyException.ToInnerMessageOnly());
             }
             catch (FhirRecordServiceException fhirRecordServiceException)
             {
-                return InternalServerError(fhirRecordServiceException.InnerException);
+                return InternalServerError(fhirRecordServiceException.ToInnerMessageOnly());
             }
         }
     }

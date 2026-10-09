@@ -14,6 +14,7 @@ using LondonFhirService.Core.Models.Foundations.Metrics.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.Metrics.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Metrics;
 using LondonFhirService.Core.Services.Orchestrations.Metrics;
+using LondonFhirService.Manage.Extensions.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -79,11 +80,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricServiceDependencyException metricServiceDependencyException)
             {
-                return InternalServerError(metricServiceDependencyException.InnerException);
+                return InternalServerError(metricServiceDependencyException.ToInnerMessageOnly());
             }
             catch (MetricServiceException metricServiceException)
             {
-                return InternalServerError(metricServiceException.InnerException);
+                return InternalServerError(metricServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -105,11 +106,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricServiceDependencyException metricServiceDependencyException)
             {
-                return InternalServerError(metricServiceDependencyException.InnerException);
+                return InternalServerError(metricServiceDependencyException.ToInnerMessageOnly());
             }
             catch (MetricServiceException metricServiceException)
             {
-                return InternalServerError(metricServiceException.InnerException);
+                return InternalServerError(metricServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -150,11 +151,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricOrchestrationDependencyException metricOrchestrationDependencyException)
             {
-                return InternalServerError(metricOrchestrationDependencyException.InnerException);
+                return InternalServerError(metricOrchestrationDependencyException.ToInnerMessageOnly());
             }
             catch (MetricOrchestrationServiceException metricOrchestrationServiceException)
             {
-                return InternalServerError(metricOrchestrationServiceException.InnerException);
+                return InternalServerError(metricOrchestrationServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -182,11 +183,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricServiceDependencyException metricServiceDependencyException)
             {
-                return InternalServerError(metricServiceDependencyException.InnerException);
+                return InternalServerError(metricServiceDependencyException.ToInnerMessageOnly());
             }
             catch (MetricServiceException metricServiceException)
             {
-                return InternalServerError(metricServiceException.InnerException);
+                return InternalServerError(metricServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -222,11 +223,11 @@ namespace LondonFhirService.Manage.Controllers.Metrics
             }
             catch (MetricServiceDependencyException metricServiceDependencyException)
             {
-                return InternalServerError(metricServiceDependencyException.InnerException);
+                return InternalServerError(metricServiceDependencyException.ToInnerMessageOnly());
             }
             catch (MetricServiceException metricServiceException)
             {
-                return InternalServerError(metricServiceException.InnerException);
+                return InternalServerError(metricServiceException.ToInnerMessageOnly());
             }
         }
     }

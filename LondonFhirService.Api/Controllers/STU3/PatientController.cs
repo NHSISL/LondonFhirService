@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System;
 using Hl7.Fhir.Model;
+using LondonFhirService.Api.Extensions.Exceptions;
 using LondonFhirService.Core.Brokers.Correlations;
 using LondonFhirService.Core.Models.Coordinations.Patients.Exceptions;
 using LondonFhirService.Core.Models.Orchestrations.FhirReconciliations.Exceptions;
@@ -84,11 +85,11 @@ namespace LondonFhirService.Api.Controllers.STU3
             }
             catch (PatientCoordinationDependencyException patientCoordinationDependencyException)
             {
-                return InternalServerError(patientCoordinationDependencyException);
+                return InternalServerError(patientCoordinationDependencyException.ToInnerMessageOnly());
             }
             catch (PatientCoordinationServiceException patientCoordinationServiceException)
             {
-                return InternalServerError(patientCoordinationServiceException);
+                return InternalServerError(patientCoordinationServiceException.ToInnerMessageOnly());
             }
         }
 

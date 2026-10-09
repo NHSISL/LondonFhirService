@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LondonFhirService.Core.Models.Foundations.Providers;
 using LondonFhirService.Core.Models.Foundations.Providers.Exceptions;
 using LondonFhirService.Core.Services.Foundations.Providers;
+using LondonFhirService.Manage.Extensions.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -67,11 +68,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException.InnerException);
+                return InternalServerError(providerServiceDependencyException.ToInnerMessageOnly());
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException.InnerException);
+                return InternalServerError(providerServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -93,11 +94,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException.InnerException);
+                return InternalServerError(providerServiceDependencyException.ToInnerMessageOnly());
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException.InnerException);
+                return InternalServerError(providerServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -125,11 +126,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException.InnerException);
+                return InternalServerError(providerServiceDependencyException.ToInnerMessageOnly());
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException.InnerException);
+                return InternalServerError(providerServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -165,11 +166,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException.InnerException);
+                return InternalServerError(providerServiceDependencyException.ToInnerMessageOnly());
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException.InnerException);
+                return InternalServerError(providerServiceException.ToInnerMessageOnly());
             }
         }
 
@@ -205,11 +206,11 @@ namespace LondonFhirService.Manage.Controllers.Providers
             }
             catch (ProviderServiceDependencyException providerServiceDependencyException)
             {
-                return InternalServerError(providerServiceDependencyException.InnerException);
+                return InternalServerError(providerServiceDependencyException.ToInnerMessageOnly());
             }
             catch (ProviderServiceException providerServiceException)
             {
-                return InternalServerError(providerServiceException.InnerException);
+                return InternalServerError(providerServiceException.ToInnerMessageOnly());
             }
         }
     }

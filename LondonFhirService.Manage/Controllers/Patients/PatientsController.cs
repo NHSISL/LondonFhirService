@@ -13,6 +13,7 @@ using RESTFulSense.Controllers;
 using Xeptions;
 
 using LondonFhirService.Core.Brokers.Correlations;
+using LondonFhirService.Manage.Extensions.Exceptions;
 using LondonFhirService.Manage.Models.Foundations.Patients;
 using LondonFhirService.Manage.Models.Foundations.Patients.Exceptions;
 using LondonFhirService.Manage.Models.Securities;
@@ -105,7 +106,7 @@ namespace LondonFhirService.Manage.Controllers.Patients
             }
             catch (PatientServiceException patientServiceException)
             {
-                return InternalServerError(patientServiceException.InnerException);
+                return InternalServerError(patientServiceException.ToInnerMessageOnly());
             }
         }
 
