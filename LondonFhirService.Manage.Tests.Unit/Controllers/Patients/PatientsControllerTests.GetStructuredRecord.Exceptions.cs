@@ -112,12 +112,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             StructuredRecordRequest someStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
 
+            string randomOuterMessage = GetRandomString();
             string randomInnerMessage = GetRandomString();
             string refusalBody = CreateRefusalBody();
 
             var dependencyValidationException =
                 new PatientServiceDependencyValidationException(
-                    message: GetRandomString(),
+                    message: randomOuterMessage,
                     innerException: new Xeption(message: randomInnerMessage),
                     responseBody: refusalBody);
 
@@ -169,12 +170,13 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             StructuredRecordRequest someStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
 
+            string randomOuterMessage = GetRandomString();
             string randomInnerMessage = GetRandomString();
             string failureBody = CreateRefusalBody();
 
             var dependencyException =
                 new PatientServiceDependencyException(
-                    message: GetRandomString(),
+                    message: randomOuterMessage,
                     innerException: new Xeption(message: randomInnerMessage),
                     responseBody: failureBody);
 
@@ -274,11 +276,12 @@ namespace LondonFhirService.Manage.Tests.Unit.Controllers.Patients
             StructuredRecordRequest someStructuredRecordRequest =
                 CreateRandomStructuredRecordRequest();
 
+            string randomOuterMessage = GetRandomString();
             string randomInnerMessage = GetRandomString();
 
             var dependencyException =
                 new PatientServiceDependencyException(
-                    message: GetRandomString(),
+                    message: randomOuterMessage,
                     innerException: new Xeption(message: randomInnerMessage));
 
             this.patientServiceMock.Setup(service =>
