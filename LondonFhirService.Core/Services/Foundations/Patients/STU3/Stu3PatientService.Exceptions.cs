@@ -69,7 +69,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             {
                 var failedPatientDependencyValidationException =
                     new FailedPatientDependencyValidationException(
-                        message: "Failed patient dependency validation error occurred, please try again.",
+                        message: exception.InnerException?.Message ?? exception.Message,
                         innerException: exception.InnerException,
                         data: exception.Data);
 
@@ -82,7 +82,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             {
                 var failedPatientDependencyException =
                     new FailedPatientDependencyException(
-                        message: "Failed patient dependency error occurred, contact support.",
+                        message: exception.InnerException?.Message ?? exception.Message,
                         innerException: exception.InnerException,
                         data: exception.Data);
 
@@ -152,7 +152,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             {
                 var failedPatientDependencyValidationException =
                     new FailedPatientDependencyValidationException(
-                        message: "Failed patient dependency validation error occurred, please try again.",
+                        message: exception.InnerException?.Message ?? exception.Message,
                         innerException: exception.InnerException,
                         data: exception.Data);
 
@@ -165,7 +165,7 @@ namespace LondonFhirService.Core.Services.Foundations.Patients.STU3
             {
                 var failedPatientDependencyException =
                     new FailedPatientDependencyException(
-                        message: "Failed patient dependency error occurred, contact support.",
+                        message: exception.InnerException?.Message ?? exception.Message,
                         innerException: exception.InnerException,
                         data: exception.Data);
 
